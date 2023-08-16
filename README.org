@@ -1,0 +1,95 @@
+#+TITLE: PanelsController
+#+AUTHOR: Peter Polidoro
+#+EMAIL: peter@polidoro.io
+
+* Library Information
+- Name: PanelsController
+- Description: Arduino library for communicating with the Reiser Lab Modular LED Display panels.
+- Version: 0.1.0
+- Release Date: 2023-08-16
+- Creation Date: 2023-08-16
+- License: BSD-3-Clause
+- URL: https://github.com/janelia-arduino/PanelsController
+- Author: Peter Polidoro
+- Email: peter@polidoro.io
+- Copyright: 2023 Howard Hughes Medical Institute
+- References:
+  - https://reiserlab.github.io/Modular-LED-Display/
+
+* Development
+
+** PlatformIO
+
+*** Install PlatformIO Core
+
+[[https://docs.platformio.org/en/latest/core/installation/index.html]]
+
+**** Example
+
+#+BEGIN_SRC sh
+sudo apt install -y python3-venv
+mkdir -p ~/platformio/venv
+python3 -m venv ~/platformio/venv
+source ~/platformio/venv/bin/activate
+pip install platformio
+pio --version
+#+END_SRC
+
+**** 99-platformio-udev.rules
+
+Linux users have to install udev rules for PlatformIO supported boards/devices.
+
+***** Download udev rules file to /etc/udev/rules.d
+
+#+BEGIN_SRC sh
+curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+#+END_SRC
+
+***** Restart udev management tool
+
+#+BEGIN_SRC sh
+sudo service udev restart
+#+END_SRC
+
+***** Add user to groups
+
+#+BEGIN_SRC sh
+sudo usermod -a -G dialout $USER
+sudo usermod -a -G plugdev $USER
+#+END_SRC
+
+***** Remove modemmanager
+
+#+BEGIN_SRC sh
+sudo apt-get purge --auto-remove modemmanager
+#+END_SRC
+
+*** Download this repository
+
+[[https://github.com/janelia-arduino/PanelsController.git]]
+
+**** Example
+
+#+BEGIN_SRC sh
+sudo apt install -y git
+cd ~/platformio
+git clone https://github.com/janelia-arduino/PanelsController.git
+#+END_SRC
+
+*** Compile the firmware
+
+**** Example
+
+#+BEGIN_SRC sh
+cd ~/platformio/PanelsController
+pio run -e teensy40
+#+END_SRC
+
+*** Upload the firmware
+
+**** Example
+
+#+BEGIN_SRC sh
+cd ~/platformio/PanelsController
+pio run -e teensy40 -t upload
+#+END_SRC
