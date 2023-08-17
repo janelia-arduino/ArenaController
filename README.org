@@ -16,37 +16,48 @@
 - References:
   - https://reiserlab.github.io/Modular-LED-Display/
 
-* Layout
+* Layout Numbering
 
 ** Quarter Panel
 
-message = LOW BYTE | HIGH BYTE
-message[byte index] = pixel[column index][row index] | (pixel[column index][row index + 1] << 4)
+One quarter panel is made up of (8 columns x 8 rows) = 64 pixels.
 
-|   | 0  | 1  | 2   | 3   | 4   | 5   | 6   | 7   |
-| 7 | 4H | 8H | 12H | 16H | 20H | 24H | 28H | 33H |
-| 6 | 4L | 8L | 12L | 16L | 20L | 24L | 28L | 33L |
-| 5 | 3H | 7H | 11H | 15H | 19H | 23H | 27H | 32H |
-| 4 | 3L | 7L | 11L | 15L | 19L | 23L | 27L | 31L |
-| 3 | 2H | 6H | 10H | 14H | 18H | 22H | 26H | 30H |
-| 2 | 2L | 6L | 10L | 14L | 18L | 22L | 26L | 30L |
-| 1 | 1H | 5H | 9H  | 13H | 17H | 21H | 25H | 29H |
-| 0 | 1L | 5L | 9L  | 13L | 17L | 21L | 25L | 29L |
+One quarter panel message is made up of (64 pixels / 2) + 1 = 33 bytes.
+
+message byte = low nibble | (high nibble << 4)
+
+quarter_panel_message[pixel_byte_num] = pixel[pixel_col_num][pixel_row_num] | (pixel[pixel_col_num][pixel_row_num + 1] << 4)
+
+| pixel_byte_num  | pixel_col_num 0 | pixel_col_num 1 | pixel_col_num 2 | pixel_col_num 3 | pixel_col_num 4 | pixel_col_num 5 | pixel_col_num 6 | pixel_col_num 7 |
+| pixel_row_num 7 | 4 high          | 8 high          | 12 high         | 16 high         | 20 high         | 24 high         | 28 high         | 33 high         |
+| pixel_row_num 6 | 4 low           | 8 low           | 12 low          | 16 low          | 20 low          | 24 low          | 28 low          | 33 low          |
+| pixel_row_num 5 | 3 high          | 7 high          | 11 high         | 15 high         | 19 high         | 23 high         | 27 high         | 32 high         |
+| pixel_row_num 4 | 3 low           | 7 low           | 11 low          | 15 low          | 19 low          | 23 low          | 27 low          | 31 low          |
+| pixel_row_num 3 | 2 high          | 6 high          | 10 high         | 14 high         | 18 high         | 22 high         | 26 high         | 30 high         |
+| pixel_row_num 2 | 2 low           | 6 low           | 10 low          | 14 low          | 18 low          | 22 low          | 26 low          | 30 low          |
+| pixel_row_num 1 | 1 high          | 5 high          | 9 high          | 13 high         | 17 high         | 21 high         | 25 high         | 29 high         |
+| pixel_row_num 0 | 1 low           | 5 low           | 9 low           | 13 low          | 17 low          | 21 low          | 25 low          | 29 low          |
 
 ** Panel
 
-|   | 0               |               1 |
-| 1 | Quarter Panel 1 | Quarter Panel 3 |
-| 0 | Quarter Panel 0 | Quarter Panel 2 |
+One panel is made up of 4 quarter panels.
+
+panel_message[(0 + (quarter_panel_num x 33)):(32 + (quarter_panel_num x 33))] = quarter_panel_message
+
+| quarter_panel_num       | quarter_panel_col_num 0 | quarter_panel_col_num 1 |
+| quarter_panel_row_num 1 |                       1 |                       3 |
+| quarter_panel_row_num 0 |                       0 |                       2 |
 
 ** Arena
 
-|   | 0       | 1       | 2        | 3        | 4        | 5        |        6 |
-| 5 | Panel 4 | Panel 9 | Panel 14 | Panel 19 | Panel 24 | Panel 29 | Panel 34 |
-| 4 | Panel 3 | Panel 8 | Panel 13 | Panel 18 | Panel 23 | Panel 28 | Panel 33 |
-| 3 | Panel 2 | Panel 7 | Panel 12 | Panel 17 | Panel 22 | Panel 27 | Panel 32 |
-| 2 | Panel 1 | Panel 6 | Panel 11 | Panel 16 | Panel 21 | Panel 26 | Panel 31 |
-| 1 | Panel 0 | Panel 5 | Panel 10 | Panel 15 | Panel 20 | Panel 25 | Panel 30 |
+One arena is made up of a maximum of (6 columns x 5 rows ) = 35 panels.
+
+| panels | col 0 | col 1 | col 2 | col 3 | col 4 | col 5 | col 6 |
+| row 5  |     4 |     9 |    14 |    19 |    24 |    29 |    34 |
+| row 4  |     3 |     8 |    13 |    18 |    23 |    28 |    33 |
+| row 3  |     2 |     7 |    12 |    17 |    22 |    27 |    32 |
+| row 2  |     1 |     6 |    11 |    16 |    21 |    26 |    31 |
+| row 1  |     0 |     5 |    10 |    15 |    20 |    25 |    30 |
 
 * Development
 
