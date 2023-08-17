@@ -16,6 +16,38 @@
 - References:
   - https://reiserlab.github.io/Modular-LED-Display/
 
+* Layout
+
+** Quarter Panel
+
+message = LOW BYTE | HIGH BYTE
+message[byte index] = pixel[column index][row index] | (pixel[column index][row index + 1] << 4)
+
+|   | 0  | 1  | 2   | 3   | 4   | 5   | 6   | 7   |
+| 7 | 4H | 8H | 12H | 16H | 20H | 24H | 28H | 33H |
+| 6 | 4L | 8L | 12L | 16L | 20L | 24L | 28L | 33L |
+| 5 | 3H | 7H | 11H | 15H | 19H | 23H | 27H | 32H |
+| 4 | 3L | 7L | 11L | 15L | 19L | 23L | 27L | 31L |
+| 3 | 2H | 6H | 10H | 14H | 18H | 22H | 26H | 30H |
+| 2 | 2L | 6L | 10L | 14L | 18L | 22L | 26L | 30L |
+| 1 | 1H | 5H | 9H  | 13H | 17H | 21H | 25H | 29H |
+| 0 | 1L | 5L | 9L  | 13L | 17L | 21L | 25L | 29L |
+
+** Panel
+
+|   | 0               |               1 |
+| 1 | Quarter Panel 1 | Quarter Panel 3 |
+| 0 | Quarter Panel 0 | Quarter Panel 2 |
+
+** Arena
+
+|   | 0       | 1       | 2        | 3        | 4        | 5        |        6 |
+| 5 | Panel 4 | Panel 9 | Panel 14 | Panel 19 | Panel 24 | Panel 29 | Panel 34 |
+| 4 | Panel 3 | Panel 8 | Panel 13 | Panel 18 | Panel 23 | Panel 28 | Panel 33 |
+| 3 | Panel 2 | Panel 7 | Panel 12 | Panel 17 | Panel 22 | Panel 27 | Panel 32 |
+| 2 | Panel 1 | Panel 6 | Panel 11 | Panel 16 | Panel 21 | Panel 26 | Panel 31 |
+| 1 | Panel 0 | Panel 5 | Panel 10 | Panel 15 | Panel 20 | Panel 25 | Panel 30 |
+
 * Development
 
 ** PlatformIO
@@ -82,7 +114,7 @@ git clone https://github.com/janelia-arduino/PanelsController.git
 
 #+BEGIN_SRC sh
 cd ~/platformio/PanelsController
-pio run -e teensy40
+pio run -e teensy41
 #+END_SRC
 
 *** Upload the firmware
@@ -91,5 +123,5 @@ pio run -e teensy40
 
 #+BEGIN_SRC sh
 cd ~/platformio/PanelsController
-pio run -e teensy40 -t upload
+pio run -e teensy41 -t upload
 #+END_SRC
