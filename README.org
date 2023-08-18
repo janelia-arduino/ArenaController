@@ -32,15 +32,14 @@ One quarter panel message is made up of (64 pixels / 2 pixels per byte) + 1 spec
 quarter_panel_message[pixel_byte_i] = pixel[pixel_col_i][pixel_row_i] | (pixel[pixel_col_i][pixel_row_i + 1] << 4)
 #+END_SRC
 
-| pixel_byte_i  | pixel_col_i 0 | pixel_col_i 1 | pixel_col_i 2 | pixel_col_i 3 | pixel_col_i 4 | pixel_col_i 5 | pixel_col_i 6 | pixel_col_i 7 |
-| pixel_row_i 7 | 4 high        | 8 high        | 12 high       | 16 high       | 20 high       | 24 high       | 28 high       | 33 high       |
-| pixel_row_i 6 | 4 low         | 8 low         | 12 low        | 16 low        | 20 low        | 24 low        | 28 low        | 33 low        |
-| pixel_row_i 5 | 3 high        | 7 high        | 11 high       | 15 high       | 19 high       | 23 high       | 27 high       | 32 high       |
-| pixel_row_i 4 | 3 low         | 7 low         | 11 low        | 15 low        | 19 low        | 23 low        | 27 low        | 31 low        |
-| pixel_row_i 3 | 2 high        | 6 high        | 10 high       | 14 high       | 18 high       | 22 high       | 26 high       | 30 high       |
-| pixel_row_i 2 | 2 low         | 6 low         | 10 low        | 14 low        | 18 low        | 22 low        | 26 low        | 30 low        |
-| pixel_row_i 1 | 1 high        | 5 high        | 9 high        | 13 high       | 17 high       | 21 high       | 25 high       | 29 high       |
-| pixel_row_i 0 | 1 low         | 5 low         | 9 low         | 13 low        | 17 low        | 21 low        | 25 low        | 29 low        |
+*** Pixels in Quarter Panel
+
+| pixel_byte_i  | pixel_col_i 0 | pixel_col_i 1 | ... | pixel_col_i 6 | pixel_col_i 7 |
+| pixel_row_i 7 | 4 high        | 8 high        | ... | 28 high       | 33 high       |
+| pixel_row_i 6 | 4 low         | 8 low         | ... | 28 low        | 33 low        |
+| ...           | ...           | ...           | ... | ...           | ...           |
+| pixel_row_i 1 | 1 high        | 5 high        | ... | 25 high       | 29 high       |
+| pixel_row_i 0 | 1 low         | 5 low         | ... | 25 low        | 29 low        |
 
 ** Panel
 
@@ -54,10 +53,14 @@ One panel message = 4 quarter panel messages = (4 x 33 bytes) = 132 bytes
 panel_message[(pixel_byte_i + (quarter_panel_i x 33))] = quarter_panel_message[pixel_byte_i]
 #+END_SRC
 
+*** Quarter Panels in Panel
+
 | quarter_panel_i       | quarter_panel_col_i 0 | quarter_panel_col_i 1 |
 |-----------------------+-----------------------+-----------------------|
 | quarter_panel_row_i 1 |                     1 |                     3 |
 | quarter_panel_row_i 0 |                     0 |                     2 |
+
+*** Pixels in Panel
 
 | pixel_byte_i   | pixel_col_i 0 | ... | pixel_col_i 7 | pixel_col_i 8 | ... | pixel_col_i 15 |
 |----------------+---------------+-----+---------------+---------------+-----+----------------|
@@ -75,6 +78,8 @@ panel_message[(pixel_byte_i + (quarter_panel_i x 33))] = quarter_panel_message[p
 ** Arena
 
 One arena is made up of a maximum of (6 columns x 5 rows ) = 35 panels.
+
+*** Panels in Arena
 
 | panel_i       | panel_col_i 0 | panel_col_i 1 | panel_col_i 2 | panel_col_i 3 | panel_col_i 4 | panel_col_i 5 | panel_col_i 6 |
 |---------------+---------------+---------------+---------------+---------------+---------------+---------------+---------------|
