@@ -10,3 +10,10 @@
 
 using namespace panels_controller;
 
+void PanelsController::setup()
+{
+}
+
+void PanelsController::update()
+{
+}
