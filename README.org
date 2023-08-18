@@ -56,14 +56,12 @@ panel_message[(pixel_byte_i + (quarter_panel_i x 33))] = quarter_panel_message[p
 *** Quarter Panels in Panel
 
 | quarter_panel_i       | quarter_panel_col_i 0 | quarter_panel_col_i 1 |
-|-----------------------+-----------------------+-----------------------|
 | quarter_panel_row_i 1 |                     1 |                     3 |
 | quarter_panel_row_i 0 |                     0 |                     2 |
 
 *** Pixels in Panel
 
 | pixel_byte_i   | pixel_col_i 0 | ... | pixel_col_i 7 | pixel_col_i 8 | ... | pixel_col_i 15 |
-|----------------+---------------+-----+---------------+---------------+-----+----------------|
 | pixel_row_i 15 | 37 high       | ... | 65 high       | 103 high      | ... | 131 high       |
 | pixel_row_i 14 | 37 low        | ... | 65 low        | 103 low       | ... | 131 low        |
 | ...            | ...           | ... | ...           | ...           | ... | ...            |
@@ -82,7 +80,6 @@ One arena is made up of a maximum of (6 columns x 5 rows ) = 35 panels.
 *** Panels in Arena
 
 | panel_i       | panel_col_i 0 | panel_col_i 1 | panel_col_i 2 | panel_col_i 3 | panel_col_i 4 | panel_col_i 5 | panel_col_i 6 |
-|---------------+---------------+---------------+---------------+---------------+---------------+---------------+---------------|
 | panel_row_i 5 |             4 |             9 |            14 |            19 |            24 |            29 |            34 |
 | panel_row_i 4 |             3 |             8 |            13 |            18 |            23 |            28 |            33 |
 | panel_row_i 3 |             2 |             7 |            12 |            17 |            22 |            27 |            32 |
