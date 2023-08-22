@@ -36,7 +36,7 @@ quarter_panel_message[pixel_byte_i] = pixel[pixel_col_i][pixel_row_i] | (pixel[p
 
 pixel_byte_i low nibble and high nibble numbering for each led in a quarter panel:
 
-#+html: <img src="./images/quarter_panel_pixels.png" width="600px">
+#+html: <img src="./images/pixels_in_quarter_panel.png" width="1200px">
 
 ** Panel
 
@@ -52,23 +52,7 @@ panel_message[(pixel_byte_i + (quarter_panel_i x 33))] = quarter_panel_message[p
 
 *** Quarter Panels in Panel
 
-| quarter_panel_i       | quarter_panel_col_i 0 | quarter_panel_col_i 1 |
-| quarter_panel_row_i 1 |                     1 |                     3 |
-| quarter_panel_row_i 0 |                     0 |                     2 |
-
-*** Pixels in Panel
-
-| pixel_byte_i   | pixel_col_i 0 | ... | pixel_col_i 7 | pixel_col_i 8 | ... | pixel_col_i 15 |
-| pixel_row_i 15 | 37 high       | ... | 65 high       | 103 high      | ... | 131 high       |
-| pixel_row_i 14 | 37 low        | ... | 65 low        | 103 low       | ... | 131 low        |
-| ...            | ...           | ... | ...           | ...           | ... | ...            |
-| pixel_row_i 9  | 34 high       | ... | 62 high       | 100 high      | ... | 128 high       |
-| pixel_row_i 8  | 34 low        | ... | 62 low        | 100 low       | ... | 128 low        |
-| pixel_row_i 7  | 4 high        | ... | 32 high       | 70 high       | ... | 98 high        |
-| pixel_row_i 6  | 4 low         | ... | 32 low        | 70 low        | ... | 98 low         |
-| ...            | ...           | ... | ...           | ...           | ... | ...            |
-| pixel_row_i 1  | 1 high        | ... | 29 high       | 67 high       | ... | 95 high        |
-| pixel_row_i 0  | 1 low         | ... | 29 low        | 67 low        | ... | 95 low         |
+#+html: <img src="./images/quarter_panels_in_panel.png" width="1200px">
 
 ** Arena
 
