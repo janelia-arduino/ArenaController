@@ -34,6 +34,10 @@ quarter_panel_message[pixel_byte_i] = pixel[pixel_col_i][pixel_row_i] | (pixel[p
 
 *** Pixels in Quarter Panel
 
+pixel_byte_i low nibble and high nibble numbering for each led in a quarter panel:
+
+./images/quarter_panel_pixels.png
+
 | pixel_byte_i  | pixel_col_i 0 | pixel_col_i 1 | ... | pixel_col_i 6 | pixel_col_i 7 |
 | pixel_row_i 7 | 4 high        | 8 high        | ... | 28 high       | 33 high       |
 | pixel_row_i 6 | 4 low         | 8 low         | ... | 28 low        | 33 low        |
