@@ -34,7 +34,7 @@ quarter_panel_message[pixel_byte_i] = pixel[pixel_col_i][pixel_row_i] | (pixel[p
 
 *** Pixels in Quarter Panel
 
-pixel_byte_i low nibble and high nibble numbering for each led in a quarter panel:
+Low nibble and high nibble byte numbering for each pixel in a quarter panel:
 
 #+html: <img src="./images/pixels_in_quarter_panel.png" width="1200px">
 
@@ -52,20 +52,20 @@ panel_message[(pixel_byte_i + (quarter_panel_i x 33))] = quarter_panel_message[p
 
 *** Quarter Panels in Panel
 
+Quarter panel numbering for each quarter panel in a panel plus low nibble and
+high nibble byte numbering for select pixels in a panel:
+
 #+html: <img src="./images/quarter_panels_in_panel.png" width="1200px">
 
 ** Arena
 
-One arena is made up of a maximum of (6 columns x 5 rows ) = 35 panels.
+One arena is made up of a maximum of (6 columns x 5 rows ) = 30 panels.
 
 *** Panels in Arena
 
-| panel_i       | panel_col_i 0 | panel_col_i 1 | panel_col_i 2 | panel_col_i 3 | panel_col_i 4 | panel_col_i 5 | panel_col_i 6 |
-| panel_row_i 5 |             4 |             9 |            14 |            19 |            24 |            29 |            34 |
-| panel_row_i 4 |             3 |             8 |            13 |            18 |            23 |            28 |            33 |
-| panel_row_i 3 |             2 |             7 |            12 |            17 |            22 |            27 |            32 |
-| panel_row_i 2 |             1 |             6 |            11 |            16 |            21 |            26 |            31 |
-| panel_row_i 1 |             0 |             5 |            10 |            15 |            20 |            25 |            30 |
+Panel numbering for each panel in an arena:
+
+#+html: <img src="./images/panels_in_arena.png" width="1200px">
 
 * Development
 
