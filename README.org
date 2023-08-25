@@ -6,7 +6,8 @@
 - Name: PanelsController
 - Description: Arduino library for communicating with the Reiser Lab Modular LED Display panels.
 - Version: 0.1.0
-- Release Date: 2023-08-16
+- Panel Version: G4 v1.9
+- Release Date: 2023-08-25
 - Creation Date: 2023-08-16
 - License: BSD-3-Clause
 - URL: https://github.com/janelia-arduino/PanelsController
@@ -34,7 +35,7 @@ quarter_panel_message[pixel_byte_i] = pixel[pixel_col_i][pixel_row_i] | (pixel[p
 
 *** Pixels in Quarter Panel
 
-Low nibble and high nibble byte numbering for each pixel in a quarter panel:
+Pixel numbering for each pixel in a quarter panel:
 
 #+html: <img src="./images/pixels_in_quarter_panel.png" width="1200px">
 
@@ -52,8 +53,7 @@ panel_message[(pixel_byte_i + (quarter_panel_i x 33))] = quarter_panel_message[p
 
 *** Quarter Panels in Panel
 
-Quarter panel numbering for each quarter panel in a panel plus low nibble and
-high nibble byte numbering for select pixels in a panel:
+Quarter panel numbering for each quarter panel in a panel plus pixel numbering for select pixels in a panel:
 
 #+html: <img src="./images/quarter_panels_in_panel.png" width="1200px">
 
