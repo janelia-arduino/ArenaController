@@ -11,4 +11,5 @@ void setup()
 void loop()
 {
   dev.update();
+  delay(1000);
 }

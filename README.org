@@ -69,6 +69,15 @@ Panel numbering for each panel in an arena:
 
 * Development
 
+** Download this repository
+
+[[https://github.com/janelia-arduino/PanelsController.git]]
+
+#+BEGIN_SRC sh
+sudo apt install -y git
+mkdir -p ~/tmp && cd ~/tmp && git clone https://github.com/janelia-arduino/PanelsController.git
+#+END_SRC
+
 ** PlatformIO
 
 *** Install PlatformIO Core
@@ -79,9 +88,9 @@ Panel numbering for each panel in an arena:
 
 #+BEGIN_SRC sh
 sudo apt install -y python3-venv
-mkdir -p ~/platformio/venv
-python3 -m venv ~/platformio/venv
-source ~/platformio/venv/bin/activate
+cd ~/tmp/PanelsController
+python3 -m venv .venv
+source .venv/bin/activate
 pip install platformio
 pio --version
 #+END_SRC
@@ -115,25 +124,14 @@ sudo usermod -a -G plugdev $USER
 sudo apt-get purge --auto-remove modemmanager
 #+END_SRC
 
-*** Download this repository
-
-[[https://github.com/janelia-arduino/PanelsController.git]]
-
-**** Example
-
-#+BEGIN_SRC sh
-sudo apt install -y git
-cd ~/platformio
-git clone https://github.com/janelia-arduino/PanelsController.git
-#+END_SRC
 
 *** Compile the firmware
 
 **** Example
 
 #+BEGIN_SRC sh
-cd ~/platformio/PanelsController
-pio run -e teensy41
+cd ~/tmp/PanelsController
+pio run
 #+END_SRC
 
 *** Upload the firmware
@@ -141,6 +139,6 @@ pio run -e teensy41
 **** Example
 
 #+BEGIN_SRC sh
-cd ~/platformio/PanelsController
+cd ~/tmp/PanelsController
 pio run -e teensy41 -t upload
 #+END_SRC
