@@ -13,7 +13,9 @@ namespace panels_controller
 {
 namespace constants
 {
+constexpr uint8_t COL_PIXEL_COUNT_PER_QUARTER_PANEL = 8;
+constexpr uint8_t ROW_PIXEL_COUNT_PER_QUARTER_PANEL = 8;
 }
 }
-#include "TEENSY40.h"
+#include "TEENSY41.h"
 #endif

@@ -19,9 +19,7 @@ public:
   void setup();
   void update();
 private:
-  const static uint8_t PIXEL_COL_COUNT_QUARTER_PANEL = 8;
-  const static uint8_t PIXEL_ROW_COUNT_QUARTER_PANEL = 8;
-  uint8_t quarter_panel_message_[PIXEL_COL_COUNT_QUARTER_PANEL];
+  uint8_t quarter_panel_message_[panels_controller::constants::COL_PIXEL_COUNT_PER_QUARTER_PANEL];
   long inc_;
 };
 
