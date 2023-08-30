@@ -19,8 +19,8 @@ public:
   void setup();
   void update();
 private:
-  uint8_t quarter_panel_message_[panels_controller::constants::COL_PIXEL_COUNT_PER_QUARTER_PANEL];
-  long inc_;
+  uint8_t panel_row_index_;
+  uint8_t panel_col_index_;
 };
 
 #endif
