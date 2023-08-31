@@ -21,11 +21,11 @@
 
 ** System Components
 
-*** Arena
+*** Quarter Panel
 
-An arena is a set of panels arranged in rows and columns.
+A quarter panel is a set of LED pixels arranged in rows and columns.
 
-#+html: <img src="./images/arena.png" width="1214px">
+#+html: <img src="./images/quarter_panel.png" width="96px">
 
 *** Panel
 
@@ -33,11 +33,11 @@ A panel is a set of quarter panels arranged in rows and columns.
 
 #+html: <img src="./images/panel.png" width="192px">
 
-*** Quarter Panel
+*** Arena
 
-A quarter panel is a set of LED pixels arranged in rows and columns.
+An arena is a set of panels arranged in rows and columns.
 
-#+html: <img src="./images/quarter_panel.png" width="96px">
+#+html: <img src="./images/arena.png" width="1214px">
 
 ** Display Modes
 
@@ -45,13 +45,13 @@ A quarter panel is a set of LED pixels arranged in rows and columns.
 
 In grayscale mode, each LED can be one of sixteen brightness levels.
 
-#+html: <img src="./images/grayscale.png" width="400px"
+#+html: <img src="./images/grayscale.png" width="420px"
 
 *** Binary
 
 In binary mode, each LED can be one of two brightness levels, on or off.
 
-#+html: <img src="./images/binary.png" width="400px"
+#+html: <img src="./images/binary.png" width="420px"
 
 ** Display Messages
 
