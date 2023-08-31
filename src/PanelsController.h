@@ -8,9 +8,9 @@
 #ifndef PANELS_CONTROLLER_H
 #define PANELS_CONTROLLER_H
 
-#include "Arduino.h"
+#include <Arduino.h>
 
-#include "PanelsController/Constants.h"
+#include "Constants.h"
 
 
 class PanelsController

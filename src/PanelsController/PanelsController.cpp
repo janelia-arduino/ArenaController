@@ -19,19 +19,27 @@ void PanelsController::setup()
 
 void PanelsController::update()
 {
-  uint8_t clock_select_pin = panels_controller::constants::PANEL_CLOCK_SELECT_PINS[panel_row_index_][panel_col_index_];
+  long panel_spi_address = (long)panels_controller::constants::PANEL_SPI_PTRS[panel_row_index_][panel_col_index_];
+  uint8_t panel_clock_select_pin = panels_controller::constants::PANEL_CLOCK_SELECT_PINS[panel_row_index_][panel_col_index_];
 
-  Serial.print("clock select pin for panel at row: ");
+  Serial.print("panel spi address at row: ");
   Serial.print(panel_row_index_);
   Serial.print(", col: ");
   Serial.print(panel_col_index_);
   Serial.print(" = ");
-  Serial.println(clock_select_pin);
+  Serial.println(panel_spi_address);
 
-  if (++panel_col_index_ == panels_controller::constants::PANEL_COUNT_MAX_PER_ARENA_COL)
+  Serial.print("panel clock select pin at row: ");
+  Serial.print(panel_row_index_);
+  Serial.print(", col: ");
+  Serial.print(panel_col_index_);
+  Serial.print(" = ");
+  Serial.println(panel_clock_select_pin);
+
+  if (++panel_col_index_ == panels_controller::constants::ARENA_PANEL_COUNT_MAX_PER_COL)
   {
     panel_col_index_ = 0;
-    if (++panel_row_index_ == panels_controller::constants::PANEL_COUNT_MAX_PER_ARENA_ROW)
+    if (++panel_row_index_ == panels_controller::constants::ARENA_PANEL_COUNT_MAX_PER_ROW)
     {
       panel_row_index_ = 0;
     }

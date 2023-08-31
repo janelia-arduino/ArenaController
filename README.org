@@ -17,55 +17,98 @@
 - References:
   - https://reiserlab.github.io/Modular-LED-Display/
 
-* Layout Numbering
+* Modular LED Display
 
-** Quarter Panel
+** System Components
 
-One quarter panel is made up of (8 columns x 8 rows) = 64 pixels
+*** Arena
 
-One pixel message is 1 nibble (1/2 byte)
+An arena is a set of panels arranged in rows and columns.
 
-One quarter panel message byte = 2 pixel messages = low nibble | (high nibble << 4)
+#+html: <img src="./images/arena.png" width="1214px">
 
-One quarter panel message is made up of (64 pixels / 2 pixels per byte) + 1 special byte = 33 bytes
+*** Panel
+
+A panel is a set of quarter panels arranged in rows and columns.
+
+#+html: <img src="./images/panel.png" width="192px">
+
+*** Quarter Panel
+
+A quarter panel is a set of LED pixels arranged in rows and columns.
+
+#+html: <img src="./images/quarter_panel.png" width="96px">
+
+** Display Modes
+
+*** Grayscale
+
+In grayscale mode, each LED can be one of sixteen brightness levels.
+
+#+html: <img src="./images/grayscale.png" width="400px"
+
+*** Binary
+
+In binary mode, each LED can be one of two brightness levels, on or off.
+
+#+html: <img src="./images/binary.png" width="400px"
+
+** Display Messages
+
+*** Pixels in Message Byte
 
 #+BEGIN_SRC cpp
-quarter_panel_message[pixel_byte_i] = pixel[pixel_col_i][pixel_row_i] | (pixel[pixel_col_i][pixel_row_i + 1] << 4)
+constexpr uint8_t BIT_COUNT_PER_BYTE = 8;
+
+constexpr uint8_t BIT_COUNT_PER_PIXEL_GRAYSCALE = 4;
+constexpr uint8_t BIT_COUNT_PER_PIXEL_BINARY = 1;
+
+constexpr uint8_t PIXEL_COUNT_PER_BYTE_GRAYSCALE = BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_GRAYSCALE;
+constexpr uint8_t PIXEL_COUNT_PER_BYTE_BINARY = BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_BINARY;
 #+END_SRC
 
-*** Pixels in Quarter Panel
+*** Quarter Panel
+
+**** Pixels
+
+#+BEGIN_SRC cpp
+constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL_ROW = 8;
+constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL_COL = 8;
+constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL = PIXEL_COUNT_PER_QUARTER_PANEL_ROW * PIXEL_COUNT_PER_QUARTER_PANEL_COL;
+#+END_SRC
 
 Pixel numbering for each pixel in a quarter panel:
 
-#+html: <img src="./images/pixels_in_quarter_panel.png" width="1200px">
+#+html: <img src="./images/quarter_panel_pixels.png" width="1200px">
 
-** Panel
+**** Grayscale
 
-One panel is made up of 4 quarter panels.
+#+html: <img src="./images/quarter_panel_grayscale.png" width="1200px">
 
-One panel is ((8 x 2 columns) x (8 x 2 rows)) = 256 pixels
+**** Binary
 
-One panel message = 4 quarter panel messages = (4 x 33 bytes) = 132 bytes
+#+html: <img src="./images/quarter_panel_binary.png" width="1200px">
+
+*** Panel
 
 #+BEGIN_SRC cpp
-panel_message[(pixel_byte_i + (quarter_panel_i x 33))] = quarter_panel_message[pixel_byte_i]
 #+END_SRC
 
-*** Quarter Panels in Panel
+**** Quarter Panels in Panel
 
 Quarter panel numbering for each quarter panel in a panel plus pixel numbering for select pixels in a panel:
 
-#+html: <img src="./images/quarter_panels_in_panel.png" width="1200px">
+#+html: <img src="./images/panel_quarter_panels.png" width="1200px">
 
-** Arena
+*** Arena
 
 One arena is made up of a maximum of (6 columns x 5 rows ) = 30 panels.
 
-*** Panels in Arena
+**** Panels in Arena
 
 Panel numbering for each panel in an arena:
 
-#+html: <img src="./images/panels_in_arena.png" width="1200px">
+#+html: <img src="./images/arena_panels.png" width="1200px">
 
 * Development
 
