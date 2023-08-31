@@ -60,7 +60,7 @@ Pixel numbering for each pixel in a quarter panel:
 
 In grayscale mode, each LED can be one of sixteen brightness levels.
 
-#+html: <img src="./images/grayscale.png" width="420px"
+#+html: <img src="./images/grayscale.png" width="420px">
 
 #+BEGIN_SRC cpp
 constexpr uint8_t BIT_COUNT_PER_PIXEL_GRAYSCALE = 4;
@@ -74,7 +74,7 @@ constexpr uint8_t PIXEL_COUNT_PER_BYTE_GRAYSCALE = \
 
 In binary mode, each LED can be one of two brightness levels, on or off.
 
-#+html: <img src="./images/binary.png" width="420px"
+#+html: <img src="./images/binary.png" width="420px">
 
 #+BEGIN_SRC cpp
 constexpr uint8_t BIT_COUNT_PER_PIXEL_BINARY = 1;
@@ -84,12 +84,28 @@ constexpr uint8_t PIXEL_COUNT_PER_BYTE_BINARY = \
 
 #+html: <img src="./images/quarter_panel_binary.png" width="1200px">
 
-*** Panel
+**** Message Bytes
 
 #+BEGIN_SRC cpp
+constexpr uint8_t BYTE_COUNT_PER_QUARTER_PANEL_CONTROL = 1;
+constexpr uint8_t BYTE_COUNT_PER_QUARTER_PANEL_GRAYSCALE = \
+  BYTE_COUNT_PER_QUARTER_PANEL_CONTROL + \
+  PIXEL_COUNT_PER_QUARTER_PANEL/PIXEL_COUNT_PER_BYTE_GRAYSCALE; // 33
+constexpr uint8_t BYTE_COUNT_PER_QUARTER_PANEL_BINARY = \
+  BYTE_COUNT_PER_QUARTER_PANEL_CONTROL + \
+  PIXEL_COUNT_PER_QUARTER_PANEL/PIXEL_COUNT_PER_BYTE_BINARY; // 9
 #+END_SRC
 
+*** Panel
+
 **** Quarter Panels in Panel
+
+#+BEGIN_SRC cpp
+constexpr uint8_t QUARTER_PANEL_COUNT_PER_PANEL_ROW = 2;
+constexpr uint8_t QUARTER_PANEL_COUNT_PER_PANEL_COL = 2;
+constexpr uint8_t QUARTER_PANEL_COUNT_PER_PANEL = \
+  QUARTER_PANEL_COUNT_PER_PANEL_ROW * QUARTER_PANEL_COUNT_PER_PANEL_COL; // 4
+#+END_SRC
 
 Quarter panel numbering for each quarter panel in a panel plus pixel numbering for select pixels in a panel:
 
@@ -97,9 +113,13 @@ Quarter panel numbering for each quarter panel in a panel plus pixel numbering f
 
 *** Arena
 
-One arena is made up of a maximum of (6 columns x 5 rows ) = 30 panels.
 
 **** Panels in Arena
+
+#+BEGIN_SRC cpp
+constexpr uint8_t PANEL_COUNT_MAX_PER_ARENA_ROW = 5;
+constexpr uint8_t PANEL_COUNT_MAX_PER_ARENA_COL = 6;
+#+END_SRC
 
 Panel numbering for each panel in an arena:
 
