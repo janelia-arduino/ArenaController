@@ -39,33 +39,7 @@ An arena is a set of panels arranged in rows and columns.
 
 #+html: <img src="./images/arena.png" width="1214px">
 
-** Display Modes
-
-*** Grayscale
-
-In grayscale mode, each LED can be one of sixteen brightness levels.
-
-#+html: <img src="./images/grayscale.png" width="420px"
-
-*** Binary
-
-In binary mode, each LED can be one of two brightness levels, on or off.
-
-#+html: <img src="./images/binary.png" width="420px"
-
 ** Display Messages
-
-*** Pixels in Message Byte
-
-#+BEGIN_SRC cpp
-constexpr uint8_t BIT_COUNT_PER_BYTE = 8;
-
-constexpr uint8_t BIT_COUNT_PER_PIXEL_GRAYSCALE = 4;
-constexpr uint8_t BIT_COUNT_PER_PIXEL_BINARY = 1;
-
-constexpr uint8_t PIXEL_COUNT_PER_BYTE_GRAYSCALE = BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_GRAYSCALE;
-constexpr uint8_t PIXEL_COUNT_PER_BYTE_BINARY = BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_BINARY;
-#+END_SRC
 
 *** Quarter Panel
 
@@ -74,7 +48,8 @@ constexpr uint8_t PIXEL_COUNT_PER_BYTE_BINARY = BIT_COUNT_PER_BYTE / BIT_COUNT_P
 #+BEGIN_SRC cpp
 constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL_ROW = 8;
 constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL_COL = 8;
-constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL = PIXEL_COUNT_PER_QUARTER_PANEL_ROW * PIXEL_COUNT_PER_QUARTER_PANEL_COL;
+constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL = \
+  PIXEL_COUNT_PER_QUARTER_PANEL_ROW * PIXEL_COUNT_PER_QUARTER_PANEL_COL; // 64
 #+END_SRC
 
 Pixel numbering for each pixel in a quarter panel:
@@ -83,9 +58,29 @@ Pixel numbering for each pixel in a quarter panel:
 
 **** Grayscale
 
+In grayscale mode, each LED can be one of sixteen brightness levels.
+
+#+html: <img src="./images/grayscale.png" width="420px"
+
+#+BEGIN_SRC cpp
+constexpr uint8_t BIT_COUNT_PER_PIXEL_GRAYSCALE = 4;
+constexpr uint8_t PIXEL_COUNT_PER_BYTE_GRAYSCALE = \
+  BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_GRAYSCALE; // 2
+#+END_SRC
+
 #+html: <img src="./images/quarter_panel_grayscale.png" width="1200px">
 
 **** Binary
+
+In binary mode, each LED can be one of two brightness levels, on or off.
+
+#+html: <img src="./images/binary.png" width="420px"
+
+#+BEGIN_SRC cpp
+constexpr uint8_t BIT_COUNT_PER_PIXEL_BINARY = 1;
+constexpr uint8_t PIXEL_COUNT_PER_BYTE_BINARY = \
+  BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_BINARY; // 8
+#+END_SRC
 
 #+html: <img src="./images/quarter_panel_binary.png" width="1200px">
 
