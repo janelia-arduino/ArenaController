@@ -45,13 +45,6 @@ An arena is a set of panels arranged in rows and columns.
 
 **** Pixels
 
-#+BEGIN_SRC cpp
-constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL_ROW = 8;
-constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL_COL = 8;
-constexpr uint8_t PIXEL_COUNT_PER_QUARTER_PANEL = \
-  PIXEL_COUNT_PER_QUARTER_PANEL_ROW * PIXEL_COUNT_PER_QUARTER_PANEL_COL; // 64
-#+END_SRC
-
 Pixel numbering for each pixel in a quarter panel:
 
 #+html: <img src="./images/quarter_panel_pixels.png" width="1200px">
@@ -62,12 +55,6 @@ In grayscale mode, each LED can be one of sixteen brightness levels.
 
 #+html: <img src="./images/grayscale.png" width="420px">
 
-#+BEGIN_SRC cpp
-constexpr uint8_t BIT_COUNT_PER_PIXEL_GRAYSCALE = 4;
-constexpr uint8_t PIXEL_COUNT_PER_BYTE_GRAYSCALE = \
-  BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_GRAYSCALE; // 2
-#+END_SRC
-
 #+html: <img src="./images/quarter_panel_grayscale.png" width="1200px">
 
 **** Binary
@@ -76,36 +63,11 @@ In binary mode, each LED can be one of two brightness levels, on or off.
 
 #+html: <img src="./images/binary.png" width="420px">
 
-#+BEGIN_SRC cpp
-constexpr uint8_t BIT_COUNT_PER_PIXEL_BINARY = 1;
-constexpr uint8_t PIXEL_COUNT_PER_BYTE_BINARY = \
-  BIT_COUNT_PER_BYTE / BIT_COUNT_PER_PIXEL_BINARY; // 8
-#+END_SRC
-
 #+html: <img src="./images/quarter_panel_binary.png" width="1200px">
-
-**** Message Bytes
-
-#+BEGIN_SRC cpp
-constexpr uint8_t BYTE_COUNT_PER_QUARTER_PANEL_CONTROL = 1;
-constexpr uint8_t BYTE_COUNT_PER_QUARTER_PANEL_GRAYSCALE = \
-  BYTE_COUNT_PER_QUARTER_PANEL_CONTROL + \
-  PIXEL_COUNT_PER_QUARTER_PANEL/PIXEL_COUNT_PER_BYTE_GRAYSCALE; // 33
-constexpr uint8_t BYTE_COUNT_PER_QUARTER_PANEL_BINARY = \
-  BYTE_COUNT_PER_QUARTER_PANEL_CONTROL + \
-  PIXEL_COUNT_PER_QUARTER_PANEL/PIXEL_COUNT_PER_BYTE_BINARY; // 9
-#+END_SRC
 
 *** Panel
 
 **** Quarter Panels in Panel
-
-#+BEGIN_SRC cpp
-constexpr uint8_t QUARTER_PANEL_COUNT_PER_PANEL_ROW = 2;
-constexpr uint8_t QUARTER_PANEL_COUNT_PER_PANEL_COL = 2;
-constexpr uint8_t QUARTER_PANEL_COUNT_PER_PANEL = \
-  QUARTER_PANEL_COUNT_PER_PANEL_ROW * QUARTER_PANEL_COUNT_PER_PANEL_COL; // 4
-#+END_SRC
 
 Quarter panel numbering for each quarter panel in a panel plus pixel numbering for select pixels in a panel:
 
@@ -115,11 +77,6 @@ Quarter panel numbering for each quarter panel in a panel plus pixel numbering f
 
 
 **** Panels in Arena
-
-#+BEGIN_SRC cpp
-constexpr uint8_t PANEL_COUNT_MAX_PER_ARENA_ROW = 5;
-constexpr uint8_t PANEL_COUNT_MAX_PER_ARENA_COL = 6;
-#+END_SRC
 
 Panel numbering for each panel in an arena:
 
