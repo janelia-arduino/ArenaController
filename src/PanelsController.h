@@ -18,12 +18,17 @@ class PanelsController
 {
 public:
   PanelsController();
+
   void setup();
   void update();
+
+  void transferFrameSynchronously();
 private:
   uint8_t panel_row_index_;
   uint8_t panel_col_index_;
   const SPISettings spi_settings_;
+
+  void transferPanelSynchronously();
 };
 
 #endif

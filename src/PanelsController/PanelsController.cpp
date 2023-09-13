@@ -16,6 +16,7 @@ spi_settings_(SPISettings(constants::SPI_CLOCK, constants::SPI_BIT_ORDER, consta
 void PanelsController::setup()
 {
   SPI.begin();
+  SPI1.begin();
   Serial.begin(115200);
   // panel_row_index_ = 0;
   // panel_col_index_ = 0;
@@ -57,4 +58,27 @@ void PanelsController::update()
   //     panel_row_index_ = 0;
   //   }
   // }
+}
+PANEL_COUNT_MAX_PER_ARENA_ROW
+void PanelsController::transferFrameSynchronously()
+{
+  SPI.beginTransaction(spi_settings_);
+  for (uint16_t i = 0; i<constants::BYTE_COUNT_MAX_PER_ARENA_GRAYSCALE; ++i)
+  {
+    for (uint16_t r = 0; i<PANEL_COUNT_MAX_PER_ARENA_ROW; ++r)
+    {
+      SPI.transfer(1);
+    }
+  }
+  SPI.endTransaction();
+
+  Serial.println(constants::BYTE_COUNT_MAX_PER_ARENA_GRAYSCALE);
+}
+
+void PanelsController::transferPanelSynchronously()
+{
+  for (uint16_t i = 0; i<constants::BYTE_COUNT_MAX_PER_ARENA_GRAYSCALE; ++i)
+  {
+    SPI.transfer(1);
+  }
 }
