@@ -28,6 +28,7 @@ private:
   uint8_t panel_col_index_;
   const SPISettings spi_settings_;
 
+  void setupPanelClockSelectPins();
   void transferPanelSynchronously();
 };
 
