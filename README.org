@@ -102,12 +102,9 @@ mkdir -p ~/tmp && cd ~/tmp && git clone https://github.com/janelia-arduino/Panel
 **** Example
 
 #+BEGIN_SRC sh
-sudo apt install -y python3-venv
+sudo apt install -y python3-venv make
 cd ~/tmp/PanelsController
-python3 -m venv .venv
-source .venv/bin/activate
-pip install platformio
-pio --version
+make venv
 #+END_SRC
 
 **** 99-platformio-udev.rules
@@ -146,7 +143,7 @@ sudo apt-get purge --auto-remove modemmanager
 
 #+BEGIN_SRC sh
 cd ~/tmp/PanelsController
-pio run
+make firmware
 #+END_SRC
 
 *** Upload the firmware
@@ -155,5 +152,14 @@ pio run
 
 #+BEGIN_SRC sh
 cd ~/tmp/PanelsController
-pio run -e teensy41 -t upload
+make upload
+#+END_SRC
+
+*** Monitor
+
+**** Example
+
+#+BEGIN_SRC sh
+cd ~/tmp/PanelsController
+make monitor
 #+END_SRC
