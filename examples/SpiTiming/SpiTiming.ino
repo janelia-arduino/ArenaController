@@ -11,5 +11,7 @@ void setup()
 void loop()
 {
   dev.transferFrameSynchronously();
+  delay(1);
+  dev.transferFrameAsynchronously();
   delay(1000);
 }
