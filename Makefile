@@ -1,3 +1,7 @@
+MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+MAKEFILE_DIR := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
+MAKEFILE_DIR_ABS := $(dir $(MAKEFILE_PATH))
+
 .PHONY: venv
 venv:
 	rm -rf .venv;\
@@ -10,9 +14,10 @@ venv:
 clean:
 	rm -rf .pio
 
-.PHONY: firmware
-firmware: clean
-	. .venv/bin/activate; pio run -e teensy41
+.PHONY: spi-timing-firmware
+spi-timing-firmware: PLATFORMIO_SRC_DIR=$(MAKEFILE_DIR_ABS)examples/SpiTiming
+spi-timing-firmware: clean
+	echo $(PLATFORMIO_SRC_DIR); . .venv/bin/activate; pio run -e teensy41
 
 .PHONY: upload
 upload: clean
