@@ -33,9 +33,15 @@ A panel is a set of quarter panels arranged in rows and columns.
 
 #+html: <img src="./images/panel.png" width="192px">
 
+*** Region
+
+A region is a set of panels arranged in rows and columns with a common communication interface.
+
+#+html: <img src="./images/region.png" width="607px">
+
 *** Arena
 
-An arena is a set of panels arranged in rows and columns.
+An arena is a set of regions arranged in rows and columns.
 
 #+html: <img src="./images/arena.png" width="1214px">
 
@@ -73,14 +79,33 @@ Quarter panel numbering for each quarter panel in a panel plus pixel numbering f
 
 #+html: <img src="./images/panel_quarter_panels.png" width="1200px">
 
-*** Arena
+*** Region
 
+**** Regions in Arena
+
+Region numbering for each region in an arena:
+
+#+html: <img src="./images/arena_regions.png" width="1200px">
+
+**** Panels in Region
+
+Panel numbering for each panel in an region:
+
+#+html: <img src="./images/region_panels.png" width="600px">
+
+*** Arena
 
 **** Panels in Arena
 
-Panel numbering for each panel in an arena:
+Panel update order for each panel in an arena:
 
-#+html: <img src="./images/arena_panels.png" width="1200px">
+***** Synchronous
+
+#+html: <img src="./images/arena_panels_synchronous.png" width="1200px">
+
+***** Asynchronous
+
+#+html: <img src="./images/arena_panels_asynchronous.png" width="1200px">
 
 * Development
 
