@@ -68,15 +68,15 @@ void PanelsController::update()
 
 void PanelsController::transferFrameSynchronously()
 {
-  for (uint8_t s = 0; s<constants::SPI_COUNT_PER_ARENA; ++s)
+  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
   {
-    SPIClass & spi = *(constants::SPI_PTRS[s]);
+    SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
     spi.beginTransaction(spi_settings_);
-    for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_ARENA_SPI_COL; ++c)
+    for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
     {
-      for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_ARENA_SPI_ROW; ++r)
+      for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
       {
-        const uint8_t & cs_pin = constants::PANEL_CLOCK_SELECT_PINS[s][r][c];
+        const uint8_t & cs_pin = constants::PANEL_CLOCK_SELECT_PINS[g][r][c];
         digitalWriteFast(cs_pin, LOW);
         for (uint8_t b = 0; b<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++b)
         {
@@ -91,13 +91,13 @@ void PanelsController::transferFrameSynchronously()
 
 void PanelsController::transferFrameAsynchronously()
 {
-  for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_ARENA_SPI_COL; ++c)
+  for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
   {
-    for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_ARENA_SPI_ROW; ++r)
+    for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
     {
-      for (uint8_t s = 0; s<constants::SPI_COUNT_PER_ARENA; ++s)
+      for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
       {
-        SPIClass & spi = *(constants::SPI_PTRS[s]);
+        SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
         spi.beginTransaction(spi_settings_);
       }
 
@@ -105,28 +105,28 @@ void PanelsController::transferFrameAsynchronously()
       digitalWriteFast(cs_pin, LOW);
 
       // bool all_spi_finished = false;
-      for (uint8_t s = 0; s<constants::SPI_COUNT_PER_ARENA; ++s)
+      for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
       {
-        // spi_finished[s] = false;
-        SPIClass & spi = *(constants::SPI_PTRS[s]);
-        spi.transfer(output_buffers_[s], input_buffers_[s], constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, event_responder_);
+        // spi_finished[g] = false;
+        SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
+        spi.transfer(output_buffers_[g], input_buffers_[g], constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, event_responder_);
       }
 
       delayMicroseconds(300);
       // while (not all_spi_finished)
       // {
       //   all_spi_finished = true;
-      //   for (uint8_t s = 0; s<constants::SPI_COUNT_PER_ARENA; ++s)
+      //   for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
       //   {
-      //     all_spi_finished = (all_spi_not_finished and spi_finished[s]);
+      //     all_spi_finished = (all_spi_not_finished and spi_finished[g]);
       //   }
       // }
 
       digitalWriteFast(cs_pin, HIGH);
 
-      for (uint8_t s = 0; s<constants::SPI_COUNT_PER_ARENA; ++s)
+      for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
       {
-        SPIClass & spi = *(constants::SPI_PTRS[s]);
+        SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
         spi.endTransaction();
       }
     }
@@ -137,13 +137,13 @@ void PanelsController::transferFrameAsynchronously()
 
 void PanelsController::setupPanelClockSelectPins()
 {
-  for (uint8_t s = 0; s<constants::SPI_COUNT_PER_ARENA; ++s)
+  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
   {
-    for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_ARENA_SPI_COL; ++c)
+    for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
     {
-      for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_ARENA_SPI_ROW; ++r)
+      for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
       {
-        const uint8_t & cs_pin = constants::PANEL_CLOCK_SELECT_PINS[s][r][c];
+        const uint8_t & cs_pin = constants::PANEL_CLOCK_SELECT_PINS[g][r][c];
         pinMode(cs_pin, OUTPUT);
         digitalWriteFast(cs_pin, HIGH);
       }
@@ -153,11 +153,11 @@ void PanelsController::setupPanelClockSelectPins()
 
 void PanelsController::setupOutputBuffers()
 {
-  for (uint8_t s = 0; s<constants::SPI_COUNT_PER_ARENA; ++s)
+  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
   {
     for (uint8_t b = 0; b<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++b)
     {
-      output_buffers_[s][b] = 1;
+      output_buffers_[g][b] = 1;
     }
   }
 }
