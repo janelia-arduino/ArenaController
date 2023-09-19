@@ -10,63 +10,32 @@
 
 using namespace panels_controller;
 
-PanelsController::PanelsController() :
+void Region::setup()
+{
+  for (uint8_t b = 0; b<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++b)
+  {
+    output_buffers[b] = 1;
+  }
+}
+
+Arena::Arena() :
 spi_settings_(SPISettings(constants::SPI_CLOCK, constants::SPI_BIT_ORDER, constants::SPI_DATA_MODE))
 {}
 
-void PanelsController::setup()
+void Arena::setup()
 {
-  Serial.begin(115200);
-
-  setupPanelClockSelectPins();
+  setupPanelSelectPins();
   setupOutputBuffers();
 
   SPI.begin();
   SPI1.begin();
-
-  // panel_row_index_ = 0;
-  // panel_col_index_ = 0;
 }
 
-void PanelsController::update()
+void Arena::update()
 {
-  // SPI.beginTransaction(spi_settings_);
-  // for (uint16_t i = 0; i<constants::BYTE_COUNT_MAX_PER_ARENA_GRAYSCALE; ++i)
-  // {
-  //   SPI.transfer(1);
-  // }
-  // SPI.endTransaction();
-
-  // Serial.println(constants::BYTE_COUNT_MAX_PER_ARENA_GRAYSCALE);
-
-  // long panel_spi_address = (long)panels_controller::constants::PANEL_SPI_PTRS[panel_row_index_][panel_col_index_];
-  // uint8_t panel_clock_select_pin = panels_controller::constants::PANEL_CLOCK_SELECT_PINS[panel_row_index_][panel_col_index_];
-
-  // Serial.print("panel spi address at row: ");
-  // Serial.print(panel_row_index_);
-  // Serial.print(", col: ");
-  // Serial.print(panel_col_index_);
-  // Serial.print(" = ");
-  // Serial.println(panel_spi_address);
-
-  // Serial.print("panel clock select pin at row: ");
-  // Serial.print(panel_row_index_);
-  // Serial.print(", col: ");
-  // Serial.print(panel_col_index_);
-  // Serial.print(" = ");
-  // Serial.println(panel_clock_select_pin);
-
-  // if (++panel_col_index_ == panels_controller::constants::ARENA_PANEL_COUNT_MAX_PER_COL)
-  // {
-  //   panel_col_index_ = 0;
-  //   if (++panel_row_index_ == panels_controller::constants::ARENA_PANEL_COUNT_MAX_PER_ROW)
-  //   {
-  //     panel_row_index_ = 0;
-  //   }
-  // }
 }
 
-void PanelsController::transferFrameSynchronously()
+void Arena::transferFrameSynchronously()
 {
   for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
   {
@@ -76,7 +45,7 @@ void PanelsController::transferFrameSynchronously()
     {
       for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
       {
-        const uint8_t & cs_pin = constants::PANEL_CLOCK_SELECT_PINS[g][r][c];
+        const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[r][c];
         digitalWriteFast(cs_pin, LOW);
         for (uint8_t b = 0; b<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++b)
         {
@@ -89,7 +58,7 @@ void PanelsController::transferFrameSynchronously()
   }
 }
 
-void PanelsController::transferFrameAsynchronously()
+void Arena::transferFrameAsynchronously()
 {
   for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
   {
@@ -101,7 +70,7 @@ void PanelsController::transferFrameAsynchronously()
         spi.beginTransaction(spi_settings_);
       }
 
-      const uint8_t & cs_pin = constants::PANEL_CLOCK_SELECT_PINS[0][r][c];
+      const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[r][c];
       digitalWriteFast(cs_pin, LOW);
 
       // bool all_spi_finished = false;
@@ -109,7 +78,7 @@ void PanelsController::transferFrameAsynchronously()
       {
         // spi_finished[g] = false;
         SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
-        spi.transfer(output_buffers_[g], input_buffers_[g], constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, event_responder_);
+        spi.transfer(output_buffers_[g], NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, event_);
       }
 
       delayMicroseconds(300);
@@ -133,39 +102,45 @@ void PanelsController::transferFrameAsynchronously()
   }
 }
 
-
-
-void PanelsController::setupPanelClockSelectPins()
+void Arena::setupPanelSelectPins()
 {
-  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
+  for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
   {
-    for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
+    for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
     {
-      for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
-      {
-        const uint8_t & cs_pin = constants::PANEL_CLOCK_SELECT_PINS[g][r][c];
-        pinMode(cs_pin, OUTPUT);
-        digitalWriteFast(cs_pin, HIGH);
-      }
+      const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[r][c];
+      pinMode(cs_pin, OUTPUT);
+      digitalWriteFast(cs_pin, HIGH);
     }
   }
 }
 
-void PanelsController::setupOutputBuffers()
+void Arena::setupRegions()
 {
   for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
   {
-    for (uint8_t b = 0; b<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++b)
-    {
-      output_buffers_[g][b] = 1;
-    }
+    regions_[g].setup();
   }
 }
 
-void PanelsController::transferPanelSynchronously()
+void PanelsController::setup()
 {
-  for (uint16_t i = 0; i<constants::BYTE_COUNT_MAX_PER_ARENA_GRAYSCALE; ++i)
-  {
-    SPI.transfer(1);
-  }
+  Serial.begin(115200);
+
+  arena_.setup();
+}
+
+void PanelsController::update()
+{
+  arena_.update();
+}
+
+void PanelsController::transferFrameSynchronously()
+{
+  arena_.transferFrameSynchronously();
+}
+
+void PanelsController::transferFrameAsynchronously()
+{
+  arena_.transferFrameAsynchronously();
 }

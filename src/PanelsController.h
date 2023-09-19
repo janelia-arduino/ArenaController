@@ -16,11 +16,21 @@
 
 
 // bool spi_finished[panel_controller::constants::SPI_COUNT_PER_ARENA];
+void asyncEventResponder(EventResponderRef event_responder);
 
-class PanelsController
+class Region
 {
 public:
-  PanelsController();
+  void setup();
+
+  uint8_t output_buffer_[panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
+  EventResponder transferred_event_;
+};
+
+class Arena
+{
+public:
+  Arena();
 
   void setup();
   void update();
@@ -28,16 +38,23 @@ public:
   void transferFrameSynchronously();
   void transferFrameAsynchronously();
 private:
-  uint8_t panel_row_index_;
-  uint8_t panel_col_index_;
   const SPISettings spi_settings_;
-  uint8_t output_buffers_[panels_controller::constants::REGION_COUNT_PER_ARENA][panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
-  uint8_t input_buffers_[panels_controller::constants::REGION_COUNT_PER_ARENA][panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
-  EventResponder event_responder_;
+  Region regions_[panels_controller::constants::REGION_COUNT_PER_ARENA];
 
-  void setupPanelClockSelectPins();
-  void setupOutputBuffers();
-  void transferPanelSynchronously();
+  void setupPanelSelectPins();
+  void setupRegions();
+};
+
+class PanelsController
+{
+public:
+  void setup();
+  void update();
+
+  void transferFrameSynchronously();
+  void transferFrameAsynchronously();
+private:
+  Arena arena_;
 };
 
 #endif
