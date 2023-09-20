@@ -15,9 +15,6 @@
 #include "Constants.h"
 
 
-// bool spi_finished[panel_controller::constants::SPI_COUNT_PER_ARENA];
-void asyncEventResponder(EventResponderRef event_responder);
-
 class Region
 {
 public:
@@ -26,10 +23,9 @@ public:
   void endTransaction();
   void transfer();
   bool transferComplete();
-
+private:
   uint8_t output_buffer_[panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
   EventResponder transferred_event_;
-private:
   SPIClass * spi_ptr_;
   volatile bool transfer_complete_;
 };

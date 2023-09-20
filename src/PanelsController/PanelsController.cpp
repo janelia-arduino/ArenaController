@@ -17,7 +17,7 @@ void Region::setup(SPIClass * spi_ptr)
 
   for (uint8_t b = 0; b<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++b)
   {
-    output_buffers[b] = 1;
+    output_buffer_[b] = 1;
   }
 }
 
@@ -33,9 +33,7 @@ void Region::endTransaction()
 
 void Region::transfer()
 {
-    // spi_finished[g] = false;
-    SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
-    spi.transfer(output_buffers_[g], NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, event_);
+    spi_ptr_->transfer(output_buffer_, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, transferred_event_);
 }
 
 bool Region::transferComplete()
@@ -118,10 +116,11 @@ void Arena::transferPanels(uint8_t r, uint8_t c)
     regions_[g].transfer();
   }
 
-  while (not allTransfersComplete())
-  {
-    yield();
-  }
+  delayMicroseconds(300);
+  // while (not allTransfersComplete())
+  // {
+  //   yield();
+  // }
 
   digitalWriteFast(cs_pin, HIGH);
 }
