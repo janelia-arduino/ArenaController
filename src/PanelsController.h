@@ -21,10 +21,16 @@ void asyncEventResponder(EventResponderRef event_responder);
 class Region
 {
 public:
-  void setup();
+  void setup(SPIClass * spi_ptr);
+  void beginTransaction(SPISettings spi_settings);
+  void endTransaction();
+  void transfer();
 
   uint8_t output_buffer_[panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
   EventResponder transferred_event_;
+private:
+  SPIClass * spi_ptr_;
+  volatile bool transfer_complete_;
 };
 
 class Arena
@@ -35,14 +41,16 @@ public:
   void setup();
   void update();
 
-  void transferFrameSynchronously();
-  void transferFrameAsynchronously();
 private:
   const SPISettings spi_settings_;
   Region regions_[panels_controller::constants::REGION_COUNT_PER_ARENA];
 
   void setupPanelSelectPins();
   void setupRegions();
+  void beginTransactions();
+  void endTransactions();
+  void transferRegions();
+  void transferPanels(uint8_t r, uint8_t c);
 };
 
 class PanelsController
@@ -50,9 +58,6 @@ class PanelsController
 public:
   void setup();
   void update();
-
-  void transferFrameSynchronously();
-  void transferFrameAsynchronously();
 private:
   Arena arena_;
 };
