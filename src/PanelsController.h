@@ -25,6 +25,7 @@ public:
   void beginTransaction(SPISettings spi_settings);
   void endTransaction();
   void transfer();
+  bool transferComplete();
 
   uint8_t output_buffer_[panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
   EventResponder transferred_event_;
@@ -51,6 +52,7 @@ private:
   void endTransactions();
   void transferRegions();
   void transferPanels(uint8_t r, uint8_t c);
+  bool allTransfersComplete();
 };
 
 class PanelsController

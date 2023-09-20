@@ -31,6 +31,18 @@ void Region::endTransaction()
   spi_ptr_->endTransaction();
 }
 
+void Region::transfer()
+{
+    // spi_finished[g] = false;
+    SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
+    spi.transfer(output_buffers_[g], NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, event_);
+}
+
+bool Region::transferComplete()
+{
+  return transfer_complete_;
+}
+
 Arena::Arena() :
 spi_settings_(SPISettings(constants::SPI_CLOCK, constants::SPI_BIT_ORDER, constants::SPI_DATA_MODE))
 {}
@@ -101,25 +113,27 @@ void Arena::transferPanels(uint8_t r, uint8_t c)
   const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[r][c];
   digitalWriteFast(cs_pin, LOW);
 
-  // bool all_spi_finished = false;
   for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
   {
-    // spi_finished[g] = false;
-    SPIClass & spi = *(constants::REGION_SPI_PTRS[g]);
-    spi.transfer(output_buffers_[g], NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, event_);
+    regions_[g].transfer();
   }
 
-  delayMicroseconds(300);
-  // while (not all_spi_finished)
-  // {
-  //   all_spi_finished = true;
-  //   for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
-  //   {
-  //     all_spi_finished = (all_spi_not_finished and spi_finished[g]);
-  //   }
-  // }
+  while (not allTransfersComplete())
+  {
+    yield();
+  }
 
   digitalWriteFast(cs_pin, HIGH);
+}
+
+bool Arena::allTransfersComplete()
+{
+  bool all_transfers_complete = true;
+  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
+  {
+    all_transfers_complete = all_transfers_complete and regions_[g].transferComplete();
+  }
+  return all_transfers_complete;
 }
 
 void PanelsController::setup()
