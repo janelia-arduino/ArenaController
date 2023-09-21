@@ -10,6 +10,34 @@
 
 using namespace panels_controller;
 
+void TransferTracker::setup()
+{
+  panel_transfer_complete_event_.attachImmediate(&TransferTracker::transferCompleteCallback);
+}
+
+EventResponderRef TransferTracker::getPanelTransferCompleteEvent()
+{
+  return panel_transfer_complete_event_;
+}
+
+void TransferTracker::beginPanelTransfers()
+{
+  panel_transfer_complete_count_ = 0;
+}
+
+bool TransferTracker::allPanelTransfersComplete()
+{
+  return panel_transfer_complete_count_ == constants::REGION_COUNT_PER_ARENA;
+}
+
+void TransferTracker::transferCompleteCallback(EventResponderRef event_responder)
+{
+  ++panel_transfer_complete_count_;
+}
+
+EventResponder TransferTracker::panel_transfer_complete_event_;
+uint8_t TransferTracker::panel_transfer_complete_count_ = 0;
+
 void Region::setup(SPIClass * spi_ptr)
 {
   spi_ptr_ = spi_ptr;
@@ -33,12 +61,7 @@ void Region::endTransaction()
 
 void Region::transfer()
 {
-    spi_ptr_->transfer(output_buffer_, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, transferred_event_);
-}
-
-bool Region::transferComplete()
-{
-  return transfer_complete_;
+  spi_ptr_->transfer(output_buffer_, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, TransferTracker::getPanelTransferCompleteEvent());
 }
 
 Arena::Arena() :
@@ -49,6 +72,7 @@ void Arena::setup()
 {
   setupPanelSelectPins();
   setupRegions();
+  TransferTracker::setup();
 }
 
 void Arena::update()
@@ -108,6 +132,8 @@ void Arena::transferRegions()
 
 void Arena::transferPanels(uint8_t r, uint8_t c)
 {
+  TransferTracker::beginPanelTransfers();
+
   const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[r][c];
   digitalWriteFast(cs_pin, LOW);
 
@@ -116,23 +142,12 @@ void Arena::transferPanels(uint8_t r, uint8_t c)
     regions_[g].transfer();
   }
 
-  delayMicroseconds(300);
-  // while (not allTransfersComplete())
-  // {
-  //   yield();
-  // }
+  while (not TransferTracker::allPanelTransfersComplete())
+  {
+    yield();
+  }
 
   digitalWriteFast(cs_pin, HIGH);
-}
-
-bool Arena::allTransfersComplete()
-{
-  bool all_transfers_complete = true;
-  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
-  {
-    all_transfers_complete = all_transfers_complete and regions_[g].transferComplete();
-  }
-  return all_transfers_complete;
 }
 
 void PanelsController::setup()

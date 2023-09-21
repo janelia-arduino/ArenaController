@@ -15,6 +15,25 @@
 #include "Constants.h"
 
 
+// volatile bool event_happened = false;
+// void asyncEventResponder(EventResponderRef event_responder)
+// {
+//   digitalWriteFast(CS_PIN, HIGH);
+//   event_happened = true;
+// }
+class TransferTracker
+{
+public:
+  static void setup();
+  static EventResponderRef getPanelTransferCompleteEvent();
+  static void beginPanelTransfers();
+  static bool allPanelTransfersComplete();
+  static void transferCompleteCallback(EventResponderRef event_responder);
+private:
+  static EventResponder panel_transfer_complete_event_;
+  static uint8_t panel_transfer_complete_count_;
+};
+
 class Region
 {
 public:
@@ -22,12 +41,9 @@ public:
   void beginTransaction(SPISettings spi_settings);
   void endTransaction();
   void transfer();
-  bool transferComplete();
 private:
   uint8_t output_buffer_[panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
-  EventResponder transferred_event_;
   SPIClass * spi_ptr_;
-  volatile bool transfer_complete_;
 };
 
 class Arena
@@ -48,7 +64,6 @@ private:
   void endTransactions();
   void transferRegions();
   void transferPanels(uint8_t r, uint8_t c);
-  bool allTransfersComplete();
 };
 
 class PanelsController
