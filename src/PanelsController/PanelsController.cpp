@@ -12,56 +12,67 @@ using namespace panels_controller;
 
 void TransferTracker::setup()
 {
-  panel_transfer_complete_event_.attachImmediate(&TransferTracker::transferCompleteCallback);
+  transfer_panel_complete_event_.attachImmediate(&TransferTracker::transferPanelCompleteCallback);
 }
 
-EventResponderRef TransferTracker::getPanelTransferCompleteEvent()
+EventResponderRef TransferTracker::getTransferPanelCompleteEvent()
 {
-  return panel_transfer_complete_event_;
+  return transfer_panel_complete_event_;
 }
 
-void TransferTracker::beginPanelTransfers()
+void TransferTracker::beginTransferPanels()
 {
-  panel_transfer_complete_count_ = 0;
+  transfer_panel_complete_count_ = 0;
 }
 
-bool TransferTracker::allPanelTransfersComplete()
+void TransferTracker::endTransferPanels()
 {
-  return panel_transfer_complete_count_ == constants::REGION_COUNT_PER_ARENA;
 }
 
-void TransferTracker::transferCompleteCallback(EventResponderRef event_responder)
+bool TransferTracker::allTransferPanelsComplete()
 {
-  ++panel_transfer_complete_count_;
+  return transfer_panel_complete_count_ == constants::REGION_COUNT_PER_ARENA;
 }
 
-EventResponder TransferTracker::panel_transfer_complete_event_;
-uint8_t TransferTracker::panel_transfer_complete_count_ = 0;
+void TransferTracker::transferPanelCompleteCallback(EventResponderRef event_responder)
+{
+  ++transfer_panel_complete_count_;
+}
+
+EventResponder TransferTracker::transfer_panel_complete_event_;
+uint8_t TransferTracker::transfer_panel_complete_count_ = 0;
 
 void Region::setup(SPIClass * spi_ptr)
 {
   spi_ptr_ = spi_ptr;
   spi_ptr_->begin();
 
-  for (uint8_t b = 0; b<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++b)
+  for (uint8_t byte_index = 0; byte_index<constants::BYTE_COUNT_PER_PANEL_GRAYSCALE; ++byte_index)
   {
-    output_buffer_[b] = 1;
+    if ((byte_index == 0) || (byte_index == 33) || (byte_index == 66) || (byte_index == 99))
+    {
+      output_buffer_[byte_index] = 1;
+    }
+    else
+    {
+      output_buffer_[byte_index] = 25;
+    }
   }
 }
 
-void Region::beginTransaction(SPISettings spi_settings)
+void Region::beginTransferPanel(SPISettings spi_settings)
 {
   spi_ptr_->beginTransaction(spi_settings);
 }
 
-void Region::endTransaction()
+void Region::endTransferPanel()
 {
   spi_ptr_->endTransaction();
 }
 
-void Region::transfer()
+void Region::transferPanel()
 {
-  spi_ptr_->transfer(output_buffer_, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, TransferTracker::getPanelTransferCompleteEvent());
+  spi_ptr_->transfer(output_buffer_, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, TransferTracker::getTransferPanelCompleteEvent());
 }
 
 Arena::Arena() :
@@ -82,11 +93,11 @@ void Arena::update()
 
 void Arena::setupPanelSelectPins()
 {
-  for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
+  for (uint8_t col_index = 0; col_index<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++col_index)
   {
-    for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
+    for (uint8_t row_index = 0; row_index<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++row_index)
     {
-      const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[r][c];
+      const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[row_index][col_index];
       pinMode(cs_pin, OUTPUT);
       digitalWriteFast(cs_pin, HIGH);
     }
@@ -95,54 +106,56 @@ void Arena::setupPanelSelectPins()
 
 void Arena::setupRegions()
 {
-  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
+  for (uint8_t region_index = 0; region_index<constants::REGION_COUNT_PER_ARENA; ++region_index)
   {
-    regions_[g].setup(constants::REGION_SPI_PTRS[g]);
+    regions_[region_index].setup(constants::REGION_SPI_PTRS[region_index]);
   }
 }
 
-void Arena::beginTransactions()
+void Arena::beginTransferPanels()
 {
-  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
+  TransferTracker::beginTransferPanels();
+
+  for (uint8_t region_index = 0; region_index<constants::REGION_COUNT_PER_ARENA; ++region_index)
   {
-    regions_[g].beginTransaction(spi_settings_);
+    regions_[region_index].beginTransferPanel(spi_settings_);
   }
 }
 
-void Arena::endTransactions()
+void Arena::endTransferPanels()
 {
-  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
+  for (uint8_t region_index = 0; region_index<constants::REGION_COUNT_PER_ARENA; ++region_index)
   {
-    regions_[g].endTransaction();
+    regions_[region_index].endTransferPanel();
   }
+
+  TransferTracker::endTransferPanels();
 }
 
 void Arena::transferRegions()
 {
-  for (uint8_t c = 0; c<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++c)
+  for (uint8_t col_index = 0; col_index<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++col_index)
   {
-    for (uint8_t r = 0; r<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++r)
+    for (uint8_t row_index = 0; row_index<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++row_index)
     {
-      beginTransactions();
-      transferPanels(r, c);
-      endTransactions();
+      beginTransferPanels();
+      transferPanels(row_index, col_index);
+      endTransferPanels();
     }
   }
 }
 
-void Arena::transferPanels(uint8_t r, uint8_t c)
+void Arena::transferPanels(uint8_t row_index, uint8_t col_index)
 {
-  TransferTracker::beginPanelTransfers();
-
-  const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[r][c];
+  const uint8_t & cs_pin = constants::PANEL_SELECT_PINS[row_index][col_index];
   digitalWriteFast(cs_pin, LOW);
 
-  for (uint8_t g = 0; g<constants::REGION_COUNT_PER_ARENA; ++g)
+  for (uint8_t region_index = 0; region_index<constants::REGION_COUNT_PER_ARENA; ++region_index)
   {
-    regions_[g].transfer();
+    regions_[region_index].transferPanel();
   }
 
-  while (not TransferTracker::allPanelTransfersComplete())
+  while (not TransferTracker::allTransferPanelsComplete())
   {
     yield();
   }

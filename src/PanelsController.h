@@ -15,32 +15,27 @@
 #include "Constants.h"
 
 
-// volatile bool event_happened = false;
-// void asyncEventResponder(EventResponderRef event_responder)
-// {
-//   digitalWriteFast(CS_PIN, HIGH);
-//   event_happened = true;
-// }
 class TransferTracker
 {
 public:
   static void setup();
-  static EventResponderRef getPanelTransferCompleteEvent();
-  static void beginPanelTransfers();
-  static bool allPanelTransfersComplete();
-  static void transferCompleteCallback(EventResponderRef event_responder);
+  static EventResponderRef getTransferPanelCompleteEvent();
+  static void beginTransferPanels();
+  static void endTransferPanels();
+  static bool allTransferPanelsComplete();
+  static void transferPanelCompleteCallback(EventResponderRef event_responder);
 private:
-  static EventResponder panel_transfer_complete_event_;
-  static uint8_t panel_transfer_complete_count_;
+  static EventResponder transfer_panel_complete_event_;
+  static uint8_t transfer_panel_complete_count_;
 };
 
 class Region
 {
 public:
   void setup(SPIClass * spi_ptr);
-  void beginTransaction(SPISettings spi_settings);
-  void endTransaction();
-  void transfer();
+  void beginTransferPanel(SPISettings spi_settings);
+  void endTransferPanel();
+  void transferPanel();
 private:
   uint8_t output_buffer_[panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
   SPIClass * spi_ptr_;
@@ -60,10 +55,10 @@ private:
 
   void setupPanelSelectPins();
   void setupRegions();
-  void beginTransactions();
-  void endTransactions();
   void transferRegions();
-  void transferPanels(uint8_t r, uint8_t c);
+  void beginTransferPanels();
+  void endTransferPanels();
+  void transferPanels(uint8_t row_index, uint8_t col_index);
 };
 
 class PanelsController
