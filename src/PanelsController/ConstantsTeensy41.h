@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------------
-// TEENSY41.h
+// ConstantsTeensy41.h
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_TEENSY41_CONSTANTS_H
-#define PANELS_CONTROLLER_TEENSY41_CONSTANTS_H
+#ifndef PANELS_CONTROLLER_CONSTANTS_TEENSY41_H
+#define PANELS_CONTROLLER_CONSTANTS_TEENSY41_H
 #include <SPI.h>
 #include "Constants.h"
 

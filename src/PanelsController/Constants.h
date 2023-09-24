@@ -70,5 +70,5 @@ constexpr uint16_t BYTE_COUNT_MAX_PER_ARENA_GRAYSCALE = \
   BYTE_COUNT_PER_PANEL_GRAYSCALE; // 3960
 }
 }
-#include "TEENSY41.h"
+#include "ConstantsTeensy41.h"
 #endif
