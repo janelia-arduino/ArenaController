@@ -28,7 +28,7 @@ private:
   const SPISettings spi_settings_;
   Region regions_[panels_controller::constants::REGION_COUNT_PER_ARENA];
 
-  void setupPanelSelectPins();
+  void setupPins();
   void setupRegions();
   void transferRegions();
   void beginTransferPanels();

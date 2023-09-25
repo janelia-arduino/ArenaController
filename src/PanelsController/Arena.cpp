@@ -16,7 +16,7 @@ spi_settings_(SPISettings(constants::SPI_CLOCK, constants::SPI_BIT_ORDER, consta
 
 void Arena::setup()
 {
-  setupPanelSelectPins();
+  setupPins();
   setupRegions();
   TransferTracker::setup();
 }
@@ -26,8 +26,11 @@ void Arena::update()
   transferRegions();
 }
 
-void Arena::setupPanelSelectPins()
+void Arena::setupPins()
 {
+  pinMode(constants::RESET_PIN, OUTPUT);
+  digitalWriteFast(constants::RESET_PIN, LOW);
+
   for (uint8_t col_index = 0; col_index<constants::PANEL_COUNT_MAX_PER_REGION_COL; ++col_index)
   {
     for (uint8_t row_index = 0; row_index<constants::PANEL_COUNT_MAX_PER_REGION_ROW; ++row_index)

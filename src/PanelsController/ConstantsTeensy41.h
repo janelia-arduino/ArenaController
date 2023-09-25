@@ -16,6 +16,8 @@ namespace panels_controller
 {
 namespace constants
 {
+constexpr uint8_t RESET_PIN = 37;
+
 // region
 constexpr uint8_t REGION_COUNT_PER_ARENA = 2;
 constexpr SPIClass * REGION_SPI_PTRS[REGION_COUNT_PER_ARENA] = {&SPI, &SPI1};
@@ -26,11 +28,11 @@ constexpr uint8_t PANEL_COUNT_MAX_PER_REGION_COL = \
 
 constexpr uint8_t PANEL_SELECT_PINS[PANEL_COUNT_MAX_PER_REGION_ROW][PANEL_COUNT_MAX_PER_REGION_COL] =
 {
-  {5, 10, 24},
-  {6, 11, 25},
-  {7, 21, 26},
-  {8, 22, 27},
-  {9, 23, 28}
+  {3, 8, 32},
+  {4, 9, 33},
+  {5, 29, 34},
+  {6, 30, 35},
+  {7, 31, 36}
 };
 }
 }
