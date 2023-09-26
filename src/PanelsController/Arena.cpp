@@ -90,7 +90,7 @@ void Arena::transferPanels(uint8_t row_index, uint8_t col_index)
 
   for (uint8_t region_index = 0; region_index<constants::REGION_COUNT_PER_ARENA; ++region_index)
   {
-    regions_[region_index].transferPanel();
+    regions_[region_index].transferPanel(row_index, col_index);
   }
 
   while (not TransferTracker::allTransferPanelsComplete())
