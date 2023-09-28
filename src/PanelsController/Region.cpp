@@ -40,6 +40,6 @@ void Region::endTransferPanel()
 void Region::transferPanel(uint8_t row_index, uint8_t col_index)
 {
   // spi_ptr_->transfer(output_buffer_, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, TransferTracker::getTransferPanelCompleteEvent());
-  spi_ptr_->transfer(pattern, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, TransferTracker::getTransferPanelCompleteEvent());
+  spi_ptr_->transfer(patterns::all_on, NULL, constants::BYTE_COUNT_PER_PANEL_GRAYSCALE, TransferTracker::getTransferPanelCompleteEvent());
 }
 
