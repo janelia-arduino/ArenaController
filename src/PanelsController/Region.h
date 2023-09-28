@@ -13,6 +13,7 @@
 #include "Constants.h"
 #include "TransferTracker.h"
 #include "Patterns.h"
+#include "Card.h"
 
 
 class Region

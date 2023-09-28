@@ -15,7 +15,7 @@ namespace panels_controller
 {
 namespace patterns
 {
-constexpr uint8_t all_on[constants::BYTE_COUNT_PER_PANEL_GRAYSCALE] =
+constexpr uint8_t all_on[constants::byte_count_per_panel_grayscale] =
 {
   1,
   255, 255, 255, 255,
@@ -55,7 +55,7 @@ constexpr uint8_t all_on[constants::BYTE_COUNT_PER_PANEL_GRAYSCALE] =
   255, 255, 255, 255,
 };
 
-constexpr uint8_t all_off[constants::BYTE_COUNT_PER_PANEL_GRAYSCALE] =
+constexpr uint8_t all_off[constants::byte_count_per_panel_grayscale] =
 {
   1,
   0, 0, 0, 0,
@@ -95,7 +95,7 @@ constexpr uint8_t all_off[constants::BYTE_COUNT_PER_PANEL_GRAYSCALE] =
   0, 0, 0, 0,
 };
 
-constexpr uint8_t identify_quarter_panels[constants::BYTE_COUNT_PER_PANEL_GRAYSCALE] =
+constexpr uint8_t identify_quarter_panels[constants::byte_count_per_panel_grayscale] =
 {
   1,
   15, 0, 0, 0,

@@ -31,7 +31,7 @@ void TransferTracker::endTransferPanels()
 
 bool TransferTracker::allTransferPanelsComplete()
 {
-  return transfer_panel_complete_count_ == constants::REGION_COUNT_PER_ARENA;
+  return transfer_panel_complete_count_ == constants::region_count_per_arena;
 }
 
 void TransferTracker::transferPanelCompleteCallback(EventResponderRef event_responder)

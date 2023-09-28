@@ -16,17 +16,17 @@ namespace panels_controller
 {
 namespace constants
 {
-constexpr uint8_t RESET_PIN = 37;
+constexpr uint8_t reset_pin = 37;
 
 // region
-constexpr uint8_t REGION_COUNT_PER_ARENA = 2;
-constexpr SPIClass * REGION_SPI_PTRS[REGION_COUNT_PER_ARENA] = {&SPI, &SPI1};
+constexpr uint8_t region_count_per_arena = 2;
+constexpr SPIClass * region_spi_ptrs[region_count_per_arena] = {&SPI, &SPI1};
 
-constexpr uint8_t PANEL_COUNT_MAX_PER_REGION_ROW = PANEL_COUNT_MAX_PER_ARENA_ROW;
-constexpr uint8_t PANEL_COUNT_MAX_PER_REGION_COL = \
-  PANEL_COUNT_MAX_PER_ARENA_COL/REGION_COUNT_PER_ARENA; // 3
+constexpr uint8_t panel_count_max_per_region_row = panel_count_max_per_arena_row;
+constexpr uint8_t panel_count_max_per_region_col = \
+  panel_count_max_per_arena_col/region_count_per_arena; // 3
 
-constexpr uint8_t PANEL_SELECT_PINS[PANEL_COUNT_MAX_PER_REGION_ROW][PANEL_COUNT_MAX_PER_REGION_COL] =
+constexpr uint8_t panel_select_pins[panel_count_max_per_region_row][panel_count_max_per_region_col] =
 {
   {3, 8, 32},
   {4, 9, 33},

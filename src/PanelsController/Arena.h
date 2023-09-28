@@ -26,7 +26,7 @@ public:
 
 private:
   const SPISettings spi_settings_;
-  Region regions_[panels_controller::constants::REGION_COUNT_PER_ARENA];
+  Region regions_[panels_controller::constants::region_count_per_arena];
 
   void setupPins();
   void setupRegions();
