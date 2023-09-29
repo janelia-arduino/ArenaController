@@ -19,12 +19,12 @@ namespace constants
 constexpr uint8_t reset_pin = 37;
 
 // region
-constexpr uint8_t region_count_per_arena = 2;
-constexpr SPIClass * region_spi_ptrs[region_count_per_arena] = {&SPI, &SPI1};
+constexpr uint8_t region_count_per_frame = 2;
+constexpr SPIClass * region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
 
-constexpr uint8_t panel_count_max_per_region_row = panel_count_max_per_arena_row;
+constexpr uint8_t panel_count_max_per_region_row = panel_count_max_per_frame_row;
 constexpr uint8_t panel_count_max_per_region_col = \
-  panel_count_max_per_arena_col/region_count_per_arena; // 3
+  panel_count_max_per_frame_col/region_count_per_frame; // 3
 
 constexpr uint8_t panel_select_pins[panel_count_max_per_region_row][panel_count_max_per_region_col] =
 {

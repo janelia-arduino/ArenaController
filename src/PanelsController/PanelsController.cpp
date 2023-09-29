@@ -21,3 +21,8 @@ void PanelsController::update()
 {
   arena_.update();
 }
+
+void PanelsController::writeFramesToCard()
+{
+  arena_.writeFramesToCard();
+}

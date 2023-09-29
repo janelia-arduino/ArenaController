@@ -13,18 +13,6 @@ void Region::setup(SPIClass * spi_ptr)
 {
   spi_ptr_ = spi_ptr;
   spi_ptr_->begin();
-
-  // for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_panel_grayscale; ++byte_index)
-  // {
-  //   if ((byte_index == 0) || (byte_index == 33) || (byte_index == 66) || (byte_index == 99))
-  //   {
-  //     output_buffer_[byte_index] = 255;
-  //   }
-  //   else
-  //   {
-  //     output_buffer_[byte_index] = 255;
-  //   }
-  // }
 }
 
 void Region::beginTransferPanel(SPISettings spi_settings)
@@ -37,9 +25,7 @@ void Region::endTransferPanel()
   spi_ptr_->endTransaction();
 }
 
-void Region::transferPanel(uint8_t row_index, uint8_t col_index)
+void Region::transferPanel(uint8_t * panel_buffer_ptr, uint8_t panel_buffer_byte_count)
 {
-  // spi_ptr_->transfer(output_buffer_, NULL, constants::byte_count_per_panel_grayscale, TransferTracker::getTransferPanelCompleteEvent());
-  spi_ptr_->transfer(patterns::all_on, NULL, constants::byte_count_per_panel_grayscale, TransferTracker::getTransferPanelCompleteEvent());
+  spi_ptr_->transfer(panel_buffer_ptr, NULL, panel_buffer_byte_count, TransferTracker::getTransferPanelCompleteEvent());
 }
-

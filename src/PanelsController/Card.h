@@ -13,6 +13,7 @@
 #include "Constants.h"
 #include "Patterns.h"
 
+
 // 1 for FAT16/FAT32, 2 for exFAT, 3 for FAT16/FAT32 and exFAT.
 #define SD_FAT_TYPE 2
 
@@ -47,11 +48,16 @@ const uint8_t WRITE_COUNT = 2;
 // Read pass count.
 const uint16_t READ_COUNT = 1000;
 
-
 class Card
 {
 public:
+  void setup();
+  void mkdirDisplay();
+  void chdirDisplay();
+  void openFileForWriting(const char* path);
 private:
+  SdExFat sd_;
+  ExFile file_;
 };
 
 #endif

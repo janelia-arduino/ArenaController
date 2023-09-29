@@ -18,6 +18,8 @@ class PanelsController
 public:
   void setup();
   void update();
+
+  void writeFramesToCard();
 private:
   Arena arena_;
 };

@@ -12,8 +12,6 @@
 
 #include "Constants.h"
 #include "TransferTracker.h"
-#include "Patterns.h"
-#include "Card.h"
 
 
 class Region
@@ -22,9 +20,8 @@ public:
   void setup(SPIClass * spi_ptr);
   void beginTransferPanel(SPISettings spi_settings);
   void endTransferPanel();
-  void transferPanel(uint8_t row_index, uint8_t col_index);
+  void transferPanel(uint8_t * panel_buffer_ptr, uint8_t panel_buffer_byte_count);
 private:
-  // uint8_t output_buffer_[panels_controller::constants::BYTE_COUNT_PER_PANEL_GRAYSCALE];
   SPIClass * spi_ptr_;
 };
 

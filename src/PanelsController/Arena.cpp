@@ -19,11 +19,15 @@ void Arena::setup()
   setupPins();
   setupRegions();
   TransferTracker::setup();
+  card_.setup();
+  frame_index_ = 0;
 }
 
 void Arena::update()
 {
-  transferRegions();
+  beginTransferFrame();
+  transferFrame();
+  endTransferFrame();
 }
 
 void Arena::setupPins()
@@ -44,25 +48,52 @@ void Arena::setupPins()
 
 void Arena::setupRegions()
 {
-  for (uint8_t region_index = 0; region_index<constants::region_count_per_arena; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
     regions_[region_index].setup(constants::region_spi_ptrs[region_index]);
   }
 }
 
-void Arena::beginTransferPanels()
+void Arena::beginTransferFrame()
+{
+  sprintf(file_name_, "f%d", frame_index_);
+  Serial.println(file_name_);
+}
+
+void Arena::endTransferFrame()
+{
+  if (++frame_index_ == constants::frame_count)
+  {
+    frame_index_ = 0;
+  };
+}
+
+void Arena::transferFrame()
+{
+  for (uint8_t col_index = 0; col_index<constants::panel_count_max_per_region_col; ++col_index)
+  {
+    for (uint8_t row_index = 0; row_index<constants::panel_count_max_per_region_row; ++row_index)
+    {
+      beginTransferPanelsAcrossRegions();
+      transferPanelsAcrossRegions(row_index, col_index);
+      endTransferPanelsAcrossRegions();
+    }
+  }
+}
+
+void Arena::beginTransferPanelsAcrossRegions()
 {
   TransferTracker::beginTransferPanels();
 
-  for (uint8_t region_index = 0; region_index<constants::region_count_per_arena; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
     regions_[region_index].beginTransferPanel(spi_settings_);
   }
 }
 
-void Arena::endTransferPanels()
+void Arena::endTransferPanelsAcrossRegions()
 {
-  for (uint8_t region_index = 0; region_index<constants::region_count_per_arena; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
     regions_[region_index].endTransferPanel();
   }
@@ -70,27 +101,21 @@ void Arena::endTransferPanels()
   TransferTracker::endTransferPanels();
 }
 
-void Arena::transferRegions()
-{
-  for (uint8_t col_index = 0; col_index<constants::panel_count_max_per_region_col; ++col_index)
-  {
-    for (uint8_t row_index = 0; row_index<constants::panel_count_max_per_region_row; ++row_index)
-    {
-      beginTransferPanels();
-      transferPanels(row_index, col_index);
-      endTransferPanels();
-    }
-  }
-}
-
-void Arena::transferPanels(uint8_t row_index, uint8_t col_index)
+void Arena::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
 {
   const uint8_t & cs_pin = constants::panel_select_pins[row_index][col_index];
   digitalWriteFast(cs_pin, LOW);
 
-  for (uint8_t region_index = 0; region_index<constants::region_count_per_arena; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    regions_[region_index].transferPanel(row_index, col_index);
+    if (frame_index_ < constants::half_frame_count)
+    {
+      regions_[region_index].transferPanel(patterns::all_on, constants::byte_count_per_panel_grayscale);
+    }
+    else
+    {
+      regions_[region_index].transferPanel(patterns::all_off, constants::byte_count_per_panel_grayscale);
+    }
   }
 
   while (not TransferTracker::allTransferPanelsComplete())
@@ -99,4 +124,16 @@ void Arena::transferPanels(uint8_t row_index, uint8_t col_index)
   }
 
   digitalWriteFast(cs_pin, HIGH);
+}
+
+void Arena::writeFramesToCard()
+{
+  card_.mkdirDisplay();
+  card_.chdirDisplay();
+
+  for (uint8_t frame_index = 0; frame_index<constants::frame_count; ++frame_index)
+  {
+    sprintf(file_name_, "f%d", frame_index);
+    card_.open(file_name_);
+  }
 }
