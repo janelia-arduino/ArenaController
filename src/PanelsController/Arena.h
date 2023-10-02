@@ -29,13 +29,19 @@ public:
   void writeFramesToCard();
 private:
   const SPISettings spi_settings_;
-  Region regions_[panels_controller::constants::region_count_per_arena];
+  Region regions_[panels_controller::constants::region_count_per_frame];
   uint8_t frame_index_;
   char file_name_[panels_controller::constants::file_name_size_max];
   Card card_;
+  uint64_t file_position_;
+  uint8_t panel_buffer_[panels_controller::constants::byte_count_per_panel_grayscale];
 
   void setupPins();
   void setupRegions();
+  void setupCard();
+  void beginTransferFrames();
+  void endTransferFrames();
+  void transferFrames();
   void beginTransferFrame();
   void endTransferFrame();
   void transferFrame();

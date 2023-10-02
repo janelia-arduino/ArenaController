@@ -48,13 +48,18 @@ const uint8_t WRITE_COUNT = 2;
 // Read pass count.
 const uint16_t READ_COUNT = 1000;
 
+const char DIR[] = "display";
+
 class Card
 {
 public:
   void setup();
   void mkdirDisplay();
   void chdirDisplay();
-  void openFileForWriting(const char* path);
+  void openFileForWriting(const char* path, uint64_t file_length);
+  void openNextFileForReading();
+  void closeFile();
+  void writeToFile(const uint8_t * buf, size_t count);
 private:
   SdExFat sd_;
   ExFile file_;

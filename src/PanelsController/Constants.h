@@ -74,7 +74,11 @@ constexpr uint8_t frame_count = 100;
 constexpr uint8_t half_frame_count = frame_count / 2;
 
 // files
-constexpr uint8_t file_name_size_max = 12;
+constexpr uint8_t file_name_size_max = 24;
+constexpr uint64_t file_length = \
+  frame_count *\
+  byte_count_max_per_frame_grayscale; // 396000
+
 }
 }
 #include "ConstantsTeensy41.h"
