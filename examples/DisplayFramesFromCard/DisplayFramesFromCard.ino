@@ -10,6 +10,5 @@ void setup()
 
 void loop()
 {
-  dev.update();
-  delayMicroseconds(1000);
+  dev.displayFrameFromCard();
 }

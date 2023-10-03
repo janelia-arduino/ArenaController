@@ -29,40 +29,23 @@
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SPI_CLOCK)
 #endif  // HAS_SDIO_CLASS
 
-// Set PRE_ALLOCATE true to pre-allocate file clusters.
-const bool PRE_ALLOCATE = true;
-
-// Set SKIP_FIRST_LATENCY true if the first read/write to the SD can
-// be avoid by writing a file header or reading the first record.
-const bool SKIP_FIRST_LATENCY = true;
-
-// Size of read/write.
-const size_t BUF_SIZE = 2048;
-
-// File size in MB where KB = 1024 bytes.
-const uint32_t FILE_SIZE_MB = 5;
-
-// Write pass count.
-const uint8_t WRITE_COUNT = 2;
-
-// Read pass count.
-const uint16_t READ_COUNT = 1000;
-
-const char DIR[] = "display";
-
 class Card
 {
 public:
   void setup();
-  void mkdirDisplay();
-  void chdirDisplay();
-  void openFileForWriting(const char* path, uint64_t file_length);
-  void openNextFileForReading();
+  void openFileForWriting();
+  void openFileForReading();
   void closeFile();
-  void writeToFile(const uint8_t * buf, size_t count);
+  void writePanelToFile(const uint8_t * panel_buffer, size_t panel_byte_count);
+  void readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count);
 private:
   SdExFat sd_;
   ExFile file_;
+  char file_name_[panels_controller::constants::file_name_size_max];
+  uint64_t file_position_;
+
+  void mkdirDisplay();
+  void chdirDisplay();
 };
 
 #endif

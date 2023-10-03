@@ -17,12 +17,17 @@ void PanelsController::setup()
   arena_.setup();
 }
 
-void PanelsController::update()
-{
-  arena_.update();
-}
-
 void PanelsController::writeFramesToCard()
 {
   arena_.writeFramesToCard();
+}
+
+void PanelsController::displayFrameFromCard()
+{
+  arena_.displayFrameFromCard();
+}
+
+void PanelsController::displayFrameFromRAM()
+{
+  arena_.displayFrameFromRAM();
 }

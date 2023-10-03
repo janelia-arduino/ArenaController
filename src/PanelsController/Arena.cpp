@@ -21,13 +21,49 @@ void Arena::setup()
   setupCard();
   TransferTracker::setup();
   frame_index_ = 0;
+  display_from_card_ = true;
 }
 
-void Arena::update()
+void Arena::writeFramesToCard()
 {
-  beginTransferFrames();
-  transferFrames();
-  endTransferFrames();
+  card_.openFileForWriting();
+
+  for (uint8_t frame_index = 0; frame_index<constants::frame_count; ++frame_index)
+  {
+    for (uint8_t col_index = 0; col_index<constants::panel_count_max_per_region_col; ++col_index)
+    {
+      for (uint8_t row_index = 0; row_index<constants::panel_count_max_per_region_row; ++row_index)
+      {
+        for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
+        {
+          if (frame_index < constants::half_frame_count)
+          {
+            card_.writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
+          }
+          else
+          {
+            card_.writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
+          }
+        }
+      }
+    }
+  }
+  card_.closeFile();
+}
+
+void Arena::displayFrameFromCard()
+{
+  beginTransferFrame();
+  transferFrame();
+  endTransferFrame();
+}
+
+void Arena::displayFrameFromRAM()
+{
+  display_from_card_ = false;
+  beginTransferFrame();
+  transferFrame();
+  endTransferFrame();
 }
 
 void Arena::setupPins()
@@ -59,28 +95,12 @@ void Arena::setupCard()
   card_.setup();
 }
 
-void Arena::beginTransferFrames()
-{
-  card_.openNextFileForReading();
-  file_position_ = 0;
-}
-
-void Arena::endTransferFrames()
-{
-}
-
-void Arena::transferFrames()
-{
-  while (file_position_ <= constants::file_length)
-  {
-    beginTransferFrame();
-    transferFrame();
-    endTransferFrame();
-  }
-}
-
 void Arena::beginTransferFrame()
 {
+  if (frame_index_ == 0)
+  {
+    card_.openFileForReading();
+  }
 }
 
 void Arena::endTransferFrame()
@@ -88,6 +108,7 @@ void Arena::endTransferFrame()
   if (++frame_index_ == constants::frame_count)
   {
     frame_index_ = 0;
+    card_.closeFile();
   };
 }
 
@@ -131,15 +152,22 @@ void Arena::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
 
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    
-    // if (frame_index_ < constants::half_frame_count)
-    // {
-    //   regions_[region_index].transferPanel(patterns::all_on, constants::byte_count_per_panel_grayscale);
-    // }
-    // else
-    // {
-    //   regions_[region_index].transferPanel(patterns::all_off, constants::byte_count_per_panel_grayscale);
-    // }
+    if (display_from_card_)
+    {
+      card_.readPanelFromFile(panel_buffer_, constants::byte_count_per_panel_grayscale);
+      regions_[region_index].transferPanel(panel_buffer_, constants::byte_count_per_panel_grayscale);
+    }
+    else
+    {
+      if (frame_index_ < constants::half_frame_count)
+      {
+        regions_[region_index].transferPanel(patterns::all_on, constants::byte_count_per_panel_grayscale);
+      }
+      else
+      {
+        regions_[region_index].transferPanel(patterns::all_off, constants::byte_count_per_panel_grayscale);
+      }
+    }
   }
 
   while (not TransferTracker::allTransferPanelsComplete())
@@ -148,39 +176,4 @@ void Arena::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
   }
 
   digitalWriteFast(cs_pin, HIGH);
-}
-
-void Arena::writeFramesToCard()
-{
-  card_.mkdirDisplay();
-  card_.chdirDisplay();
-
-  sprintf(file_name_, "f%d_c%d_r%d_g%d",
-    constants::frame_count,
-    constants::panel_count_max_per_region_col,
-    constants::panel_count_max_per_region_row,
-    constants::region_count_per_frame);
-  card_.openFileForWriting(file_name_, constants::file_length);
-
-  for (uint8_t frame_index = 0; frame_index<constants::frame_count; ++frame_index)
-  {
-    for (uint8_t col_index = 0; col_index<constants::panel_count_max_per_region_col; ++col_index)
-    {
-      for (uint8_t row_index = 0; row_index<constants::panel_count_max_per_region_row; ++row_index)
-      {
-        for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
-        {
-          if (frame_index < constants::half_frame_count)
-          {
-            card_.writeToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
-          }
-          else
-          {
-            card_.writeToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
-          }
-        }
-      }
-    }
-  }
-  card_.closeFile();
 }

@@ -17,9 +17,9 @@ class PanelsController
 {
 public:
   void setup();
-  void update();
-
   void writeFramesToCard();
+  void displayFrameFromCard();
+  void displayFrameFromRAM();
 private:
   Arena arena_;
 };
