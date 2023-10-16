@@ -25,7 +25,7 @@ void Region::endTransferPanel()
   spi_ptr_->endTransaction();
 }
 
-void Region::transferPanel(uint8_t * panel_buffer_ptr, uint8_t panel_buffer_byte_count)
+void Region::transferPanel(const uint8_t * panel_buffer_ptr, uint8_t panel_buffer_byte_count)
 {
   spi_ptr_->transfer(panel_buffer_ptr, NULL, panel_buffer_byte_count, TransferTracker::getTransferPanelCompleteEvent());
 }
