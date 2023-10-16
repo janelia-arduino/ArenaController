@@ -13,10 +13,16 @@ namespace panels_controller
 {
 namespace constants
 {
+// Serial Settings
+constexpr uint32_t baud_rate = 2000000;
+
 // SPI Settings
 constexpr uint32_t spi_clock = 5000000;
 constexpr uint8_t spi_bit_order = MSBFIRST;
 constexpr uint8_t spi_data_mode = SPI_MODE0;
+
+// Ethernet Settings
+constexpr uint8_t mac_address_size = 6;
 
 // message byte
 constexpr uint8_t bit_count_per_byte = 8;
