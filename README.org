@@ -16,6 +16,9 @@
 - Copyright: 2023 Howard Hughes Medical Institute
 - References:
   - https://reiserlab.github.io/Modular-LED-Display/
+  - https://www.pjrc.com/store/teensy41.html
+  - https://www.pjrc.com/store/ethernet_kit.html
+  - https://github.com/vjmuzik/NativeEthernet
 
 * Modular LED Display
 
@@ -161,10 +164,7 @@ sudo usermod -a -G plugdev $USER
 sudo apt-get purge --auto-remove modemmanager
 #+END_SRC
 
-
 *** Compile the firmware
-
-**** Example
 
 #+BEGIN_SRC sh
 cd ~/tmp/PanelsController
@@ -173,16 +173,12 @@ make firmware
 
 *** Upload the firmware
 
-**** Example
-
 #+BEGIN_SRC sh
 cd ~/tmp/PanelsController
 make upload
 #+END_SRC
 
 *** Monitor
-
-**** Example
 
 #+BEGIN_SRC sh
 cd ~/tmp/PanelsController
