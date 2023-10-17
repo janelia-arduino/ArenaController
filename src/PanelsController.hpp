@@ -10,7 +10,7 @@
 
 #include <Arduino.h>
 
-#include "Arena.h"
+#include "Arena.hpp"
 
 
 class PanelsController

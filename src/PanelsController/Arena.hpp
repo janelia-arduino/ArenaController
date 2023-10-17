@@ -1,22 +1,22 @@
 // ----------------------------------------------------------------------------
-// Arena.h
+// Arena.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_ARENA_H
-#define PANELS_CONTROLLER_ARENA_H
+#ifndef PANELS_CONTROLLER_ARENA_HPP
+#define PANELS_CONTROLLER_ARENA_HPP
 
 #include <Arduino.h>
 #include <SPI.h>
+#include <NativeEthernet.h>
 
-#include "Constants.h"
-#include "Region.h"
-#include "TransferTracker.h"
-#include "Patterns.h"
-#include "Card.h"
-#include "NativeEthernet.h"
+#include "Constants.hpp"
+#include "Region.hpp"
+#include "TransferTracker.hpp"
+#include "Patterns.hpp"
+#include "Card.hpp"
 
 
 class Arena

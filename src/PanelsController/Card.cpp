@@ -4,7 +4,7 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#include "Card.h"
+#include "Card.hpp"
 
 
 using namespace panels_controller;

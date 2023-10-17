@@ -4,7 +4,7 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#include "Region.h"
+#include "Region.hpp"
 
 
 using namespace panels_controller;

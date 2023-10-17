@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------------
-// Constants.h
+// Constants.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CONSTANTS_H
-#define PANELS_CONTROLLER_CONSTANTS_H
+#ifndef PANELS_CONTROLLER_CONSTANTS_HPP
+#define PANELS_CONTROLLER_CONSTANTS_HPP
 
 
 namespace panels_controller
@@ -89,5 +89,5 @@ const char directory[] = "display";
 
 }
 }
-#include "ConstantsTeensy41.h"
+#include "ConstantsTeensy41.hpp"
 #endif

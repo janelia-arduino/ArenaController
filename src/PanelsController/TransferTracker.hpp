@@ -1,18 +1,18 @@
 // ----------------------------------------------------------------------------
-// TransferTracker.h
+// TransferTracker.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_TRANSFER_TRACKER_H
-#define PANELS_CONTROLLER_TRANSFER_TRACKER_H
+#ifndef PANELS_CONTROLLER_TRANSFER_TRACKER_HPP
+#define PANELS_CONTROLLER_TRANSFER_TRACKER_HPP
 
 #include <Arduino.h>
 #include <SPI.h>
 #include <EventResponder.h>
 
-#include "Constants.h"
+#include "Constants.hpp"
 
 
 class TransferTracker

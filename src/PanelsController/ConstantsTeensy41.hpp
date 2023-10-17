@@ -1,14 +1,15 @@
 // ----------------------------------------------------------------------------
-// ConstantsTeensy41.h
+// ConstantsTeensy41.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CONSTANTS_TEENSY41_H
-#define PANELS_CONTROLLER_CONSTANTS_TEENSY41_H
+#ifndef PANELS_CONTROLLER_CONSTANTS_TEENSY41_HPP
+#define PANELS_CONTROLLER_CONSTANTS_TEENSY41_HPP
 #include <SPI.h>
-#include "Constants.h"
+
+#include "Constants.hpp"
 
 
 #if defined(__IMXRT1062__) && defined(ARDUINO_TEENSY41)

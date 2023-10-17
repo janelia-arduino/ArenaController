@@ -5,7 +5,7 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#include "PanelsController.h"
+#include "PanelsController.hpp"
 
 
 using namespace panels_controller;

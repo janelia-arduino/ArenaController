@@ -5,7 +5,7 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#include "Arena.h"
+#include "Arena.hpp"
 
 
 using namespace panels_controller;

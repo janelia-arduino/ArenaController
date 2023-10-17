@@ -1,17 +1,17 @@
 // ----------------------------------------------------------------------------
-// Card.h
+// Card.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CARD_H
-#define PANELS_CONTROLLER_CARD_H
+#ifndef PANELS_CONTROLLER_CARD_HPP
+#define PANELS_CONTROLLER_CARD_HPP
 
 #include <SdFat.h>
 
-#include "Constants.h"
-#include "Patterns.h"
+#include "Constants.hpp"
+#include "Patterns.hpp"
 
 
 // 1 for FAT16/FAT32, 2 for exFAT, 3 for FAT16/FAT32 and exFAT.

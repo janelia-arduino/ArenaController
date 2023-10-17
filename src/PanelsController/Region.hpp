@@ -1,17 +1,17 @@
 // ----------------------------------------------------------------------------
-// Region.h
+// Region.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_REGION_H
-#define PANELS_CONTROLLER_REGION_H
+#ifndef PANELS_CONTROLLER_REGION_HPP
+#define PANELS_CONTROLLER_REGION_HPP
 
 #include <SPI.h>
 
-#include "Constants.h"
-#include "TransferTracker.h"
+#include "Constants.hpp"
+#include "TransferTracker.hpp"
 
 
 class Region

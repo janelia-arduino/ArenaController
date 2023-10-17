@@ -1,14 +1,14 @@
 // ----------------------------------------------------------------------------
-// Patterns.h
+// Patterns.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CONSTANTS_PATTERNS_H
-#define PANELS_CONTROLLER_CONSTANTS_PATTERNS_H
+#ifndef PANELS_CONTROLLER_CONSTANTS_PATTERNS_HPP
+#define PANELS_CONTROLLER_CONSTANTS_PATTERNS_HPP
 
-#include "Constants.h"
+#include "Constants.hpp"
 
 
 namespace panels_controller
