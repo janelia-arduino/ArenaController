@@ -1,27 +1,23 @@
 // ----------------------------------------------------------------------------
-// PanelsController.hpp
+// Server.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_HPP
-#define PANELS_CONTROLLER_HPP
+#ifndef PANELS_CONTROLLER_SERVER_HPP
+#define PANELS_CONTROLLER_SERVER_HPP
 
 #include <Arduino.h>
+#include <NativeEthernet.h>
 
-#include "Arena.hpp"
 
-
-class PanelsController
+class Server
 {
 public:
+  Server();
   void setup();
-  void writeFramesToCard();
-  void displayFrameFromCard();
-  void displayFrameFromRAM();
 private:
-  Arena arena_;
 };
 
 #endif
