@@ -12,22 +12,10 @@ using namespace panels_controller;
 
 void PanelsController::setup()
 {
-  Serial.begin(115200);
-
-  arena_.setup();
+  server_.setup();
 }
 
-void PanelsController::writeFramesToCard()
+void PanelsController::update()
 {
-  arena_.writeFramesToCard();
-}
-
-void PanelsController::displayFrameFromCard()
-{
-  arena_.displayFrameFromCard();
-}
-
-void PanelsController::displayFrameFromRAM()
-{
-  arena_.displayFrameFromRAM();
+  server_.update();
 }

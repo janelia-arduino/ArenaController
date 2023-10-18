@@ -10,18 +10,16 @@
 
 #include <Arduino.h>
 
-#include "Arena.hpp"
+#include "Server.hpp"
 
 
 class PanelsController
 {
 public:
   void setup();
-  void writeFramesToCard();
-  void displayFrameFromCard();
-  void displayFrameFromRAM();
+  void update();
 private:
-  Arena arena_;
+  Server server_;
 };
 
 #endif
