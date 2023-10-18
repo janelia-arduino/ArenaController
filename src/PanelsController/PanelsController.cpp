@@ -12,10 +12,10 @@ using namespace panels_controller;
 
 void PanelsController::setup()
 {
-  server_.setup();
+  arena_server_.setup();
 }
 
 void PanelsController::update()
 {
-  server_.update();
+  arena_server_.update();
 }

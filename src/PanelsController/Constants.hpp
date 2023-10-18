@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------------
 #ifndef PANELS_CONTROLLER_CONSTANTS_HPP
 #define PANELS_CONTROLLER_CONSTANTS_HPP
+#include <SPI.h>
 
 
 namespace panels_controller

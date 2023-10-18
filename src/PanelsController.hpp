@@ -10,7 +10,7 @@
 
 #include <Arduino.h>
 
-#include "Server.hpp"
+#include "ArenaServer.hpp"
 
 
 class PanelsController
@@ -19,7 +19,7 @@ public:
   void setup();
   void update();
 private:
-  Server server_;
+  ArenaServer arena_server_;
 };
 
 #endif

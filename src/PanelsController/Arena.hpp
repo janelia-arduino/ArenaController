@@ -35,13 +35,9 @@ private:
   uint8_t panel_buffer_[panels_controller::constants::byte_count_per_panel_grayscale];
   bool display_from_card_;
 
-  void setupSerial();
   void setupPins();
   void setupRegions();
   void setupCard();
-  void setupEthernet();
-
-  void getMacAddress(uint8_t * mac_address);
 
   void beginTransferFrame();
   void endTransferFrame();
