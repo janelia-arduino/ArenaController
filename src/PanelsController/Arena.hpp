@@ -11,12 +11,16 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <NativeEthernet.h>
+#include <qpcpp.hpp>
 
 #include "Constants.hpp"
 #include "Region.hpp"
 #include "TransferTracker.hpp"
 #include "Patterns.hpp"
 #include "Card.hpp"
+
+using namespace QP;
+>>>>>>> f5ff8e7 (Test addition of qp-arduino library):src/PanelsController/Arena.h
 
 
 class Arena
