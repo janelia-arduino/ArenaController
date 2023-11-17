@@ -20,8 +20,6 @@
 #include "Card.hpp"
 
 using namespace QP;
->>>>>>> f5ff8e7 (Test addition of qp-arduino library):src/PanelsController/Arena.h
-
 
 class Arena
 {
