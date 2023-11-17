@@ -14,20 +14,20 @@ void PanelsController::setup()
 {
   Serial.begin(115200);
 
-  arena_.setup();
+  display_.setup();
 }
 
-void PanelsController::writeFramesToCard()
+void PanelsController::writeFramesToStorage()
 {
-  arena_.writeFramesToCard();
+  display_.writeFramesToStorage();
 }
 
-void PanelsController::displayFrameFromCard()
+void PanelsController::showFrameFromStorage()
 {
-  arena_.displayFrameFromCard();
+  display_.showFrameFromStorage();
 }
 
-void PanelsController::displayFrameFromRAM()
+void PanelsController::showFrameFromRAM()
 {
-  arena_.displayFrameFromRAM();
+  display_.showFrameFromRAM();
 }

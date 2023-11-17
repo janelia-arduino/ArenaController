@@ -13,7 +13,7 @@ void setup()
   Serial.println("writing...");
 
   duration = millis();
-  dev.writeFramesToCard();
+  dev.writeFramesToStorage();
   duration = millis() - duration;
 }
 

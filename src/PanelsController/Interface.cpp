@@ -1,18 +1,16 @@
 // ----------------------------------------------------------------------------
-// Server.cpp
+// Interface.cpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#include "Server.hpp"
+#include "Interface.hpp"
 
 
-using namespace panels_controller;
-
-Server::Server()
+Interface::Interface()
 {}
 
-void Server::setup()
+void Interface::setup()
 {
 }

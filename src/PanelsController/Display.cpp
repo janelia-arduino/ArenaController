@@ -1,34 +1,34 @@
 // ----------------------------------------------------------------------------
-// Arena.cpp
+// Display.cpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#include "Arena.hpp"
+#include "Display.hpp"
 
 
 using namespace panels_controller;
 
-Arena::Arena() :
+Display::Display() :
 spi_settings_(SPISettings(constants::spi_clock, constants::spi_bit_order, constants::spi_data_mode))
 {}
 
-void Arena::setup()
+void Display::setup()
 {
   setupSerial();
   setupPins();
   setupRegions();
-  setupCard();
+  setupStorage();
   setupEthernet();
   TransferTracker::setup();
   frame_index_ = 0;
-  display_from_card_ = true;
+  show_from_storage_ = true;
 }
 
-void Arena::writeFramesToCard()
+void Display::writeFramesToStorage()
 {
-  card_.openFileForWriting();
+  storage_.openFileForWriting();
 
   for (uint8_t frame_index = 0; frame_index<constants::frame_count; ++frame_index)
   {
@@ -40,35 +40,35 @@ void Arena::writeFramesToCard()
         {
           if (frame_index < constants::half_frame_count)
           {
-            card_.writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
+            storage_.writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
           }
           else
           {
-            card_.writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
+            storage_.writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
           }
         }
       }
     }
   }
-  card_.closeFile();
+  storage_.closeFile();
 }
 
-void Arena::displayFrameFromCard()
+void Display::showFrameFromStorage()
 {
   beginTransferFrame();
   transferFrame();
   endTransferFrame();
 }
 
-void Arena::displayFrameFromRAM()
+void Display::showFrameFromRAM()
 {
-  display_from_card_ = false;
+  show_from_storage_ = false;
   beginTransferFrame();
   transferFrame();
   endTransferFrame();
 }
 
-void Arena::setupSerial()
+void Display::setupSerial()
 {
   // Open serial communications and wait for port to open:
   Serial.begin(constants::baud_rate);
@@ -77,7 +77,7 @@ void Arena::setupSerial()
   }
 }
 
-void Arena::setupPins()
+void Display::setupPins()
 {
   pinMode(constants::reset_pin, OUTPUT);
   digitalWriteFast(constants::reset_pin, LOW);
@@ -93,7 +93,7 @@ void Arena::setupPins()
   }
 }
 
-void Arena::setupRegions()
+void Display::setupRegions()
 {
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
@@ -101,12 +101,12 @@ void Arena::setupRegions()
   }
 }
 
-void Arena::setupCard()
+void Display::setupStorage()
 {
-  card_.setup();
+  storage_.setup();
 }
 
-void Arena::setupEthernet()
+void Display::setupEthernet()
 {
   uint8_t mac_address[constants::mac_address_size];
   getMacAddress(mac_address);
@@ -130,24 +130,24 @@ void Arena::setupEthernet()
   Serial.println(Ethernet.localIP());
 }
 
-void Arena::beginTransferFrame()
+void Display::beginTransferFrame()
 {
   if (frame_index_ == 0)
   {
-    card_.openFileForReading();
+    storage_.openFileForReading();
   }
 }
 
-void Arena::endTransferFrame()
+void Display::endTransferFrame()
 {
   if (++frame_index_ == constants::frame_count)
   {
     frame_index_ = 0;
-    card_.closeFile();
+    storage_.closeFile();
   };
 }
 
-void Arena::transferFrame()
+void Display::transferFrame()
 {
   for (uint8_t col_index = 0; col_index<constants::panel_count_max_per_region_col; ++col_index)
   {
@@ -160,7 +160,7 @@ void Arena::transferFrame()
   }
 }
 
-void Arena::beginTransferPanelsAcrossRegions()
+void Display::beginTransferPanelsAcrossRegions()
 {
   TransferTracker::beginTransferPanels();
 
@@ -170,7 +170,7 @@ void Arena::beginTransferPanelsAcrossRegions()
   }
 }
 
-void Arena::endTransferPanelsAcrossRegions()
+void Display::endTransferPanelsAcrossRegions()
 {
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
@@ -180,16 +180,16 @@ void Arena::endTransferPanelsAcrossRegions()
   TransferTracker::endTransferPanels();
 }
 
-void Arena::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
+void Display::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
 {
   const uint8_t & cs_pin = constants::panel_select_pins[row_index][col_index];
   digitalWriteFast(cs_pin, LOW);
 
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    if (display_from_card_)
+    if (show_from_storage_)
     {
-      card_.readPanelFromFile(panel_buffer_, constants::byte_count_per_panel_grayscale);
+      storage_.readPanelFromFile(panel_buffer_, constants::byte_count_per_panel_grayscale);
       regions_[region_index].transferPanel(panel_buffer_, constants::byte_count_per_panel_grayscale);
     }
     else
@@ -213,7 +213,7 @@ void Arena::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
   digitalWriteFast(cs_pin, HIGH);
 }
 
-void Arena::getMacAddress(uint8_t * mac_address)
+void Display::getMacAddress(uint8_t * mac_address)
 {
   for(uint8_t by=0; by<2; by++) mac_address[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
   for(uint8_t by=0; by<4; by++) mac_address[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;

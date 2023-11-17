@@ -10,18 +10,18 @@
 
 #include <Arduino.h>
 
-#include "Arena.hpp"
+#include "Display.hpp"
 
 
 class PanelsController
 {
 public:
   void setup();
-  void writeFramesToCard();
-  void displayFrameFromCard();
-  void displayFrameFromRAM();
+  void writeFramesToStorage();
+  void showFrameFromStorage();
+  void showFrameFromRAM();
 private:
-  Arena arena_;
+  Display display_;
 };
 
 #endif

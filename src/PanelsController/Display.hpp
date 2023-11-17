@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------------
-// Arena.hpp
+// Display.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_ARENA_HPP
-#define PANELS_CONTROLLER_ARENA_HPP
+#ifndef PANELS_CONTROLLER_DISPLAY_HPP
+#define PANELS_CONTROLLER_DISPLAY_HPP
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -17,30 +17,30 @@
 #include "Region.hpp"
 #include "TransferTracker.hpp"
 #include "Patterns.hpp"
-#include "Card.hpp"
+#include "Storage.hpp"
 
 using namespace QP;
 
-class Arena
+class Display
 {
 public:
-  Arena();
+  Display();
   void setup();
-  void writeFramesToCard();
-  void displayFrameFromCard();
-  void displayFrameFromRAM();
+  void writeFramesToStorage();
+  void showFrameFromStorage();
+  void showFrameFromRAM();
 private:
   const SPISettings spi_settings_;
   Region regions_[panels_controller::constants::region_count_per_frame];
   uint8_t frame_index_;
-  Card card_;
+  Storage storage_;
   uint8_t panel_buffer_[panels_controller::constants::byte_count_per_panel_grayscale];
-  bool display_from_card_;
+  bool show_from_storage_;
 
   void setupSerial();
   void setupPins();
   void setupRegions();
-  void setupCard();
+  void setupStorage();
   void setupEthernet();
 
   void getMacAddress(uint8_t * mac_address);

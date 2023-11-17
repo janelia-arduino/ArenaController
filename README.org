@@ -5,7 +5,7 @@
 * Library Information
 - Name: PanelsController
 - Description: Arduino library for communicating with the Reiser Lab Modular LED Display panels.
-- Version: 0.1.0
+- Version: 0.2.0
 - Panel Version: G4 v1.9
 - Release Date: 2023-08-25
 - Creation Date: 2023-08-16
@@ -42,11 +42,11 @@ A region is a set of panels arranged in rows and columns with a common communica
 
 #+html: <img src="./images/region.png" width="607px">
 
-*** Arena
+*** Display
 
-An arena is a set of regions arranged in rows and columns.
+An display is a set of regions arranged in rows and columns.
 
-#+html: <img src="./images/arena.png" width="1214px">
+#+html: <img src="./images/display.png" width="1214px">
 
 ** Display Messages
 
@@ -84,11 +84,11 @@ Quarter panel numbering for each quarter panel in a panel plus pixel numbering f
 
 *** Region
 
-**** Regions in Arena
+**** Regions in Display
 
-Region numbering for each region in an arena:
+Region numbering for each region in an display:
 
-#+html: <img src="./images/arena_regions.png" width="1200px">
+#+html: <img src="./images/display_regions.png" width="1200px">
 
 **** Panels in Region
 
@@ -96,19 +96,19 @@ Panel numbering for each panel in an region:
 
 #+html: <img src="./images/region_panels.png" width="600px">
 
-*** Arena
+*** Display
 
-**** Panels in Arena
+**** Panels in Display
 
-Panel update order for each panel in an arena:
+Panel update order for each panel in an display:
 
 ***** Synchronous
 
-#+html: <img src="./images/arena_panels_synchronous.png" width="1200px">
+#+html: <img src="./images/display_panels_synchronous.png" width="1200px">
 
 ***** Asynchronous
 
-#+html: <img src="./images/arena_panels_asynchronous.png" width="1200px">
+#+html: <img src="./images/display_panels_asynchronous.png" width="1200px">
 
 * Development
 

@@ -19,4 +19,4 @@ upload: clean
 
 .PHONY: monitor
 monitor:
-	. .venv/bin/activate; pio device monitor
+	. .venv/bin/activate; pio device monitor --echo --eol=LF

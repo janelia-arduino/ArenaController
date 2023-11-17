@@ -1,12 +1,12 @@
 // ----------------------------------------------------------------------------
-// Card.hpp
+// Storage.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CARD_HPP
-#define PANELS_CONTROLLER_CARD_HPP
+#ifndef PANELS_CONTROLLER_STORAGE_HPP
+#define PANELS_CONTROLLER_STORAGE_HPP
 
 #include <SdFat.h>
 
@@ -20,7 +20,7 @@
 // Try max SPI clock for an SD. Reduce SPI_CLOCK if errors occur.
 #define SPI_CLOCK SD_SCK_MHZ(50)
 
-// Try to select the best SD card configuration.
+// Try to select the best SD storage configuration.
 #if HAS_SDIO_CLASS
 #define SD_CONFIG SdioConfig(FIFO_SDIO)
 #elif ENABLE_DEDICATED_SPI
@@ -29,7 +29,7 @@
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SPI_CLOCK)
 #endif  // HAS_SDIO_CLASS
 
-class Card
+class Storage
 {
 public:
   void setup();
@@ -44,8 +44,8 @@ private:
   char file_name_[panels_controller::constants::file_name_size_max];
   uint64_t file_position_;
 
-  void mkdirDisplay();
-  void chdirDisplay();
+  void mkdirShow();
+  void chdirShow();
 };
 
 #endif
