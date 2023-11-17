@@ -1,33 +1,33 @@
 // ----------------------------------------------------------------------------
-// PanelsController.cpp
+// ArenaController.cpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#include "PanelsController.hpp"
+#include "ArenaController.hpp"
 
 
-using namespace panels_controller;
+using namespace arena_controller;
 
-void PanelsController::setup()
+void ArenaController::setup()
 {
   Serial.begin(115200);
 
   display_.setup();
 }
 
-void PanelsController::writeFramesToStorage()
+void ArenaController::writeFramesToStorage()
 {
   display_.writeFramesToStorage();
 }
 
-void PanelsController::showFrameFromStorage()
+void ArenaController::showFrameFromStorage()
 {
   display_.showFrameFromStorage();
 }
 
-void PanelsController::showFrameFromRAM()
+void ArenaController::showFrameFromRAM()
 {
   display_.showFrameFromRAM();
 }

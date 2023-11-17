@@ -7,7 +7,7 @@
 #include "Region.hpp"
 
 
-using namespace panels_controller;
+using namespace arena_controller;
 
 void Region::setup(SPIClass * spi_ptr)
 {

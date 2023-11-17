@@ -8,7 +8,7 @@
 #include "Display.hpp"
 
 
-using namespace panels_controller;
+using namespace arena_controller;
 
 Display::Display() :
 spi_settings_(SPISettings(constants::spi_clock, constants::spi_bit_order, constants::spi_data_mode))

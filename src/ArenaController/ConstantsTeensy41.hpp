@@ -5,15 +5,15 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CONSTANTS_TEENSY41_HPP
-#define PANELS_CONTROLLER_CONSTANTS_TEENSY41_HPP
+#ifndef ARENA_CONTROLLER_CONSTANTS_TEENSY41_HPP
+#define ARENA_CONTROLLER_CONSTANTS_TEENSY41_HPP
 #include <SPI.h>
 
 #include "Constants.hpp"
 
 
 #if defined(__IMXRT1062__) && defined(ARDUINO_TEENSY41)
-namespace panels_controller
+namespace arena_controller
 {
 namespace constants
 {

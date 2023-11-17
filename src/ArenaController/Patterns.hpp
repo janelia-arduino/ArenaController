@@ -5,13 +5,13 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CONSTANTS_PATTERNS_HPP
-#define PANELS_CONTROLLER_CONSTANTS_PATTERNS_HPP
+#ifndef ARENA_CONTROLLER_CONSTANTS_PATTERNS_HPP
+#define ARENA_CONTROLLER_CONSTANTS_PATTERNS_HPP
 
 #include "Constants.hpp"
 
 
-namespace panels_controller
+namespace arena_controller
 {
 namespace patterns
 {

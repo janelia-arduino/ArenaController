@@ -5,8 +5,8 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_DISPLAY_HPP
-#define PANELS_CONTROLLER_DISPLAY_HPP
+#ifndef ARENA_CONTROLLER_DISPLAY_HPP
+#define ARENA_CONTROLLER_DISPLAY_HPP
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -31,10 +31,10 @@ public:
   void showFrameFromRAM();
 private:
   const SPISettings spi_settings_;
-  Region regions_[panels_controller::constants::region_count_per_frame];
+  Region regions_[arena_controller::constants::region_count_per_frame];
   uint8_t frame_index_;
   Storage storage_;
-  uint8_t panel_buffer_[panels_controller::constants::byte_count_per_panel_grayscale];
+  uint8_t panel_buffer_[arena_controller::constants::byte_count_per_panel_grayscale];
   bool show_from_storage_;
 
   void setupSerial();

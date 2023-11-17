@@ -5,8 +5,8 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_REGION_HPP
-#define PANELS_CONTROLLER_REGION_HPP
+#ifndef ARENA_CONTROLLER_REGION_HPP
+#define ARENA_CONTROLLER_REGION_HPP
 
 #include <SPI.h>
 

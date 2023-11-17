@@ -1,7 +1,7 @@
-#include <PanelsController.hpp>
+#include <ArenaController.hpp>
 
 
-PanelsController dev;
+ArenaController dev;
 uint32_t duration;
 
 void setup()

@@ -1,16 +1,16 @@
-#+TITLE: PanelsController
+#+TITLE: ArenaController
 #+AUTHOR: Peter Polidoro
 #+EMAIL: peter@polidoro.io
 
 * Library Information
-- Name: PanelsController
-- Description: Arduino library for communicating with the Reiser Lab Modular LED Display panels.
+- Name: ArenaController
+- Description:  Arduino library for communicating with the Reiser Lab Modular LED panels display arena.
 - Version: 0.2.0
 - Panel Version: G4 v1.9
 - Release Date: 2023-08-25
 - Creation Date: 2023-08-16
 - License: BSD-3-Clause
-- URL: https://github.com/janelia-arduino/PanelsController
+- URL: https://github.com/janelia-arduino/ArenaController
 - Author: Peter Polidoro
 - Email: peter@polidoro.io
 - Copyright: 2023 Howard Hughes Medical Institute
@@ -20,7 +20,7 @@
   - https://www.pjrc.com/store/ethernet_kit.html
   - https://github.com/vjmuzik/NativeEthernet
 
-* Modular LED Display
+* Arena
 
 ** System Components
 
@@ -114,11 +114,11 @@ Panel update order for each panel in an display:
 
 ** Download this repository
 
-[[https://github.com/janelia-arduino/PanelsController.git]]
+[[https://github.com/janelia-arduino/ArenaController.git]]
 
 #+BEGIN_SRC sh
 sudo apt install -y git
-mkdir -p ~/tmp && cd ~/tmp && git clone https://github.com/janelia-arduino/PanelsController.git
+mkdir -p ~/tmp && cd ~/tmp && git clone https://github.com/janelia-arduino/ArenaController.git
 #+END_SRC
 
 ** PlatformIO
@@ -131,7 +131,7 @@ mkdir -p ~/tmp && cd ~/tmp && git clone https://github.com/janelia-arduino/Panel
 
 #+BEGIN_SRC sh
 sudo apt install -y python3-venv make
-cd ~/tmp/PanelsController
+cd ~/tmp/ArenaController
 make venv
 #+END_SRC
 
@@ -167,20 +167,20 @@ sudo apt-get purge --auto-remove modemmanager
 *** Compile the firmware
 
 #+BEGIN_SRC sh
-cd ~/tmp/PanelsController
+cd ~/tmp/ArenaController
 make firmware
 #+END_SRC
 
 *** Upload the firmware
 
 #+BEGIN_SRC sh
-cd ~/tmp/PanelsController
+cd ~/tmp/ArenaController
 make upload
 #+END_SRC
 
 *** Monitor
 
 #+BEGIN_SRC sh
-cd ~/tmp/PanelsController
+cd ~/tmp/ArenaController
 make monitor
 #+END_SRC

@@ -5,11 +5,11 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_CONSTANTS_HPP
-#define PANELS_CONTROLLER_CONSTANTS_HPP
+#ifndef ARENA_CONTROLLER_CONSTANTS_HPP
+#define ARENA_CONTROLLER_CONSTANTS_HPP
 
 
-namespace panels_controller
+namespace arena_controller
 {
 namespace constants
 {

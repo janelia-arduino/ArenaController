@@ -7,7 +7,7 @@
 #include "Storage.hpp"
 
 
-using namespace panels_controller;
+using namespace arena_controller;
 
 void Storage::setup()
 {

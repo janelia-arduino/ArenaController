@@ -1,23 +1,27 @@
 // ----------------------------------------------------------------------------
-// Interface.hpp
+// ArenaController.hpp
 //
 //
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_INTERFACE_HPP
-#define PANELS_CONTROLLER_INTERFACE_HPP
+#ifndef ARENA_CONTROLLER_HPP
+#define ARENA_CONTROLLER_HPP
 
 #include <Arduino.h>
-#include <NativeEthernet.h>
+
+#include "Display.hpp"
 
 
-class Interface
+class ArenaController
 {
 public:
-  Interface();
   void setup();
+  void writeFramesToStorage();
+  void showFrameFromStorage();
+  void showFrameFromRAM();
 private:
+  Display display_;
 };
 
 #endif

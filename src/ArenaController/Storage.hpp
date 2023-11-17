@@ -5,8 +5,8 @@
 // Authors:
 // Peter Polidoro peter@polidoro.io
 // ----------------------------------------------------------------------------
-#ifndef PANELS_CONTROLLER_STORAGE_HPP
-#define PANELS_CONTROLLER_STORAGE_HPP
+#ifndef ARENA_CONTROLLER_STORAGE_HPP
+#define ARENA_CONTROLLER_STORAGE_HPP
 
 #include <SdFat.h>
 
@@ -41,7 +41,7 @@ public:
 private:
   SdExFat sd_;
   ExFile file_;
-  char file_name_[panels_controller::constants::file_name_size_max];
+  char file_name_[arena_controller::constants::file_name_size_max];
   uint64_t file_position_;
 
   void mkdirShow();
