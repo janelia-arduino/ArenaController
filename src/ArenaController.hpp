@@ -10,7 +10,7 @@
 
 #include <Arduino.h>
 
-#include "Display.hpp"
+#include "ArenaController/Display.hpp"
 
 
 class ArenaController
