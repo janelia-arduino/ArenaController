@@ -20,7 +20,7 @@ void Display::setup()
   setupPins();
   setupRegions();
   setupStorage();
-  setupEthernet();
+  // setupEthernet();
   TransferTracker::setup();
   frame_index_ = 0;
   show_from_storage_ = true;
