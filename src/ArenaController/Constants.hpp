@@ -66,26 +66,9 @@ constexpr uint8_t byte_count_per_panel_binary = \
   byte_count_per_quarter_panel_binary * \
   quarter_panel_count_per_panel; // 36
 
-// frame
-constexpr uint8_t panel_count_max_per_frame_row = 5;
-constexpr uint8_t panel_count_max_per_frame_col = 6;
-constexpr uint8_t panel_count_max_per_frame = \
-  panel_count_max_per_frame_row * panel_count_max_per_frame_col; // 30
-constexpr uint16_t byte_count_max_per_frame_grayscale = \
-  panel_count_max_per_frame * \
-  byte_count_per_panel_grayscale; // 3960
-
 // frames
 constexpr uint8_t frame_count = 100;
 constexpr uint8_t half_frame_count = frame_count / 2;
-
-// files
-constexpr uint8_t file_name_size_max = 24;
-constexpr uint64_t file_length = \
-  frame_count *\
-  byte_count_max_per_frame_grayscale; // 396000
-
-const char directory[] = "show";
 
 }
 }
