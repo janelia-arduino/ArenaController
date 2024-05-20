@@ -26,6 +26,7 @@ class Display
 public:
   Display();
   void setup();
+  void setupFileFromStorage();
   void writeFramesToStorage();
   void showFrameFromStorage();
   void showFrameFromRAM();

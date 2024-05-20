@@ -6,6 +6,7 @@ ArenaController dev;
 void setup()
 {
   dev.setup();
+  dev.setupFileFromStorage();
 }
 
 void loop()

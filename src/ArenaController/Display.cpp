@@ -26,6 +26,11 @@ void Display::setup()
   show_from_storage_ = true;
 }
 
+void Display::setupFileFromStorage()
+{
+  storage_.openFileForReading();
+}
+
 void Display::writeFramesToStorage()
 {
   storage_.openFileForWriting();
@@ -72,9 +77,9 @@ void Display::setupSerial()
 {
   // Open serial communications and wait for port to open:
   Serial.begin(constants::baud_rate);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  // while (!Serial) {
+  //   ; // wait for serial port to connect. Needed for native USB port only
+  // }
 }
 
 void Display::setupPins()
@@ -134,7 +139,7 @@ void Display::beginTransferFrame()
 {
   if (frame_index_ == 0)
   {
-    storage_.openFileForReading();
+    storage_.rewindFileForReading();
   }
 }
 
@@ -143,7 +148,6 @@ void Display::endTransferFrame()
   if (++frame_index_ == constants::frame_count)
   {
     frame_index_ = 0;
-    storage_.closeFile();
   };
 }
 

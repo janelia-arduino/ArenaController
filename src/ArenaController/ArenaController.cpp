@@ -17,6 +17,11 @@ void ArenaController::setup()
   display_.setup();
 }
 
+void ArenaController::setupFileFromStorage()
+{
+  display_.setupFileFromStorage();
+}
+
 void ArenaController::writeFramesToStorage()
 {
   display_.writeFramesToStorage();

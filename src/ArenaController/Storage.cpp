@@ -33,6 +33,10 @@ void Storage::openFileForWriting()
 void Storage::openFileForReading()
 {
   file_.open(file_name_);
+}
+
+void Storage::rewindFileForReading()
+{
   file_.rewind();
   file_position_ = 0;
 }
