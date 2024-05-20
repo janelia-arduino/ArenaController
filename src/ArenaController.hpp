@@ -17,6 +17,7 @@ class ArenaController
 {
 public:
   void setup();
+  void setupFileFromStorage();
   void writeFramesToStorage();
   void showFrameFromStorage();
   void showFrameFromRAM();

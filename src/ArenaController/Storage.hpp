@@ -35,6 +35,7 @@ public:
   void setup();
   void openFileForWriting();
   void openFileForReading();
+  void rewindFileForReading();
   void closeFile();
   void writePanelToFile(const uint8_t * panel_buffer, size_t panel_byte_count);
   void readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count);
