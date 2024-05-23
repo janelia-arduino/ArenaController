@@ -66,6 +66,23 @@ In grayscale mode, each LED can be one of sixteen brightness levels.
 
 #+html: <img src="./images/quarter_panel_grayscale.png" width="1200px">
 
+***** Example Quarter Panel Message Grayscale All On
+
+#+BEGIN_SRC cpp
+constexpr uint8_t all_on[constants::byte_count_per_quarter_panel_grayscale] =
+{
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255
+};
+#+END_SRC
+
 **** Binary
 
 In binary mode, each LED can be one of two brightness levels, on or off.
@@ -74,6 +91,23 @@ In binary mode, each LED can be one of two brightness levels, on or off.
 
 #+html: <img src="./images/quarter_panel_binary.png" width="1200px">
 
+***** Example Quarter Panel Message Binary All On
+
+#+BEGIN_SRC cpp
+constexpr uint8_t all_on[constants::byte_count_per_quarter_panel_binary] =
+{
+  1,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255
+};
+#+END_SRC
+
 *** Panel
 
 **** Quarter Panels in Panel
@@ -81,6 +115,97 @@ In binary mode, each LED can be one of two brightness levels, on or off.
 Quarter panel numbering for each quarter panel in a panel plus pixel numbering for select pixels in a panel:
 
 #+html: <img src="./images/panel_quarter_panels.png" width="1200px">
+
+*** Example Panel Messages
+
+***** Grayscale All On
+
+#+BEGIN_SRC cpp
+constexpr uint8_t all_on[constants::byte_count_per_panel_grayscale] =
+{
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255
+};
+#+END_SRC
+
+***** Binary All On
+
+#+BEGIN_SRC cpp
+constexpr uint8_t all_on[constants::byte_count_per_panel_binary] =
+{
+  1,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  1,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  1,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  1,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255
+};
+#+END_SRC
+
 
 *** Region
 
