@@ -21,11 +21,14 @@
 
 using namespace QP;
 
+class ArenaController;
+
+namespace arena_controller
+{
 class Display
 {
 public:
   Display();
-  void setup();
   void setupFileFromStorage();
   void writeFramesToStorage();
   void showFrameFromStorage();
@@ -34,14 +37,14 @@ private:
   const SPISettings spi_settings_;
   Region regions_[arena_controller::constants::region_count_per_frame];
   uint8_t frame_index_;
-  Storage storage_;
+  Storage * storage_ptr_;
   uint8_t panel_buffer_[arena_controller::constants::byte_count_per_panel_grayscale];
   bool show_from_storage_;
 
+  void setup(Storage & storage);
   void setupSerial();
   void setupPins();
   void setupRegions();
-  void setupStorage();
   void setupEthernet();
 
   void getMacAddress(uint8_t * mac_address);
@@ -52,6 +55,7 @@ private:
   void beginTransferPanelsAcrossRegions();
   void endTransferPanelsAcrossRegions();
   void transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index);
+  friend class ::ArenaController;
 };
-
+}
 #endif

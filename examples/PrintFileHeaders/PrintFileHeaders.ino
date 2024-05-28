@@ -6,11 +6,11 @@ ArenaController dev;
 void setup()
 {
   dev.setup();
-  dev.setupFileFromStorage();
 }
 
 void loop()
 {
-  // dev.showFrameFromStorage();
+  dev.storage.printFileHeaders();
+  Serial.println("--------");
   delay(2000);
 }

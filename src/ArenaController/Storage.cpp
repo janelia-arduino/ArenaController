@@ -9,18 +9,13 @@
 
 using namespace arena_controller;
 
-void Storage::setup()
+void Storage::listFiles()
 {
-  sd_.begin(SD_CONFIG);
+  sd_.ls(LS_R);
+}
 
-  sprintf(file_name_, "f%d_c%d_r%d_g%d",
-    constants::frame_count,
-    constants::panel_count_max_per_region_col,
-    constants::panel_count_max_per_region_row,
-    constants::region_count_per_frame);
-
-  mkdirShow();
-  chdirShow();
+void Storage::printFileHeaders()
+{
 }
 
 void Storage::openFileForWriting()
@@ -57,6 +52,21 @@ void Storage::readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count)
   file_.read(panel_buffer, panel_byte_count);
   file_position_ = file_position_ + panel_byte_count;
   file_.seekSet(file_position_);
+}
+
+void Storage::setup()
+{
+  sd_.begin(SD_CONFIG);
+
+  // sprintf(file_name_, "f%d_c%d_r%d_g%d",
+  //   constants::frame_count,
+  //   constants::panel_count_max_per_region_col,
+  //   constants::panel_count_max_per_region_row,
+  //   constants::region_count_per_frame);
+
+  sd_.chdir(constants::directory);
+  // mkdirShow();
+  // chdirShow();
 }
 
 void Storage::mkdirShow()

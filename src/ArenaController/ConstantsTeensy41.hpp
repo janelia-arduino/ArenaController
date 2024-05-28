@@ -67,7 +67,7 @@ constexpr uint64_t file_length = \
   frame_count *\
   byte_count_max_per_frame_grayscale; // 396000
 
-const char directory[] = "show";
+const char directory[] = "patterns";
 
 }
 }

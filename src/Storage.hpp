@@ -29,10 +29,15 @@
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SPI_CLOCK)
 #endif  // HAS_SDIO_CLASS
 
+class ArenaController;
+
+namespace arena_controller
+{
 class Storage
 {
 public:
-  void setup();
+  void listFiles();
+  void printFileHeaders();
   void openFileForWriting();
   void openFileForReading();
   void rewindFileForReading();
@@ -45,8 +50,10 @@ private:
   char file_name_[arena_controller::constants::file_name_size_max];
   uint64_t file_position_;
 
+  void setup();
   void mkdirShow();
   void chdirShow();
+  friend class ::ArenaController;
 };
-
+}
 #endif

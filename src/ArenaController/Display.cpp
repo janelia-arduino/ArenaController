@@ -14,26 +14,14 @@ Display::Display() :
 spi_settings_(SPISettings(constants::spi_clock, constants::spi_bit_order, constants::spi_data_mode))
 {}
 
-void Display::setup()
-{
-  setupSerial();
-  setupPins();
-  setupRegions();
-  setupStorage();
-  // setupEthernet();
-  TransferTracker::setup();
-  frame_index_ = 0;
-  show_from_storage_ = true;
-}
-
 void Display::setupFileFromStorage()
 {
-  storage_.openFileForReading();
+  storage_ptr_->openFileForReading();
 }
 
 void Display::writeFramesToStorage()
 {
-  storage_.openFileForWriting();
+  storage_ptr_->openFileForWriting();
 
   for (uint8_t frame_index = 0; frame_index<constants::frame_count; ++frame_index)
   {
@@ -45,17 +33,17 @@ void Display::writeFramesToStorage()
         {
           if (frame_index < constants::half_frame_count)
           {
-            storage_.writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
+            storage_ptr_->writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
           }
           else
           {
-            storage_.writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
+            storage_ptr_->writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
           }
         }
       }
     }
   }
-  storage_.closeFile();
+  storage_ptr_->closeFile();
 }
 
 void Display::showFrameFromStorage()
@@ -71,6 +59,18 @@ void Display::showFrameFromRAM()
   beginTransferFrame();
   transferFrame();
   endTransferFrame();
+}
+
+void Display::setup(Storage & storage)
+{
+  storage_ptr_ = &storage;
+  setupSerial();
+  setupPins();
+  setupRegions();
+  // setupEthernet();
+  TransferTracker::setup();
+  frame_index_ = 0;
+  show_from_storage_ = true;
 }
 
 void Display::setupSerial()
@@ -106,11 +106,6 @@ void Display::setupRegions()
   }
 }
 
-void Display::setupStorage()
-{
-  storage_.setup();
-}
-
 void Display::setupEthernet()
 {
   uint8_t mac_address[constants::mac_address_size];
@@ -139,7 +134,7 @@ void Display::beginTransferFrame()
 {
   if (frame_index_ == 0)
   {
-    storage_.rewindFileForReading();
+    storage_ptr_->rewindFileForReading();
   }
 }
 
@@ -193,7 +188,7 @@ void Display::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
   {
     if (show_from_storage_)
     {
-      storage_.readPanelFromFile(panel_buffer_, constants::byte_count_per_panel_grayscale);
+      storage_ptr_->readPanelFromFile(panel_buffer_, constants::byte_count_per_panel_grayscale);
       regions_[region_index].transferPanel(panel_buffer_, constants::byte_count_per_panel_grayscale);
     }
     else
