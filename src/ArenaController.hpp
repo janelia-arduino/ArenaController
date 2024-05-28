@@ -10,19 +10,16 @@
 
 #include <Arduino.h>
 
-#include "ArenaController/Display.hpp"
+#include "Display.hpp"
+#include "Storage.hpp"
 
 
-class ArenaController
+struct ArenaController
 {
-public:
   void setup();
-  void setupFileFromStorage();
-  void writeFramesToStorage();
-  void showFrameFromStorage();
-  void showFrameFromRAM();
-private:
-  Display display_;
+
+  arena_controller::Display display;
+  arena_controller::Storage storage;
 };
 
 #endif
