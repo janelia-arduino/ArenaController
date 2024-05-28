@@ -13,11 +13,12 @@
 #include <NativeEthernet.h>
 #include <qpcpp.hpp>
 
-#include "Constants.hpp"
-#include "Region.hpp"
-#include "TransferTracker.hpp"
-#include "Patterns.hpp"
 #include "Storage.hpp"
+
+#include "ArenaController/Constants.hpp"
+#include "ArenaController/Region.hpp"
+#include "ArenaController/TransferTracker.hpp"
+#include "ArenaController/Patterns.hpp"
 
 using namespace QP;
 
