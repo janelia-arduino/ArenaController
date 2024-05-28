@@ -10,8 +10,8 @@
 
 #include <SdFat.h>
 
-#include "Constants.hpp"
-#include "Patterns.hpp"
+#include "ArenaController/Constants.hpp"
+#include "ArenaController/Patterns.hpp"
 
 
 // 1 for FAT16/FAT32, 2 for exFAT, 3 for FAT16/FAT32 and exFAT.
@@ -37,7 +37,10 @@ class Storage
 {
 public:
   void listFiles();
+  void printFileInformation();
   void printFileHeaders();
+  void printFileSizes();
+
   void openFileForWriting();
   void openFileForReading();
   void rewindFileForReading();
@@ -46,13 +49,13 @@ public:
   void readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count);
 private:
   SdExFat sd_;
+  ExFile dir_;
   ExFile file_;
+  //uint8_t file_buffer[79407U];
   char file_name_[arena_controller::constants::file_name_size_max];
   uint64_t file_position_;
 
   void setup();
-  void mkdirShow();
-  void chdirShow();
   friend class ::ArenaController;
 };
 }
