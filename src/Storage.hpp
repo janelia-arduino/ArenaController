@@ -40,6 +40,7 @@ public:
   void printFileInformation();
   void printFileHeaders();
   void printFileSizes();
+  void convertFiles();
 
   void openFileForWriting();
   void openFileForReading();
@@ -49,13 +50,16 @@ public:
   void readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count);
 private:
   SdExFat sd_;
-  ExFile dir_;
+  ExFile pat_dir_;
+  ExFile tpa_dir_;
   ExFile file_;
   //uint8_t file_buffer[79407U];
   char file_name_[arena_controller::constants::file_name_size_max];
   uint64_t file_position_;
 
   void setup();
+  const char * getFilenameSuffix(const char * filename);
+  void getFilenameStem(char * stem, const char * filename);
   friend class ::ArenaController;
 };
 }

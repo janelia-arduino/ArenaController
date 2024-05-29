@@ -17,8 +17,8 @@ void Storage::listFiles()
 void Storage::printFileInformation()
 {
   ExFile file;
-  dir_.rewind();
-  while (file.openNext(&dir_, O_RDONLY))
+  pat_dir_.rewind();
+  while (file.openNext(&pat_dir_, O_RDONLY))
   {
     file.printFileSize(&Serial);
     Serial.write(' ');
@@ -33,7 +33,7 @@ void Storage::printFileInformation()
     Serial.println();
     file.close();
   }
-  if (dir_.getError())
+  if (pat_dir_.getError())
   {
     Serial.println("openNext failed");
   }
@@ -46,8 +46,8 @@ void Storage::printFileInformation()
 void Storage::printFileHeaders()
 {
   ExFile file;
-  dir_.rewind();
-  while (file.openNext(&dir_, O_RDONLY))
+  pat_dir_.rewind();
+  while (file.openNext(&pat_dir_, O_RDONLY))
   {
     file.printName(&Serial);
     Serial.println("");
@@ -72,8 +72,8 @@ void Storage::printFileHeaders()
 void Storage::printFileSizes()
 {
   ExFile file;
-  dir_.rewind();
-  while (file.openNext(&dir_, O_RDONLY))
+  pat_dir_.rewind();
+  while (file.openNext(&pat_dir_, O_RDONLY))
   {
     file.printName(&Serial);
     Serial.print(' ');
@@ -91,6 +91,51 @@ void Storage::printFileSizes()
     Serial.println(file_size);
     file.close();
     Serial.println("--");
+  }
+}
+
+void Storage::convertFiles()
+{
+  ExFile file;
+
+  tpa_dir_.rewind();
+  while (file.openNext(&tpa_dir_, O_WRONLY))
+  {
+    file.remove();
+  }
+
+  pat_dir_.rewind();
+  while (file.openNext(&pat_dir_, O_RDONLY))
+  {
+    char in_name[100] = "";
+    file.getName(in_name, 100);
+    const char * suffix = getFilenameSuffix(in_name);
+    if (strcmp(suffix, "pat") == 0)
+    {
+      Serial.print(in_name);
+      Serial.print(" ");
+      file.printFileSize(&Serial);
+      file.close();
+      Serial.println("");
+      char stem[10] = "";
+      getFilenameStem(stem, in_name);
+      char out_name[100] = "patterns/tpa/";
+      strcat(out_name, stem);
+      strcat(out_name, ".tpa");
+      sd_.open(out_name, O_WRONLY | O_CREAT);
+    }
+  }
+
+  tpa_dir_.rewind();
+  while (file.openNext(&tpa_dir_, O_RDONLY))
+  {
+    char in_name[100] = "";
+    file.getName(in_name, 100);
+    Serial.print(in_name);
+    Serial.print(' ');
+    file.printFileSize(&Serial);
+    file.close();
+    Serial.println("");
   }
 }
 
@@ -134,7 +179,8 @@ void Storage::setup()
 {
   sd_.begin(SD_CONFIG);
 
-  dir_.open(constants::directory);
+  pat_dir_.open("patterns/pat");
+  tpa_dir_.open("patterns/tpa", O_CREAT);
 
   // sprintf(file_name_, "f%d_c%d_r%d_g%d",
   //   constants::frame_count,
@@ -145,4 +191,18 @@ void Storage::setup()
   // sd_.chdir(constants::directory);
   // mkdirShow();
   // chdirShow();
+}
+
+const char * Storage::getFilenameSuffix(const char * filename)
+{
+  const char * dot = strrchr(filename, '.');
+  if(!dot || dot == filename) return "";
+  return dot + 1;
+}
+
+void Storage::getFilenameStem(char * stem, const char * filename)
+{
+  const char * dot = strrchr(filename, '.');
+  if(!dot || dot == filename) return "";
+  strncpy(stem, filename, (strlen(filename) - strlen(dot)));
 }
