@@ -17,7 +17,7 @@ namespace constants
 constexpr uint32_t baud_rate = 2000000;
 
 // SPI Settings
-constexpr uint32_t spi_clock = 5000000;
+constexpr uint32_t spi_clock_speed = 5000000;
 constexpr uint8_t spi_bit_order = MSBFIRST;
 constexpr uint8_t spi_data_mode = SPI_MODE0;
 
@@ -65,10 +65,6 @@ constexpr uint8_t byte_count_per_panel_grayscale = \
 constexpr uint8_t byte_count_per_panel_binary = \
   byte_count_per_quarter_panel_binary * \
   quarter_panel_count_per_panel; // 36
-
-// frames
-constexpr uint8_t frame_count = 100;
-constexpr uint8_t half_frame_count = frame_count / 2;
 
 }
 }

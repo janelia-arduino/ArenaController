@@ -1,0 +1,12 @@
+Initial benchmarks
+16 bit grayscale
+
+12x5 @  5 MHz: 138 Hz
+12x5 @ 10 MHz: 257 Hz
+12x5 @ 20 MHz: 455 Hz
+12x3 @  5 MHz: 230 Hz
+12x3 @ 10 MHz: 430 Hz
+12x3 @ 20 MHz: 758 Hz
+12x2 @  5 MHz: 347 Hz
+12x2 @ 10 MHz: 641 Hz
+12x2 @ 20 MHz: 1190 Hz
