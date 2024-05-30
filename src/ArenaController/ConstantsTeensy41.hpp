@@ -62,11 +62,6 @@ constexpr uint8_t panel_select_pins[panel_count_max_per_region_row][panel_count_
 };
 
 // files
-constexpr uint8_t file_name_size_max = 24;
-constexpr uint64_t file_length = \
-  frame_count *\
-  byte_count_max_per_frame_grayscale; // 396000
-
 const char base_dir_str[] = "patterns";
 
 }

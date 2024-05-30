@@ -139,16 +139,47 @@ void Storage::convertFiles()
   }
 }
 
-void Storage::openFileForWriting()
+void Storage::writeDummyFramesToFile(const char * filename, uint16_t frame_count, uint8_t panel_columns_per_frame, uint8_t panel_rows_per_frame)
 {
-  file_.remove(file_name_);
-  file_.preAllocate(constants::file_length);
-  file_.open(file_name_, O_WRITE | O_CREAT | O_APPEND);
+  if (not openFileForWriting(filename))
+  {
+    return;
+  }
+  uint16_t half_frame_count = frame_count / 2;
+  uint8_t panel_count_per_region_col = panel_columns_per_frame / constants::region_count_per_frame;
+  uint8_t panel_count_per_region_row = panel_rows_per_frame;
+
+  for (uint8_t frame_index = 0; frame_index<frame_count; ++frame_index)
+  {
+    for (uint8_t col_index = 0; col_index<panel_count_per_region_col; ++col_index)
+    {
+      for (uint8_t row_index = 0; row_index<panel_count_per_region_row; ++row_index)
+      {
+        for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
+        {
+          if (frame_index < half_frame_count)
+          {
+            writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
+          }
+          else
+          {
+            writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
+          }
+        }
+      }
+    }
+  }
+  closeFile();
 }
 
-void Storage::openFileForReading()
+bool Storage::openFileForWriting(const char * filename)
 {
-  file_.open(file_name_);
+  return file_.open(filename, O_WRITE | O_CREAT | O_EXCL);
+}
+
+bool Storage::openFileForReading(const char * filename)
+{
+  return file_.open(filename);
 }
 
 void Storage::rewindFileForReading()
@@ -182,15 +213,7 @@ void Storage::setup()
   pat_dir_.open("patterns/pat");
   tpa_dir_.open("patterns/tpa", O_CREAT);
 
-  // sprintf(file_name_, "f%d_c%d_r%d_g%d",
-  //   constants::frame_count,
-  //   constants::panel_count_max_per_region_col,
-  //   constants::panel_count_max_per_region_row,
-  //   constants::region_count_per_frame);
-
-  // sd_.chdir(constants::directory);
-  // mkdirShow();
-  // chdirShow();
+  sd_.chdir(constants::base_dir_str);
 }
 
 const char * Storage::getFilenameSuffix(const char * filename)

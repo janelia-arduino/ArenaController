@@ -42,8 +42,10 @@ public:
   void printFileSizes();
   void convertFiles();
 
-  void openFileForWriting();
-  void openFileForReading();
+  void writeDummyFramesToFile(const char * filename, uint16_t frame_count, uint8_t panel_columns_per_frame, uint8_t panel_rows_per_frame);
+
+  bool openFileForWriting(const char * filename);
+  bool openFileForReading(const char * filename);
   void rewindFileForReading();
   void closeFile();
   void writePanelToFile(const uint8_t * panel_buffer, size_t panel_byte_count);
@@ -54,7 +56,6 @@ private:
   ExFile tpa_dir_;
   ExFile file_;
   //uint8_t file_buffer[79407U];
-  char file_name_[arena_controller::constants::file_name_size_max];
   uint64_t file_position_;
 
   void setup();

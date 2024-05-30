@@ -11,54 +11,19 @@
 using namespace arena_controller;
 
 Display::Display() :
-spi_settings_(SPISettings(constants::spi_clock, constants::spi_bit_order, constants::spi_data_mode))
+spi_settings_(SPISettings(constants::spi_clock_speed, constants::spi_bit_order, constants::spi_data_mode))
 {}
 
-void Display::setupFileFromStorage()
+void Display::setClockSpeed(uint32_t clock_speed)
 {
-  storage_ptr_->openFileForReading();
+  spi_settings_ = SPISettings(clock_speed, constants::spi_bit_order, constants::spi_data_mode);
 }
 
-void Display::writeFramesToStorage()
-{
-  storage_ptr_->openFileForWriting();
-
-  for (uint8_t frame_index = 0; frame_index<constants::frame_count; ++frame_index)
-  {
-    for (uint8_t col_index = 0; col_index<constants::panel_count_max_per_region_col; ++col_index)
-    {
-      for (uint8_t row_index = 0; row_index<constants::panel_count_max_per_region_row; ++row_index)
-      {
-        for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
-        {
-          if (frame_index < constants::half_frame_count)
-          {
-            storage_ptr_->writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
-          }
-          else
-          {
-            storage_ptr_->writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
-          }
-        }
-      }
-    }
-  }
-  storage_ptr_->closeFile();
-}
-
-void Display::showFrameFromStorage()
+void Display::showFrame(uint16_t frame_count, uint8_t panel_columns_per_frame, uint8_t panel_rows_per_frame)
 {
   beginTransferFrame();
-  transferFrame();
-  endTransferFrame();
-}
-
-void Display::showFrameFromRAM()
-{
-  show_from_storage_ = false;
-  beginTransferFrame();
-  transferFrame();
-  endTransferFrame();
+  transferFrame(panel_columns_per_frame/constants::region_count_per_frame, panel_rows_per_frame);
+  endTransferFrame(frame_count);
 }
 
 void Display::setup(Storage & storage)
@@ -70,7 +35,6 @@ void Display::setup(Storage & storage)
   // setupEthernet();
   TransferTracker::setup();
   frame_index_ = 0;
-  show_from_storage_ = true;
 }
 
 void Display::setupSerial()
@@ -138,19 +102,19 @@ void Display::beginTransferFrame()
   }
 }
 
-void Display::endTransferFrame()
+void Display::endTransferFrame(uint16_t frame_count)
 {
-  if (++frame_index_ == constants::frame_count)
+  if (++frame_index_ == frame_count)
   {
     frame_index_ = 0;
   };
 }
 
-void Display::transferFrame()
+void Display::transferFrame(uint8_t panel_count_per_region_col, uint8_t panel_count_per_region_row)
 {
-  for (uint8_t col_index = 0; col_index<constants::panel_count_max_per_region_col; ++col_index)
+  for (uint8_t col_index = 0; col_index<panel_count_per_region_col; ++col_index)
   {
-    for (uint8_t row_index = 0; row_index<constants::panel_count_max_per_region_row; ++row_index)
+    for (uint8_t row_index = 0; row_index<panel_count_per_region_row; ++row_index)
     {
       beginTransferPanelsAcrossRegions();
       transferPanelsAcrossRegions(row_index, col_index);
@@ -186,22 +150,8 @@ void Display::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
 
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    if (show_from_storage_)
-    {
-      storage_ptr_->readPanelFromFile(panel_buffer_, constants::byte_count_per_panel_grayscale);
-      regions_[region_index].transferPanel(panel_buffer_, constants::byte_count_per_panel_grayscale);
-    }
-    else
-    {
-      if (frame_index_ < constants::half_frame_count)
-      {
-        regions_[region_index].transferPanel(patterns::all_on, constants::byte_count_per_panel_grayscale);
-      }
-      else
-      {
-        regions_[region_index].transferPanel(patterns::all_off, constants::byte_count_per_panel_grayscale);
-      }
-    }
+    storage_ptr_->readPanelFromFile(panel_buffer_[region_index], constants::byte_count_per_panel_grayscale);
+    regions_[region_index].transferPanel(panel_buffer_[region_index], constants::byte_count_per_panel_grayscale);
   }
 
   while (not TransferTracker::allTransferPanelsComplete())
