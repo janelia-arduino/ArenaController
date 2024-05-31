@@ -52,8 +52,8 @@ void Storage::printFileHeaders()
     file.printName(&Serial);
     Serial.println("");
     file.rewind();
-    patterns::Header header;
-    file.read(&header, patterns::header_size);
+    pat::Header header;
+    file.read(&header, pat::header_size);
     Serial.print("frame_count_x: ");
     Serial.println(header.frame_count_x);
     Serial.print("frame_count_y: ");
@@ -80,11 +80,11 @@ void Storage::printFileSizes()
     file.printFileSize(&Serial);
     Serial.println("");
     file.rewind();
-    patterns::Header header;
-    file.read(&header, patterns::header_size);
+    pat::Header header;
+    file.read(&header, pat::header_size);
 
     long file_size = 0;
-    file_size += patterns::header_size;
+    file_size += pat::header_size;
     file_size += (1 + header.col_count + 32*header.col_count)*4*header.row_count*header.frame_count_x*header.frame_count_y;
 
     Serial.print("calculated file size: ");

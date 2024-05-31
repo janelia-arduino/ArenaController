@@ -12,6 +12,7 @@
 
 #include "ArenaController/Constants.hpp"
 #include "ArenaController/Patterns.hpp"
+#include "ArenaController/Pat.hpp"
 
 
 // 1 for FAT16/FAT32, 2 for exFAT, 3 for FAT16/FAT32 and exFAT.
