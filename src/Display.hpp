@@ -18,7 +18,7 @@
 #include "ArenaController/Constants.hpp"
 #include "ArenaController/Region.hpp"
 #include "ArenaController/TransferTracker.hpp"
-#include "ArenaController/Patterns.hpp"
+#include "ArenaController/Pattern.hpp"
 
 using namespace QP;
 
