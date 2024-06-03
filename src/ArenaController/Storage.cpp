@@ -52,18 +52,18 @@ void Storage::printFileHeaders()
     file.printName(&Serial);
     Serial.println("");
     file.rewind();
-    pat::Header header;
-    file.read(&header, pat::header_size);
+    pattern::PatHeader pat_header;
+    file.read(&pat_header, pattern::pat_header_size);
     Serial.print("frame_count_x: ");
-    Serial.println(header.frame_count_x);
+    Serial.println(pat_header.frame_count_x);
     Serial.print("frame_count_y: ");
-    Serial.println(header.frame_count_y);
+    Serial.println(pat_header.frame_count_y);
     Serial.print("grayscale_value: ");
-    Serial.println(header.grayscale_value);
+    Serial.println(pat_header.grayscale_value);
     Serial.print("row_count: ");
-    Serial.println(header.row_count);
+    Serial.println(pat_header.row_count);
     Serial.print("col_count: ");
-    Serial.println(header.col_count);
+    Serial.println(pat_header.col_count);
     file.close();
     Serial.println("--");
   }
@@ -80,12 +80,12 @@ void Storage::printFileSizes()
     file.printFileSize(&Serial);
     Serial.println("");
     file.rewind();
-    pat::Header header;
-    file.read(&header, pat::header_size);
+    pattern::PatHeader pat_header;
+    file.read(&pat_header, pattern::pat_header_size);
 
     long file_size = 0;
-    file_size += pat::header_size;
-    file_size += (1 + header.col_count + 32*header.col_count)*4*header.row_count*header.frame_count_x*header.frame_count_y;
+    file_size += pattern::pat_header_size;
+    file_size += (1 + pat_header.col_count + 32*pat_header.col_count)*4*pat_header.row_count*pat_header.frame_count_x*pat_header.frame_count_y;
 
     Serial.print("calculated file size: ");
     Serial.println(file_size);
@@ -159,11 +159,11 @@ void Storage::writeDummyFramesToFile(const char * filename, uint16_t frame_count
         {
           if (frame_index < half_frame_count)
           {
-            writePanelToFile(patterns::all_on, constants::byte_count_per_panel_grayscale);
+            writePanelToFile(pattern::all_on_grayscale_panel, constants::byte_count_per_panel_grayscale);
           }
           else
           {
-            writePanelToFile(patterns::all_off, constants::byte_count_per_panel_grayscale);
+            writePanelToFile(pattern::all_off_grayscale_panel, constants::byte_count_per_panel_grayscale);
           }
         }
       }
