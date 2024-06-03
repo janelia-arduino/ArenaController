@@ -59,8 +59,6 @@ private:
   uint64_t file_position_;
 
   void setup();
-  const char * getFilenameSuffix(const char * filename);
-  void getFilenameStem(char * stem, const char * filename);
   friend class ::ArenaController;
 };
 }

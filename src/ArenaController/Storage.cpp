@@ -107,30 +107,15 @@ void Storage::convertFiles()
   pat_dir_.rewind();
   while (file.openNext(&pat_dir_, O_RDONLY))
   {
-    char in_name[100] = "";
-    file.getName(in_name, 100);
-    const char * suffix = getFilenameSuffix(in_name);
-    if (strcmp(suffix, "pat") == 0)
-    {
-      Serial.print(in_name);
-      Serial.print(" ");
-      file.printFileSize(&Serial);
-      file.close();
-      Serial.println("");
-      char stem[10] = "";
-      getFilenameStem(stem, in_name);
-      char out_name[100] = "patterns/tpa/";
-      strcat(out_name, stem);
-      strcat(out_name, ".tpa");
-      sd_.open(out_name, O_WRONLY | O_CREAT);
-    }
+    pattern::Pattern pattern;
+    pattern.importFromPat(file);
   }
 
   tpa_dir_.rewind();
   while (file.openNext(&tpa_dir_, O_RDONLY))
   {
-    char in_name[100] = "";
-    file.getName(in_name, 100);
+    char in_name[constants::filename_length_max] = "";
+    file.getName(in_name, constants::filename_length_max);
     Serial.print(in_name);
     Serial.print(' ');
     file.printFileSize(&Serial);
@@ -214,18 +199,4 @@ void Storage::setup()
   tpa_dir_.open("patterns/tpa", O_CREAT);
 
   sd_.chdir(constants::base_dir_str);
-}
-
-const char * Storage::getFilenameSuffix(const char * filename)
-{
-  const char * dot = strrchr(filename, '.');
-  if(!dot || dot == filename) return "";
-  return dot + 1;
-}
-
-void Storage::getFilenameStem(char * stem, const char * filename)
-{
-  const char * dot = strrchr(filename, '.');
-  if(!dot || dot == filename) return "";
-  strncpy(stem, filename, (strlen(filename) - strlen(dot)));
 }

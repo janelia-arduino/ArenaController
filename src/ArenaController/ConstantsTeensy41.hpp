@@ -62,7 +62,10 @@ constexpr uint8_t panel_select_pins[panel_count_max_per_region_row][panel_count_
 };
 
 // files
-const char base_dir_str[] = "patterns";
+constexpr char base_dir_str[] = "patterns";
+constexpr uint8_t filename_length_max = 15;
+constexpr uint16_t frame_count_max_y = 1;
+constexpr uint16_t frame_count_max_x = 10;
 
 }
 }
