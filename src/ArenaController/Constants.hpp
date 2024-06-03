@@ -37,6 +37,8 @@ constexpr uint8_t pixel_count_per_quarter_panel = \
 constexpr uint8_t bit_count_per_pixel_grayscale = 4;
 constexpr uint8_t pixel_count_per_byte_grayscale = \
   bit_count_per_byte / bit_count_per_pixel_grayscale; // 2
+constexpr uint8_t byte_count_per_quarter_panel_row_grayscale = \
+  pixel_count_per_quarter_panel_row / pixel_count_per_byte_grayscale; // 4
 
 // quarter panel binary
 constexpr uint8_t bit_count_per_pixel_binary = 1;
@@ -47,10 +49,10 @@ constexpr uint8_t pixel_count_per_byte_binary = \
 constexpr uint8_t byte_count_per_quarter_panel_control = 1;
 constexpr uint8_t byte_count_per_quarter_panel_grayscale = \
   byte_count_per_quarter_panel_control + \
-  pixel_count_per_quarter_panel/pixel_count_per_byte_grayscale; // 33
+  pixel_count_per_quarter_panel / pixel_count_per_byte_grayscale; // 33
 constexpr uint8_t byte_count_per_quarter_panel_binary = \
   byte_count_per_quarter_panel_control + \
-  pixel_count_per_quarter_panel/pixel_count_per_byte_binary; // 9
+  pixel_count_per_quarter_panel / pixel_count_per_byte_binary; // 9
 
 // panel
 constexpr uint8_t quarter_panel_count_per_panel_row = 2;
