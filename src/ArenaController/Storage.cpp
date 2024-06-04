@@ -60,10 +60,10 @@ void Storage::printFileHeaders()
     Serial.println(pat_header.frame_count_y);
     Serial.print("grayscale_value: ");
     Serial.println(pat_header.grayscale_value);
-    Serial.print("row_count: ");
-    Serial.println(pat_header.row_count);
-    Serial.print("col_count: ");
-    Serial.println(pat_header.col_count);
+    Serial.print("panel_count_row: ");
+    Serial.println(pat_header.panel_count_row);
+    Serial.print("panel_count_col: ");
+    Serial.println(pat_header.panel_count_col);
     file.close();
     Serial.println("--");
   }
@@ -85,7 +85,7 @@ void Storage::printFileSizes()
 
     long file_size = 0;
     file_size += pattern::pat_header_size;
-    file_size += (1 + pat_header.col_count + 32*pat_header.col_count)*4*pat_header.row_count*pat_header.frame_count_x*pat_header.frame_count_y;
+    file_size += (1 + pat_header.panel_count_col + 32*pat_header.panel_count_col)*4*pat_header.panel_count_row*pat_header.frame_count_x*pat_header.frame_count_y;
 
     Serial.print("calculated file size: ");
     Serial.println(file_size);
