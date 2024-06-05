@@ -60,10 +60,10 @@ void Storage::printFileHeaders()
     Serial.println(pat_header.frame_count_y);
     Serial.print("grayscale_value: ");
     Serial.println(pat_header.grayscale_value);
-    Serial.print("panel_count_row: ");
-    Serial.println(pat_header.panel_count_row);
-    Serial.print("panel_count_col: ");
-    Serial.println(pat_header.panel_count_col);
+    Serial.print("panel_count_per_frame_row: ");
+    Serial.println(pat_header.panel_count_per_frame_row);
+    Serial.print("panel_count_per_frame_col: ");
+    Serial.println(pat_header.panel_count_per_frame_col);
     file.close();
     Serial.println("--");
   }
@@ -85,7 +85,7 @@ void Storage::printFileSizes()
 
     long file_size = 0;
     file_size += pattern::pat_header_size;
-    file_size += (1 + pat_header.panel_count_col + 32*pat_header.panel_count_col)*4*pat_header.panel_count_row*pat_header.frame_count_x*pat_header.frame_count_y;
+    file_size += (1 + pat_header.panel_count_per_frame_col + 32*pat_header.panel_count_per_frame_col)*4*pat_header.panel_count_per_frame_row*pat_header.frame_count_x*pat_header.frame_count_y;
 
     Serial.print("calculated file size: ");
     Serial.println(file_size);
@@ -105,23 +105,67 @@ void Storage::convertFiles()
   }
 
   pat_dir_.rewind();
+  bool imported_successfully;
   while (file.openNext(&pat_dir_, O_RDONLY))
   {
-    pattern::Pattern pattern;
-    pattern.importFromPat(file);
+    char import_filename[constants::filename_length_max] = "";
+    file.getName(import_filename, constants::filename_length_max);
+    const char * import_filename_suffix = getFilenameSuffix(import_filename);
+    if (strcmp(import_filename_suffix, "pat") == 0)
+    {
+      pattern::Pattern pattern;
+      imported_successfully = pattern.importFromPat(file);
+      if (imported_successfully)
+      {
+        Serial.print(import_filename);
+        Serial.print(" ");
+        file.printFileSize(&Serial);
+        Serial.print(" -> ");
+        char filename_stem[constants::filename_length_max];
+        memset(filename_stem, 0, constants::filename_length_max);
+        getFilenameStem(filename_stem, import_filename);
+
+        char output_filename[constants::filename_length_max] = "";
+        strcat(output_filename, filename_stem);
+        strcat(output_filename, ".tpa");
+        ExFile output_file;
+        bool opened_successfully = output_file.open(&tpa_dir_, output_filename, O_WRONLY | O_CREAT);
+        if (opened_successfully)
+        {
+          bool output_successfully = pattern.exportToTpa(output_file);
+          if (output_successfully)
+          {
+            output_file.printName();
+            Serial.print(" ");
+            output_file.printFileSize(&Serial);
+            Serial.println("");
+          }
+        }
+        else
+        {
+          Serial.print("open failed! for ");
+          Serial.println(output_filename);
+        }
+        output_file.close();
+        // Serial.print(output_filename);
+        // Serial.print(" created successfully: ");
+        // Serial.println(created_successfully);
+      }
+    }
+    file.close();
   }
 
-  tpa_dir_.rewind();
-  while (file.openNext(&tpa_dir_, O_RDONLY))
-  {
-    char in_name[constants::filename_length_max] = "";
-    file.getName(in_name, constants::filename_length_max);
-    Serial.print(in_name);
-    Serial.print(' ');
-    file.printFileSize(&Serial);
-    file.close();
-    Serial.println("");
-  }
+  // tpa_dir_.rewind();
+  // while (file.openNext(&tpa_dir_, O_RDONLY))
+  // {
+  //   char in_name[constants::filename_length_max] = "";
+  //   file.getName(in_name, constants::filename_length_max);
+  //   Serial.print(in_name);
+  //   Serial.print(' ');
+  //   file.printFileSize(&Serial);
+  //   file.close();
+  //   Serial.println("");
+  // }
 }
 
 void Storage::writeDummyFramesToFile(const char * filename, uint16_t frame_count, uint8_t panel_columns_per_frame, uint8_t panel_rows_per_frame)
@@ -199,4 +243,18 @@ void Storage::setup()
   tpa_dir_.open("patterns/tpa", O_CREAT);
 
   sd_.chdir(constants::base_dir_str);
+}
+
+const char * Storage::getFilenameSuffix(const char * filename)
+{
+  const char * dot = strrchr(filename, '.');
+  if(!dot || dot == filename) return "";
+  return dot + 1;
+}
+
+void Storage::getFilenameStem(char * stem, const char * filename)
+{
+  const char * dot = strrchr(filename, '.');
+  if(!dot || dot == filename) return "";
+  strncpy(stem, filename, (strlen(filename) - strlen(dot)));
 }

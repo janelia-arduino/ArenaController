@@ -143,10 +143,20 @@ struct PatHeader
   unsigned int frame_count_x : 16;
   unsigned int frame_count_y : 16;
   unsigned int grayscale_value : 8;
-  unsigned int panel_count_row : 8;
-  unsigned int panel_count_col : 8;
+  unsigned int panel_count_per_frame_row : 8;
+  unsigned int panel_count_per_frame_col : 8;
 };
 constexpr uint8_t pat_header_size = 7;
+
+struct TpaHeader
+{
+  unsigned int frame_count_x : 16;
+  unsigned int frame_count_y : 16;
+  unsigned int grayscale_value : 8;
+  unsigned int panel_count_per_frame_row : 8;
+  unsigned int panel_count_per_frame_col : 8;
+};
+constexpr uint8_t tpa_header_size = 7;
 
 struct QuarterPanel
 {
@@ -168,17 +178,14 @@ class Pattern
 {
 public:
   bool importFromPat(ExFile & file);
+  bool exportToTpa(ExFile & file);
 private:
-  char filename_stem_[constants::filename_length_max];
   uint16_t frame_count_x_;
   uint16_t frame_count_y_;
   uint8_t grayscale_value_;
-  uint8_t panel_count_row_;
-  uint8_t panel_count_col_;
+  uint8_t panel_count_per_frame_row_;
+  uint8_t panel_count_per_frame_col_;
   Frame frames_[constants::frame_count_max_y][constants::frame_count_max_x];
-
-  const char * getFilenameSuffix(const char * filename);
-  void getFilenameStem(char * stem, const char * filename);
 };
 
 }
