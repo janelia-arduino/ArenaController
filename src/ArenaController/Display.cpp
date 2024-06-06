@@ -19,11 +19,21 @@ void Display::setClockSpeed(uint32_t clock_speed)
   spi_settings_ = SPISettings(clock_speed, constants::spi_bit_order, constants::spi_data_mode);
 }
 
-void Display::showFrame(uint16_t frame_count, uint8_t panel_columns_per_frame, uint8_t panel_rows_per_frame)
+void Display::showFrame()
 {
+  // delay(1000);
+  // Serial.print("beginTransferFrame();");
   beginTransferFrame();
-  transferFrame(panel_columns_per_frame/constants::region_count_per_frame, panel_rows_per_frame);
-  endTransferFrame(frame_count);
+  // Serial.print("transferFrame(");
+  // Serial.print(storage_ptr_->tpa_header_.panel_count_per_frame_col/constants::region_count_per_frame);
+  // Serial.print(",");
+  // Serial.print(storage_ptr_->tpa_header_.panel_count_per_frame_row);
+  // Serial.println(");");
+  transferFrame(storage_ptr_->tpa_header_.panel_count_per_frame_col/constants::region_count_per_frame, storage_ptr_->tpa_header_.panel_count_per_frame_row);
+  // Serial.print("endTransferFrame(");
+  // Serial.print(storage_ptr_->tpa_header_.frame_count_x);
+  // Serial.println(");");
+  endTransferFrame(storage_ptr_->tpa_header_.frame_count_x);
 }
 
 void Display::setup(Storage & storage)
@@ -96,10 +106,10 @@ void Display::setupEthernet()
 
 void Display::beginTransferFrame()
 {
-  if (frame_index_ == 0)
-  {
-    storage_ptr_->rewindFileForReading();
-  }
+  // if (frame_index_ == 0)
+  // {
+    storage_ptr_->rewindTpaFileForReading();
+  // }
 }
 
 void Display::endTransferFrame(uint16_t frame_count)

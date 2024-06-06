@@ -31,7 +31,7 @@ class Display
 public:
   Display();
   void setClockSpeed(uint32_t clock_speed);
-  void showFrame(uint16_t frame_count, uint8_t panel_columns_per_frame, uint8_t panel_rows_per_frame);
+  void showFrame();
 private:
   SPISettings spi_settings_;
   Region regions_[arena_controller::constants::region_count_per_frame];

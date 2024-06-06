@@ -45,11 +45,12 @@ public:
   void writeDummyFramesToFile(const char * filename, uint16_t frame_count, uint8_t panel_columns_per_frame, uint8_t panel_rows_per_frame);
 
   bool openFileForWriting(const char * filename);
-  bool openFileForReading(const char * filename);
-  void rewindFileForReading();
+  bool openTpaFileForReading(const char * filename);
+  void rewindTpaFileForReading();
   void closeFile();
   void writePanelToFile(const uint8_t * panel_buffer, size_t panel_byte_count);
   void readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count);
+  pattern::TpaHeader tpa_header_;
 private:
   SdExFat sd_;
   ExFile pat_dir_;
