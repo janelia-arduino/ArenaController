@@ -104,6 +104,12 @@ bool Pattern::importFromPat(ExFile & file)
               QuarterPanel & quarter_panel = frames_[frame_index_y][frame_index_x].panels[panel_row_index][panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
               file.read(&stretch, sizeof stretch);
               quarter_panel.stretch = stretch;
+              // if ((frame_index_x == 0) && (quarter_panel_col_index == 0) && (quarter_panel_row_index == 0))
+              // {
+                // Serial.print("import stretch: ");
+                Serial.print(quarter_panel.stretch);
+                Serial.print(" ");
+              // }
             }
             for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
             {
@@ -170,6 +176,12 @@ bool Pattern::exportToTpa(ExFile & file)
                 uint8_t region_panel_col_index = panel_col_index + region_index * panel_count_per_region_col;
                 QuarterPanel & quarter_panel = frames_[frame_index_y][frame_index_x].panels[panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
                 file.write(quarter_panel.stretch);
+                // if ((frame_index_x == 0) && (quarter_panel_col_index == 0) && (quarter_panel_row_index == 0))
+                // {
+                //   Serial.print("export stretch: ");
+                  Serial.print(quarter_panel.stretch);
+                  Serial.print(" ");
+                // }
                 for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
                 {
                   for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)

@@ -135,6 +135,7 @@ void Storage::convertFiles()
           bool output_successfully = pattern.exportToTpa(output_file);
           if (output_successfully)
           {
+            Serial.println("");
             output_file.printName();
             Serial.print(" ");
             output_file.printFileSize(&Serial);
@@ -203,18 +204,42 @@ void Storage::writeDummyFramesToFile(const char * filename, uint16_t frame_count
 
 bool Storage::openFileForWriting(const char * filename)
 {
-  return file_.open(filename, O_WRITE | O_CREAT | O_EXCL);
+  return file_.open(&tpa_dir_, filename, O_WRITE | O_CREAT | O_EXCL);
 }
 
-bool Storage::openFileForReading(const char * filename)
+bool Storage::openTpaFileForReading(const char * filename)
 {
-  return file_.open(filename);
+  bool success = file_.open(&tpa_dir_, filename, O_RDONLY);
+  if (success)
+  {
+    char import_filename[constants::filename_length_max] = "";
+    file_.getName(import_filename, constants::filename_length_max);
+    const char * import_filename_suffix = getFilenameSuffix(import_filename);
+    if (strcmp(import_filename_suffix, "tpa") == 0)
+    {
+      rewindTpaFileForReading();
+      file_.printName();
+      Serial.print(" frame_count_x: ");
+      Serial.print(tpa_header_.frame_count_x);
+      Serial.print(" frame_count_y: ");
+      Serial.print(tpa_header_.frame_count_y);
+      Serial.print(" panel_count_per_frame_row: ");
+      Serial.print(tpa_header_.panel_count_per_frame_row);
+      Serial.print(" panel_count_per_frame_col: ");
+      Serial.println(tpa_header_.panel_count_per_frame_col);
+      return true;
+    }
+  }
+  return false;
 }
 
-void Storage::rewindFileForReading()
+void Storage::rewindTpaFileForReading()
 {
   file_.rewind();
   file_position_ = 0;
+  file_.read(&tpa_header_, pattern::tpa_header_size);
+  file_position_ = file_position_ + pattern::tpa_header_size;
+  file_.seekSet(file_position_);
 }
 
 void Storage::closeFile()
