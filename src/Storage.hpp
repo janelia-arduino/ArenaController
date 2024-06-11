@@ -38,7 +38,7 @@ class Storage
 public:
   void listFiles();
   void printFileInformation();
-  void printFileHeaders();
+  void printPatFileHeaders();
   void printFileSizes();
   void convertFiles();
 

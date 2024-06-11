@@ -10,7 +10,7 @@ void setup()
 
 void loop()
 {
-  dev.storage.printFileHeaders();
+  dev.storage.printPatFileHeaders();
   Serial.println("--------");
   delay(2000);
 }
