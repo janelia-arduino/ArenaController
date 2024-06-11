@@ -43,7 +43,7 @@ void Storage::printFileInformation()
   }
 }
 
-void Storage::printFileHeaders()
+void Storage::printPatFileHeaders()
 {
   ExFile file;
   pat_dir_.rewind();

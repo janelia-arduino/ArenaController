@@ -4,14 +4,15 @@
 ArenaController dev;
 
 constexpr uint32_t CLOCK_SPEED = 5000000;
+//constexpr uint32_t CLOCK_SPEED = 5000000;
 //constexpr uint32_t CLOCK_SPEED = 10000000;
 //constexpr uint32_t CLOCK_SPEED = 20000000;
 
-//char filename[20] = "pat0003.tpa";
-//char filename[20] = "pat0004.tpa";
-//char filename[20] = "pat0007.tpa";
-//char filename[20] = "pat0008.tpa";
-char filename[20] = "pat0015.tpa";
+//char filename[20] = "pat0016.tpa";
+//char filename[20] = "pat0017.tpa";
+//char filename[20] = "pat0018.tpa";
+//char filename[20] = "pat0019.tpa";
+char filename[20] = "pat0020.tpa";
 bool success;
 
 void setup()
