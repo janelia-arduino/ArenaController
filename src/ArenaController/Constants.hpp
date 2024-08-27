@@ -8,6 +8,8 @@
 #ifndef ARENA_CONTROLLER_CONSTANTS_HPP
 #define ARENA_CONTROLLER_CONSTANTS_HPP
 
+#include <SPI.h>
+
 
 namespace arena_controller
 {

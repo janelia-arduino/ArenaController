@@ -10,8 +10,8 @@
 
 #include <Arduino.h>
 #include <SPI.h>
-#include <NativeEthernet.h>
-#include <qpcpp.hpp>
+// #include <NativeEthernet.h>
+// #include <qpcpp.hpp>
 
 #include "Storage.hpp"
 
@@ -20,7 +20,7 @@
 #include "ArenaController/TransferTracker.hpp"
 #include "ArenaController/Pattern.hpp"
 
-using namespace QP;
+// using namespace QP;
 
 class ArenaController;
 
@@ -30,7 +30,7 @@ class Display
 {
 public:
   Display();
-  void setClockSpeed(uint32_t clock_speed);
+  void setSpiClockSpeed(uint32_t spi_clock_speed);
   void showFrame();
 private:
   SPISettings spi_settings_;
@@ -43,7 +43,7 @@ private:
   void setupSerial();
   void setupPins();
   void setupRegions();
-  void setupEthernet();
+  // void setupEthernet();
 
   void getMacAddress(uint8_t * mac_address);
 

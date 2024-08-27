@@ -14,4 +14,5 @@ void ArenaController::setup()
 {
   display.setup(storage);
   storage.setup();
+  interface.setup();
 }

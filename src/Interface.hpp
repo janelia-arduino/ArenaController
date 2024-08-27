@@ -11,13 +11,25 @@
 #include <Arduino.h>
 #include <NativeEthernet.h>
 
+#include "ArenaController/Constants.hpp"
 
+
+class ArenaController;
+
+namespace arena_controller
+{
 class Interface
 {
 public:
   Interface();
-  void setup();
+  void update();
 private:
+  void setup();
+  void setupSerial();
+  void updateSerial();
+  // void setupEthernet();
+  // void getMacAddress(uint8_t * mac_address);
+  friend class ::ArenaController;
 };
-
+}
 #endif
