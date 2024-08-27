@@ -12,6 +12,7 @@
 
 #include "Display.hpp"
 #include "Storage.hpp"
+#include "Interface.hpp"
 
 
 struct ArenaController
@@ -20,6 +21,7 @@ struct ArenaController
 
   arena_controller::Display display;
   arena_controller::Storage storage;
+  arena_controller::Interface interface;
 };
 
 #endif
