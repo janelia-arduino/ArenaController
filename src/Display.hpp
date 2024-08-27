@@ -45,7 +45,7 @@ private:
   void setupRegions();
   // void setupEthernet();
 
-  void getMacAddress(uint8_t * mac_address);
+  // void getMacAddress(uint8_t * mac_address);
 
   void beginTransferFrame();
   void endTransferFrame(uint16_t frame_count);
