@@ -235,6 +235,28 @@ Panel update order for each panel in an display:
 
 #+html: <img src="./images/display_panels_asynchronous.png" width="1200px">
 
+** Pinouts
+
+*** Panel
+
+| pin | function |
+|-----+----------|
+|   1 | +5VDC    |
+|   2 | GND      |
+|   3 | RESET    |
+|   4 | SCK      |
+|   5 | MOSI     |
+|   6 | MISO     |
+|   7 | CS0      |
+|   8 | CS1      |
+|   9 | CS2      |
+|  10 | CS3      |
+|  11 | CS4      |
+|  12 | CS5      |
+|  13 | CS6      |
+|  14 | CS7      |
+|  15 | EXT_INT  |
+
 * Development
 
 ** Download this repository

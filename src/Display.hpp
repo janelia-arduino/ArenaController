@@ -10,17 +10,12 @@
 
 #include <Arduino.h>
 #include <SPI.h>
-// #include <NativeEthernet.h>
-// #include <qpcpp.hpp>
 
 #include "Storage.hpp"
 
 #include "ArenaController/Constants.hpp"
 #include "ArenaController/Region.hpp"
 #include "ArenaController/TransferTracker.hpp"
-#include "ArenaController/Pattern.hpp"
-
-// using namespace QP;
 
 class ArenaController;
 
@@ -40,12 +35,8 @@ private:
   uint8_t panel_buffer_[arena_controller::constants::region_count_per_frame][arena_controller::constants::byte_count_per_panel_grayscale];
 
   void setup(Storage & storage);
-  void setupSerial();
   void setupPins();
   void setupRegions();
-  // void setupEthernet();
-
-  // void getMacAddress(uint8_t * mac_address);
 
   void beginTransferFrame();
   void endTransferFrame(uint16_t frame_count);
