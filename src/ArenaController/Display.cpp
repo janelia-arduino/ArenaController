@@ -16,7 +16,7 @@ spi_settings_(SPISettings(constants::spi_clock_speed, constants::spi_bit_order, 
 
 void Display::setSpiClockSpeed(uint32_t spi_clock_speed)
 {
-  spi_settings_ = SPISettings(clock_speed, constants::spi_bit_order, constants::spi_data_mode);
+  spi_settings_ = SPISettings(spi_clock_speed, constants::spi_bit_order, constants::spi_data_mode);
 }
 
 void Display::showFrame()
