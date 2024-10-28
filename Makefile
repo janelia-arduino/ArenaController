@@ -1,22 +1,39 @@
-.PHONY: venv
-venv:
-	rm -rf .venv;\
-	mkdir .venv;\
-	python3 -m venv .venv;\
-	source .venv/bin/activate;\
-	pip install platformio
-
 .PHONY: clean
 clean:
 	rm -rf .pio
 
-firmware: clean
-	. .venv/bin/activate; pio run -e teensy41
+.PHONY: teensy-firmware
+teensy-firmware: clean
+	pio run -e teensy41
 
-.PHONY: upload
-upload: clean
-	. .venv/bin/activate; pio run -e teensy41 --target upload --upload-port /dev/ttyACM0
+.PHONY: teensy-upload
+teensy-upload: clean
+	pio run -e teensy41 --target upload --upload-port /dev/ttyACM0
+
+.PHONY: mega-firmware
+mega-firmware: clean
+	pio run -e mega
+
+.PHONY: mega-upload
+mega-upload: clean
+	pio run -e mega --target upload --upload-port /dev/ttyACM0
+
+.PHONY: uno-firmware
+uno-firmware: clean
+	pio run -e uno
+
+.PHONY: uno-upload
+uno-upload: clean
+	pio run -e uno --target upload --upload-port /dev/ttyACM0
+
+.PHONY: pico-firmware
+pico-firmware: clean
+	pio run -e pico
+
+.PHONY: pico-upload
+pico-upload: clean
+	pio run -e pico --target upload
 
 .PHONY: monitor
 monitor:
-	. .venv/bin/activate; pio device monitor --echo --eol=LF
+	pio device monitor --echo --eol=LF
