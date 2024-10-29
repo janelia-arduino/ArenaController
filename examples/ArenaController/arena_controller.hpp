@@ -1,4 +1,4 @@
-//.$file${.::arena_controller.hpp} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//.$file${.::arena_controller.hpp} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //
 // Model: ArenaController.qm
 // File:  ${.::arena_controller.hpp}
@@ -15,7 +15,7 @@
 // or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
 // for more details.
 //
-//.$endhead${.::arena_controller.hpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$endhead${.::arena_controller.hpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #ifndef ARENA_CONTROLLER_HPP
 #define ARENA_CONTROLLER_HPP
 
@@ -25,9 +25,9 @@ enum ArenaControllerSignals {
 };
 
 // genearate declarations of all opaque AO pointers
-//.$declare${AOs::AO_ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//.$declare${AOs::AO_ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 extern QP::QActive * const AO_ArenaController;
-//.$enddecl${AOs::AO_ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$enddecl${AOs::AO_ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //...
 
 #endif // ARENA_CONTROLLER_HPP
