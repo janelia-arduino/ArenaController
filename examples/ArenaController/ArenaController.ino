@@ -24,14 +24,16 @@ using namespace QP;
 
 //............................................................................
 void setup() {
+    static QP::QSubscrList subscrSto[MAX_PUB_SIG];
     QF::init(); // initialize the framework
     BSP::init(); // initialize the BSP
+    QP::QF::psInit(subscrSto, Q_DIM(subscrSto)); // init publish-subscribe
 
     // statically allocate event queues for the AOs and start them...
     static QEvt const *arena_controller_queueSto[10];
     AO_ArenaController->start(1U, // priority
-                     arena_controller_queueSto, Q_DIM(arena_controller_queueSto),
-                     (void *)0, 0U); // no stack
+        arena_controller_queueSto, Q_DIM(arena_controller_queueSto),
+        (void *)0, 0U); // no stack
     //...
 }
 
@@ -51,9 +53,6 @@ private:
 public:
     static ArenaController instance;
 
-private:
-    QP::QTimeEvt frame_time_evt_;
-
 public:
     ArenaController();
 
@@ -62,7 +61,6 @@ protected:
     Q_STATE_DECL(ArenaOn);
     Q_STATE_DECL(DisplayOn);
     Q_STATE_DECL(AllOn);
-    Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayOff);
 };
 //.$enddecl${AOs::ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,20 +76,41 @@ ArenaController ArenaController::instance;
 //.${AOs::ArenaController::ArenaController} ..................................
 ArenaController::ArenaController()
 : QActive(Q_STATE_CAST(&ArenaController::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U),
-QActive(Q_STATE_CAST(&ArenaController::initial)),
-    frame_time_evt_(this, FRAME_TIMEOUT_SIG, 0U)
+    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::ArenaController::SM} ...............................................
 Q_STATE_DEF(ArenaController, initial) {
     //.${AOs::ArenaController::SM::initial}
+    (void)e; // suppress the compiler warning about unused parameter
+
+    //QS_OBJ_DICTIONARY(&ArenaController::instance);
+
+    //QS_SIG_DICTIONARY(RESET_SIG, nullptr); // global signals
+    //QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
+    //QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
+
+    //subscribe(RESET_SIG);
+    subscribe(ALL_ON_SIG);
+    subscribe(ALL_OFF_SIG);
     return tran(&DisplayOff);
 }
 //.${AOs::ArenaController::SM::ArenaOn} ......................................
 Q_STATE_DEF(ArenaController, ArenaOn) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::ArenaController::SM::ArenaOn}
+        case Q_ENTRY_SIG: {
+            command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::ArenaController::SM::ArenaOn}
+        case Q_EXIT_SIG: {
+            command_time_evt_.disarm();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //.${AOs::ArenaController::SM::ArenaOn::RESET}
         case RESET_SIG: {
             status_ = tran(&ArenaOn);
@@ -99,7 +118,13 @@ Q_STATE_DEF(ArenaController, ArenaOn) {
         }
         //.${AOs::ArenaController::SM::ArenaOn::COMMAND_TIMEOUT}
         case COMMAND_TIMEOUT_SIG: {
+            BSP::pollCommand();
             status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::ArenaController::SM::ArenaOn::ALL_OFF}
+        case ALL_OFF_SIG: {
+            status_ = tran(&DisplayOff);
             break;
         }
         default: {
@@ -124,19 +149,14 @@ Q_STATE_DEF(ArenaController, DisplayOn) {
 Q_STATE_DEF(ArenaController, AllOn) {
     QP::QState status_;
     switch (e->sig) {
-        default: {
-            status_ = super(&DisplayOn);
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn}
+        case Q_ENTRY_SIG: {
+            BSP::ledOn();
+            status_ = Q_RET_HANDLED;
             break;
         }
-    }
-    return status_;
-}
-//.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::WaitingToDisplayFrame} 
-Q_STATE_DEF(ArenaController, WaitingToDisplayFrame) {
-    QP::QState status_;
-    switch (e->sig) {
         default: {
-            status_ = super(&AllOn);
+            status_ = super(&DisplayOn);
             break;
         }
     }
@@ -146,6 +166,17 @@ Q_STATE_DEF(ArenaController, WaitingToDisplayFrame) {
 Q_STATE_DEF(ArenaController, DisplayOff) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOff}
+        case Q_ENTRY_SIG: {
+            BSP::ledOff();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOff::ALL_ON}
+        case ALL_ON_SIG: {
+            status_ = tran(&AllOn);
+            break;
+        }
         default: {
             status_ = super(&ArenaOn);
             break;
@@ -160,6 +191,6 @@ Q_STATE_DEF(ArenaController, DisplayOff) {
 // generate definitions of all AO opaque pointers...
 //.$define${AOs::AO_ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //.${AOs::AO_ArenaController} ................................................
-QP::QActive * const AO_ArenaController;
+QP::QActive * const AO_ArenaController = &ArenaController::instance;
 //.$enddef${AOs::AO_ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //...

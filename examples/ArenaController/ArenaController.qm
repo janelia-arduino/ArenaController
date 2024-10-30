@@ -24,59 +24,77 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="instance" type="ArenaController" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <attribute name="frame_time_evt_" type="QP::QTimeEvt" visibility="0x02" properties="0x00"/>
    <operation name="ArenaController" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;ArenaController::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U),
-QActive(Q_STATE_CAST(&amp;ArenaController::initial)),
-    frame_time_evt_(this, FRAME_TIMEOUT_SIG, 0U)</code>
+    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)</code>
    </operation>
    <statechart properties="0x00">
-    <initial target="../1/3">
-     <initial_glyph conn="1,13,5,3,5">
-      <action box="0,-2,32,6"/>
+    <initial target="../1/4">
+     <action>(void)e; // suppress the compiler warning about unused parameter
+
+//QS_OBJ_DICTIONARY(&amp;ArenaController::instance);
+
+//QS_SIG_DICTIONARY(RESET_SIG, nullptr); // global signals
+//QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
+//QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
+
+//subscribe(RESET_SIG);
+subscribe(ALL_ON_SIG);
+subscribe(ALL_OFF_SIG);</action>
+     <initial_glyph conn="2,17,5,3,5">
+      <action box="0,-2,4,2"/>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);&#10;"/>
-     <exit brief="command_time_evt_.disarm()"/>
+     <entry brief="Arm Command Polling Timer">command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
+     <exit brief="Disarm Command Polling Timer">command_time_evt_.disarm();</exit>
      <tran trig="RESET" target="..">
-      <tran_glyph conn="115,9,1,1,5,5,-5">
+      <tran_glyph conn="121,9,1,1,5,5,-5">
        <action box="0,-2,7,3"/>
       </tran_glyph>
      </tran>
      <tran trig="COMMAND_TIMEOUT">
-      <action brief="pollCommand()"/>
-      <tran_glyph conn="4,8,3,-1,31">
+      <action>BSP::pollCommand();</action>
+      <tran_glyph conn="5,11,3,-1,30">
        <action box="0,0,29,2"/>
       </tran_glyph>
      </tran>
+     <tran trig="ALL_OFF" target="../4">
+      <tran_glyph conn="5,28,3,2,9,-3">
+       <action box="0,0,10,2"/>
+      </tran_glyph>
+     </tran>
      <state name="DisplayOn">
-      <entry brief="frame_time_evt_.armX(BSP::TICKS_PER_SEC/FRAME_RATE, BSP::TICKS_PER_SEC/FRAME_RATE);&#10;"/>
-      <exit brief="frame_time_evt_.disarm()"/>
       <state name="AllOn">
-       <state name="WaitingToDisplayFrame">
-        <state_glyph node="35,25,22,6"/>
-       </state>
-       <state_glyph node="31,22,39,15"/>
+       <entry>BSP::ledOn();</entry>
+       <state_glyph node="40,24,39,15">
+        <entry box="1,2,15,4"/>
+       </state_glyph>
       </state>
-      <state_glyph node="26,11,83,42">
-       <entry box="1,2,80,2"/>
-       <exit box="1,4,21,2"/>
-      </state_glyph>
+      <state_glyph node="37,15,81,42"/>
      </state>
      <state name="DisplayOff">
-      <state_glyph node="6,11,14,10"/>
+      <entry>BSP::ledOff();</entry>
+      <tran trig="ALL_ON" target="../../3/0">
+       <tran_glyph conn="26,17,1,3,9,10,5">
+        <action box="0,-2,10,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="7,15,19,10">
+       <entry box="1,2,18,4"/>
+      </state_glyph>
      </state>
-     <state_glyph node="4,1,111,56">
-      <entry box="1,2,58,2"/>
-      <exit box="1,4,27,2"/>
+     <state_glyph node="5,1,116,65">
+      <entry box="1,2,63,2"/>
+      <exit box="1,4,58,3"/>
      </state_glyph>
     </state>
     <state_diagram size="131,68"/>
    </statechart>
   </class>
-  <attribute name="AO_ArenaController" type="QP::QActive * const" visibility="0x00" properties="0x00"/>
+  <attribute name="AO_ArenaController" type="QP::QActive * const" visibility="0x00" properties="0x00">
+   <code>= &amp;ArenaController::instance;</code>
+  </attribute>
  </package>
  <directory name=".">
   <file name="bsp.hpp">
@@ -87,6 +105,7 @@ class BSP {
 public:
     enum { TICKS_PER_SEC = 100} ;
     static void init(void);
+    static void pollCommand(void);
     static void ledOff(void);
     static void ledOn(void);
 };
@@ -116,6 +135,8 @@ static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 void BSP::init(void) {
     // initialize the hardware used in this sketch...
     // NOTE: interrupts are configured and started later in QF::onStartup()
+    Serial.begin(115200);
+    Serial.setTimeout(100);
     pinMode(LED_BUILTIN, OUTPUT);
 
 #ifdef QS_ON
@@ -129,6 +150,27 @@ void BSP::init(void) {
     QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
     QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
 #endif
+}
+//............................................................................
+void BSP::pollCommand(void) {
+    if (Serial.available() &gt; 0)
+    {
+        String command = Serial.readStringUntil('\n');
+        if (command.equalsIgnoreCase(&quot;ALL_ON&quot;))
+        {
+            //QF::PUBLISH(Q_NEW(QEvt, ALL_ON_SIG), &amp;l_TIMER_ID);
+            Serial.println(&quot;Publishing ALL_ON_SIG&quot;);
+            Serial.print(&quot;serial available = &quot;);
+            Serial.println(Serial.available());
+        }
+        else if (command.equalsIgnoreCase(&quot;ALL_OFF&quot;))
+        {
+            //QF::PUBLISH(Q_NEW(QEvt, ALL_OFF_SIG), &amp;l_TIMER_ID);
+            Serial.println(&quot;Publishing ALL_OFF_SIG&quot;);
+            Serial.print(&quot;serial available = &quot;);
+            Serial.println(Serial.available());
+        }
+    }
 }
 //............................................................................
 void BSP::ledOff(void) {
@@ -265,8 +307,12 @@ void QP::QS::onReset(void) {
 #define ARENA_CONTROLLER_HPP
 
 enum ArenaControllerSignals {
-    TIMEOUT_SIG = QP::Q_USER_SIG,
-    MAX_SIG
+    COMMAND_TIMEOUT_SIG = QP::Q_USER_SIG,
+    RESET_SIG,
+    ALL_ON_SIG,     // published by BSP to display all panels on
+    ALL_OFF_SIG,    // published by BSP to display all panels off
+    MAX_PUB_SIG,    // the last published signal
+    MAX_SIG         // the last signal
 };
 
 // genearate declarations of all opaque AO pointers
@@ -285,14 +331,20 @@ using namespace QP;
 
 //............................................................................
 void setup() {
+    static QP::QSubscrList subscrSto[MAX_PUB_SIG];
     QF::init(); // initialize the framework
     BSP::init(); // initialize the BSP
+    QP::QF::psInit(subscrSto, Q_DIM(subscrSto)); // init publish-subscribe
 
-    // statically allocate event queues for the AOs and start them...
+     // initialize event pools...
+    QP::QF::poolInit(smlPoolSto,
+                     sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
+
+   // statically allocate event queues for the AOs and start them...
     static QEvt const *arena_controller_queueSto[10];
     AO_ArenaController-&gt;start(1U, // priority
-                     arena_controller_queueSto, Q_DIM(arena_controller_queueSto),
-                     (void *)0, 0U); // no stack
+        arena_controller_queueSto, Q_DIM(arena_controller_queueSto),
+        (void *)0, 0U); // no stack
     //...
 }
 

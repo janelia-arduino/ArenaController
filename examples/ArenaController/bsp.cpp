@@ -37,6 +37,8 @@ static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 void BSP::init(void) {
     // initialize the hardware used in this sketch...
     // NOTE: interrupts are configured and started later in QF::onStartup()
+    Serial.begin(115200);
+    Serial.setTimeout(100);
     pinMode(LED_BUILTIN, OUTPUT);
 
 #ifdef QS_ON
@@ -50,6 +52,27 @@ void BSP::init(void) {
     QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
     QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
 #endif
+}
+//............................................................................
+void BSP::pollCommand(void) {
+    if (Serial.available() > 0)
+    {
+        String command = Serial.readStringUntil('\n');
+        if (command.equalsIgnoreCase("ALL_ON"))
+        {
+            //QF::PUBLISH(Q_NEW(QEvt, ALL_ON_SIG), &l_TIMER_ID);
+            Serial.println("Publishing ALL_ON_SIG");
+            Serial.print("serial available = ");
+            Serial.println(Serial.available());
+        }
+        else if (command.equalsIgnoreCase("ALL_OFF"))
+        {
+            //QF::PUBLISH(Q_NEW(QEvt, ALL_OFF_SIG), &l_TIMER_ID);
+            Serial.println("Publishing ALL_OFF_SIG");
+            Serial.print("serial available = ");
+            Serial.println(Serial.available());
+        }
+    }
 }
 //............................................................................
 void BSP::ledOff(void) {

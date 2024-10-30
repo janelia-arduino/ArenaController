@@ -20,8 +20,12 @@
 #define ARENA_CONTROLLER_HPP
 
 enum ArenaControllerSignals {
-    TIMEOUT_SIG = QP::Q_USER_SIG,
-    MAX_SIG
+    COMMAND_TIMEOUT_SIG = QP::Q_USER_SIG,
+    RESET_SIG,
+    ALL_ON_SIG,     // published by BSP to display all panels on
+    ALL_OFF_SIG,    // published by BSP to display all panels off
+    MAX_PUB_SIG,    // the last published signal
+    MAX_SIG         // the last signal
 };
 
 // genearate declarations of all opaque AO pointers

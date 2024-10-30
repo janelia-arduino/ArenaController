@@ -23,6 +23,7 @@ class BSP {
 public:
     enum { TICKS_PER_SEC = 100} ;
     static void init(void);
+    static void pollCommand(void);
     static void ledOff(void);
     static void ledOn(void);
 };
