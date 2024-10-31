@@ -24,14 +24,21 @@ using namespace QP;
 
 //............................................................................
 void setup() {
-    static QP::QSubscrList subscrSto[MAX_PUB_SIG];
     QF::init(); // initialize the framework
     BSP::init(); // initialize the BSP
-    QP::QF::psInit(subscrSto, Q_DIM(subscrSto)); // init publish-subscribe
 
-    // statically allocate event queues for the AOs and start them...
+    // init publish-subscribe
+    //static QSubscrList subscrSto[MAX_PUB_SIG];
+    //QF::psInit(subscrSto, Q_DIM(subscrSto));
+
+    // initialize event pools...
+    //static QF_MPOOL_EL(CommandEvt) smlPoolSto[20];
+    //QF::poolInit(smlPoolSto,
+    //             sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
+
+   // statically allocate event queues for the AOs and start them...
     static QEvt const *arena_controller_queueSto[10];
-    AO_ArenaController->start(1U, // priority
+    AC::AO_ArenaController->start(1U, // priority
         arena_controller_queueSto, Q_DIM(arena_controller_queueSto),
         (void *)0, 0U); // no stack
     //...
@@ -45,6 +52,8 @@ void loop() {
 //============================================================================
 // generate declarations and definitions of all AO classes (state machines)...
 //.$declare${AOs::ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
 //.${AOs::ArenaController} ...................................................
 class ArenaController : public QP::QActive {
 private:
@@ -63,6 +72,8 @@ protected:
     Q_STATE_DECL(AllOn);
     Q_STATE_DECL(DisplayOff);
 };
+
+} // namespace AC
 //.$enddecl${AOs::ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //.$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //. Check for the minimum required QP version
@@ -71,6 +82,8 @@ protected:
 #endif
 //.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //.$define${AOs::ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
 //.${AOs::ArenaController} ...................................................
 ArenaController ArenaController::instance;
 //.${AOs::ArenaController::ArenaController} ..................................
@@ -91,8 +104,8 @@ Q_STATE_DEF(ArenaController, initial) {
     //QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
 
     //subscribe(RESET_SIG);
-    subscribe(ALL_ON_SIG);
-    subscribe(ALL_OFF_SIG);
+    //subscribe(ALL_ON_SIG);
+    //subscribe(ALL_OFF_SIG);
     return tran(&DisplayOff);
 }
 //.${AOs::ArenaController::SM::ArenaOn} ......................................
@@ -184,13 +197,19 @@ Q_STATE_DEF(ArenaController, DisplayOff) {
     }
     return status_;
 }
+
+} // namespace AC
 //.$enddef${AOs::ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //...
 
 //============================================================================
 // generate definitions of all AO opaque pointers...
 //.$define${AOs::AO_ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
 //.${AOs::AO_ArenaController} ................................................
 QP::QActive * const AO_ArenaController = &ArenaController::instance;
+
+} // namespace AC
 //.$enddef${AOs::AO_ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //...

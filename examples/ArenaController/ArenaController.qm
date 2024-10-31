@@ -18,7 +18,7 @@ This example demonstrates the concept of the Board Support Package (BSP), which 
 
 This structure of the code is recommended for applications with only one active object. (See also the dpp_bsp example).</documentation>
  <framework name="qpcpp"/>
- <package name="AOs" stereotype="0x02">
+ <package name="AOs" stereotype="0x02" namespace="AC::">
   <class name="ArenaController" superclass="qpcpp::QActive">
    <attribute name="command_time_evt_" type="QP::QTimeEvt" visibility="0x02" properties="0x00"/>
    <attribute name="instance" type="ArenaController" visibility="0x00" properties="0x01">
@@ -39,8 +39,8 @@ This structure of the code is recommended for applications with only one active 
 //QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
 
 //subscribe(RESET_SIG);
-subscribe(ALL_ON_SIG);
-subscribe(ALL_OFF_SIG);</action>
+//subscribe(ALL_ON_SIG);
+//subscribe(ALL_OFF_SIG);</action>
      <initial_glyph conn="2,17,5,3,5">
       <action box="0,-2,4,2"/>
      </initial_glyph>
@@ -95,6 +95,9 @@ subscribe(ALL_OFF_SIG);</action>
   <attribute name="AO_ArenaController" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;ArenaController::instance;</code>
   </attribute>
+ </package>
+ <package name="Events" stereotype="0x01" namespace="AC::">
+  <class name="CommandEvt" superclass="qpcpp::QEvt"/>
  </package>
  <directory name=".">
   <file name="bsp.hpp">
@@ -306,14 +309,20 @@ void QP::QS::onReset(void) {
    <text>#ifndef ARENA_CONTROLLER_HPP
 #define ARENA_CONTROLLER_HPP
 
+namespace AC {
+
 enum ArenaControllerSignals {
-    COMMAND_TIMEOUT_SIG = QP::Q_USER_SIG,
-    RESET_SIG,
+    RESET_SIG = QP::Q_USER_SIG,
     ALL_ON_SIG,     // published by BSP to display all panels on
     ALL_OFF_SIG,    // published by BSP to display all panels off
     MAX_PUB_SIG,    // the last published signal
+    COMMAND_TIMEOUT_SIG,
     MAX_SIG         // the last signal
 };
+
+} // namespace AC
+
+$declare${Events}
 
 // genearate declarations of all opaque AO pointers
 $declare${AOs::AO_ArenaController}
@@ -331,18 +340,21 @@ using namespace QP;
 
 //............................................................................
 void setup() {
-    static QP::QSubscrList subscrSto[MAX_PUB_SIG];
     QF::init(); // initialize the framework
     BSP::init(); // initialize the BSP
-    QP::QF::psInit(subscrSto, Q_DIM(subscrSto)); // init publish-subscribe
 
-     // initialize event pools...
-    QP::QF::poolInit(smlPoolSto,
-                     sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
+    // init publish-subscribe
+    //static QSubscrList subscrSto[MAX_PUB_SIG];
+    //QF::psInit(subscrSto, Q_DIM(subscrSto));
+
+    // initialize event pools...
+    //static QF_MPOOL_EL(CommandEvt) smlPoolSto[20];
+    //QF::poolInit(smlPoolSto,
+    //             sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
 
    // statically allocate event queues for the AOs and start them...
     static QEvt const *arena_controller_queueSto[10];
-    AO_ArenaController-&gt;start(1U, // priority
+    AC::AO_ArenaController-&gt;start(1U, // priority
         arena_controller_queueSto, Q_DIM(arena_controller_queueSto),
         (void *)0, 0U); // no stack
     //...

@@ -19,18 +19,35 @@
 #ifndef ARENA_CONTROLLER_HPP
 #define ARENA_CONTROLLER_HPP
 
+namespace AC {
+
 enum ArenaControllerSignals {
-    COMMAND_TIMEOUT_SIG = QP::Q_USER_SIG,
-    RESET_SIG,
+    RESET_SIG = QP::Q_USER_SIG,
     ALL_ON_SIG,     // published by BSP to display all panels on
     ALL_OFF_SIG,    // published by BSP to display all panels off
     MAX_PUB_SIG,    // the last published signal
+    COMMAND_TIMEOUT_SIG,
     MAX_SIG         // the last signal
 };
 
+} // namespace AC
+
+//.$declare${Events} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
+//.${Events::CommandEvt} .....................................................
+class CommandEvt : public QP::QEvt {};
+
+} // namespace AC
+//.$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 // genearate declarations of all opaque AO pointers
 //.$declare${AOs::AO_ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
 extern QP::QActive * const AO_ArenaController;
+
+} // namespace AC
 //.$enddecl${AOs::AO_ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //...
 
