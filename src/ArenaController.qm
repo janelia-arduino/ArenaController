@@ -46,8 +46,8 @@ subscribe(ALL_OFF_SIG);</action>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="Arm Command Polling Timer">command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
-     <exit brief="Disarm Command Polling Timer">command_time_evt_.disarm();</exit>
+     <entry brief="armCommandPollingTimer()">command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
+     <exit brief="disarmCommandPollingTimer()">command_time_evt_.disarm();</exit>
      <tran trig="RESET" target="..">
       <tran_glyph conn="121,9,1,1,5,5,-5">
        <action box="0,-2,7,3"/>
@@ -105,6 +105,7 @@ subscribe(ALL_OFF_SIG);</action>
 #define ARENA_CONTROLLER_HPP
 
 #include &quot;qpcpp.hpp&quot;   // QP-C++ framework
+#include &quot;bsp.hpp&quot;
 
 using namespace QP;
 
@@ -119,11 +120,8 @@ enum ArenaControllerSignals {
     MAX_SIG         // the last signal
 };
 
-//............................................................................
-void setup() {}
-
-//............................................................................
-void loop() {}
+void setup();
+void loop();
 
 } // namespace AC
 
@@ -139,10 +137,27 @@ $declare${AOs::AO_ArenaController}
 //...
 
 #endif // ARENA_CONTROLLER_HPP
-</text>
+   </text>
+  </file>
+  <file name="bsp.hpp">
+   <text>
+#ifndef BSP_HPP
+#define BSP_HPP
+
+class BSP {
+public:
+    enum { TICKS_PER_SEC = 100} ;
+    static void init(void);
+    static void pollCommand(void);
+    static void ledOff(void);
+    static void ledOn(void);
+};
+
+#endif // BSP_HPP
+   </text>
   </file>
  </directory>
- <directory name=".ArenaController">
+ <directory name="./ArenaController">
   <file name="ArenaController.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
 
@@ -152,8 +167,9 @@ namespace AC {
 
 //............................................................................
 void setup() {
+
     QF::init(); // initialize the framework
-    //BSP::init(); // initialize the BSP
+    BSP::init(); // initialize the BSP
 
     // init publish-subscribe
     static QSubscrList subscrSto[AC::MAX_PUB_SIG];

@@ -16,6 +16,7 @@
 // for more details.
 //
 //.$endhead${.::bsp.hpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 #ifndef BSP_HPP
 #define BSP_HPP
 
