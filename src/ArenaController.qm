@@ -100,9 +100,13 @@ subscribe(ALL_OFF_SIG);</action>
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
  </package>
  <directory name=".">
-  <file name="arena_controller.hpp">
+  <file name="ArenaController.hpp">
    <text>#ifndef ARENA_CONTROLLER_HPP
 #define ARENA_CONTROLLER_HPP
+
+#include &quot;qpcpp.hpp&quot;   // QP-C++ framework
+
+using namespace QP;
 
 namespace AC {
 
@@ -115,7 +119,18 @@ enum ArenaControllerSignals {
     MAX_SIG         // the last signal
 };
 
+//............................................................................
+void setup() {}
+
+//............................................................................
+void loop() {}
+
 } // namespace AC
+
+//============================================================================
+// generate declarations of all AO classes (state machines)...
+$declare${AOs::ArenaController}
+//...
 
 $declare${Events}
 
@@ -126,17 +141,19 @@ $declare${AOs::AO_ArenaController}
 #endif // ARENA_CONTROLLER_HPP
 </text>
   </file>
-  <file name="ArenaController.ino">
-   <text>#include &quot;qpcpp.hpp&quot;   // QP-C++ framework
-#include &quot;arena_controller.hpp&quot;  // ArenaController application interface
-#include &quot;bsp.hpp&quot;     // Board Support Package (BSP)
+ </directory>
+ <directory name=".ArenaController">
+  <file name="ArenaController.cpp">
+   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
 
 using namespace QP;
+
+namespace AC {
 
 //............................................................................
 void setup() {
     QF::init(); // initialize the framework
-    BSP::init(); // initialize the BSP
+    //BSP::init(); // initialize the BSP
 
     // init publish-subscribe
     static QSubscrList subscrSto[AC::MAX_PUB_SIG];
@@ -155,9 +172,10 @@ void loop() {
     QF::run(); // run the QF/C++ framework
 }
 
+} // namespace AC
+
 //============================================================================
-// generate declarations and definitions of all AO classes (state machines)...
-$declare${AOs::ArenaController}
+// generate definitions of all AO classes (state machines)...
 $define${AOs::ArenaController}
 //...
 
