@@ -32,6 +32,7 @@ enum ArenaControllerSignals {
     ALL_OFF_SIG,    // published by BSP to display all panels off
     MAX_PUB_SIG,    // the last published signal
     COMMAND_TIMEOUT_SIG,
+    DISPLAY_FRAME_TIMEOUT_SIG,
     MAX_SIG         // the last signal
 };
 
@@ -47,11 +48,10 @@ namespace AC {
 
 //.${AOs::ArenaController} ...................................................
 class ArenaController : public QP::QActive {
-private:
-    QP::QTimeEvt command_time_evt_;
-
 public:
+    QP::QTimeEvt command_time_evt_;
     static ArenaController instance;
+    QP::QTimeEvt display_frame_time_evt_;
 
 public:
     ArenaController();
@@ -61,6 +61,8 @@ protected:
     Q_STATE_DECL(ArenaOn);
     Q_STATE_DECL(DisplayOn);
     Q_STATE_DECL(AllOn);
+    Q_STATE_DECL(AllOnWaiting);
+    Q_STATE_DECL(AllOnDisplaying);
     Q_STATE_DECL(DisplayOff);
 };
 

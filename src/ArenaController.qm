@@ -20,13 +20,15 @@ This structure of the code is recommended for applications with only one active 
  <framework name="qpcpp"/>
  <package name="AOs" stereotype="0x02" namespace="AC::">
   <class name="ArenaController" superclass="qpcpp::QActive">
-   <attribute name="command_time_evt_" type="QP::QTimeEvt" visibility="0x02" properties="0x00"/>
+   <attribute name="command_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="instance" type="ArenaController" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
+   <attribute name="display_frame_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="ArenaController" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;ArenaController::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)</code>
+    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U),
+    display_frame_time_evt_(this, DISPLAY_FRAME_TIMEOUT_SIG, 0U)</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1/4">
@@ -49,7 +51,7 @@ subscribe(ALL_OFF_SIG);</action>
      <entry brief="armCommandPollingTimer()">command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
      <exit brief="disarmCommandPollingTimer()">command_time_evt_.disarm();</exit>
      <tran trig="RESET" target="..">
-      <tran_glyph conn="121,9,1,1,5,5,-5">
+      <tran_glyph conn="106,9,1,1,5,5,-5">
        <action box="0,-2,7,3"/>
       </tran_glyph>
      </tran>
@@ -65,26 +67,55 @@ subscribe(ALL_OFF_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="DisplayOn">
+      <entry brief="armDisplayFrameTimer()">display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
+      <exit brief="disarmDisplayFrameTimer()">display_frame_time_evt_.disarm();</exit>
       <state name="AllOn">
-       <entry>BSP::ledOn();</entry>
-       <state_glyph node="40,24,39,15">
-        <entry box="1,2,15,4"/>
-       </state_glyph>
+       <initial target="../1">
+        <initial_glyph conn="66,28,4,0,3">
+         <action box="3,0,10,2"/>
+        </initial_glyph>
+       </initial>
+       <state name="AllOnWaiting">
+        <entry brief="ledOff()">BSP::ledOff();</entry>
+        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../2">
+         <tran_glyph conn="58,33,3,3,-3,9,3">
+          <action box="-21,-3,23,2"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="58,31,14,6">
+         <entry box="1,2,9,2"/>
+        </state_glyph>
+       </state>
+       <state name="AllOnDisplaying">
+        <entry brief="ledOn()">BSP::ledOn();</entry>
+        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../1">
+         <tran_glyph conn="72,42,1,1,2,-9,-2">
+          <action box="1,1,21,3"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="58,40,14,6">
+         <entry box="1,2,10,2"/>
+        </state_glyph>
+       </state>
+       <state_glyph node="36,23,59,26"/>
       </state>
-      <state_glyph node="37,15,81,42"/>
+      <state_glyph node="33,15,65,48">
+       <entry box="1,2,20,2"/>
+       <exit box="1,4,22,2"/>
+      </state_glyph>
      </state>
      <state name="DisplayOff">
-      <entry>BSP::ledOff();</entry>
+      <entry brief="ledOff()">BSP::ledOff();</entry>
       <tran trig="ALL_ON" target="../../3/0">
-       <tran_glyph conn="26,17,1,3,9,10,5">
+       <tran_glyph conn="26,17,1,3,3,9,7">
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
       <state_glyph node="7,15,19,10">
-       <entry box="1,2,18,4"/>
+       <entry box="1,2,9,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="5,1,116,65">
+     <state_glyph node="5,1,101,65">
       <entry box="1,2,63,2"/>
       <exit box="1,4,58,3"/>
      </state_glyph>
@@ -117,6 +148,7 @@ enum ArenaControllerSignals {
     ALL_OFF_SIG,    // published by BSP to display all panels off
     MAX_PUB_SIG,    // the last published signal
     COMMAND_TIMEOUT_SIG,
+    DISPLAY_FRAME_TIMEOUT_SIG,
     MAX_SIG         // the last signal
 };
 

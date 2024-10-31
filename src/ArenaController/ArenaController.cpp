@@ -63,7 +63,8 @@ ArenaController ArenaController::instance;
 //.${AOs::ArenaController::ArenaController} ..................................
 ArenaController::ArenaController()
 : QActive(Q_STATE_CAST(&ArenaController::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)
+    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U),
+    display_frame_time_evt_(this, DISPLAY_FRAME_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::ArenaController::SM} ...............................................
@@ -125,6 +126,18 @@ Q_STATE_DEF(ArenaController, ArenaOn) {
 Q_STATE_DEF(ArenaController, DisplayOn) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn}
+        case Q_ENTRY_SIG: {
+            display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn}
+        case Q_EXIT_SIG: {
+            display_frame_time_evt_.disarm();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&ArenaOn);
             break;
@@ -136,14 +149,57 @@ Q_STATE_DEF(ArenaController, DisplayOn) {
 Q_STATE_DEF(ArenaController, AllOn) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn}
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&AllOnWaiting);
+            break;
+        }
+        default: {
+            status_ = super(&DisplayOn);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::AllOnWaiting} ......
+Q_STATE_DEF(ArenaController, AllOnWaiting) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::AllOnWaiting}
+        case Q_ENTRY_SIG: {
+            BSP::ledOff();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::AllOnWaiting::DISPLAY_FRAME_TIMEOUT}
+        case DISPLAY_FRAME_TIMEOUT_SIG: {
+            status_ = tran(&AllOnDisplaying);
+            break;
+        }
+        default: {
+            status_ = super(&AllOn);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::AllOnDisplaying} ...
+Q_STATE_DEF(ArenaController, AllOnDisplaying) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::AllOnDisplaying}
         case Q_ENTRY_SIG: {
             BSP::ledOn();
             status_ = Q_RET_HANDLED;
             break;
         }
+        //.${AOs::ArenaController::SM::ArenaOn::DisplayOn::AllOn::AllOnDisplaying::DISPLAY_FRAME_TIMEOUT}
+        case DISPLAY_FRAME_TIMEOUT_SIG: {
+            status_ = tran(&AllOnWaiting);
+            break;
+        }
         default: {
-            status_ = super(&DisplayOn);
+            status_ = super(&AllOn);
             break;
         }
     }
