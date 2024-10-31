@@ -128,7 +128,7 @@ Q_STATE_DEF(ArenaController, DisplayOn) {
     switch (e->sig) {
         //.${AOs::ArenaController::SM::ArenaOn::DisplayOn}
         case Q_ENTRY_SIG: {
-            display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);
+            display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/100, BSP::TICKS_PER_SEC/100);
             status_ = Q_RET_HANDLED;
             break;
         }

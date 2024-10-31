@@ -48,7 +48,7 @@ subscribe(ALL_OFF_SIG);</action>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="armCommandPollingTimer()">command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
+     <entry brief="armCommandPollingTimer(1Hz)">command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
      <exit brief="disarmCommandPollingTimer()">command_time_evt_.disarm();</exit>
      <tran trig="RESET" target="..">
       <tran_glyph conn="106,9,1,1,5,5,-5">
@@ -67,7 +67,7 @@ subscribe(ALL_OFF_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="DisplayOn">
-      <entry brief="armDisplayFrameTimer()">display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
+      <entry brief="armDisplayFrameTimer(50Hz)">display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/100, BSP::TICKS_PER_SEC/100);</entry>
       <exit brief="disarmDisplayFrameTimer()">display_frame_time_evt_.disarm();</exit>
       <state name="AllOn">
        <initial target="../1">
@@ -100,8 +100,8 @@ subscribe(ALL_OFF_SIG);</action>
        <state_glyph node="36,23,59,26"/>
       </state>
       <state_glyph node="33,15,65,48">
-       <entry box="1,2,20,2"/>
-       <exit box="1,4,22,2"/>
+       <entry box="1,2,28,2"/>
+       <exit box="1,4,28,2"/>
       </state_glyph>
      </state>
      <state name="DisplayOff">
