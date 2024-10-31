@@ -60,17 +60,13 @@ void BSP::pollCommand(void) {
         String command = Serial.readStringUntil('\n');
         if (command.equalsIgnoreCase("ALL_ON"))
         {
-            //QF::PUBLISH(Q_NEW(QEvt, ALL_ON_SIG), &l_TIMER_ID);
-            Serial.println("Publishing ALL_ON_SIG");
-            Serial.print("serial available = ");
-            Serial.println(Serial.available());
+            static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
+            QF::PUBLISH(&allOnEvt, &l_TIMER_ID);
         }
         else if (command.equalsIgnoreCase("ALL_OFF"))
         {
-            //QF::PUBLISH(Q_NEW(QEvt, ALL_OFF_SIG), &l_TIMER_ID);
-            Serial.println("Publishing ALL_OFF_SIG");
-            Serial.print("serial available = ");
-            Serial.println(Serial.available());
+            static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
+            QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
         }
     }
 }

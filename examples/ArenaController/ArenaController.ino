@@ -28,13 +28,8 @@ void setup() {
     BSP::init(); // initialize the BSP
 
     // init publish-subscribe
-    //static QSubscrList subscrSto[MAX_PUB_SIG];
-    //QF::psInit(subscrSto, Q_DIM(subscrSto));
-
-    // initialize event pools...
-    //static QF_MPOOL_EL(CommandEvt) smlPoolSto[20];
-    //QF::poolInit(smlPoolSto,
-    //             sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
+    static QSubscrList subscrSto[AC::MAX_PUB_SIG];
+    QF::psInit(subscrSto, Q_DIM(subscrSto));
 
    // statically allocate event queues for the AOs and start them...
     static QEvt const *arena_controller_queueSto[10];
@@ -104,8 +99,8 @@ Q_STATE_DEF(ArenaController, initial) {
     //QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
 
     //subscribe(RESET_SIG);
-    //subscribe(ALL_ON_SIG);
-    //subscribe(ALL_OFF_SIG);
+    subscribe(ALL_ON_SIG);
+    subscribe(ALL_OFF_SIG);
     return tran(&DisplayOff);
 }
 //.${AOs::ArenaController::SM::ArenaOn} ......................................

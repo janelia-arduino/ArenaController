@@ -10,8 +10,8 @@
  </group>
  <group name="windows">
   <item id="AOs::ArenaController::SM">-155,0,1158,765</item>
-  <item id=".::arena_controller.hpp">0,0,1003,765,*</item>
-  <item id=".::ArenaController.ino">0,0,1003,765</item>
+  <item id=".::arena_controller.hpp">0,33,1003,765</item>
+  <item id=".::ArenaController.ino">0,0,1003,765,*</item>
   <item id=".::bsp.hpp">0,498,596,300</item>
   <item id=".::bsp.cpp">0,0,596,300</item>
  </group>
