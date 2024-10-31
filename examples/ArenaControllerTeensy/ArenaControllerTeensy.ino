@@ -1,9 +1,11 @@
 #include "ArenaController.hpp"
 
-void setup() {
+void setup()
+{
   AC::setup();
 }
 
-void loop() {
+void loop()
+{
   AC::loop();
 }
