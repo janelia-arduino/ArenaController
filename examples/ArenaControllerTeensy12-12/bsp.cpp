@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "bsp.hpp"
 #include "ArenaController.hpp"
+#include "BspConstants.hpp"
 
 using namespace QP;
 
@@ -20,9 +21,26 @@ void BSP::init(void)
 {
   // initialize the hardware used in this sketch...
   // NOTE: interrupts are configured and started later in QF::onStartup()
+
+  // setup serial
   Serial.begin(115200);
   Serial.setTimeout(100);
+
+  // setup pins
   pinMode(LED_BUILTIN, OUTPUT);
+
+  pinMode(AC::constants::reset_pin, OUTPUT);
+  digitalWriteFast(AC::constants::reset_pin, LOW);
+
+  for (uint8_t col_index = 0; col_index<AC::constants::panel_count_max_per_region_col; ++col_index)
+  {
+    for (uint8_t row_index = 0; row_index<AC::constants::panel_count_max_per_region_row; ++row_index)
+    {
+      const uint8_t & cs_pin = AC::constants::panel_select_pins[row_index][col_index];
+      pinMode(cs_pin, OUTPUT);
+      digitalWriteFast(cs_pin, HIGH);
+    }
+  }
 
 #ifdef QS_ON
   QS_INIT(nullptr);
@@ -57,31 +75,24 @@ void BSP::pollCommand(void)
 //............................................................................
 void BSP::ledOff(void)
 {
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWriteFast(LED_BUILTIN, LOW);
 }
 //............................................................................
 void BSP::ledOn(void)
 {
-  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWriteFast(LED_BUILTIN, HIGH);
 }
 //............................................................................
 #include <TimerThree.h>  // Teensy Timer3 interface
-// int ledState = LOW;
 void displayFrameTimerHandler()
 {
   static AC::DisplayFrameEvt const displayFrameEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
   QF::PUBLISH(&displayFrameEvt, &l_TIMER_ID);
-  // if (ledState == LOW) {
-  //   ledState = HIGH;
-  // } else {
-  //   ledState = LOW;
-  // }
-  // digitalWrite(LED_BUILTIN, ledState);
 }
 
 void BSP::armDisplayFrameTimer(uint32_t frequency_hz)
 {
-  uint32_t period_us = MICROSECONDS_PER_SECOND / frequency_hz;
+  uint32_t period_us = AC::constants::MICROSECONDS_PER_SECOND / frequency_hz;
   Timer3.initialize(period_us);
   Timer3.attachInterrupt(displayFrameTimerHandler);
 }

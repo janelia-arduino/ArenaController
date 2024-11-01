@@ -19,6 +19,7 @@
 
 #ifndef BSP_HPP
 #define BSP_HPP
+#include "Constants.hpp"
 
 class BSP {
 public:
