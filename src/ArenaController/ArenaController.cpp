@@ -20,7 +20,7 @@
 
 using namespace QP;
 
-namespace AC {
+namespace ArduinoInterface {
 
 //............................................................................
 void setup() {
@@ -63,8 +63,7 @@ ArenaController ArenaController::instance;
 //.${AOs::ArenaController::ArenaController} ..................................
 ArenaController::ArenaController()
 : QActive(Q_STATE_CAST(&ArenaController::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U),
-    display_frame_time_evt_(this, DISPLAY_FRAME_TIMEOUT_SIG, 0U)
+    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::ArenaController::SM} ...............................................
@@ -81,6 +80,7 @@ Q_STATE_DEF(ArenaController, initial) {
     //subscribe(RESET_SIG);
     subscribe(ALL_ON_SIG);
     subscribe(ALL_OFF_SIG);
+    subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
     return tran(&DisplayOff);
 }
 //.${AOs::ArenaController::SM::ArenaOn} ......................................
@@ -89,7 +89,7 @@ Q_STATE_DEF(ArenaController, ArenaOn) {
     switch (e->sig) {
         //.${AOs::ArenaController::SM::ArenaOn}
         case Q_ENTRY_SIG: {
-            command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);
+            command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -128,13 +128,13 @@ Q_STATE_DEF(ArenaController, DisplayOn) {
     switch (e->sig) {
         //.${AOs::ArenaController::SM::ArenaOn::DisplayOn}
         case Q_ENTRY_SIG: {
-            display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/100, BSP::TICKS_PER_SEC/100);
+            BSP::armDisplayFrameTimer(400);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::ArenaController::SM::ArenaOn::DisplayOn}
         case Q_EXIT_SIG: {
-            display_frame_time_evt_.disarm();
+            BSP::disarmDisplayFrameTimer();
             status_ = Q_RET_HANDLED;
             break;
         }

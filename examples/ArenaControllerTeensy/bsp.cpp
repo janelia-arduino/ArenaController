@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "bsp.hpp"
 #include "ArenaController.hpp"
 
@@ -63,7 +64,31 @@ void BSP::ledOn(void)
 {
   digitalWrite(LED_BUILTIN, HIGH);
 }
+//............................................................................
+#include <TimerThree.h>  // Teensy Timer3 interface
+// int ledState = LOW;
+void displayFrameTimerHandler()
+{
+  static AC::DisplayFrameEvt const displayFrameEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
+  QF::PUBLISH(&displayFrameEvt, &l_TIMER_ID);
+  // if (ledState == LOW) {
+  //   ledState = HIGH;
+  // } else {
+  //   ledState = LOW;
+  // }
+  // digitalWrite(LED_BUILTIN, ledState);
+}
 
+void BSP::armDisplayFrameTimer(uint32_t frequency_hz)
+{
+  uint32_t period_us = MICROSECONDS_PER_SECOND / frequency_hz;
+  Timer3.initialize(period_us);
+  Timer3.attachInterrupt(displayFrameTimerHandler);
+}
+void BSP::disarmDisplayFrameTimer()
+{
+  Timer3.detachInterrupt();
+}
 //----------------------------------------------------------------------------
 // QF callbacks...
 

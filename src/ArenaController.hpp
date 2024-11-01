@@ -28,18 +28,22 @@ namespace AC {
 
 enum ArenaControllerSignals {
     RESET_SIG = QP::Q_USER_SIG,
-    ALL_ON_SIG,     // published by BSP to display all panels on
-    ALL_OFF_SIG,    // published by BSP to display all panels off
+    ALL_ON_SIG,
+    ALL_OFF_SIG,
+    DISPLAY_FRAME_TIMEOUT_SIG,
     MAX_PUB_SIG,    // the last published signal
     COMMAND_TIMEOUT_SIG,
-    DISPLAY_FRAME_TIMEOUT_SIG,
     MAX_SIG         // the last signal
 };
+
+} // namespace AC
+
+namespace ArduinoInterface {
 
 void setup();
 void loop();
 
-} // namespace AC
+} // namespace ArduinoInterface
 
 //============================================================================
 // generate declarations of all AO classes (state machines)...
@@ -51,7 +55,6 @@ class ArenaController : public QP::QActive {
 public:
     QP::QTimeEvt command_time_evt_;
     static ArenaController instance;
-    QP::QTimeEvt display_frame_time_evt_;
 
 public:
     ArenaController();
@@ -75,6 +78,8 @@ namespace AC {
 
 //.${Events::CommandEvt} .....................................................
 class CommandEvt : public QP::QEvt {};
+//.${Events::DisplayFrameEvt} ................................................
+class DisplayFrameEvt : public QP::QEvt {};
 
 } // namespace AC
 //.$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

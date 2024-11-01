@@ -24,11 +24,9 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="instance" type="ArenaController" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <attribute name="display_frame_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="ArenaController" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;ArenaController::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U),
-    display_frame_time_evt_(this, DISPLAY_FRAME_TIMEOUT_SIG, 0U)</code>
+    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1/4">
@@ -42,13 +40,14 @@ This structure of the code is recommended for applications with only one active 
 
 //subscribe(RESET_SIG);
 subscribe(ALL_ON_SIG);
-subscribe(ALL_OFF_SIG);</action>
+subscribe(ALL_OFF_SIG);
+subscribe(DISPLAY_FRAME_TIMEOUT_SIG);</action>
      <initial_glyph conn="2,17,5,3,5">
       <action box="0,-2,4,2"/>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="armCommandPollingTimer(1Hz)">command_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/2);</entry>
+     <entry brief="armCommandPollingTimer(50Hz)">command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);</entry>
      <exit brief="disarmCommandPollingTimer()">command_time_evt_.disarm();</exit>
      <tran trig="RESET" target="..">
       <tran_glyph conn="106,9,1,1,5,5,-5">
@@ -67,8 +66,8 @@ subscribe(ALL_OFF_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="DisplayOn">
-      <entry brief="armDisplayFrameTimer(50Hz)">display_frame_time_evt_.armX(BSP::TICKS_PER_SEC/100, BSP::TICKS_PER_SEC/100);</entry>
-      <exit brief="disarmDisplayFrameTimer()">display_frame_time_evt_.disarm();</exit>
+      <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(400);</entry>
+      <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
       <state name="AllOn">
        <initial target="../1">
         <initial_glyph conn="66,28,4,0,3">
@@ -129,6 +128,7 @@ subscribe(ALL_OFF_SIG);</action>
  </package>
  <package name="Events" stereotype="0x01" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
+  <class name="DisplayFrameEvt" superclass="qpcpp::QEvt"/>
  </package>
  <directory name=".">
   <file name="ArenaController.hpp">
@@ -144,18 +144,22 @@ namespace AC {
 
 enum ArenaControllerSignals {
     RESET_SIG = QP::Q_USER_SIG,
-    ALL_ON_SIG,     // published by BSP to display all panels on
-    ALL_OFF_SIG,    // published by BSP to display all panels off
+    ALL_ON_SIG,
+    ALL_OFF_SIG,
+    DISPLAY_FRAME_TIMEOUT_SIG,
     MAX_PUB_SIG,    // the last published signal
     COMMAND_TIMEOUT_SIG,
-    DISPLAY_FRAME_TIMEOUT_SIG,
     MAX_SIG         // the last signal
 };
+
+} // namespace AC
+
+namespace ArduinoInterface {
 
 void setup();
 void loop();
 
-} // namespace AC
+} // namespace ArduinoInterface
 
 //============================================================================
 // generate declarations of all AO classes (state machines)...
@@ -179,10 +183,14 @@ $declare${AOs::AO_ArenaController}
 class BSP {
 public:
     enum { TICKS_PER_SEC = 100} ;
+    static const uint32_t MICROSECONDS_PER_SECOND = 1000000;
+
     static void init(void);
     static void pollCommand(void);
     static void ledOff(void);
     static void ledOn(void);
+    static void armDisplayFrameTimer(uint32_t frequency_hz);
+    static void disarmDisplayFrameTimer();
 };
 
 #endif // BSP_HPP
@@ -195,7 +203,7 @@ public:
 
 using namespace QP;
 
-namespace AC {
+namespace ArduinoInterface {
 
 //............................................................................
 void setup() {

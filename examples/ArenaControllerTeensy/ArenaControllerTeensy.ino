@@ -2,10 +2,10 @@
 
 void setup()
 {
-  AC::setup();
+  ArduinoInterface::setup();
 }
 
 void loop()
 {
-  AC::loop();
+  ArduinoInterface::loop();
 }
