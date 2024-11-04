@@ -22,8 +22,6 @@
 #include "qpcpp.hpp"   // QP-C++ framework
 #include "bsp.hpp"
 
-using namespace QP;
-
 namespace AC {
 
 enum ArenaControllerSignals {
@@ -45,34 +43,6 @@ void loop();
 
 } // namespace ArduinoInterface
 
-//============================================================================
-// generate declarations of all AO classes (state machines)...
-//.$declare${AOs::ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::ArenaController} ...................................................
-class ArenaController : public QP::QActive {
-public:
-    QP::QTimeEvt command_time_evt_;
-    static ArenaController instance;
-
-public:
-    ArenaController();
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(ArenaOn);
-    Q_STATE_DECL(DisplayOn);
-    Q_STATE_DECL(AllOn);
-    Q_STATE_DECL(AllOnWaiting);
-    Q_STATE_DECL(AllOnDisplaying);
-    Q_STATE_DECL(DisplayOff);
-};
-
-} // namespace AC
-//.$enddecl${AOs::ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//...
-
 //.$declare${Events} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
@@ -85,13 +55,12 @@ class DisplayFrameEvt : public QP::QEvt {};
 //.$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // genearate declarations of all opaque AO pointers
-//.$declare${AOs::AO_ArenaController} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//.$declare${AOs::AO_Arena} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
-extern QP::QActive * const AO_ArenaController;
+extern QP::QActive * const AO_Arena;
 
 } // namespace AC
-//.$enddecl${AOs::AO_ArenaController} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//...
+//.$enddecl${AOs::AO_Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif // ARENA_CONTROLLER_HPP

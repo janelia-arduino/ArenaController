@@ -16,7 +16,6 @@
 // for more details.
 //
 //.$endhead${.::bsp.hpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 #ifndef BSP_HPP
 #define BSP_HPP
 #include "Constants.hpp"
@@ -24,7 +23,6 @@
 class BSP {
 public:
     enum { TICKS_PER_SEC = 100} ;
-    static const uint32_t MICROSECONDS_PER_SECOND = 1000000;
 
     static void init(void);
     static void pollCommand(void);

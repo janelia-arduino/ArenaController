@@ -19,13 +19,13 @@ This example demonstrates the concept of the Board Support Package (BSP), which 
 This structure of the code is recommended for applications with only one active object. (See also the dpp_bsp example).</documentation>
  <framework name="qpcpp"/>
  <package name="AOs" stereotype="0x02" namespace="AC::">
-  <class name="ArenaController" superclass="qpcpp::QActive">
+  <class name="Arena" superclass="qpcpp::QActive">
    <attribute name="command_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
-   <attribute name="instance" type="ArenaController" visibility="0x00" properties="0x01">
+   <attribute name="instance" type="Arena" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <operation name="ArenaController" type="" visibility="0x00" properties="0x00">
-    <code>: QActive(Q_STATE_CAST(&amp;ArenaController::initial)),
+   <operation name="Arena" type="" visibility="0x00" properties="0x00">
+    <code>: QActive(Q_STATE_CAST(&amp;Arena::initial)),
     command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)</code>
    </operation>
    <statechart properties="0x00">
@@ -122,8 +122,8 @@ subscribe(DISPLAY_FRAME_TIMEOUT_SIG);</action>
     <state_diagram size="131,68"/>
    </statechart>
   </class>
-  <attribute name="AO_ArenaController" type="QP::QActive * const" visibility="0x00" properties="0x00">
-   <code>= &amp;ArenaController::instance;</code>
+  <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
+   <code>= &amp;Arena::instance;</code>
   </attribute>
  </package>
  <package name="Events" stereotype="0x01" namespace="AC::">
@@ -137,8 +137,6 @@ subscribe(DISPLAY_FRAME_TIMEOUT_SIG);</action>
 
 #include &quot;qpcpp.hpp&quot;   // QP-C++ framework
 #include &quot;bsp.hpp&quot;
-
-using namespace QP;
 
 namespace AC {
 
@@ -161,23 +159,16 @@ void loop();
 
 } // namespace ArduinoInterface
 
-//============================================================================
-// generate declarations of all AO classes (state machines)...
-$declare${AOs::ArenaController}
-//...
-
 $declare${Events}
 
 // genearate declarations of all opaque AO pointers
-$declare${AOs::AO_ArenaController}
-//...
+$declare${AOs::AO_Arena}
 
 #endif // ARENA_CONTROLLER_HPP
    </text>
   </file>
   <file name="bsp.hpp">
-   <text>
-#ifndef BSP_HPP
+   <text>#ifndef BSP_HPP
 #define BSP_HPP
 #include &quot;Constants.hpp&quot;
 
@@ -198,6 +189,26 @@ public:
   </file>
  </directory>
  <directory name="./ArenaController">
+  <file name="Arena.cpp">
+   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+
+using namespace QP;
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Arena}
+
+//============================================================================
+// generate definition of to opaque pointer to the AO
+$define${AOs::AO_Arena}
+
+//============================================================================
+// generate definition of the AO
+$define${AOs::Arena}
+
+
+</text>
+  </file>
   <file name="ArenaController.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
 
@@ -216,9 +227,9 @@ void setup() {
     QF::psInit(subscrSto, Q_DIM(subscrSto));
 
    // statically allocate event queues for the AOs and start them...
-    static QEvt const *arena_controller_queueSto[10];
-    AC::AO_ArenaController-&gt;start(1U, // priority
-        arena_controller_queueSto, Q_DIM(arena_controller_queueSto),
+    static QEvt const *arena_queueSto[10];
+    AC::AO_Arena-&gt;start(1U, // priority
+        arena_queueSto, Q_DIM(arena_queueSto),
         (void *)0, 0U); // no stack
     //...
 }
@@ -228,18 +239,7 @@ void loop() {
     QF::run(); // run the QF/C++ framework
 }
 
-} // namespace AC
-
-//============================================================================
-// generate definitions of all AO classes (state machines)...
-$define${AOs::ArenaController}
-//...
-
-//============================================================================
-// generate definitions of all AO opaque pointers...
-$define${AOs::AO_ArenaController}
-//...
-</text>
+} // namespace AC</text>
   </file>
  </directory>
 </model>
