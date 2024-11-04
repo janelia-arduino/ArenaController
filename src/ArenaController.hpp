@@ -71,5 +71,12 @@ extern QP::QActive * const AO_SerialCommandInterface;
 
 } // namespace AC
 //.$enddecl${AOs::AO_SerialCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$declare${AOs::AO_Display} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
+extern QP::QActive * const AO_Display;
+
+} // namespace AC
+//.$enddecl${AOs::AO_Display} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif // ARENA_CONTROLLER_HPP

@@ -43,6 +43,11 @@ void setup() {
         arena_queueSto, Q_DIM(arena_queueSto),
         (void *)0, 0U); // no stack
 
+    static QEvt const *display_queueSto[10];
+    AC::AO_Display->start(3U, // priority
+        display_queueSto, Q_DIM(display_queueSto),
+        (void *)0, 0U); // no stack
+
     //...
 }
 

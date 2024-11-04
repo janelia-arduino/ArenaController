@@ -36,11 +36,6 @@ public:
 protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(ArenaOn);
-    Q_STATE_DECL(DisplayOn);
-    Q_STATE_DECL(AllOn);
-    Q_STATE_DECL(AllOnWaiting);
-    Q_STATE_DECL(AllOnDisplaying);
-    Q_STATE_DECL(DisplayOff);
 };
 
 } // namespace AC
@@ -78,19 +73,8 @@ Arena::Arena()
 //.${AOs::Arena::SM} .........................................................
 Q_STATE_DEF(Arena, initial) {
     //.${AOs::Arena::SM::initial}
-    (void)e; // suppress the compiler warning about unused parameter
-
-    //QS_OBJ_DICTIONARY(&ArenaController::instance);
-
-    //QS_SIG_DICTIONARY(RESET_SIG, nullptr); // global signals
-    //QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
-    //QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
-
-    //subscribe(RESET_SIG);
-    subscribe(ALL_ON_SIG);
-    subscribe(ALL_OFF_SIG);
-    subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
-    return tran(&DisplayOff);
+    subscribe(RESET_SIG);
+    return tran(&ArenaOn);
 }
 //.${AOs::Arena::SM::ArenaOn} ................................................
 Q_STATE_DEF(Arena, ArenaOn) {
@@ -115,118 +99,8 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = tran(&ArenaOn);
             break;
         }
-        //.${AOs::Arena::SM::ArenaOn::ALL_OFF}
-        case ALL_OFF_SIG: {
-            status_ = tran(&DisplayOff);
-            break;
-        }
         default: {
             status_ = super(&top);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::Arena::SM::ArenaOn::DisplayOn} .....................................
-Q_STATE_DEF(Arena, DisplayOn) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::Arena::SM::ArenaOn::DisplayOn}
-        case Q_ENTRY_SIG: {
-            BSP::armDisplayFrameTimer(400);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::DisplayOn}
-        case Q_EXIT_SIG: {
-            BSP::disarmDisplayFrameTimer();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn} ..............................
-Q_STATE_DEF(Arena, AllOn) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn::initial}
-        case Q_INIT_SIG: {
-            status_ = tran(&AllOnWaiting);
-            break;
-        }
-        default: {
-            status_ = super(&DisplayOn);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn::AllOnWaiting} ................
-Q_STATE_DEF(Arena, AllOnWaiting) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn::AllOnWaiting}
-        case Q_ENTRY_SIG: {
-            BSP::ledOff();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn::AllOnWaiting::DISPLAY_FRAME_TIMEOUT}
-        case DISPLAY_FRAME_TIMEOUT_SIG: {
-            status_ = tran(&AllOnDisplaying);
-            break;
-        }
-        default: {
-            status_ = super(&AllOn);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn::AllOnDisplaying} .............
-Q_STATE_DEF(Arena, AllOnDisplaying) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn::AllOnDisplaying}
-        case Q_ENTRY_SIG: {
-            BSP::ledOn();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::DisplayOn::AllOn::AllOnDisplaying::DISPLAY_FRAME_TIMEOUT}
-        case DISPLAY_FRAME_TIMEOUT_SIG: {
-            status_ = tran(&AllOnWaiting);
-            break;
-        }
-        default: {
-            status_ = super(&AllOn);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::Arena::SM::ArenaOn::DisplayOff} ....................................
-Q_STATE_DEF(Arena, DisplayOff) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::Arena::SM::ArenaOn::DisplayOff}
-        case Q_ENTRY_SIG: {
-            BSP::ledOff();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::DisplayOff::ALL_ON}
-        case ALL_ON_SIG: {
-            status_ = tran(&AllOn);
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
             break;
         }
     }
@@ -235,5 +109,3 @@ Q_STATE_DEF(Arena, DisplayOff) {
 
 } // namespace AC
 //.$enddef${AOs::Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-

@@ -27,21 +27,10 @@ This structure of the code is recommended for applications with only one active 
     <code>: QActive(Q_STATE_CAST(&amp;Arena::initial))</code>
    </operation>
    <statechart properties="0x00">
-    <initial target="../1/3">
-     <action>(void)e; // suppress the compiler warning about unused parameter
-
-//QS_OBJ_DICTIONARY(&amp;ArenaController::instance);
-
-//QS_SIG_DICTIONARY(RESET_SIG, nullptr); // global signals
-//QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
-//QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
-
-//subscribe(RESET_SIG);
-subscribe(ALL_ON_SIG);
-subscribe(ALL_OFF_SIG);
-subscribe(DISPLAY_FRAME_TIMEOUT_SIG);</action>
-     <initial_glyph conn="2,17,5,3,5">
-      <action box="0,-2,4,2"/>
+    <initial target="../1">
+     <action>subscribe(RESET_SIG);</action>
+     <initial_glyph conn="50,8,4,0,4">
+      <action box="-1,-1,10,2"/>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
@@ -50,65 +39,11 @@ QF::PUBLISH(&amp;activateSerialCommandInterfaceEvt, this);</entry>
      <exit brief="deactivateCommandInterfaces()">static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 QF::PUBLISH(&amp;deactivateSerialCommandInterfaceEvt, this);</exit>
      <tran trig="RESET" target="..">
-      <tran_glyph conn="106,9,1,1,5,5,-5">
+      <tran_glyph conn="74,20,1,1,5,5,-5">
        <action box="0,-2,7,3"/>
       </tran_glyph>
      </tran>
-     <tran trig="ALL_OFF" target="../3">
-      <tran_glyph conn="5,28,3,2,9,-3">
-       <action box="0,0,10,2"/>
-      </tran_glyph>
-     </tran>
-     <state name="DisplayOn">
-      <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(400);</entry>
-      <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
-      <state name="AllOn">
-       <initial target="../1">
-        <initial_glyph conn="66,28,4,0,3">
-         <action box="3,0,10,2"/>
-        </initial_glyph>
-       </initial>
-       <state name="AllOnWaiting">
-        <entry brief="ledOff()">BSP::ledOff();</entry>
-        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../2">
-         <tran_glyph conn="58,33,3,3,-3,9,3">
-          <action box="-21,-3,23,2"/>
-         </tran_glyph>
-        </tran>
-        <state_glyph node="58,31,14,6">
-         <entry box="1,2,9,2"/>
-        </state_glyph>
-       </state>
-       <state name="AllOnDisplaying">
-        <entry brief="ledOn()">BSP::ledOn();</entry>
-        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../1">
-         <tran_glyph conn="72,42,1,1,2,-9,-2">
-          <action box="1,1,21,3"/>
-         </tran_glyph>
-        </tran>
-        <state_glyph node="58,40,14,6">
-         <entry box="1,2,10,2"/>
-        </state_glyph>
-       </state>
-       <state_glyph node="36,23,59,26"/>
-      </state>
-      <state_glyph node="33,15,65,48">
-       <entry box="1,2,28,2"/>
-       <exit box="1,4,28,2"/>
-      </state_glyph>
-     </state>
-     <state name="DisplayOff">
-      <entry brief="ledOff()">BSP::ledOff();</entry>
-      <tran trig="ALL_ON" target="../../2/0">
-       <tran_glyph conn="26,17,1,3,3,9,7">
-        <action box="0,-2,10,2"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="7,15,19,10">
-       <entry box="1,2,9,2"/>
-      </state_glyph>
-     </state>
-     <state_glyph node="5,1,101,65">
+     <state_glyph node="32,12,42,20">
       <entry box="1,2,23,2"/>
       <exit box="1,4,24,2"/>
      </state_glyph>
@@ -161,11 +96,85 @@ subscribe(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);</action>
     <state_diagram size="97,50"/>
    </statechart>
   </class>
+  <class name="Display" superclass="qpcpp::QActive">
+   <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
+   <operation name="Display" type="" visibility="0x00" properties="0x00">
+    <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
+   </operation>
+   <statechart properties="0x00">
+    <initial target="../1">
+     <action>subscribe(ALL_ON_SIG);
+subscribe(ALL_OFF_SIG);
+subscribe(DISPLAY_FRAME_TIMEOUT_SIG);</action>
+     <initial_glyph conn="40,7,4,0,4">
+      <action box="0,-2,10,2"/>
+     </initial_glyph>
+    </initial>
+    <state name="Off">
+     <entry brief="ledOff()">BSP::ledOff();</entry>
+     <tran trig="ALL_ON" target="../../2/1">
+      <tran_glyph conn="46,13,1,1,29,17,-6">
+       <action box="5,-2,10,2"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="34,11,12,7">
+      <entry box="1,2,9,2"/>
+     </state_glyph>
+    </state>
+    <state name="On">
+     <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(400);</entry>
+     <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
+     <tran trig="ALL_OFF" target="../../1">
+      <tran_glyph conn="6,23,3,3,-2,-10,30">
+       <action box="5,-12,8,2"/>
+      </tran_glyph>
+     </tran>
+     <state name="AllOn">
+      <initial target="../1">
+       <initial_glyph conn="39,30,4,0,3">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
+      <state name="AllOnWaiting">
+       <entry brief="ledOff()">BSP::ledOff();</entry>
+       <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../2">
+        <tran_glyph conn="45,35,1,1,2,12,-2">
+         <action box="3,6,22,2"/>
+        </tran_glyph>
+       </tran>
+       <state_glyph node="31,33,14,7">
+        <entry box="1,2,11,2"/>
+       </state_glyph>
+      </state>
+      <state name="AllOnDisplaying">
+       <entry brief="ledOn()">BSP::ledOn();</entry>
+       <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../1">
+        <tran_glyph conn="31,47,3,3,-14,-12,14">
+         <action box="-14,-6,22,2"/>
+        </tran_glyph>
+       </tran>
+       <state_glyph node="31,45,14,6">
+        <entry box="1,2,10,2"/>
+       </state_glyph>
+      </state>
+      <state_glyph node="9,26,60,35"/>
+     </state>
+     <state_glyph node="6,19,67,47">
+      <entry box="1,2,26,2"/>
+      <exit box="1,4,25,2"/>
+     </state_glyph>
+    </state>
+    <state_diagram size="80,68"/>
+   </statechart>
+  </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
   </attribute>
   <attribute name="AO_SerialCommandInterface" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;SerialCommandInterface::instance;</code>
+  </attribute>
+  <attribute name="AO_Display" type="QP::QActive * const" visibility="0x00" properties="0x00">
+   <code>= &amp;Display::instance;</code>
   </attribute>
  </package>
  <package name="Events" stereotype="0x01" namespace="AC::">
@@ -208,6 +217,7 @@ $declare${Events}
 // genearate declarations of all opaque AO pointers
 $declare${AOs::AO_Arena}
 $declare${AOs::AO_SerialCommandInterface}
+$declare${AOs::AO_Display}
 
 #endif // ARENA_CONTROLLER_HPP
    </text>
@@ -229,8 +239,7 @@ public:
     static void disarmDisplayFrameTimer();
 };
 
-#endif // BSP_HPP
-   </text>
+#endif // BSP_HPP</text>
   </file>
  </directory>
  <directory name="./ArenaController">
@@ -249,10 +258,7 @@ $define${AOs::AO_Arena}
 
 //============================================================================
 // generate definition of the AO
-$define${AOs::Arena}
-
-
-</text>
+$define${AOs::Arena}</text>
   </file>
   <file name="ArenaController.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
@@ -282,6 +288,11 @@ void setup() {
         arena_queueSto, Q_DIM(arena_queueSto),
         (void *)0, 0U); // no stack
 
+    static QEvt const *display_queueSto[10];
+    AC::AO_Display-&gt;start(3U, // priority
+        display_queueSto, Q_DIM(display_queueSto),
+        (void *)0, 0U); // no stack
+
     //...
 }
 
@@ -308,6 +319,23 @@ $define${AOs::AO_SerialCommandInterface}
 //============================================================================
 // generate definition of the AO
 $define${AOs::SerialCommandInterface}</text>
+  </file>
+  <file name="Display.cpp">
+   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+
+using namespace QP;
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Display}
+
+//============================================================================
+// generate definition of to opaque pointer to the AO
+$define${AOs::AO_Display}
+
+//============================================================================
+// generate definition of the AO
+$define${AOs::Display}</text>
   </file>
  </directory>
 </model>
