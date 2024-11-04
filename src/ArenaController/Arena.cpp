@@ -28,7 +28,6 @@ namespace AC {
 //.${AOs::Arena} .............................................................
 class Arena : public QP::QActive {
 public:
-    QP::QTimeEvt command_time_evt_;
     static Arena instance;
 
 public:
@@ -73,8 +72,7 @@ namespace AC {
 Arena Arena::instance;
 //.${AOs::Arena::Arena} ......................................................
 Arena::Arena()
-: QActive(Q_STATE_CAST(&Arena::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)
+: QActive(Q_STATE_CAST(&Arena::initial))
 {}
 
 //.${AOs::Arena::SM} .........................................................
@@ -100,25 +98,21 @@ Q_STATE_DEF(Arena, ArenaOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn}
         case Q_ENTRY_SIG: {
-            command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);
+            static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+            QF::PUBLISH(&activateSerialCommandInterfaceEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Arena::SM::ArenaOn}
         case Q_EXIT_SIG: {
-            command_time_evt_.disarm();
+            static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+            QF::PUBLISH(&deactivateSerialCommandInterfaceEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Arena::SM::ArenaOn::RESET}
         case RESET_SIG: {
             status_ = tran(&ArenaOn);
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::COMMAND_TIMEOUT}
-        case COMMAND_TIMEOUT_SIG: {
-            BSP::pollCommand();
-            status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Arena::SM::ArenaOn::ALL_OFF}

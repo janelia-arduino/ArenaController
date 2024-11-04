@@ -55,7 +55,7 @@ void BSP::init(void)
 #endif
 }
 //............................................................................
-void BSP::pollCommand(void)
+void BSP::pollSerialCommand(void)
 {
   if (Serial.available() > 0)
   {

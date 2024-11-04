@@ -33,10 +33,16 @@ void setup() {
     QF::psInit(subscrSto, Q_DIM(subscrSto));
 
    // statically allocate event queues for the AOs and start them...
+    static QEvt const *serial_command_interface_queueSto[10];
+    AC::AO_SerialCommandInterface->start(1U, // priority
+        serial_command_interface_queueSto, Q_DIM(serial_command_interface_queueSto),
+        (void *)0, 0U); // no stack
+
     static QEvt const *arena_queueSto[10];
-    AC::AO_Arena->start(1U, // priority
+    AC::AO_Arena->start(2U, // priority
         arena_queueSto, Q_DIM(arena_queueSto),
         (void *)0, 0U); // no stack
+
     //...
 }
 

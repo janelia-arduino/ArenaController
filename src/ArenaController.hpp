@@ -26,6 +26,8 @@ namespace AC {
 
 enum ArenaControllerSignals {
     RESET_SIG = QP::Q_USER_SIG,
+    ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
+    DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     ALL_ON_SIG,
     ALL_OFF_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
@@ -62,5 +64,12 @@ extern QP::QActive * const AO_Arena;
 
 } // namespace AC
 //.$enddecl${AOs::AO_Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$declare${AOs::AO_SerialCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
+extern QP::QActive * const AO_SerialCommandInterface;
+
+} // namespace AC
+//.$enddecl${AOs::AO_SerialCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif // ARENA_CONTROLLER_HPP
