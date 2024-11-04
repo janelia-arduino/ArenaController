@@ -23,8 +23,8 @@ void BSP::init(void)
   // NOTE: interrupts are configured and started later in QF::onStartup()
 
   // setup serial
-  Serial.begin(115200);
-  Serial.setTimeout(100);
+  AC::constants::serial_communication_interface_stream.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
+  AC::constants::serial_communication_interface_stream.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
 
   // setup pins
   pinMode(LED_BUILTIN, OUTPUT);
@@ -57,9 +57,9 @@ void BSP::init(void)
 //............................................................................
 void BSP::pollSerialCommand(void)
 {
-  if (Serial.available() > 0)
+  if (AC::constants::serial_communication_interface_stream.available() > 0)
   {
-    String command = Serial.readStringUntil('\n');
+    String command = AC::constants::serial_communication_interface_stream.readStringUntil('\n');
     if (command.equalsIgnoreCase("ALL_ON"))
     {
       static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
@@ -142,23 +142,23 @@ void QV::onIdle(void)
 #ifdef QS_ON
 
   // transmit QS outgoing data (QS-TX)
-  uint16_t len = Serial.availableForWrite();
+  uint16_t len = AC::constants::serial_communication_interface_stream.availableForWrite();
   if (len > 0U)
   { // any space available in the output buffer?
     uint8_t const *buf = QS::getBlock(&len);
     if (buf)
     {
-      Serial.write(buf, len); // asynchronous and non-blocking
+      AC::constants::serial_communication_interface_stream.write(buf, len); // asynchronous and non-blocking
     }
   }
 
   // receive QS incoming data (QS-RX)
-  len = Serial.available();
+  len = AC::constants::serial_communication_interface_stream.available();
   if (len > 0U)
   {
     do
     {
-      QP::QS::rxPut(Serial.read());
+      QP::QS::rxPut(AC::constants::serial_communication_interface_stream.read());
     } while (--len > 0U);
     QS::rxParse();
   }

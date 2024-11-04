@@ -127,7 +127,7 @@ QF::PUBLISH(&amp;deactivateSerialCommandInterfaceEvt, this);</exit>
     <initial target="../2">
      <action>subscribe(ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);
 subscribe(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);</action>
-     <initial_glyph conn="45,8,4,0,3">
+     <initial_glyph conn="46,8,4,0,3">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
@@ -141,7 +141,7 @@ subscribe(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);</action>
       </tran_glyph>
      </tran>
      <tran trig="DEACTIVATE_SERIAL_COMMAND_INTERFACE" target="../../2">
-      <tran_glyph conn="28,27,3,3,-3,-14,11">
+      <tran_glyph conn="28,27,3,3,-3,-14,12">
        <action box="-27,-16,35,2"/>
       </tran_glyph>
      </tran>
@@ -152,11 +152,11 @@ subscribe(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);</action>
     </state>
     <state name="Inactive">
      <tran trig="ACTIVATE_SERIAL_COMMAND_INTERFACE" target="../../1">
-      <tran_glyph conn="54,13,1,1,18,12,-7">
-       <action box="0,-2,35,2"/>
+      <tran_glyph conn="55,13,1,1,18,12,-8">
+       <action box="2,-2,35,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="36,11,18,7"/>
+     <state_glyph node="37,11,18,7"/>
     </state>
     <state_diagram size="97,50"/>
    </statechart>

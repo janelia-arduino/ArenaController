@@ -14,6 +14,12 @@ namespace AC
 {
 namespace constants
 {
+// Serial Communication Interface
+//HardwareSerial & serial_communication_interface_stream = Serial;
+usb_serial_class & serial_communication_interface_stream = Serial;
+const uint32_t SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE = 115200;
+const uint16_t SERIAL_COMMUNICATION_INTERFACE_TIMEOUT = 100;
+
 // SPI Settings
 constexpr uint32_t spi_clock_speed = 5000000;
 
