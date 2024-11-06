@@ -37,6 +37,8 @@ public:
 protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(ArenaOn);
+    Q_STATE_DECL(AllOn);
+    Q_STATE_DECL(AllOff);
 };
 
 } // namespace AC
@@ -75,6 +77,9 @@ Arena::Arena()
 Q_STATE_DEF(Arena, initial) {
     //.${AOs::Arena::SM::initial}
     subscribe(RESET_SIG);
+    subscribe(ALL_ON_SIG);
+    subscribe(ALL_OFF_SIG);
+    subscribe(FRAME_DISPLAYED_SIG);
     return tran(&ArenaOn);
 }
 //.${AOs::Arena::SM::ArenaOn} ................................................
@@ -95,13 +100,71 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //.${AOs::Arena::SM::ArenaOn::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&AllOff);
+            break;
+        }
         //.${AOs::Arena::SM::ArenaOn::RESET}
         case RESET_SIG: {
             status_ = tran(&ArenaOn);
             break;
         }
+        //.${AOs::Arena::SM::ArenaOn::ALL_OFF}
+        case ALL_OFF_SIG: {
+            status_ = tran(&AllOff);
+            break;
+        }
         default: {
             status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Arena::SM::ArenaOn::AllOn} .........................................
+Q_STATE_DEF(Arena, AllOn) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Arena::SM::ArenaOn::AllOn}
+        case Q_ENTRY_SIG: {
+            static QEvt const displayMultipleFramesEvt = { AC::DISPLAY_MULTIPLE_FRAMES_SIG, 0U, 0U};
+            QF::PUBLISH(&displayMultipleFramesEvt, this);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_DISPLAYED}
+        case FRAME_DISPLAYED_SIG: {
+            static AC::DisplayFrameEvt const displayFrameEvt = { AC::DISPLAY_FRAME_SIG, 0U, 0U};
+            QF::PUBLISH(&displayFrameEvt, this);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&ArenaOn);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Arena::SM::ArenaOn::AllOff} ........................................
+Q_STATE_DEF(Arena, AllOff) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Arena::SM::ArenaOn::AllOff}
+        case Q_ENTRY_SIG: {
+            static QEvt const deactivateDisplayEvt = { AC::DEACTIVATE_DISPLAY_SIG, 0U, 0U};
+            QF::PUBLISH(&deactivateDisplayEvt, this);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Arena::SM::ArenaOn::AllOff::ALL_ON}
+        case ALL_ON_SIG: {
+            status_ = tran(&AllOn);
+            break;
+        }
+        default: {
+            status_ = super(&ArenaOn);
             break;
         }
     }

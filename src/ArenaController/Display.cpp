@@ -36,11 +36,12 @@ public:
 
 protected:
     Q_STATE_DECL(initial);
-    Q_STATE_DECL(Off);
-    Q_STATE_DECL(On);
-    Q_STATE_DECL(AllOn);
-    Q_STATE_DECL(AllOnWaiting);
-    Q_STATE_DECL(AllOnDisplaying);
+    Q_STATE_DECL(Inactive);
+    Q_STATE_DECL(Active);
+    Q_STATE_DECL(DisplayingMultipleFrames);
+    Q_STATE_DECL(WaitingToDisplayFrame);
+    Q_STATE_DECL(DisplayingFrame);
+    Q_STATE_DECL(FrameDisplayed);
 };
 
 } // namespace AC
@@ -78,24 +79,26 @@ Display::Display()
 //.${AOs::Display::SM} .......................................................
 Q_STATE_DEF(Display, initial) {
     //.${AOs::Display::SM::initial}
-    subscribe(ALL_ON_SIG);
-    subscribe(ALL_OFF_SIG);
+    subscribe(DEACTIVATE_DISPLAY_SIG);
+    subscribe(DISPLAY_MULTIPLE_FRAMES_SIG);
     subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
-    return tran(&Off);
+    subscribe(FRAME_DISPLAYED_SIG);
+    subscribe(DISPLAY_FRAME_SIG);
+    return tran(&Inactive);
 }
-//.${AOs::Display::SM::Off} ..................................................
-Q_STATE_DEF(Display, Off) {
+//.${AOs::Display::SM::Inactive} .............................................
+Q_STATE_DEF(Display, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Off}
+        //.${AOs::Display::SM::Inactive}
         case Q_ENTRY_SIG: {
             BSP::ledOff();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Off::ALL_ON}
-        case ALL_ON_SIG: {
-            status_ = tran(&AllOn);
+        //.${AOs::Display::SM::Inactive::DISPLAY_MULTIPLE_FRAMES}
+        case DISPLAY_MULTIPLE_FRAMES_SIG: {
+            status_ = tran(&DisplayingMultipleFrames);
             break;
         }
         default: {
@@ -105,89 +108,105 @@ Q_STATE_DEF(Display, Off) {
     }
     return status_;
 }
-//.${AOs::Display::SM::On} ...................................................
-Q_STATE_DEF(Display, On) {
+//.${AOs::Display::SM::Active} ...............................................
+Q_STATE_DEF(Display, Active) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::On}
+        //.${AOs::Display::SM::Active::DEACTIVATE_DISPLAY}
+        case DEACTIVATE_DISPLAY_SIG: {
+            status_ = tran(&Inactive);
+            break;
+        }
+        default: {
+            status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Display::SM::Active::DisplayingMultipleFrames} .....................
+Q_STATE_DEF(Display, DisplayingMultipleFrames) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Display::SM::Active::DisplayingMultipleFrames}
         case Q_ENTRY_SIG: {
-            BSP::armDisplayFrameTimer(400);
+            BSP::armDisplayFrameTimer(200);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::On}
+        //.${AOs::Display::SM::Active::DisplayingMultipleFrames}
         case Q_EXIT_SIG: {
             BSP::disarmDisplayFrameTimer();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::On::ALL_OFF}
-        case ALL_OFF_SIG: {
-            status_ = tran(&Off);
-            break;
-        }
-        default: {
-            status_ = super(&top);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::Display::SM::On::AllOn} ............................................
-Q_STATE_DEF(Display, AllOn) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::Display::SM::On::AllOn::initial}
+        //.${AOs::Display::SM::Active::DisplayingMultip~::initial}
         case Q_INIT_SIG: {
-            status_ = tran(&AllOnWaiting);
+            status_ = tran(&WaitingToDisplayFrame);
             break;
         }
         default: {
-            status_ = super(&On);
+            status_ = super(&Active);
             break;
         }
     }
     return status_;
 }
-//.${AOs::Display::SM::On::AllOn::AllOnWaiting} ..............................
-Q_STATE_DEF(Display, AllOnWaiting) {
+//.${AOs::Display::SM::Active::DisplayingMultip~::WaitingToDisplayFrame} .....
+Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::On::AllOn::AllOnWaiting}
+        //.${AOs::Display::SM::Active::DisplayingMultip~::WaitingToDisplayFrame}
         case Q_ENTRY_SIG: {
             BSP::ledOff();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::On::AllOn::AllOnWaiting::DISPLAY_FRAME_TIMEOUT}
+        //.${AOs::Display::SM::Active::DisplayingMultip~::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
         case DISPLAY_FRAME_TIMEOUT_SIG: {
-            status_ = tran(&AllOnDisplaying);
+            status_ = tran(&DisplayingFrame);
             break;
         }
         default: {
-            status_ = super(&AllOn);
+            status_ = super(&DisplayingMultipleFrames);
             break;
         }
     }
     return status_;
 }
-//.${AOs::Display::SM::On::AllOn::AllOnDisplaying} ...........................
-Q_STATE_DEF(Display, AllOnDisplaying) {
+//.${AOs::Display::SM::Active::DisplayingMultip~::DisplayingFrame} ...........
+Q_STATE_DEF(Display, DisplayingFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::On::AllOn::AllOnDisplaying}
+        //.${AOs::Display::SM::Active::DisplayingMultip~::DisplayingFrame}
         case Q_ENTRY_SIG: {
-            BSP::ledOn();
+            BSP::displayFrame();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::On::AllOn::AllOnDisplaying::DISPLAY_FRAME_TIMEOUT}
-        case DISPLAY_FRAME_TIMEOUT_SIG: {
-            status_ = tran(&AllOnWaiting);
+        //.${AOs::Display::SM::Active::DisplayingMultip~::DisplayingFrame::FRAME_DISPLAYED}
+        case FRAME_DISPLAYED_SIG: {
+            status_ = tran(&FrameDisplayed);
             break;
         }
         default: {
-            status_ = super(&AllOn);
+            status_ = super(&DisplayingMultipleFrames);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Display::SM::Active::DisplayingMultip~::FrameDisplayed} ............
+Q_STATE_DEF(Display, FrameDisplayed) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Display::SM::Active::DisplayingMultip~::FrameDisplayed::DISPLAY_FRAME}
+        case DISPLAY_FRAME_SIG: {
+            status_ = tran(&WaitingToDisplayFrame);
+            break;
+        }
+        default: {
+            status_ = super(&DisplayingMultipleFrames);
             break;
         }
     }

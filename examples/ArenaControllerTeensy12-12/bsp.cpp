@@ -86,8 +86,8 @@ void BSP::ledOn(void)
 #include <TimerThree.h>  // Teensy Timer3 interface
 void displayFrameTimerHandler()
 {
-  static AC::DisplayFrameEvt const displayFrameEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
-  QF::PUBLISH(&displayFrameEvt, &l_TIMER_ID);
+  static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
+  QF::PUBLISH(&displayFrameTimeoutEvt, &l_TIMER_ID);
 }
 
 void BSP::armDisplayFrameTimer(uint32_t frequency_hz)
@@ -99,6 +99,14 @@ void BSP::armDisplayFrameTimer(uint32_t frequency_hz)
 void BSP::disarmDisplayFrameTimer()
 {
   Timer3.detachInterrupt();
+}
+//............................................................................
+void BSP::displayFrame()
+{
+  ledOn();
+  delay(2);
+  static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
+  QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 //----------------------------------------------------------------------------
 // QF callbacks...

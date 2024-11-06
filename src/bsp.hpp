@@ -30,6 +30,7 @@ public:
     static void ledOn(void);
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();
+    static void displayFrame();
 };
 
 #endif // BSP_HPP
