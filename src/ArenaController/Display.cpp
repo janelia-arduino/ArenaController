@@ -18,6 +18,7 @@
 //.$endhead${./ArenaControlle~::Display.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #include "ArenaController.hpp"  // ArenaController application interface
 
+
 using namespace QP;
 
 //============================================================================
@@ -53,14 +54,14 @@ protected:
 #error qpcpp version 6.9.0 or higher required
 #endif
 //.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//.$define${AOs::AO_Display} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//.$define${Shared::AO_Display} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
-//.${AOs::AO_Display} ........................................................
+//.${Shared::AO_Display} .....................................................
 QP::QActive * const AO_Display = &Display::instance;
 
 } // namespace AC
-//.$enddef${AOs::AO_Display} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$enddef${Shared::AO_Display} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of the AO

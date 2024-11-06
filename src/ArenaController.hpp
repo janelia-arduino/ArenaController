@@ -45,38 +45,18 @@ void loop();
 
 } // namespace ArduinoInterface
 
-//.$declare${Events} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//.$declare${Shared} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
-//.${Events::CommandEvt} .....................................................
+//.${Shared::CommandEvt} .....................................................
 class CommandEvt : public QP::QEvt {};
-//.${Events::DisplayFrameEvt} ................................................
+//.${Shared::DisplayFrameEvt} ................................................
 class DisplayFrameEvt : public QP::QEvt {};
-
-} // namespace AC
-//.$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-// genearate declarations of all opaque AO pointers
-//.$declare${AOs::AO_Arena} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
 extern QP::QActive * const AO_Arena;
-
-} // namespace AC
-//.$enddecl${AOs::AO_Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//.$declare${AOs::AO_SerialCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
+extern QP::QActive * const AO_Display;
 extern QP::QActive * const AO_SerialCommandInterface;
 
 } // namespace AC
-//.$enddecl${AOs::AO_SerialCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//.$declare${AOs::AO_Display} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-extern QP::QActive * const AO_Display;
-
-} // namespace AC
-//.$enddecl${AOs::AO_Display} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif // ARENA_CONTROLLER_HPP

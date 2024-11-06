@@ -167,19 +167,19 @@ subscribe(DISPLAY_FRAME_TIMEOUT_SIG);</action>
     <state_diagram size="80,68"/>
    </statechart>
   </class>
+ </package>
+ <package name="Shared" stereotype="0x00" namespace="AC::">
+  <class name="CommandEvt" superclass="qpcpp::QEvt"/>
+  <class name="DisplayFrameEvt" superclass="qpcpp::QEvt"/>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
-  </attribute>
-  <attribute name="AO_SerialCommandInterface" type="QP::QActive * const" visibility="0x00" properties="0x00">
-   <code>= &amp;SerialCommandInterface::instance;</code>
   </attribute>
   <attribute name="AO_Display" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Display::instance;</code>
   </attribute>
- </package>
- <package name="Events" stereotype="0x01" namespace="AC::">
-  <class name="CommandEvt" superclass="qpcpp::QEvt"/>
-  <class name="DisplayFrameEvt" superclass="qpcpp::QEvt"/>
+  <attribute name="AO_SerialCommandInterface" type="QP::QActive * const" visibility="0x00" properties="0x00">
+   <code>= &amp;SerialCommandInterface::instance;</code>
+  </attribute>
  </package>
  <directory name=".">
   <file name="ArenaController.hpp">
@@ -212,12 +212,7 @@ void loop();
 
 } // namespace ArduinoInterface
 
-$declare${Events}
-
-// genearate declarations of all opaque AO pointers
-$declare${AOs::AO_Arena}
-$declare${AOs::AO_SerialCommandInterface}
-$declare${AOs::AO_Display}
+$declare${Shared}
 
 #endif // ARENA_CONTROLLER_HPP
    </text>
@@ -246,6 +241,7 @@ public:
   <file name="Arena.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
 
+
 using namespace QP;
 
 //============================================================================
@@ -254,7 +250,7 @@ $declare${AOs::Arena}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
-$define${AOs::AO_Arena}
+$define${Shared::AO_Arena}
 
 //============================================================================
 // generate definition of the AO
@@ -306,6 +302,7 @@ void loop() {
   <file name="SerialCommandInterface.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
 
+
 using namespace QP;
 
 //============================================================================
@@ -314,7 +311,7 @@ $declare${AOs::SerialCommandInterface}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
-$define${AOs::AO_SerialCommandInterface}
+$define${Shared::AO_SerialCommandInterface}
 
 //============================================================================
 // generate definition of the AO
@@ -322,6 +319,7 @@ $define${AOs::SerialCommandInterface}</text>
   </file>
   <file name="Display.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+
 
 using namespace QP;
 
@@ -331,7 +329,7 @@ $declare${AOs::Display}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
-$define${AOs::AO_Display}
+$define${Shared::AO_Display}
 
 //============================================================================
 // generate definition of the AO

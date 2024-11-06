@@ -18,6 +18,7 @@
 //.$endhead${./ArenaControlle~::SerialCommandInterface.cpp} ^^^^^^^^^^^^^^^^^^
 #include "ArenaController.hpp"  // ArenaController application interface
 
+
 using namespace QP;
 
 //============================================================================
@@ -51,14 +52,14 @@ protected:
 #error qpcpp version 6.9.0 or higher required
 #endif
 //.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//.$define${AOs::AO_SerialCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//.$define${Shared::AO_SerialCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
-//.${AOs::AO_SerialCommandInterface} .........................................
+//.${Shared::AO_SerialCommandInterface} ......................................
 QP::QActive * const AO_SerialCommandInterface = &SerialCommandInterface::instance;
 
 } // namespace AC
-//.$enddef${AOs::AO_SerialCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$enddef${Shared::AO_SerialCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of the AO
