@@ -17,44 +17,16 @@ using namespace QP;
 static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
+// Static global variables
+static EthernetServer ethernet_server(AC::constants::port);
+
+//----------------------------------------------------------------------------
 // Local functions
-void setupSerialCommandInterface()
-{
-  // setup serial
-  AC::constants::serial_communication_interface_stream.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
-  AC::constants::serial_communication_interface_stream.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
-
-}
-
 void getMacAddress(uint8_t * mac_address)
 {
   for(uint8_t by=0; by<2; by++) mac_address[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
   for(uint8_t by=0; by<4; by++) mac_address[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
   // Serial.printf("MAC Address: %02x:%02x:%02x:%02x:%02x:%02x\n", mac_address[0], mac_address[1], mac_address[2], mac_address[3], mac_address[4], mac_address[5]);
-}
-
-void setupEthernetCommandInterface()
-{
-  uint8_t mac_address[AC::constants::mac_address_size];
-  getMacAddress(mac_address);
-
-  // start the Ethernet connection:
-  // Serial.println("Initialize Ethernet with DHCP:");
-  if (Ethernet.begin(mac_address) == 0) {
-    // Serial.println("Failed to configure Ethernet using DHCP");
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-      // Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
-    } else if (Ethernet.linkStatus() == LinkOFF) {
-      // Serial.println("Ethernet cable is not connected.");
-    }
-    // no point in carrying on, so do nothing forevermore:
-    // while (true) {
-    //   delay(1);
-    // }
-  }
-  // print your local IP address:
-  // Serial.print("My IP address: ");
-  // Serial.println(Ethernet.localIP());
 }
 
 //----------------------------------------------------------------------------
@@ -65,12 +37,6 @@ void BSP::init(void)
 {
   // initialize the hardware used in this sketch...
   // NOTE: interrupts are configured and started later in QF::onStartup()
-
-#ifndef QS_ON
-  setupSerialCommandInterface();
-#endif
-
-  setupEthernetCommandInterface();
 
   // setup pins
   pinMode(LED_BUILTIN, OUTPUT);
@@ -103,8 +69,10 @@ void BSP::init(void)
 //............................................................................
 void BSP::activateCommandInterfaces(void)
 {
+#ifndef QS_ON
   static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
   QF::PUBLISH(&activateSerialCommandInterfaceEvt, &l_TIMER_ID);
+#endif
 
   static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
   QF::PUBLISH(&activateEthernetCommandInterfaceEvt, &l_TIMER_ID);
@@ -112,11 +80,19 @@ void BSP::activateCommandInterfaces(void)
 //............................................................................
 void BSP::deactivateCommandInterfaces(void)
 {
+#ifndef QS_ON
   static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
   QF::PUBLISH(&deactivateSerialCommandInterfaceEvt, &l_TIMER_ID);
+#endif
 
   static QEvt const deactivateEthernetCommandInterfaceEvt = { AC::DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
   QF::PUBLISH(&deactivateEthernetCommandInterfaceEvt, &l_TIMER_ID);
+}
+//............................................................................
+void BSP::beginSerial()
+{
+  AC::constants::serial_communication_interface_stream.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
+  AC::constants::serial_communication_interface_stream.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
 }
 //............................................................................
 void BSP::pollSerialCommand(void)
@@ -135,6 +111,21 @@ void BSP::pollSerialCommand(void)
       QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
     }
   }
+}
+//............................................................................
+void BSP::beginEthernet()
+{
+  uint8_t mac_address[AC::constants::mac_address_size];
+  getMacAddress(mac_address);
+
+  Ethernet.begin(mac_address, AC::constants::ip);
+  static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
+  QF::PUBLISH(&ethernetInitializedEvt, &l_TIMER_ID);
+}
+//............................................................................
+void BSP::beginEthernetServer()
+{
+  ethernet_server.begin();
 }
 //............................................................................
 void BSP::pollEthernetCommand(void)

@@ -14,6 +14,10 @@ namespace AC
 {
 namespace constants
 {
+// Ethernet Communication Interface
+const IPAddress ip(192, 168, 10, 196);
+const uint32_t port = 62222;
+
 // Serial Communication Interface
 //HardwareSerial & serial_communication_interface_stream = Serial;
 usb_serial_class & serial_communication_interface_stream = Serial;

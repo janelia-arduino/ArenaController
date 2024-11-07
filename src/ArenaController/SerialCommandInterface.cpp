@@ -87,6 +87,7 @@ Q_STATE_DEF(SerialCommandInterface, Active) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active}
         case Q_ENTRY_SIG: {
+            BSP::beginSerial();
             serial_command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);
             status_ = Q_RET_HANDLED;
             break;

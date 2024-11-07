@@ -25,12 +25,19 @@ public:
     enum { TICKS_PER_SEC = 100} ;
 
     static void init(void);
+
     static void activateCommandInterfaces(void);
     static void deactivateCommandInterfaces(void);
+
+    static void beginSerial(void);
     static void pollSerialCommand(void);
+
+    static void beginEthernet(void);
     static void pollEthernetCommand(void);
+
     static void ledOff(void);
     static void ledOn(void);
+
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();
     static void displayFrame();

@@ -39,6 +39,8 @@ protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
+    Q_STATE_DECL(Unintitalized);
+    Q_STATE_DECL(Initialized);
 };
 
 } // namespace AC
@@ -113,6 +115,11 @@ Q_STATE_DEF(EthernetCommandInterface, Active) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //.${AOs::EthernetCommandI~::SM::Active::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&Unintitalized);
+            break;
+        }
         //.${AOs::EthernetCommandI~::SM::Active::DEACTIVATE_ETHERNET_COMMAND_INTE~}
         case DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG: {
             status_ = tran(&Inactive);
@@ -126,6 +133,39 @@ Q_STATE_DEF(EthernetCommandInterface, Active) {
         }
         default: {
             status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::EthernetCommandI~::SM::Active::Unintitalized} ......................
+Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::EthernetCommandI~::SM::Active::Unintitalized}
+        case Q_ENTRY_SIG: {
+            BSP::beginEthernet();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::Unintitalized::ETHERNET_INITIALIZED}
+        case ETHERNET_INITIALIZED_SIG: {
+            status_ = tran(&Initialized);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::EthernetCommandI~::SM::Active::Initialized} ........................
+Q_STATE_DEF(EthernetCommandInterface, Initialized) {
+    QP::QState status_;
+    switch (e->sig) {
+        default: {
+            status_ = super(&Active);
             break;
         }
     }

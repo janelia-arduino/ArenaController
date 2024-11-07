@@ -25,21 +25,32 @@
 namespace AC {
 
 enum ArenaControllerSignals {
+
+    // commands from serial or ethernet interface
     RESET_SIG = QP::Q_USER_SIG,
     ALL_ON_SIG,
     ALL_OFF_SIG,
+
+    // bsp to SerialCommandInterface
     ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
+
+    // bsp to EthernetCommandInterface
     ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
+    ETHERNET_INITIALIZED_SIG,
+
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_MULTIPLE_FRAMES_SIG,
     DISPLAY_FRAME_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
+
     MAX_PUB_SIG,    // the last published signal
-    SERIAL_COMMAND_TIMEOUT_SIG,
-    ETHERNET_COMMAND_TIMEOUT_SIG,
+
+    SERIAL_COMMAND_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
+    ETHERNET_COMMAND_TIMEOUT_SIG, // signal for EthernetCommandInterface timeout event
+
     MAX_SIG         // the last signal
 };
 

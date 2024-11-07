@@ -38,13 +38,18 @@ void setup() {
         serial_command_interface_queueSto, Q_DIM(serial_command_interface_queueSto),
         (void *)0, 0U); // no stack
 
+    static QEvt const *ethernet_command_interface_queueSto[10];
+    AC::AO_EthernetCommandInterface->start(2U, // priority
+        ethernet_command_interface_queueSto, Q_DIM(ethernet_command_interface_queueSto),
+        (void *)0, 0U); // no stack
+
     static QEvt const *arena_queueSto[10];
-    AC::AO_Arena->start(2U, // priority
+    AC::AO_Arena->start(3U, // priority
         arena_queueSto, Q_DIM(arena_queueSto),
         (void *)0, 0U); // no stack
 
     static QEvt const *display_queueSto[10];
-    AC::AO_Display->start(3U, // priority
+    AC::AO_Display->start(4U, // priority
         display_queueSto, Q_DIM(display_queueSto),
         (void *)0, 0U); // no stack
 

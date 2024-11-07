@@ -104,33 +104,34 @@ subscribe(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);</action>
      </initial_glyph>
     </initial>
     <state name="Active">
-     <entry brief="armSerialCommandPollingTimer(50Hz)">serial_command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);</entry>
+     <entry brief="armSerialCommandPollingTimer(50Hz)">BSP::beginSerial();
+serial_command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);</entry>
      <exit brief="disarmSerialCommandPollingTimer()">serial_command_time_evt_.disarm();</exit>
      <tran trig="SERIAL_COMMAND_TIMEOUT">
       <action brief="pollSerialCommand()">BSP::pollSerialCommand();</action>
-      <tran_glyph conn="28,32,3,-1,26">
+      <tran_glyph conn="29,32,3,-1,26">
        <action box="0,-2,24,4"/>
       </tran_glyph>
      </tran>
      <tran trig="DEACTIVATE_SERIAL_COMMAND_INTERFACE" target="../../2">
-      <tran_glyph conn="28,27,3,3,-3,-14,12">
+      <tran_glyph conn="29,27,3,3,-3,-14,11">
        <action box="-27,-16,35,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="28,21,37,16">
+     <state_glyph node="29,21,37,26">
       <entry box="1,2,32,2"/>
       <exit box="1,4,32,2"/>
      </state_glyph>
     </state>
     <state name="Inactive">
      <tran trig="ACTIVATE_SERIAL_COMMAND_INTERFACE" target="../../1">
-      <tran_glyph conn="55,13,1,1,18,12,-8">
+      <tran_glyph conn="55,13,1,1,18,12,-7">
        <action box="2,-2,35,2"/>
       </tran_glyph>
      </tran>
      <state_glyph node="37,11,18,7"/>
     </state>
-    <state_diagram size="97,50"/>
+    <state_diagram size="97,69"/>
    </statechart>
   </class>
   <class name="Display" superclass="qpcpp::QActive">
@@ -225,38 +226,68 @@ subscribe(DISPLAY_FRAME_SIG);</action>
     <initial target="../1">
      <action>subscribe(ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG);
 subscribe(DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG);</action>
-     <initial_glyph conn="47,4,4,0,4">
+     <initial_glyph conn="55,6,4,0,3">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Inactive">
      <tran trig="ACTIVATE_ETHERNET_COMMAND_INTERFACE" target="../../2">
-      <tran_glyph conn="55,10,1,1,20,12,-3">
+      <tran_glyph conn="63,11,1,1,39,11,-6">
        <action box="1,-2,36,3"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="41,8,14,9"/>
+     <state_glyph node="49,9,14,9"/>
     </state>
     <state name="Active">
      <entry brief="armEthernetCommandPollingTimer(1Hz)">ethernet_command_time_evt_.armX(BSP::TICKS_PER_SEC/1, BSP::TICKS_PER_SEC/1);</entry>
      <exit brief="disarmEthernetCommandPollingTimer()">ethernet_command_time_evt_.disarm();</exit>
+     <initial target="../2">
+      <initial_glyph conn="49,28,4,0,3">
+       <action box="0,-2,10,2"/>
+      </initial_glyph>
+     </initial>
      <tran trig="DEACTIVATE_ETHERNET_COMMAND_INTERFACE" target="../../1">
-      <tran_glyph conn="33,22,3,3,-1,-12,9">
-       <action box="-32,-14,39,2"/>
+      <tran_glyph conn="33,22,3,3,-1,-11,17">
+       <action box="-26,-14,39,2"/>
       </tran_glyph>
      </tran>
-     <tran trig="ETHERNET_COMMAND_TIMEOUT">
-      <action brief="pollEthernetCommand()">BSP::pollEthernetCommand();</action>
-      <tran_glyph conn="33,29,3,-1,28">
-       <action box="0,-2,30,2"/>
-      </tran_glyph>
-     </tran>
-     <state_glyph node="33,20,39,17">
+     <state name="Unintitalized">
+      <entry brief="beginEthernet()">BSP::beginEthernet();</entry>
+      <tran trig="ETHERNET_INITIALIZED" target="../../3">
+       <tran_glyph conn="57,33,1,1,22,10,-8">
+        <action box="1,-2,19,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="39,31,18,8">
+       <entry box="1,2,15,2"/>
+      </state_glyph>
+     </state>
+     <state name="Initialized">
+      <entry brief="beginEthernetServer()">BSP::beginEthernetServer();</entry>
+      <tran trig="ETHERNET_SERVER_INITIALIZED" target="../../4">
+       <tran_glyph conn="71,46,1,0,4,12">
+        <action box="0,-2,27,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="39,41,32,11">
+       <entry box="1,2,20,2"/>
+      </state_glyph>
+     </state>
+     <state name="ServerRunning">
+      <tran trig="ETHERNET_COMMAND_TIMEOUT">
+       <action>BSP::pollEthernetCommand();</action>
+       <tran_glyph conn="39,67,3,-1,28">
+        <action box="0,-2,26,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="39,58,40,17"/>
+     </state>
+     <state_glyph node="33,20,63,56">
       <entry box="1,2,34,2"/>
       <exit box="1,4,33,2"/>
      </state_glyph>
     </state>
-    <state_diagram size="121,50"/>
+    <state_diagram size="121,78"/>
    </statechart>
   </class>
  </package>
@@ -287,21 +318,32 @@ subscribe(DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG);</action>
 namespace AC {
 
 enum ArenaControllerSignals {
+
+    // commands from serial or ethernet interface
     RESET_SIG = QP::Q_USER_SIG,
     ALL_ON_SIG,
     ALL_OFF_SIG,
+
+    // bsp to SerialCommandInterface
     ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
+
+    // bsp to EthernetCommandInterface
     ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
+    ETHERNET_INITIALIZED_SIG,
+
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_MULTIPLE_FRAMES_SIG,
     DISPLAY_FRAME_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
+
     MAX_PUB_SIG,    // the last published signal
-    SERIAL_COMMAND_TIMEOUT_SIG,
-    ETHERNET_COMMAND_TIMEOUT_SIG,
+
+    SERIAL_COMMAND_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
+    ETHERNET_COMMAND_TIMEOUT_SIG, // signal for EthernetCommandInterface timeout event
+
     MAX_SIG         // the last signal
 };
 
@@ -328,13 +370,21 @@ class BSP {
 public:
     enum { TICKS_PER_SEC = 100} ;
 
-    static void init(void);
-    static void activateCommandInterfaces(void);
-    static void deactivateCommandInterfaces(void);
-    static void pollSerialCommand(void);
-    static void pollEthernetCommand(void);
-    static void ledOff(void);
-    static void ledOn(void);
+    static void init();
+
+    static void activateCommandInterfaces();
+    static void deactivateCommandInterfaces();
+
+    static void beginSerial();
+    static void pollSerialCommand();
+
+    static void beginEthernet();
+    static void beginEthernetServer();
+    static void pollEthernetCommand();
+
+    static void ledOff();
+    static void ledOn();
+
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();
     static void displayFrame();
@@ -385,13 +435,18 @@ void setup() {
         serial_command_interface_queueSto, Q_DIM(serial_command_interface_queueSto),
         (void *)0, 0U); // no stack
 
+    static QEvt const *ethernet_command_interface_queueSto[10];
+    AC::AO_EthernetCommandInterface-&gt;start(2U, // priority
+        ethernet_command_interface_queueSto, Q_DIM(ethernet_command_interface_queueSto),
+        (void *)0, 0U); // no stack
+
     static QEvt const *arena_queueSto[10];
-    AC::AO_Arena-&gt;start(2U, // priority
+    AC::AO_Arena-&gt;start(3U, // priority
         arena_queueSto, Q_DIM(arena_queueSto),
         (void *)0, 0U); // no stack
 
     static QEvt const *display_queueSto[10];
-    AC::AO_Display-&gt;start(3U, // priority
+    AC::AO_Display-&gt;start(4U, // priority
         display_queueSto, Q_DIM(display_queueSto),
         (void *)0, 0U); // no stack
 
