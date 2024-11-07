@@ -88,15 +88,13 @@ Q_STATE_DEF(Arena, ArenaOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn}
         case Q_ENTRY_SIG: {
-            static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-            QF::PUBLISH(&activateSerialCommandInterfaceEvt, this);
+            BSP::activateCommandInterfaces();
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Arena::SM::ArenaOn}
         case Q_EXIT_SIG: {
-            static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-            QF::PUBLISH(&deactivateSerialCommandInterfaceEvt, this);
+            BSP::deactivateCommandInterfaces();
             status_ = Q_RET_HANDLED;
             break;
         }

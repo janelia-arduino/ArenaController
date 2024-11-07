@@ -30,13 +30,16 @@ enum ArenaControllerSignals {
     ALL_OFF_SIG,
     ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
+    ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
+    DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_MULTIPLE_FRAMES_SIG,
     DISPLAY_FRAME_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
     MAX_PUB_SIG,    // the last published signal
-    COMMAND_TIMEOUT_SIG,
+    SERIAL_COMMAND_TIMEOUT_SIG,
+    ETHERNET_COMMAND_TIMEOUT_SIG,
     MAX_SIG         // the last signal
 };
 
@@ -59,6 +62,7 @@ class DisplayFrameEvt : public QP::QEvt {};
 extern QP::QActive * const AO_Arena;
 extern QP::QActive * const AO_Display;
 extern QP::QActive * const AO_SerialCommandInterface;
+extern QP::QActive * const AO_EthernetCommandInterface;
 
 } // namespace AC
 //.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

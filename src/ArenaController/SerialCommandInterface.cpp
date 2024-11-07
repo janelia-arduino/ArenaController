@@ -29,7 +29,7 @@ namespace AC {
 //.${AOs::SerialCommandInterface} ............................................
 class SerialCommandInterface : public QP::QActive {
 public:
-    QP::QTimeEvt command_time_evt_;
+    QP::QTimeEvt serial_command_time_evt_;
     static SerialCommandInterface instance;
 
 public:
@@ -71,7 +71,7 @@ SerialCommandInterface SerialCommandInterface::instance;
 //.${AOs::SerialCommandInt~::SerialCommandInterface} .........................
 SerialCommandInterface::SerialCommandInterface()
 : QActive(Q_STATE_CAST(&SerialCommandInterface::initial)),
-    command_time_evt_(this, COMMAND_TIMEOUT_SIG, 0U)
+    serial_command_time_evt_(this, SERIAL_COMMAND_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::SerialCommandInt~::SM} .............................................
@@ -87,18 +87,18 @@ Q_STATE_DEF(SerialCommandInterface, Active) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active}
         case Q_ENTRY_SIG: {
-            command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);
+            serial_command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::SerialCommandInt~::SM::Active}
         case Q_EXIT_SIG: {
-            command_time_evt_.disarm();
+            serial_command_time_evt_.disarm();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::SerialCommandInt~::SM::Active::COMMAND_TIMEOUT}
-        case COMMAND_TIMEOUT_SIG: {
+        //.${AOs::SerialCommandInt~::SM::Active::SERIAL_COMMAND_TIMEOUT}
+        case SERIAL_COMMAND_TIMEOUT_SIG: {
             BSP::pollSerialCommand();
             status_ = Q_RET_HANDLED;
             break;
