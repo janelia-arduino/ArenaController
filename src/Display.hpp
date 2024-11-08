@@ -27,6 +27,7 @@ public:
   Display();
   void setSpiClockSpeed(uint32_t spi_clock_speed);
   void showFrame();
+  void showAllOnFrame();
 private:
   SPISettings spi_settings_;
   Region regions_[arena_controller::constants::region_count_per_frame];
@@ -41,10 +42,12 @@ private:
   void beginTransferFrame();
   void endTransferFrame(uint16_t frame_count);
   void transferFrame(uint8_t panel_count_per_region_col, uint8_t panel_count_per_region_row);
+  void transferAllOnFrame(uint8_t panel_count_per_region_col, uint8_t panel_count_per_region_row);
   void beginTransferPanelsAcrossRegions();
   void endTransferPanelsAcrossRegions();
   void transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index);
-  friend class ::ArenaController;
+  void transferAllOnPanelsAcrossRegions(uint8_t row_index, uint8_t col_index);
+friend class ::ArenaController;
 };
 }
 #endif

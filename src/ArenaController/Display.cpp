@@ -26,6 +26,13 @@ void Display::showFrame()
   endTransferFrame(storage_ptr_->tpa_header_.frame_count_x);
 }
 
+void Display::showAllOnFrame()
+{
+  beginTransferFrame();
+  transferAllOnFrame(constants::panel_count_max_per_frame_col/constants::region_count_per_frame, constants::panel_count_max_per_frame_row);
+  endTransferFrame(storage_ptr_->tpa_header_.frame_count_x);
+}
+
 void Display::setup(Storage & storage)
 {
   storage_ptr_ = &storage;
@@ -88,6 +95,19 @@ void Display::transferFrame(uint8_t panel_count_per_region_col, uint8_t panel_co
   }
 }
 
+void Display::transferAllOnFrame(uint8_t panel_count_per_region_col, uint8_t panel_count_per_region_row)
+{
+  for (uint8_t col_index = 0; col_index<panel_count_per_region_col; ++col_index)
+  {
+    for (uint8_t row_index = 0; row_index<panel_count_per_region_row; ++row_index)
+    {
+      beginTransferPanelsAcrossRegions();
+      transferAllOnPanelsAcrossRegions(row_index, col_index);
+      endTransferPanelsAcrossRegions();
+    }
+  }
+}
+
 void Display::beginTransferPanelsAcrossRegions()
 {
   TransferTracker::beginTransferPanels();
@@ -117,6 +137,24 @@ void Display::transferPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
   {
     storage_ptr_->readPanelFromFile(panel_buffer_[region_index], constants::byte_count_per_panel_grayscale);
     regions_[region_index].transferPanel(panel_buffer_[region_index], constants::byte_count_per_panel_grayscale);
+  }
+
+  while (not TransferTracker::allTransferPanelsComplete())
+  {
+    yield();
+  }
+
+  digitalWriteFast(cs_pin, HIGH);
+}
+
+void Display::transferAllOnPanelsAcrossRegions(uint8_t row_index, uint8_t col_index)
+{
+  const uint8_t & cs_pin = constants::panel_select_pins[row_index][col_index];
+  digitalWriteFast(cs_pin, LOW);
+
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
+  {
+    regions_[region_index].transferPanel(pattern::all_on_grayscale_panel, constants::byte_count_per_panel_grayscale);
   }
 
   while (not TransferTracker::allTransferPanelsComplete())

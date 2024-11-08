@@ -27,10 +27,10 @@ void Interface::setup()
 void Interface::setupSerial()
 {
   Serial.begin(constants::baud_rate);
-  while (!Serial)
-  {
-    ; // wait for serial port to connect. Needed for native USB
-  }
+  // while (!Serial)
+  // {
+  //   ; // wait for serial port to connect. Needed for native USB
+  // }
 }
 
 void Interface::updateSerial()
