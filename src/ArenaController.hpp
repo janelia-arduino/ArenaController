@@ -34,11 +34,14 @@ enum ArenaControllerSignals {
     // bsp to SerialCommandInterface
     ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
+    SERIAL_READY_SIG,
 
     // bsp to EthernetCommandInterface
     ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     ETHERNET_INITIALIZED_SIG,
+    ETHERNET_SERVER_INITIALIZED_SIG,
+    ETHERNET_CLIENT_CONNECTED_SIG,
 
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_MULTIPLE_FRAMES_SIG,
@@ -48,8 +51,8 @@ enum ArenaControllerSignals {
 
     MAX_PUB_SIG,    // the last published signal
 
-    SERIAL_COMMAND_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
-    ETHERNET_COMMAND_TIMEOUT_SIG, // signal for EthernetCommandInterface timeout event
+    SERIAL_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
+    ETHERNET_TIMEOUT_SIG, // signal for EthernetCommandInterface timeout event
 
     MAX_SIG         // the last signal
 };

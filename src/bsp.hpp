@@ -24,19 +24,21 @@ class BSP {
 public:
     enum { TICKS_PER_SEC = 100} ;
 
-    static void init(void);
+    static void init();
 
-    static void activateCommandInterfaces(void);
-    static void deactivateCommandInterfaces(void);
+    static void activateCommandInterfaces();
+    static void deactivateCommandInterfaces();
 
-    static void beginSerial(void);
-    static void pollSerialCommand(void);
+    static void beginSerial();
+    static void pollSerialCommand();
 
-    static void beginEthernet(void);
-    static void pollEthernetCommand(void);
+    static void beginEthernet();
+    static void beginEthernetServer();
+    static void checkForEthernetClient();
+    static void pollEthernetCommand();
 
-    static void ledOff(void);
-    static void ledOn(void);
+    static void ledOff();
+    static void ledOn();
 
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();

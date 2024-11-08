@@ -29,7 +29,7 @@ namespace AC {
 //.${AOs::SerialCommandInterface} ............................................
 class SerialCommandInterface : public QP::QActive {
 public:
-    QP::QTimeEvt serial_command_time_evt_;
+    QP::QTimeEvt serial_time_evt_;
     static SerialCommandInterface instance;
 
 public:
@@ -38,6 +38,8 @@ public:
 protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Active);
+    Q_STATE_DECL(NotReady);
+    Q_STATE_DECL(Ready);
     Q_STATE_DECL(Inactive);
 };
 
@@ -71,7 +73,7 @@ SerialCommandInterface SerialCommandInterface::instance;
 //.${AOs::SerialCommandInt~::SerialCommandInterface} .........................
 SerialCommandInterface::SerialCommandInterface()
 : QActive(Q_STATE_CAST(&SerialCommandInterface::initial)),
-    serial_command_time_evt_(this, SERIAL_COMMAND_TIMEOUT_SIG, 0U)
+    serial_time_evt_(this, SERIAL_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::SerialCommandInt~::SM} .............................................
@@ -79,29 +81,16 @@ Q_STATE_DEF(SerialCommandInterface, initial) {
     //.${AOs::SerialCommandInt~::SM::initial}
     subscribe(ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);
     subscribe(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);
+    subscribe(SERIAL_READY_SIG);
     return tran(&Inactive);
 }
 //.${AOs::SerialCommandInt~::SM::Active} .....................................
 Q_STATE_DEF(SerialCommandInterface, Active) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::SerialCommandInt~::SM::Active}
-        case Q_ENTRY_SIG: {
-            BSP::beginSerial();
-            serial_command_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::SerialCommandInt~::SM::Active}
-        case Q_EXIT_SIG: {
-            serial_command_time_evt_.disarm();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::SerialCommandInt~::SM::Active::SERIAL_COMMAND_TIMEOUT}
-        case SERIAL_COMMAND_TIMEOUT_SIG: {
-            BSP::pollSerialCommand();
-            status_ = Q_RET_HANDLED;
+        //.${AOs::SerialCommandInt~::SM::Active::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&NotReady);
             break;
         }
         //.${AOs::SerialCommandInt~::SM::Active::DEACTIVATE_SERIAL_COMMAND_INTERF~}
@@ -111,6 +100,57 @@ Q_STATE_DEF(SerialCommandInterface, Active) {
         }
         default: {
             status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::SerialCommandInt~::SM::Active::NotReady} ...........................
+Q_STATE_DEF(SerialCommandInterface, NotReady) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::SerialCommandInt~::SM::Active::NotReady}
+        case Q_ENTRY_SIG: {
+            BSP::beginSerial();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active::NotReady::SERIAL_READY}
+        case SERIAL_READY_SIG: {
+            status_ = tran(&Ready);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::SerialCommandInt~::SM::Active::Ready} ..............................
+Q_STATE_DEF(SerialCommandInterface, Ready) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::SerialCommandInt~::SM::Active::Ready}
+        case Q_ENTRY_SIG: {
+            serial_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active::Ready}
+        case Q_EXIT_SIG: {
+            serial_time_evt_.disarm();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active::Ready::SERIAL_TIMEOUT}
+        case SERIAL_TIMEOUT_SIG: {
+            BSP::pollSerialCommand();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&Active);
             break;
         }
     }

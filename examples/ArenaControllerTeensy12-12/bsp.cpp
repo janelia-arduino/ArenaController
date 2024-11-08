@@ -19,6 +19,7 @@ static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 //----------------------------------------------------------------------------
 // Static global variables
 static EthernetServer ethernet_server(AC::constants::port);
+static EthernetClient ethernet_client;
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -33,7 +34,7 @@ void getMacAddress(uint8_t * mac_address)
 // BSP functions
 
 //............................................................................
-void BSP::init(void)
+void BSP::init()
 {
   // initialize the hardware used in this sketch...
   // NOTE: interrupts are configured and started later in QF::onStartup()
@@ -67,7 +68,7 @@ void BSP::init(void)
 #endif
 }
 //............................................................................
-void BSP::activateCommandInterfaces(void)
+void BSP::activateCommandInterfaces()
 {
 #ifndef QS_ON
   static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
@@ -78,7 +79,7 @@ void BSP::activateCommandInterfaces(void)
   QF::PUBLISH(&activateEthernetCommandInterfaceEvt, &l_TIMER_ID);
 }
 //............................................................................
-void BSP::deactivateCommandInterfaces(void)
+void BSP::deactivateCommandInterfaces()
 {
 #ifndef QS_ON
   static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
@@ -93,9 +94,11 @@ void BSP::beginSerial()
 {
   AC::constants::serial_communication_interface_stream.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
   AC::constants::serial_communication_interface_stream.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
+  static QEvt const serialReadyEvt = { AC::SERIAL_READY_SIG, 0U, 0U};
+  QF::PUBLISH(&serialReadyEvt, &l_TIMER_ID);
 }
 //............................................................................
-void BSP::pollSerialCommand(void)
+void BSP::pollSerialCommand()
 {
   if (AC::constants::serial_communication_interface_stream.available() > 0)
   {
@@ -126,21 +129,39 @@ void BSP::beginEthernet()
 void BSP::beginEthernetServer()
 {
   ethernet_server.begin();
+  static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
+  QF::PUBLISH(&ethernetServerInitializedEvt, &l_TIMER_ID);
 }
 //............................................................................
-void BSP::pollEthernetCommand(void)
+void BSP::checkForEthernetClient()
+{
+  ethernet_client = ethernet_server.available();
+  if (ethernet_client)
+  {
+    static QEvt const ethernetClientConnectedEvt = { AC::ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
+    QF::PUBLISH(&ethernetClientConnectedEvt, &l_TIMER_ID);
+  }
+  else
+  {
+    Serial.print("No Ethernet client connected. ");
+    Serial.print("My IP address: ");
+    Serial.println(Ethernet.localIP());
+  }
+}
+//............................................................................
+void BSP::pollEthernetCommand()
 {
   // print your local IP address:
   Serial.print("My IP address: ");
   Serial.println(Ethernet.localIP());
 }
 //............................................................................
-void BSP::ledOff(void)
+void BSP::ledOff()
 {
   digitalWriteFast(LED_BUILTIN, LOW);
 }
 //............................................................................
-void BSP::ledOn(void)
+void BSP::ledOn()
 {
   digitalWriteFast(LED_BUILTIN, HIGH);
 }
@@ -186,12 +207,12 @@ void BSP::displayFrame()
 #define TIMER_HANDLER   T1_Handler
 
 // interrupts.................................................................
-void TIMER_HANDLER(void)
+void TIMER_HANDLER()
 {
   QF::TICK_X(0, &l_TIMER_ID); // process time events for tick rate 0
 }
 //............................................................................
-void QF::onStartup(void)
+void QF::onStartup()
 {
   // configure the timer-counter channel........
   Timer1.initialize(TIMER1_CLCK_HZ / BSP::TICKS_PER_SEC);
@@ -199,7 +220,7 @@ void QF::onStartup(void)
   // ...
 }
 //............................................................................
-void QV::onIdle(void)
+void QV::onIdle()
 { // called with interrupts DISABLED
 #ifdef NDEBUG
   // Put the CPU and peripherals to the low-power mode. You might
@@ -276,16 +297,16 @@ void QP::QS::onCommand(uint8_t cmdId, uint32_t param1,
 #endif // QS_ON
 
 //............................................................................
-void QP::QS::onCleanup(void)
+void QP::QS::onCleanup()
 {
 }
 //............................................................................
-QP::QSTimeCtr QP::QS::onGetTime(void)
+QP::QSTimeCtr QP::QS::onGetTime()
 {
   return millis();
 }
 //............................................................................
-void QP::QS::onFlush(void)
+void QP::QS::onFlush()
 {
 #ifdef QS_ON
   uint16_t len = 0xFFFFU; // big number to get as many bytes as available
@@ -300,7 +321,7 @@ void QP::QS::onFlush(void)
 #endif // QS_ON
 }
 //............................................................................
-void QP::QS::onReset(void)
+void QP::QS::onReset()
 {
   //??? TBD for Teensy
 }
