@@ -33,6 +33,7 @@ public:
     static void pollSerialCommand();
 
     static void beginEthernet();
+    static void checkForEthernetIPAddress();
     static void beginEthernetServer();
     static void checkForEthernetClient();
     static void pollEthernetCommand();

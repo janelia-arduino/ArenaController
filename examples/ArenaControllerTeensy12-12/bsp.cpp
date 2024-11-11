@@ -1,23 +1,27 @@
 #include <Arduino.h>
-#include <NativeEthernet.h>
+#include <QNEthernet.h>
 
 #include "bsp.hpp"
 #include "ArenaController.hpp"
 
+
+using namespace QP;
+using namespace qindesign::network;
 
 namespace AC
 {
 namespace constants
 {
 // Ethernet Communication Interface
-const IPAddress ip(192, 168, 10, 196);
-const uint32_t port = 62222;
+// constexpr IPAddress ip(192, 168, 10, 196);
+constexpr uint16_t port = 62222;
 
 // Serial Communication Interface
-//HardwareSerial & serial_communication_interface_stream = Serial;
-usb_serial_class & serial_communication_interface_stream = Serial;
-const uint32_t SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE = 115200;
-const uint16_t SERIAL_COMMUNICATION_INTERFACE_TIMEOUT = 100;
+//HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
+usb_serial_class & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
+usb_serial_class & QS_SERIAL_STREAM = Serial;
+constexpr uint32_t SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE = 115200;
+constexpr uint16_t SERIAL_COMMUNICATION_INTERFACE_TIMEOUT = 100;
 
 // SPI Settings
 constexpr uint32_t spi_clock_speed = 5000000;
@@ -59,8 +63,6 @@ constexpr uint16_t frame_count_max_x = 20;
 } // namespace constants
 } // namespace AC
 
-using namespace QP;
-
 //----------------------------------------------------------------------------
 // QS facilities
 
@@ -71,17 +73,24 @@ static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
-static EthernetServer ethernet_server(AC::constants::port);
+static EthernetServer ethernet_server{AC::constants::port};
 static EthernetClient ethernet_client;
+static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivateEthernetCommandInterfaceEvt = { AC::DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const serialReadyEvt = { AC::SERIAL_READY_SIG, 0U, 0U};
+static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
+static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
+static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
+static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
+static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
+static QEvt const ethernetClientConnectedEvt = { AC::ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
+static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
+static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
 
 //----------------------------------------------------------------------------
 // Local functions
-void getMacAddress(uint8_t * mac_address)
-{
-  for(uint8_t by=0; by<2; by++) mac_address[by]=(HW_OCOTP_MAC1 >> ((1-by)*8)) & 0xFF;
-  for(uint8_t by=0; by<4; by++) mac_address[by+2]=(HW_OCOTP_MAC0 >> ((3-by)*8)) & 0xFF;
-  // Serial.printf("MAC Address: %02x:%02x:%02x:%02x:%02x:%02x\n", mac_address[0], mac_address[1], mac_address[2], mac_address[3], mac_address[4], mac_address[5]);
-}
 
 //----------------------------------------------------------------------------
 // BSP functions
@@ -124,46 +133,39 @@ void BSP::init()
 void BSP::activateCommandInterfaces()
 {
 #ifndef QS_ON
-  static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-  QF::PUBLISH(&activateSerialCommandInterfaceEvt, &l_TIMER_ID);
+  AC::AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_TIMER_ID);
 #endif
 
-  static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
-  QF::PUBLISH(&activateEthernetCommandInterfaceEvt, &l_TIMER_ID);
+  AC::AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_TIMER_ID);
 }
 //............................................................................
 void BSP::deactivateCommandInterfaces()
 {
 #ifndef QS_ON
-  static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-  QF::PUBLISH(&deactivateSerialCommandInterfaceEvt, &l_TIMER_ID);
+  AC::AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_TIMER_ID);
 #endif
 
-  static QEvt const deactivateEthernetCommandInterfaceEvt = { AC::DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
-  QF::PUBLISH(&deactivateEthernetCommandInterfaceEvt, &l_TIMER_ID);
+  AC::AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_TIMER_ID);
 }
 //............................................................................
 void BSP::beginSerial()
 {
-  AC::constants::serial_communication_interface_stream.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
-  AC::constants::serial_communication_interface_stream.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
-  static QEvt const serialReadyEvt = { AC::SERIAL_READY_SIG, 0U, 0U};
-  QF::PUBLISH(&serialReadyEvt, &l_TIMER_ID);
+  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
+  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
+  AC::AO_SerialCommandInterface->POST(&serialReadyEvt, &l_TIMER_ID);
 }
 //............................................................................
 void BSP::pollSerialCommand()
 {
-  if (AC::constants::serial_communication_interface_stream.available() > 0)
+  if (AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available() > 0)
   {
-    String command = AC::constants::serial_communication_interface_stream.readStringUntil('\n');
+    String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
     if (command.equalsIgnoreCase("ALL_ON"))
     {
-      static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
       QF::PUBLISH(&allOnEvt, &l_TIMER_ID);
     }
     else if (command.equalsIgnoreCase("ALL_OFF"))
     {
-      static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
       QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
     }
   }
@@ -171,43 +173,58 @@ void BSP::pollSerialCommand()
 //............................................................................
 void BSP::beginEthernet()
 {
-  uint8_t mac_address[AC::constants::mac_address_size];
-  getMacAddress(mac_address);
-
-  Ethernet.begin(mac_address, AC::constants::ip);
-  static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
-  QF::PUBLISH(&ethernetInitializedEvt, &l_TIMER_ID);
+  if (Ethernet.begin())
+  {
+    AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_TIMER_ID);
+  }
+}
+//............................................................................
+void BSP::checkForEthernetIPAddress()
+{
+  IPAddress ip_address = Ethernet.localIP();
+  if (ip_address != nullptr)
+  {
+    // AC::AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_TIMER_ID);
+  }
 }
 //............................................................................
 void BSP::beginEthernetServer()
 {
-  ethernet_server.begin();
-  static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
-  QF::PUBLISH(&ethernetServerInitializedEvt, &l_TIMER_ID);
+  IPAddress ip_address = Ethernet.localIP();
+  Serial.print("Local IP_ADDRESS    = ");
+  Serial.print(ip_address[0]);
+  Serial.print(".");
+  Serial.print(ip_address[1]);
+  Serial.print(".");
+  Serial.print(ip_address[2]);
+  Serial.print(".");
+  Serial.print(ip_address[3]);
+  Serial.println("");
+  // ethernet_server.begin();
+  // AC::AO_EthernetCommandInterface->POST(&ethernetServerInitializedEvt, &l_TIMER_ID);
 }
 //............................................................................
 void BSP::checkForEthernetClient()
 {
-  ethernet_client = ethernet_server.available();
-  if (ethernet_client)
-  {
-    Serial.println("Ethernet client connected!");
-    static QEvt const ethernetClientConnectedEvt = { AC::ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
-    QF::PUBLISH(&ethernetClientConnectedEvt, &l_TIMER_ID);
-  }
-  else
-  {
-    Serial.print("No Ethernet client connected. ");
-    Serial.print("My IP address: ");
-    Serial.println(Ethernet.localIP());
-  }
+  // ethernet_client = ethernet_server.available();
+  // if (ethernet_client)
+  // {
+  //   Serial.println("Ethernet client connected!");
+  //   AC::AO_EthernetCommandInterface->POST(&ethernetClientConnectedEvt, &l_TIMER_ID);
+  // }
+  // else
+  // {
+  //   Serial.print("No Ethernet client connected. ");
+  //   Serial.print("My IP address: ");
+  //   Serial.println(Ethernet.localIP());
+  // }
 }
 //............................................................................
 void BSP::pollEthernetCommand()
 {
   // print your local IP address:
-  Serial.print("My IP address: ");
-  Serial.println(Ethernet.localIP());
+  // Serial.print("My IP address: ");
+  // Serial.println(Ethernet.localIP());
 }
 //............................................................................
 void BSP::ledOff()
@@ -223,7 +240,6 @@ void BSP::ledOn()
 #include <TimerThree.h>  // Teensy Timer3 interface
 void displayFrameTimerHandler()
 {
-  static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
   QF::PUBLISH(&displayFrameTimeoutEvt, &l_TIMER_ID);
 }
 
@@ -242,7 +258,6 @@ void BSP::displayFrame()
 {
   ledOn();
   delay(2);
-  static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
   QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 //----------------------------------------------------------------------------
@@ -287,23 +302,23 @@ void QV::onIdle()
 #ifdef QS_ON
 
   // transmit QS outgoing data (QS-TX)
-  uint16_t len = AC::constants::serial_communication_interface_stream.availableForWrite();
+  uint16_t len = AC::constants::QS_SERIAL_STREAM.availableForWrite();
   if (len > 0U)
   { // any space available in the output buffer?
     uint8_t const *buf = QS::getBlock(&len);
     if (buf)
     {
-      AC::constants::serial_communication_interface_stream.write(buf, len); // asynchronous and non-blocking
+      AC::constants::QS_SERIAL_STREAM.write(buf, len); // asynchronous and non-blocking
     }
   }
 
   // receive QS incoming data (QS-RX)
-  len = AC::constants::serial_communication_interface_stream.available();
+  len = AC::constants::QS_SERIAL_STREAM.available();
   if (len > 0U)
   {
     do
     {
-      QP::QS::rxPut(AC::constants::serial_communication_interface_stream.read());
+      QP::QS::rxPut(AC::constants::QS_SERIAL_STREAM.read());
     } while (--len > 0U);
     QS::rxParse();
   }
@@ -339,7 +354,7 @@ bool QP::QS::onStartup(void const * arg)
   static uint8_t qsRxBuf[128];  // buffer for QS receive channel (QS-RX)
   initBuf  (qsTxBuf, sizeof(qsTxBuf));
   rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
-  Serial.begin(115200); // run serial port at 115200 baud rate
+  AC::constants::QS_SERIAL_STREAM.begin(115200); // run serial port at 115200 baud rate
   return true; // return success
 }
 //............................................................................
@@ -367,11 +382,11 @@ void QP::QS::onFlush()
   uint8_t const *buf = QS::getBlock(&len); // get continguous block of data
   while (buf != nullptr)
   { // data available?
-    Serial.write(buf, len); // might poll until all bytes fit
+    AC::constants::QS_SERIAL_STREAM.write(buf, len); // might poll until all bytes fit
     len = 0xFFFFU; // big number to get as many bytes as available
     buf = QS::getBlock(&len); // try to get more data
   }
-  Serial.flush(); // wait for the transmission of outgoing data to complete
+  AC::constants::QS_SERIAL_STREAM.flush(); // wait for the transmission of outgoing data to complete
 #endif // QS_ON
 }
 //............................................................................

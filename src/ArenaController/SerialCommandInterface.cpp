@@ -79,9 +79,6 @@ SerialCommandInterface::SerialCommandInterface()
 //.${AOs::SerialCommandInt~::SM} .............................................
 Q_STATE_DEF(SerialCommandInterface, initial) {
     //.${AOs::SerialCommandInt~::SM::initial}
-    subscribe(ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);
-    subscribe(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG);
-    subscribe(SERIAL_READY_SIG);
     return tran(&Inactive);
 }
 //.${AOs::SerialCommandInt~::SM::Active} .....................................

@@ -40,10 +40,11 @@ protected:
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
     Q_STATE_DECL(Unintitalized);
-    Q_STATE_DECL(Initialized);
+    Q_STATE_DECL(IPAddressFound);
     Q_STATE_DECL(ServerRunning);
     Q_STATE_DECL(WaitingForClient);
     Q_STATE_DECL(ClientConnected);
+    Q_STATE_DECL(WaitingForIPAddress);
 };
 
 } // namespace AC
@@ -82,11 +83,6 @@ EthernetCommandInterface::EthernetCommandInterface()
 //.${AOs::EthernetCommandI~::SM} .............................................
 Q_STATE_DEF(EthernetCommandInterface, initial) {
     //.${AOs::EthernetCommandI~::SM::initial}
-    subscribe(ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG);
-    subscribe(DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG);
-    subscribe(ETHERNET_INITIALIZED_SIG);
-    subscribe(ETHERNET_SERVER_INITIALIZED_SIG);
-    subscribe(ETHERNET_CLIENT_CONNECTED_SIG);
     return tran(&Inactive);
 }
 //.${AOs::EthernetCommandI~::SM::Inactive} ...................................
@@ -109,6 +105,18 @@ Q_STATE_DEF(EthernetCommandInterface, Inactive) {
 Q_STATE_DEF(EthernetCommandInterface, Active) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::EthernetCommandI~::SM::Active}
+        case Q_ENTRY_SIG: {
+            ethernet_time_evt_.armX(BSP::TICKS_PER_SEC/1, BSP::TICKS_PER_SEC/1);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active}
+        case Q_EXIT_SIG: {
+            ethernet_time_evt_.disarm();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //.${AOs::EthernetCommandI~::SM::Active::initial}
         case Q_INIT_SIG: {
             status_ = tran(&Unintitalized);
@@ -138,7 +146,13 @@ Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::Unintitalized::ETHERNET_INITIALIZED}
         case ETHERNET_INITIALIZED_SIG: {
-            status_ = tran(&Initialized);
+            status_ = tran(&WaitingForIPAddress);
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::Unintitalized::ETHERNET_TIMEOUT}
+        case ETHERNET_TIMEOUT_SIG: {
+            BSP::beginEthernet();
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {
@@ -148,19 +162,25 @@ Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::Active::Initialized} ........................
-Q_STATE_DEF(EthernetCommandInterface, Initialized) {
+//.${AOs::EthernetCommandI~::SM::Active::IPAddressFound} .....................
+Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::Initialized}
+        //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound}
         case Q_ENTRY_SIG: {
-            BSP::beginEthernetServer();
+            //BSP::beginEthernetServer();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::Active::Initialized::ETHERNET_SERVER_INITIALIZED}
+        //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_SERVER_INITIALIZED}
         case ETHERNET_SERVER_INITIALIZED_SIG: {
             status_ = tran(&ServerRunning);
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_TIMEOUT}
+        case ETHERNET_TIMEOUT_SIG: {
+            //BSP::beginEthernetServer();
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {
@@ -174,18 +194,6 @@ Q_STATE_DEF(EthernetCommandInterface, Initialized) {
 Q_STATE_DEF(EthernetCommandInterface, ServerRunning) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::ServerRunning}
-        case Q_ENTRY_SIG: {
-            ethernet_time_evt_.armX(BSP::TICKS_PER_SEC/1, BSP::TICKS_PER_SEC/1);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::EthernetCommandI~::SM::Active::ServerRunning}
-        case Q_EXIT_SIG: {
-            ethernet_time_evt_.disarm();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::EthernetCommandI~::SM::Active::ServerRunning::initial}
         case Q_INIT_SIG: {
             status_ = tran(&WaitingForClient);
@@ -232,6 +240,34 @@ Q_STATE_DEF(EthernetCommandInterface, ClientConnected) {
         }
         default: {
             status_ = super(&ServerRunning);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddress} ................
+Q_STATE_DEF(EthernetCommandInterface, WaitingForIPAddress) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddress}
+        case Q_ENTRY_SIG: {
+            BSP::checkForEthernetIPAddress();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_TIMEOUT}
+        case ETHERNET_TIMEOUT_SIG: {
+            BSP::checkForEthernetIPAddress();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_IP_ADDRESS_FOUND}
+        case ETHERNET_IP_ADDRESS_FOUND_SIG: {
+            status_ = tran(&IPAddressFound);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
             break;
         }
     }
