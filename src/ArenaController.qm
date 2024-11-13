@@ -115,16 +115,16 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
      <state name="NotReady">
       <entry brief="beginSerial()">BSP::beginSerial();</entry>
       <tran trig="SERIAL_READY" target="../../3">
-       <tran_glyph conn="43,34,1,1,19,11,-4">
+       <tran_glyph conn="49,34,1,1,14,11,-5">
         <action box="0,-2,13,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="27,32,16,8">
+      <state_glyph node="27,32,22,8">
        <entry box="1,2,13,2"/>
       </state_glyph>
      </state>
      <state name="Ready">
-      <entry brief="armSerialTimer(50Hz)">serial_time_evt_.armX(BSP::TICKS_PER_SEC/50, BSP::TICKS_PER_SEC/50);</entry>
+      <entry brief="armSerialTimer(50Hz)">serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);</entry>
       <exit brief="disarmSerialTimer()">serial_time_evt_.disarm();</exit>
       <tran trig="SERIAL_TIMEOUT">
        <action brief="pollSerialCommand()">BSP::pollSerialCommand();</action>
@@ -133,8 +133,8 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
        </tran_glyph>
       </tran>
       <state_glyph node="27,43,31,18">
-       <entry box="1,2,29,2"/>
-       <exit box="1,4,29,2"/>
+       <entry box="1,2,20,2"/>
+       <exit box="1,4,19,2"/>
       </state_glyph>
      </state>
      <state_glyph node="23,21,42,46"/>
@@ -266,7 +266,6 @@ subscribe(DISPLAY_FRAME_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="Unintitalized">
-      <entry brief="beginEthernet()">BSP::beginEthernet();</entry>
       <tran trig="ETHERNET_INITIALIZED" target="../../5">
        <tran_glyph conn="42,28,1,3,13">
         <action box="-3,-7,19,2"/>
@@ -278,26 +277,21 @@ subscribe(DISPLAY_FRAME_SIG);</action>
         <action box="0,-2,18,5"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="14,24,28,10">
-       <entry box="1,2,15,2"/>
-      </state_glyph>
+      <state_glyph node="14,24,28,10"/>
      </state>
      <state name="IPAddressFound">
-      <entry brief="beginEthernetServer()">//BSP::beginEthernetServer();</entry>
       <tran trig="ETHERNET_SERVER_INITIALIZED" target="../../4">
        <tran_glyph conn="46,41,1,0,4,8">
         <action box="5,2,27,2"/>
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="beginEthernetServer()">//BSP::beginEthernetServer();</action>
+       <action brief="beginEthernetServer()">BSP::beginEthernetServer();</action>
        <tran_glyph conn="14,43,3,-1,18">
         <action box="0,-2,18,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="14,36,32,11">
-       <entry box="1,2,20,2"/>
-      </state_glyph>
+      <state_glyph node="14,36,32,11"/>
      </state>
      <state name="ServerRunning">
       <initial target="../1">
@@ -331,7 +325,6 @@ subscribe(DISPLAY_FRAME_SIG);</action>
       <state_glyph node="14,49,64,37"/>
      </state>
      <state name="WaitingForIPAddress">
-      <entry brief="checkForIPAddress()">BSP::checkForEthernetIPAddress();</entry>
       <tran trig="ETHERNET_TIMEOUT">
        <action brief="checkForIPAddress()">BSP::checkForEthernetIPAddress();</action>
        <tran_glyph conn="55,31,3,-1,18">
@@ -343,9 +336,7 @@ subscribe(DISPLAY_FRAME_SIG);</action>
         <action box="0,-2,28,3"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="55,24,25,10">
-       <entry box="1,2,19,2"/>
-      </state_glyph>
+      <state_glyph node="55,24,25,10"/>
      </state>
      <state_glyph node="8,16,99,72">
       <entry box="1,2,24,2"/>

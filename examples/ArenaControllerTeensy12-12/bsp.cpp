@@ -182,24 +182,17 @@ void BSP::beginEthernet()
 void BSP::checkForEthernetIPAddress()
 {
   IPAddress ip_address = Ethernet.localIP();
-  if (ip_address != nullptr)
+  if (ip_address)
   {
-    // AC::AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_TIMER_ID);
+    AC::AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_TIMER_ID);
   }
 }
 //............................................................................
 void BSP::beginEthernetServer()
 {
+  Serial.println("beginEthernetServer()");
   IPAddress ip_address = Ethernet.localIP();
-  Serial.print("Local IP_ADDRESS    = ");
-  Serial.print(ip_address[0]);
-  Serial.print(".");
-  Serial.print(ip_address[1]);
-  Serial.print(".");
-  Serial.print(ip_address[2]);
-  Serial.print(".");
-  Serial.print(ip_address[3]);
-  Serial.println("");
+  Serial.println(ip_address);
   // ethernet_server.begin();
   // AC::AO_EthernetCommandInterface->POST(&ethernetServerInitializedEvt, &l_TIMER_ID);
 }

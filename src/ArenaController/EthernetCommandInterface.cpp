@@ -138,12 +138,6 @@ Q_STATE_DEF(EthernetCommandInterface, Active) {
 Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::Unintitalized}
-        case Q_ENTRY_SIG: {
-            BSP::beginEthernet();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::EthernetCommandI~::SM::Active::Unintitalized::ETHERNET_INITIALIZED}
         case ETHERNET_INITIALIZED_SIG: {
             status_ = tran(&WaitingForIPAddress);
@@ -166,12 +160,6 @@ Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
 Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound}
-        case Q_ENTRY_SIG: {
-            //BSP::beginEthernetServer();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_SERVER_INITIALIZED}
         case ETHERNET_SERVER_INITIALIZED_SIG: {
             status_ = tran(&ServerRunning);
@@ -179,7 +167,7 @@ Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
-            //BSP::beginEthernetServer();
+            BSP::beginEthernetServer();
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -249,12 +237,6 @@ Q_STATE_DEF(EthernetCommandInterface, ClientConnected) {
 Q_STATE_DEF(EthernetCommandInterface, WaitingForIPAddress) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddress}
-        case Q_ENTRY_SIG: {
-            BSP::checkForEthernetIPAddress();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
             BSP::checkForEthernetIPAddress();
