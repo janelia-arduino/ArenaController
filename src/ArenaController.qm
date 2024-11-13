@@ -228,7 +228,7 @@ subscribe(DISPLAY_FRAME_SIG);</action>
      </state>
      <state_glyph node="6,19,78,47"/>
     </state>
-    <state_diagram size="115,68"/>
+    <state_diagram size="96,72"/>
    </statechart>
   </class>
   <class name="EthernetCommandInterface" superclass="qpcpp::QActive">
