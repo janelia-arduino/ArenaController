@@ -33,7 +33,7 @@ enum ArenaControllerSignals {
 
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_MULTIPLE_FRAMES_SIG,
-    DISPLAY_FRAME_SIG,
+    SETUP_FRAME_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
@@ -72,12 +72,13 @@ namespace AC {
 
 //.${Shared::CommandEvt} .....................................................
 class CommandEvt : public QP::QEvt {};
-//.${Shared::DisplayFrameEvt} ................................................
-class DisplayFrameEvt : public QP::QEvt {};
+//.${Shared::SetupFrameEvt} ..................................................
+class SetupFrameEvt : public QP::QEvt {};
 extern QP::QActive * const AO_Arena;
 extern QP::QActive * const AO_Display;
 extern QP::QActive * const AO_SerialCommandInterface;
 extern QP::QActive * const AO_EthernetCommandInterface;
+extern QP::QActive * const AO_Frame;
 
 } // namespace AC
 //.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -58,8 +58,8 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
       <entry brief="displayMultipleFrames()">static QEvt const displayMultipleFramesEvt = { AC::DISPLAY_MULTIPLE_FRAMES_SIG, 0U, 0U};
 QF::PUBLISH(&amp;displayMultipleFramesEvt, this);</entry>
       <tran trig="FRAME_DISPLAYED">
-       <action>static AC::DisplayFrameEvt const displayFrameEvt = { AC::DISPLAY_FRAME_SIG, 0U, 0U};
-QF::PUBLISH(&amp;displayFrameEvt, this);</action>
+       <action>static AC::SetupFrameEvt const setupFrameEvt = { AC::SETUP_FRAME_SIG, 0U, 0U};
+QF::PUBLISH(&amp;setupFrameEvt, this);</action>
        <tran_glyph conn="42,47,3,-1,18">
         <action box="0,-2,21,2"/>
        </tran_glyph>
@@ -161,7 +161,7 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
 subscribe(DISPLAY_MULTIPLE_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
 subscribe(FRAME_DISPLAYED_SIG);
-subscribe(DISPLAY_FRAME_SIG);</action>
+subscribe(SETUP_FRAME_SIG);</action>
      <initial_glyph conn="40,7,4,0,4">
       <action box="0,-2,10,2"/>
      </initial_glyph>
@@ -214,21 +214,21 @@ subscribe(DISPLAY_FRAME_SIG);</action>
        </state_glyph>
       </state>
       <state name="FrameDisplayed">
-       <tran trig="DISPLAY_FRAME" target="../../1">
+       <tran trig="SETUP_FRAME" target="../../1">
         <tran_glyph conn="31,56,3,3,-3,-21,3">
          <action box="-16,-5,15,2"/>
         </tran_glyph>
        </tran>
        <state_glyph node="31,54,14,6"/>
       </state>
-      <state_glyph node="9,26,65,35">
+      <state_glyph node="9,26,65,45">
        <entry box="1,2,25,2"/>
        <exit box="1,4,23,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="6,19,78,47"/>
+     <state_glyph node="6,19,78,55"/>
     </state>
-    <state_diagram size="96,72"/>
+    <state_diagram size="98,77"/>
    </statechart>
   </class>
   <class name="EthernetCommandInterface" superclass="qpcpp::QActive">
@@ -346,10 +346,31 @@ subscribe(DISPLAY_FRAME_SIG);</action>
     <state_diagram size="124,91"/>
    </statechart>
   </class>
+  <class name="Frame" superclass="qpcpp::QActive">
+   <attribute name="instance" type="Frame" visibility="0x00" properties="0x01">
+    <documentation>static class instance (Singleton)</documentation>
+   </attribute>
+   <attribute name="panel_set_index_col_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_set_index_row_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <operation name="Frame" type="" visibility="0x00" properties="0x00">
+    <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
+   </operation>
+   <statechart properties="0x00">
+    <initial target="../1">
+     <initial_glyph conn="37,9,4,0,4">
+      <action box="0,-2,10,2"/>
+     </initial_glyph>
+    </initial>
+    <state name="Inactive">
+     <state_glyph node="28,13,16,9"/>
+    </state>
+    <state_diagram size="80,50"/>
+   </statechart>
+  </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
-  <class name="DisplayFrameEvt" superclass="qpcpp::QEvt"/>
+  <class name="SetupFrameEvt" superclass="qpcpp::QEvt"/>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
   </attribute>
@@ -361,6 +382,9 @@ subscribe(DISPLAY_FRAME_SIG);</action>
   </attribute>
   <attribute name="AO_EthernetCommandInterface" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;EthernetCommandInterface::instance;</code>
+  </attribute>
+  <attribute name="AO_Frame" type="QP::QActive * const" visibility="0x00" properties="0x00">
+   <code>= &amp;Frame::instance;</code>
   </attribute>
  </package>
  <directory name=".">
@@ -382,7 +406,7 @@ enum ArenaControllerSignals {
 
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_MULTIPLE_FRAMES_SIG,
-    DISPLAY_FRAME_SIG,
+    SETUP_FRAME_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
@@ -512,7 +536,12 @@ void setup() {
         display_queueSto, Q_DIM(display_queueSto),
         (void *)0, 0U); // no stack
 
-    //...
+    //static QEvt const *frame_queueSto[10];
+    //AC::AO_Display-&gt;start(5U, // priority
+    //    frame_queueSto, Q_DIM(frame_queueSto),
+    //    (void *)0, 0U); // no stack
+
+   //...
 }
 
 //............................................................................
@@ -575,6 +604,24 @@ $define${Shared::AO_EthernetCommandInterface}
 //============================================================================
 // generate definition of the AO
 $define${AOs::EthernetCommandInterface}</text>
+  </file>
+  <file name="Frame.cpp">
+   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+
+
+using namespace QP;
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Frame}
+
+//============================================================================
+// generate definition of to opaque pointer to the AO
+$define${Shared::AO_Frame}
+
+//============================================================================
+// generate definition of the AO
+$define${AOs::Frame}</text>
   </file>
  </directory>
 </model>

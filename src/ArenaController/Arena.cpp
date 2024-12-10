@@ -133,8 +133,8 @@ Q_STATE_DEF(Arena, AllOn) {
         }
         //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_DISPLAYED}
         case FRAME_DISPLAYED_SIG: {
-            static AC::DisplayFrameEvt const displayFrameEvt = { AC::DISPLAY_FRAME_SIG, 0U, 0U};
-            QF::PUBLISH(&displayFrameEvt, this);
+            static AC::SetupFrameEvt const setupFrameEvt = { AC::SETUP_FRAME_SIG, 0U, 0U};
+            QF::PUBLISH(&setupFrameEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }

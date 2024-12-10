@@ -53,7 +53,12 @@ void setup() {
         display_queueSto, Q_DIM(display_queueSto),
         (void *)0, 0U); // no stack
 
-    //...
+    //static QEvt const *frame_queueSto[10];
+    //AC::AO_Display->start(5U, // priority
+    //    frame_queueSto, Q_DIM(frame_queueSto),
+    //    (void *)0, 0U); // no stack
+
+   //...
 }
 
 //............................................................................

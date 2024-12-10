@@ -83,7 +83,7 @@ Q_STATE_DEF(Display, initial) {
     subscribe(DISPLAY_MULTIPLE_FRAMES_SIG);
     subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
     subscribe(FRAME_DISPLAYED_SIG);
-    subscribe(DISPLAY_FRAME_SIG);
+    subscribe(SETUP_FRAME_SIG);
     return tran(&Inactive);
 }
 //.${AOs::Display::SM::Inactive} .............................................
@@ -200,8 +200,8 @@ Q_STATE_DEF(Display, DisplayingFrame) {
 Q_STATE_DEF(Display, FrameDisplayed) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingMultip~::FrameDisplayed::DISPLAY_FRAME}
-        case DISPLAY_FRAME_SIG: {
+        //.${AOs::Display::SM::Active::DisplayingMultip~::FrameDisplayed::SETUP_FRAME}
+        case SETUP_FRAME_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
             break;
         }

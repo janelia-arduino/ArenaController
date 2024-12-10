@@ -10,16 +10,16 @@
  </group>
  <group name="windows">
   <item id="AOs::Arena::SM">0,0,1003,765</item>
-  <item id="AOs::SerialCommandInterface::SM">0,0,640,480</item>
-  <item id="AOs::EthernetCommandInterface::SM">0,0,1003,765</item>
+  <item id="AOs::SerialCommandInterface::SM">525,0,640,480</item>
+  <item id="AOs::EthernetCommandInterface::SM">162,0,1003,765</item>
   <item id="AOs::Display::SM">0,0,1165,645,*</item>
   <item id=".::ArenaController.hpp">0,0,1003,765</item>
-  <item id="./ArenaController::ArenaController.cpp">407,378,596,300</item>
-  <item id="./ArenaController::Arena.cpp">0,0,1003,765</item>
+  <item id="./ArenaController::ArenaController.cpp">0,0,596,300</item>
+  <item id="./ArenaController::Arena.cpp">162,0,1003,765</item>
   <item id=".::bsp.hpp">0,0,1003,765</item>
-  <item id="./ArenaController::Display.cpp">407,0,596,300</item>
-  <item id="./ArenaController::SerialCommandInterface.cpp">0,378,596,300</item>
-  <item id="./ArenaController::EthernetCommandInterface.cpp">407,300,596,300</item>
+  <item id="./ArenaController::Display.cpp">0,378,596,300</item>
+  <item id="./ArenaController::SerialCommandInterface.cpp">569,378,596,300</item>
+  <item id="./ArenaController::EthernetCommandInterface.cpp">569,0,596,300</item>
  </group>
  <group name="search">
   <item name="options">2032128</item>

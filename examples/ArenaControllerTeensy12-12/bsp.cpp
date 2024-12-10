@@ -41,11 +41,11 @@ constexpr uint16_t byte_count_max_per_frame_grayscale = \
 constexpr uint8_t region_count_per_frame = 2;
 constexpr SPIClass * region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
 
-constexpr uint8_t panel_count_max_per_region_row = panel_count_max_per_frame_row;
-constexpr uint8_t panel_count_max_per_region_col = \
+constexpr uint8_t panel_set_max_row = panel_count_max_per_frame_row;
+constexpr uint8_t panel_set_max_col = \
   panel_count_max_per_frame_col/region_count_per_frame; // 6
 
-constexpr uint8_t panel_select_pins[panel_count_max_per_region_row][panel_count_max_per_region_col] =
+constexpr uint8_t panel_set_select_pins[panel_set_max_row][panel_set_max_col] =
 {
   {0, 6, 24, 31, 20, 39},
   {2, 7, 25, 32, 17, 38},
@@ -95,7 +95,6 @@ static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
 //----------------------------------------------------------------------------
 // BSP functions
 
-//............................................................................
 void BSP::init()
 {
   // initialize the hardware used in this sketch...
@@ -107,11 +106,11 @@ void BSP::init()
   pinMode(AC::constants::reset_pin, OUTPUT);
   digitalWriteFast(AC::constants::reset_pin, LOW);
 
-  for (uint8_t col_index = 0; col_index<AC::constants::panel_count_max_per_region_col; ++col_index)
+  for (uint8_t panel_set_index_col = 0; panel_set_index_col<AC::constants::panel_set_max_col; ++panel_set_index_col)
   {
-    for (uint8_t row_index = 0; row_index<AC::constants::panel_count_max_per_region_row; ++row_index)
+    for (uint8_t panel_set_index_row = 0; panel_set_index_row<AC::constants::panel_set_max_row; ++panel_set_index_row)
     {
-      const uint8_t & cs_pin = AC::constants::panel_select_pins[row_index][col_index];
+      const uint8_t & cs_pin = AC::constants::panel_set_select_pins[panel_set_index_row][panel_set_index_col];
       pinMode(cs_pin, OUTPUT);
       digitalWriteFast(cs_pin, HIGH);
     }
@@ -129,7 +128,7 @@ void BSP::init()
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
 #endif
 }
-//............................................................................
+
 void BSP::activateCommandInterfaces()
 {
 #ifndef QS_ON
@@ -138,7 +137,7 @@ void BSP::activateCommandInterfaces()
 
   AC::AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_TIMER_ID);
 }
-//............................................................................
+
 void BSP::deactivateCommandInterfaces()
 {
 #ifndef QS_ON
@@ -147,14 +146,14 @@ void BSP::deactivateCommandInterfaces()
 
   AC::AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_TIMER_ID);
 }
-//............................................................................
+
 void BSP::beginSerial()
 {
   AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
   AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
   AC::AO_SerialCommandInterface->POST(&serialReadyEvt, &l_TIMER_ID);
 }
-//............................................................................
+
 void BSP::pollSerialCommand()
 {
   if (AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available() > 0)
@@ -170,7 +169,7 @@ void BSP::pollSerialCommand()
     }
   }
 }
-//............................................................................
+
 void BSP::beginEthernet()
 {
   if (Ethernet.begin())
@@ -178,7 +177,7 @@ void BSP::beginEthernet()
     AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_TIMER_ID);
   }
 }
-//............................................................................
+
 void BSP::checkForEthernetIPAddress()
 {
   IPAddress ip_address = Ethernet.localIP();
@@ -187,7 +186,7 @@ void BSP::checkForEthernetIPAddress()
     AC::AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_TIMER_ID);
   }
 }
-//............................................................................
+
 void BSP::beginEthernetServer()
 {
   Serial.println("beginEthernetServer()");
@@ -196,7 +195,7 @@ void BSP::beginEthernetServer()
   // ethernet_server.begin();
   // AC::AO_EthernetCommandInterface->POST(&ethernetServerInitializedEvt, &l_TIMER_ID);
 }
-//............................................................................
+
 void BSP::checkForEthernetClient()
 {
   // ethernet_client = ethernet_server.available();
@@ -212,24 +211,24 @@ void BSP::checkForEthernetClient()
   //   Serial.println(Ethernet.localIP());
   // }
 }
-//............................................................................
+
 void BSP::pollEthernetCommand()
 {
   // print your local IP address:
   // Serial.print("My IP address: ");
   // Serial.println(Ethernet.localIP());
 }
-//............................................................................
+
 void BSP::ledOff()
 {
   digitalWriteFast(LED_BUILTIN, LOW);
 }
-//............................................................................
+
 void BSP::ledOn()
 {
   digitalWriteFast(LED_BUILTIN, HIGH);
 }
-//............................................................................
+
 #include <TimerThree.h>  // Teensy Timer3 interface
 void displayFrameTimerHandler()
 {
@@ -246,13 +245,14 @@ void BSP::disarmDisplayFrameTimer()
 {
   Timer3.detachInterrupt();
 }
-//............................................................................
+
 void BSP::displayFrame()
 {
   ledOn();
   delay(2);
   QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
+
 //----------------------------------------------------------------------------
 // QF callbacks...
 
