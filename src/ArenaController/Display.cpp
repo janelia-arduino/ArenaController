@@ -31,6 +31,9 @@ class Display : public QP::QActive {
 public:
     static Display instance;
 
+private:
+    std::uint8_t const (*panel_buffer_)[];
+
 public:
     Display();
 
@@ -38,7 +41,7 @@ protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
-    Q_STATE_DECL(DisplayingAllOnFrames);
+    Q_STATE_DECL(DisplayingUniformGrayscaleFrames);
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayingFrame);
 };
@@ -79,7 +82,7 @@ Display::Display()
 Q_STATE_DEF(Display, initial) {
     //.${AOs::Display::SM::initial}
     subscribe(DEACTIVATE_DISPLAY_SIG);
-    subscribe(DISPLAY_ALL_ON_FRAMES_SIG);
+    subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
     subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
     subscribe(FRAME_DISPLAYED_SIG);
     return tran(&Inactive);
@@ -94,9 +97,10 @@ Q_STATE_DEF(Display, Inactive) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Inactive::DISPLAY_ALL_ON_FRAMES}
-        case DISPLAY_ALL_ON_FRAMES_SIG: {
-            status_ = tran(&DisplayingAllOnFrames);
+        //.${AOs::Display::SM::Inactive::DISPLAY_UNIFORM_GRAYSCALE_FRAMES}
+        case DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG: {
+            panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)->panel_buffer;
+            status_ = tran(&DisplayingUniformGrayscaleFrames);
             break;
         }
         default: {
@@ -122,23 +126,25 @@ Q_STATE_DEF(Display, Active) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingAllOnFrames} ........................
-Q_STATE_DEF(Display, DisplayingAllOnFrames) {
+//.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames} .............
+Q_STATE_DEF(Display, DisplayingUniformGrayscaleFrames) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingAllOnFrames}
+        //.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames}
         case Q_ENTRY_SIG: {
+            Serial.print("panel_buffer_: ");
+            Serial.println((long long)panel_buffer_);
             BSP::armDisplayFrameTimer(200);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingAllOnFrames}
+        //.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames}
         case Q_EXIT_SIG: {
             BSP::disarmDisplayFrameTimer();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingAllOnF~::initial}
+        //.${AOs::Display::SM::Active::DisplayingUnifor~::initial}
         case Q_INIT_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
             break;
@@ -150,39 +156,39 @@ Q_STATE_DEF(Display, DisplayingAllOnFrames) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingAllOnF~::WaitingToDisplayFrame} .....
+//.${AOs::Display::SM::Active::DisplayingUnifor~::WaitingToDisplayFrame} .....
 Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingAllOnF~::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
+        //.${AOs::Display::SM::Active::DisplayingUnifor~::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
         case DISPLAY_FRAME_TIMEOUT_SIG: {
             status_ = tran(&DisplayingFrame);
             break;
         }
         default: {
-            status_ = super(&DisplayingAllOnFrames);
+            status_ = super(&DisplayingUniformGrayscaleFrames);
             break;
         }
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingAllOnF~::DisplayingFrame} ...........
+//.${AOs::Display::SM::Active::DisplayingUnifor~::DisplayingFrame} ...........
 Q_STATE_DEF(Display, DisplayingFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingAllOnF~::DisplayingFrame}
+        //.${AOs::Display::SM::Active::DisplayingUnifor~::DisplayingFrame}
         case Q_ENTRY_SIG: {
             BSP::displayFrame();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingAllOnF~::DisplayingFrame::FRAME_DISPLAYED}
+        //.${AOs::Display::SM::Active::DisplayingUnifor~::DisplayingFrame::FRAME_DISPLAYED}
         case FRAME_DISPLAYED_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
             break;
         }
         default: {
-            status_ = super(&DisplayingAllOnFrames);
+            status_ = super(&DisplayingUniformGrayscaleFrames);
             break;
         }
     }

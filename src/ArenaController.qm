@@ -54,8 +54,13 @@ subscribe(ALL_OFF_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="displayAllOnFrames()">static QEvt const displayAllOnFramesEvt = { AC::DISPLAY_ALL_ON_FRAMES_SIG, 0U, 0U};
-QF::PUBLISH(&amp;displayAllOnFramesEvt, this);</entry>
+      <entry brief="displayAllOnFrames()">static AC::DisplayUniformGrayscaleFramesEvt displayUniformGrayscaleFramesEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG, 0U, 0U};
+displayUniformGrayscaleFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
+Serial.print(&quot;displayUniformGrayscaleFramesEvt.panel_buffer: &quot;);
+Serial.println((long long)displayUniformGrayscaleFramesEvt.panel_buffer);
+Serial.print(&quot;&amp;AC::constants::all_on_grayscale_pattern: &quot;);
+Serial.println((long long)(&amp;AC::constants::all_on_grayscale_pattern));
+QF::PUBLISH(&amp;displayUniformGrayscaleFramesEvt, this);</entry>
       <state_glyph node="42,32,25,6">
        <entry box="1,2,20,2"/>
       </state_glyph>
@@ -144,13 +149,14 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
   </class>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
+   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
      <action>subscribe(DEACTIVATE_DISPLAY_SIG);
-subscribe(DISPLAY_ALL_ON_FRAMES_SIG);
+subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
 subscribe(FRAME_DISPLAYED_SIG);</action>
      <initial_glyph conn="40,7,4,0,4">
@@ -159,9 +165,10 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
     </initial>
     <state name="Inactive">
      <entry brief="ledOff()">BSP::ledOff();</entry>
-     <tran trig="DISPLAY_ALL_ON_FRAMES" target="../../2/1">
+     <tran trig="DISPLAY_UNIFORM_GRAYSCALE_FRAMES" target="../../2/1">
+      <action>panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;panel_buffer;</action>
       <tran_glyph conn="46,13,1,1,40,13,-12">
-       <action box="5,-2,22,2"/>
+       <action box="5,-2,34,2"/>
       </tran_glyph>
      </tran>
      <state_glyph node="34,11,12,7">
@@ -174,8 +181,10 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
        <action box="5,-12,18,3"/>
       </tran_glyph>
      </tran>
-     <state name="DisplayingAllOnFrames">
-      <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(200);</entry>
+     <state name="DisplayingUniformGrayscaleFrames">
+      <entry brief="armDisplayFrameTimer(200Hz)">Serial.print(&quot;panel_buffer_: &quot;);
+Serial.println((long long)panel_buffer_);
+BSP::armDisplayFrameTimer(200);</entry>
       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
       <initial target="../1">
        <initial_glyph conn="41,31,4,0,3">
@@ -201,7 +210,7 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
         <entry box="1,2,13,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="9,24,65,30">
+      <state_glyph node="9,24,65,29">
        <entry box="1,2,25,2"/>
        <exit box="1,4,23,2"/>
       </state_glyph>
@@ -350,6 +359,9 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
+  <class name="DisplayUniformGrayscaleFramesEvt" superclass="qpcpp::QEvt">
+   <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+  </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
   </attribute>
@@ -384,7 +396,7 @@ enum ArenaControllerSignals {
     ALL_OFF_SIG,
 
     DEACTIVATE_DISPLAY_SIG,
-    DISPLAY_ALL_ON_FRAMES_SIG,
+    DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
