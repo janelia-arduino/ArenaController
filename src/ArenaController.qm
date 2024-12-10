@@ -30,8 +30,7 @@ This structure of the code is recommended for applications with only one active 
     <initial target="../1">
      <action>subscribe(RESET_SIG);
 subscribe(ALL_ON_SIG);
-subscribe(ALL_OFF_SIG);
-subscribe(FRAME_DISPLAYED_SIG);</action>
+subscribe(ALL_OFF_SIG);</action>
      <initial_glyph conn="49,10,4,0,4">
       <action box="-1,-1,10,2"/>
      </initial_glyph>
@@ -55,16 +54,9 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="displayMultipleFrames()">static QEvt const displayMultipleFramesEvt = { AC::DISPLAY_MULTIPLE_FRAMES_SIG, 0U, 0U};
-QF::PUBLISH(&amp;displayMultipleFramesEvt, this);</entry>
-      <tran trig="FRAME_DISPLAYED">
-       <action>static AC::SetupFrameEvt const setupFrameEvt = { AC::SETUP_FRAME_SIG, 0U, 0U};
-QF::PUBLISH(&amp;setupFrameEvt, this);</action>
-       <tran_glyph conn="42,47,3,-1,18">
-        <action box="0,-2,21,2"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="42,39,25,13">
+      <entry brief="displayAllOnFrames()">static QEvt const displayAllOnFramesEvt = { AC::DISPLAY_ALL_ON_FRAMES_SIG, 0U, 0U};
+QF::PUBLISH(&amp;displayAllOnFramesEvt, this);</entry>
+      <state_glyph node="42,32,25,6">
        <entry box="1,2,20,2"/>
       </state_glyph>
      </state>
@@ -72,11 +64,11 @@ QF::PUBLISH(&amp;setupFrameEvt, this);</action>
       <entry brief="deactivateDisplay()">static QEvt const deactivateDisplayEvt = { AC::DEACTIVATE_DISPLAY_SIG, 0U, 0U};
 QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
       <tran trig="ALL_ON" target="../../3">
-       <tran_glyph conn="67,25,1,1,2,16,-2">
-        <action box="3,0,10,2"/>
+       <tran_glyph conn="54,28,2,0,4">
+        <action box="2,1,10,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="42,23,25,13">
+      <state_glyph node="42,23,25,5">
        <entry box="1,2,17,2"/>
       </state_glyph>
      </state>
@@ -158,17 +150,16 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
    <statechart properties="0x00">
     <initial target="../1">
      <action>subscribe(DEACTIVATE_DISPLAY_SIG);
-subscribe(DISPLAY_MULTIPLE_FRAMES_SIG);
+subscribe(DISPLAY_ALL_ON_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
-subscribe(FRAME_DISPLAYED_SIG);
-subscribe(SETUP_FRAME_SIG);</action>
+subscribe(FRAME_DISPLAYED_SIG);</action>
      <initial_glyph conn="40,7,4,0,4">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Inactive">
      <entry brief="ledOff()">BSP::ledOff();</entry>
-     <tran trig="DISPLAY_MULTIPLE_FRAMES" target="../../2/1">
+     <tran trig="DISPLAY_ALL_ON_FRAMES" target="../../2/1">
       <tran_glyph conn="46,13,1,1,40,13,-12">
        <action box="5,-2,22,2"/>
       </tran_glyph>
@@ -183,42 +174,34 @@ subscribe(SETUP_FRAME_SIG);</action>
        <action box="5,-12,18,3"/>
       </tran_glyph>
      </tran>
-     <state name="DisplayingMultipleFrames">
+     <state name="DisplayingAllOnFrames">
       <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(200);</entry>
       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
-      <initial target="../3">
-       <initial_glyph conn="41,29,4,0,3">
+      <initial target="../1">
+       <initial_glyph conn="41,31,4,0,3">
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
       <state name="WaitingToDisplayFrame">
        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../2">
-        <tran_glyph conn="40,49,2,0,4">
+        <tran_glyph conn="41,41,2,0,4">
          <action box="1,1,22,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="31,42,20,7"/>
+       <state_glyph node="32,34,20,7"/>
       </state>
       <state name="DisplayingFrame">
        <entry brief="displayFrame()">BSP::displayFrame();</entry>
-       <tran trig="FRAME_DISPLAYED" target="../../3">
-        <tran_glyph conn="33,56,3,3,-4,-21,2">
-         <action box="-19,-12,18,2"/>
+       <tran trig="FRAME_DISPLAYED" target="../../1">
+        <tran_glyph conn="34,48,3,3,-4,-10,2">
+         <action box="-19,-6,18,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="33,53,14,6">
+       <state_glyph node="34,45,14,6">
         <entry box="1,2,13,2"/>
        </state_glyph>
       </state>
-      <state name="WaitingForFrameSetup">
-       <tran trig="SETUP_FRAME" target="../../1">
-        <tran_glyph conn="41,38,2,0,4">
-         <action box="1,1,15,2"/>
-        </tran_glyph>
-       </tran>
-       <state_glyph node="31,32,19,6"/>
-      </state>
-      <state_glyph node="9,24,65,45">
+      <state_glyph node="9,24,65,30">
        <entry box="1,2,25,2"/>
        <exit box="1,4,23,2"/>
       </state_glyph>
@@ -367,7 +350,6 @@ subscribe(SETUP_FRAME_SIG);</action>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
-  <class name="SetupFrameEvt" superclass="qpcpp::QEvt"/>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
   </attribute>
@@ -402,8 +384,7 @@ enum ArenaControllerSignals {
     ALL_OFF_SIG,
 
     DEACTIVATE_DISPLAY_SIG,
-    DISPLAY_MULTIPLE_FRAMES_SIG,
-    SETUP_FRAME_SIG,
+    DISPLAY_ALL_ON_FRAMES_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 

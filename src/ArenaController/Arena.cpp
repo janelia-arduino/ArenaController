@@ -79,7 +79,6 @@ Q_STATE_DEF(Arena, initial) {
     subscribe(RESET_SIG);
     subscribe(ALL_ON_SIG);
     subscribe(ALL_OFF_SIG);
-    subscribe(FRAME_DISPLAYED_SIG);
     return tran(&ArenaOn);
 }
 //.${AOs::Arena::SM::ArenaOn} ................................................
@@ -126,15 +125,8 @@ Q_STATE_DEF(Arena, AllOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOn}
         case Q_ENTRY_SIG: {
-            static QEvt const displayMultipleFramesEvt = { AC::DISPLAY_MULTIPLE_FRAMES_SIG, 0U, 0U};
-            QF::PUBLISH(&displayMultipleFramesEvt, this);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_DISPLAYED}
-        case FRAME_DISPLAYED_SIG: {
-            static AC::SetupFrameEvt const setupFrameEvt = { AC::SETUP_FRAME_SIG, 0U, 0U};
-            QF::PUBLISH(&setupFrameEvt, this);
+            static QEvt const displayAllOnFramesEvt = { AC::DISPLAY_ALL_ON_FRAMES_SIG, 0U, 0U};
+            QF::PUBLISH(&displayAllOnFramesEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }
