@@ -16,13 +16,6 @@
 // for more details.
 //
 //.$endhead${.::Constants.hpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-// ----------------------------------------------------------------------------
-// Constants.hpp
-//
-//
-// Authors:
-// Peter Polidoro peter@polidoro.io
-// ----------------------------------------------------------------------------
 #ifndef ARENA_CONTROLLER_CONSTANTS_HPP
 #define ARENA_CONTROLLER_CONSTANTS_HPP
 

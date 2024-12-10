@@ -169,7 +169,7 @@ subscribe(SETUP_FRAME_SIG);</action>
     <state name="Inactive">
      <entry brief="ledOff()">BSP::ledOff();</entry>
      <tran trig="DISPLAY_MULTIPLE_FRAMES" target="../../2/1">
-      <tran_glyph conn="46,13,1,1,40,15,-12">
+      <tran_glyph conn="46,13,1,1,40,13,-12">
        <action box="5,-2,22,2"/>
       </tran_glyph>
      </tran>
@@ -186,42 +186,39 @@ subscribe(SETUP_FRAME_SIG);</action>
      <state name="DisplayingMultipleFrames">
       <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(200);</entry>
       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
-      <initial target="../1">
-       <initial_glyph conn="39,30,4,0,3">
+      <initial target="../3">
+       <initial_glyph conn="41,29,4,0,3">
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
       <state name="WaitingToDisplayFrame">
-       <entry brief="ledOff()">BSP::ledOff();</entry>
        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../2">
-        <tran_glyph conn="51,39,1,1,2,8,-8">
-         <action box="1,-3,22,2"/>
+        <tran_glyph conn="40,49,2,0,4">
+         <action box="1,1,22,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="31,33,20,7">
-        <entry box="1,2,11,2"/>
-       </state_glyph>
+       <state_glyph node="31,42,20,7"/>
       </state>
       <state name="DisplayingFrame">
        <entry brief="displayFrame()">BSP::displayFrame();</entry>
        <tran trig="FRAME_DISPLAYED" target="../../3">
-        <tran_glyph conn="45,49,1,1,2,7,-2">
-         <action box="3,2,18,2"/>
+        <tran_glyph conn="33,56,3,3,-4,-21,2">
+         <action box="-19,-12,18,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="31,45,14,6">
+       <state_glyph node="33,53,14,6">
         <entry box="1,2,13,2"/>
        </state_glyph>
       </state>
-      <state name="FrameDisplayed">
+      <state name="WaitingForFrameSetup">
        <tran trig="SETUP_FRAME" target="../../1">
-        <tran_glyph conn="31,56,3,3,-3,-21,3">
-         <action box="-16,-5,15,2"/>
+        <tran_glyph conn="41,38,2,0,4">
+         <action box="1,1,15,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="31,54,14,6"/>
+       <state_glyph node="31,32,19,6"/>
       </state>
-      <state_glyph node="9,26,65,45">
+      <state_glyph node="9,24,65,45">
        <entry box="1,2,25,2"/>
        <exit box="1,4,23,2"/>
       </state_glyph>
@@ -478,6 +475,156 @@ public:
 
 #endif // BSP_HPP</text>
   </file>
+  <file name="Constants.hpp">
+   <text>#ifndef ARENA_CONTROLLER_CONSTANTS_HPP
+#define ARENA_CONTROLLER_CONSTANTS_HPP
+
+#include &lt;SPI.h&gt;
+
+
+namespace AC
+{
+namespace constants
+{
+// SPI Settings
+constexpr uint8_t spi_bit_order = MSBFIRST;
+constexpr uint8_t spi_data_mode = SPI_MODE0;
+
+// Ethernet Settings
+constexpr uint8_t mac_address_size = 6;
+
+// Conversions
+constexpr uint32_t MICROSECONDS_PER_SECOND = 1000000;
+
+// message byte
+constexpr uint8_t bit_count_per_byte = 8;
+
+// quarter panel pixels
+constexpr uint8_t pixel_count_per_quarter_panel_row = 8;
+constexpr uint8_t pixel_count_per_quarter_panel_col = 8;
+constexpr uint8_t pixel_count_per_quarter_panel = \
+  pixel_count_per_quarter_panel_row * pixel_count_per_quarter_panel_col; // 64
+
+// quarter panel grayscale
+constexpr uint8_t bit_count_per_pixel_grayscale = 4;
+constexpr uint8_t pixel_count_per_byte_grayscale = \
+  bit_count_per_byte / bit_count_per_pixel_grayscale; // 2
+constexpr uint8_t byte_count_per_quarter_panel_row_grayscale = \
+  pixel_count_per_quarter_panel_row / pixel_count_per_byte_grayscale; // 4
+
+// quarter panel binary
+constexpr uint8_t bit_count_per_pixel_binary = 1;
+constexpr uint8_t pixel_count_per_byte_binary = \
+  bit_count_per_byte / bit_count_per_pixel_binary; // 8
+
+// quarter panel message bytes
+constexpr uint8_t byte_count_per_quarter_panel_control = 1;
+constexpr uint8_t byte_count_per_quarter_panel_grayscale = \
+  byte_count_per_quarter_panel_control + \
+  pixel_count_per_quarter_panel / pixel_count_per_byte_grayscale; // 33
+constexpr uint8_t byte_count_per_quarter_panel_binary = \
+  byte_count_per_quarter_panel_control + \
+  pixel_count_per_quarter_panel / pixel_count_per_byte_binary; // 9
+
+// panel
+constexpr uint8_t quarter_panel_count_per_panel_row = 2;
+constexpr uint8_t quarter_panel_count_per_panel_col = 2;
+constexpr uint8_t quarter_panel_count_per_panel = \
+  quarter_panel_count_per_panel_row * quarter_panel_count_per_panel_col; // 4
+
+// panel message bytes
+constexpr uint8_t byte_count_per_panel_grayscale = \
+  byte_count_per_quarter_panel_grayscale * \
+  quarter_panel_count_per_panel; // 132
+constexpr uint8_t byte_count_per_panel_binary = \
+  byte_count_per_quarter_panel_binary * \
+  quarter_panel_count_per_panel; // 36
+
+// panel pattern
+constexpr uint8_t all_on_grayscale_pattern[byte_count_per_panel_grayscale] =
+{
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  1,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+  255, 255, 255, 255,
+};
+
+constexpr uint8_t identify_quarter_panels_grayscale_pattern[byte_count_per_panel_grayscale] =
+{
+  1,
+  15, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  1,
+  15, 0, 15, 0,
+  15, 0, 15, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  1,
+  255, 0, 15, 0,
+  15, 0, 255, 0,
+  255, 0, 15, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  1,
+  255, 0, 255, 0,
+  255, 0, 255, 0,
+  255, 0, 255, 0,
+  255, 0, 255, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+};
+}
+}
+#endif
+</text>
+  </file>
  </directory>
  <directory name="./ArenaController">
   <file name="Arena.cpp">
@@ -536,10 +683,10 @@ void setup() {
         display_queueSto, Q_DIM(display_queueSto),
         (void *)0, 0U); // no stack
 
-    //static QEvt const *frame_queueSto[10];
-    //AC::AO_Display-&gt;start(5U, // priority
-    //    frame_queueSto, Q_DIM(frame_queueSto),
-    //    (void *)0, 0U); // no stack
+    static QEvt const *frame_queueSto[10];
+    AC::AO_Frame-&gt;start(5U, // priority
+        frame_queueSto, Q_DIM(frame_queueSto),
+        (void *)0, 0U); // no stack
 
    //...
 }
