@@ -41,7 +41,7 @@ protected:
     Q_STATE_DECL(DisplayingMultipleFrames);
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayingFrame);
-    Q_STATE_DECL(FrameDisplayed);
+    Q_STATE_DECL(WaitingForFrameSetup);
 };
 
 } // namespace AC
@@ -142,7 +142,7 @@ Q_STATE_DEF(Display, DisplayingMultipleFrames) {
         }
         //.${AOs::Display::SM::Active::DisplayingMultip~::initial}
         case Q_INIT_SIG: {
-            status_ = tran(&WaitingToDisplayFrame);
+            status_ = tran(&WaitingForFrameSetup);
             break;
         }
         default: {
@@ -156,12 +156,6 @@ Q_STATE_DEF(Display, DisplayingMultipleFrames) {
 Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingMultip~::WaitingToDisplayFrame}
-        case Q_ENTRY_SIG: {
-            BSP::ledOff();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::Display::SM::Active::DisplayingMultip~::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
         case DISPLAY_FRAME_TIMEOUT_SIG: {
             status_ = tran(&DisplayingFrame);
@@ -186,7 +180,7 @@ Q_STATE_DEF(Display, DisplayingFrame) {
         }
         //.${AOs::Display::SM::Active::DisplayingMultip~::DisplayingFrame::FRAME_DISPLAYED}
         case FRAME_DISPLAYED_SIG: {
-            status_ = tran(&FrameDisplayed);
+            status_ = tran(&WaitingForFrameSetup);
             break;
         }
         default: {
@@ -196,11 +190,11 @@ Q_STATE_DEF(Display, DisplayingFrame) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingMultip~::FrameDisplayed} ............
-Q_STATE_DEF(Display, FrameDisplayed) {
+//.${AOs::Display::SM::Active::DisplayingMultip~::WaitingForFrameSetup} ......
+Q_STATE_DEF(Display, WaitingForFrameSetup) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingMultip~::FrameDisplayed::SETUP_FRAME}
+        //.${AOs::Display::SM::Active::DisplayingMultip~::WaitingForFrameS~::SETUP_FRAME}
         case SETUP_FRAME_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
             break;

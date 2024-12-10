@@ -250,6 +250,7 @@ void BSP::displayFrame()
 {
   ledOn();
   delay(2);
+  ledOff();
   QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 
