@@ -1,5 +1,9 @@
 #include <Arduino.h>
 #include <QNEthernet.h>
+#include <TimerOne.h>
+#include <TimerThree.h>
+#include <SPI.h>
+#include <EventResponder.h>
 
 #include "bsp.hpp"
 #include "ArenaController.hpp"
@@ -87,7 +91,10 @@ static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SI
 static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetClientConnectedEvt = { AC::ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
 static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
-// static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
+static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
+
+static EventResponder transfer_panel_complete_event;
+static uint8_t transfer_panel_complete_count;
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -103,18 +110,12 @@ void BSP::init()
   // setup pins
   pinMode(LED_BUILTIN, OUTPUT);
 
-  pinMode(AC::constants::reset_pin, OUTPUT);
-  digitalWriteFast(AC::constants::reset_pin, LOW);
-
-  for (uint8_t panel_set_index_col = 0; panel_set_index_col<AC::constants::panel_set_max_col; ++panel_set_index_col)
+  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
   {
-    for (uint8_t panel_set_index_row = 0; panel_set_index_row<AC::constants::panel_set_max_row; ++panel_set_index_row)
-    {
-      const uint8_t & cs_pin = AC::constants::panel_set_select_pins[panel_set_index_row][panel_set_index_col];
-      pinMode(cs_pin, OUTPUT);
-      digitalWriteFast(cs_pin, HIGH);
-    }
+    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
+    spi_ptr->begin();
   }
+
 
 #ifdef QS_ON
   QS_INIT(nullptr);
@@ -127,6 +128,42 @@ void BSP::init()
   QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
 #endif
+}
+
+void BSP::initializeArena()
+{
+  pinMode(AC::constants::reset_pin, OUTPUT);
+  digitalWriteFast(AC::constants::reset_pin, LOW);
+}
+
+void BSP::initializeDisplay()
+{
+  uint32_t period_us = AC::constants::MICROSECONDS_PER_SECOND;
+  Timer3.initialize(period_us);
+  Timer3.stop();
+}
+
+void transferPanelCompleteCallback(EventResponderRef event_responder)
+{
+  ++transfer_panel_complete_count;
+  if (transfer_panel_complete_count == AC::constants::region_count_per_frame)
+  {
+    QF::PUBLISH(&panelSetTransferredEvt, &l_TIMER_ID);
+  }
+}
+
+void BSP::initializeFrame()
+{
+  transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);
+  for (uint8_t panel_set_index_col = 0; panel_set_index_col<AC::constants::panel_set_max_col; ++panel_set_index_col)
+  {
+    for (uint8_t panel_set_index_row = 0; panel_set_index_row<AC::constants::panel_set_max_row; ++panel_set_index_row)
+    {
+      const uint8_t & pss_pin = AC::constants::panel_set_select_pins[panel_set_index_row][panel_set_index_col];
+      pinMode(pss_pin, OUTPUT);
+      digitalWriteFast(pss_pin, HIGH);
+    }
+  }
 }
 
 void BSP::activateCommandInterfaces()
@@ -229,7 +266,6 @@ void BSP::ledOn()
   digitalWriteFast(LED_BUILTIN, HIGH);
 }
 
-#include <TimerThree.h>  // Teensy Timer3 interface
 void displayFrameTimerHandler()
 {
   QF::PUBLISH(&displayFrameTimeoutEvt, &l_TIMER_ID);
@@ -238,11 +274,15 @@ void displayFrameTimerHandler()
 void BSP::armDisplayFrameTimer(uint32_t frequency_hz)
 {
   uint32_t period_us = AC::constants::MICROSECONDS_PER_SECOND / frequency_hz;
-  Timer3.initialize(period_us);
+  Timer3.stop();
+  Timer3.setPeriod(period_us);
   Timer3.attachInterrupt(displayFrameTimerHandler);
+  Timer3.start();
 }
+
 void BSP::disarmDisplayFrameTimer()
 {
+  Timer3.stop();
   Timer3.detachInterrupt();
 }
 
@@ -252,6 +292,44 @@ void BSP::displayFrame()
   delay(2);
   ledOff();
   // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
+}
+
+void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
+{
+  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
+  {
+    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
+    spi_ptr->beginTransaction(SPISettings(AC::constants::spi_clock_speed, AC::constants::spi_bit_order, AC::constants::spi_data_mode));
+  }
+  const uint8_t & pss_pin = AC::constants::panel_set_select_pins[row_index][col_index];
+  digitalWriteFast(pss_pin, LOW);
+  // Serial.print("setting ");
+  // Serial.print(pss_pin);
+  // Serial.println(" LOW");
+}
+
+void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
+{
+  const uint8_t & pss_pin = AC::constants::panel_set_select_pins[row_index][col_index];
+  digitalWriteFast(pss_pin, HIGH);
+  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
+  {
+    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
+    spi_ptr->endTransaction();
+  }
+  // Serial.print("setting ");
+  // Serial.print(pss_pin);
+  // Serial.println(" HIGH");
+}
+
+void BSP::transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count)
+{
+  transfer_panel_complete_count = 0;
+  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
+  {
+    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
+    spi_ptr->transfer(panel_buffer, NULL, panel_buffer_byte_count, transfer_panel_complete_event);
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -264,7 +342,6 @@ void BSP::displayFrame()
 //
 // NOTE: You can re-define the macros to use a different ATSAM timer/channel.
 //
-#include <TimerOne.h>  // Teensy Timer1 interface
 
 #define TIMER1_CLCK_HZ  1000000
 #define TIMER_HANDLER   T1_Handler

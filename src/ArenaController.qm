@@ -28,7 +28,8 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>subscribe(RESET_SIG);
+     <action>BSP::initializeArena();
+subscribe(RESET_SIG);
 subscribe(ALL_ON_SIG);
 subscribe(ALL_OFF_SIG);</action>
      <initial_glyph conn="49,10,4,0,4">
@@ -56,6 +57,7 @@ subscribe(ALL_OFF_SIG);</action>
      <state name="AllOn">
       <entry brief="displayAllOnFrames()">static AC::DisplayUniformGrayscaleFramesEvt displayUniformGrayscaleFramesEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG, 0U, 0U};
 displayUniformGrayscaleFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
+displayUniformGrayscaleFramesEvt.display_frequency_hz = 200;
 QF::PUBLISH(&amp;displayUniformGrayscaleFramesEvt, this);</entry>
       <state_glyph node="42,32,25,6">
        <entry box="1,2,20,2"/>
@@ -146,12 +148,14 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
    <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
+   <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x02" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>subscribe(DEACTIVATE_DISPLAY_SIG);
+     <action>BSP::initializeDisplay();
+subscribe(DEACTIVATE_DISPLAY_SIG);
 subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
 subscribe(FRAME_TRANSFERRED_SIG);</action>
@@ -161,7 +165,8 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
     </initial>
     <state name="Inactive">
      <tran trig="DISPLAY_UNIFORM_GRAYSCALE_FRAMES" target="../../2/1">
-      <action>panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;panel_buffer;</action>
+      <action>panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;panel_buffer;
+display_frequency_hz_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;display_frequency_hz;</action>
       <tran_glyph conn="40,14,2,0,10">
        <action box="1,1,34,2"/>
       </tran_glyph>
@@ -175,7 +180,7 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="DisplayingUniformGrayscaleFrames">
-      <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(200);</entry>
+      <entry brief="armDisplayFrameTimer()">BSP::armDisplayFrameTimer(display_frequency_hz_);</entry>
       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
       <initial target="../1">
        <initial_glyph conn="41,31,4,0,3">
@@ -332,15 +337,17 @@ QF::PUBLISH(&amp;transferUniformGrayscaleFrameEvt, this);</entry>
    <attribute name="instance" type="Frame" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <attribute name="panel_set_index_col_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="panel_set_index_row_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_set_row_index_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_set_col_index_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>subscribe(TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG);
+     <action>BSP::initializeFrame();
+subscribe(TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG);
+subscribe(PANEL_SET_TRANSFERRED_SIG);
 subscribe(FRAME_TRANSFERRED_SIG);</action>
      <initial_glyph conn="37,4,4,0,4">
       <action box="0,-2,10,2"/>
@@ -360,28 +367,36 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
     </state>
     <state name="Active">
      <entry brief="resetPanelSetSelectIndicies()">BSP::ledOn();
-panel_set_index_col_ = 0;
-panel_set_index_row_ = 0;</entry>
+panel_set_row_index_ = 0;
+panel_set_col_index_ = 0;</entry>
      <state name="TransferringGrayscaleFrame">
-      <entry brief="delay(10)">delay(10);
-static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
-QF::PUBLISH(&amp;frameTransferredEvt, this);</entry>
+      <initial target="../2">
+       <initial_glyph conn="40,31,4,0,3">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="FRAME_TRANSFERRED" target="../../../1">
-       <tran_glyph conn="70,34,1,1,8,-21,-34">
+       <tran_glyph conn="81,34,1,1,8,-21,-45">
         <action box="-25,-24,20,2"/>
        </tran_glyph>
       </tran>
-      <state name="DisplayingPanelSet">
-       <entry brief="enablePanelSetSelectPin()"/>
-       <exit brief="disablePanelSetSelectPin()"/>
-       <state_glyph node="24,34,34,16">
-        <entry box="1,2,23,2"/>
+      <state name="TransferringPanelSet">
+       <entry brief="enablePanelSetSelectPin(); transferPanelSet()">BSP::enablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
+BSP::transferPanelSet(panel_buffer_, AC::constants::byte_count_per_panel_grayscale);</entry>
+       <exit brief="disablePanelSetSelectPin()">BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);</exit>
+       <tran trig="PANEL_SET_TRANSFERRED">
+        <action>static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
+QF::PUBLISH(&amp;frameTransferredEvt, this);</action>
+        <tran_glyph conn="12,44,3,-1,24">
+         <action box="0,-2,22,2"/>
+        </tran_glyph>
+       </tran>
+       <state_glyph node="12,34,61,16">
+        <entry box="1,2,49,2"/>
         <exit box="1,4,23,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="21,27,49,29">
-       <entry box="1,2,18,2"/>
-      </state_glyph>
+      <state_glyph node="10,27,71,29"/>
      </state>
      <state_glyph node="7,21,80,49">
       <entry box="1,2,25,2"/>
@@ -395,6 +410,7 @@ QF::PUBLISH(&amp;frameTransferredEvt, this);</entry>
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
   <class name="DisplayUniformGrayscaleFramesEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="TransferUniformGrayscaleFrameEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
@@ -435,6 +451,7 @@ enum ArenaControllerSignals {
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG,
     TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG,
+    PANEL_SET_TRANSFERRED_SIG,
     FRAME_TRANSFERRED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
@@ -484,6 +501,10 @@ public:
 
     static void init();
 
+    static void initializeArena();
+    static void initializeDisplay();
+    static void initializeFrame();
+
     static void activateCommandInterfaces();
     static void deactivateCommandInterfaces();
 
@@ -502,6 +523,11 @@ public:
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();
     static void displayFrame();
+
+    static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
+    static void disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
+    static void transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count);
+
 };
 
 #endif // BSP_HPP</text>

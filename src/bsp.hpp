@@ -26,6 +26,10 @@ public:
 
     static void init();
 
+    static void initializeArena();
+    static void initializeDisplay();
+    static void initializeFrame();
+
     static void activateCommandInterfaces();
     static void deactivateCommandInterfaces();
 
@@ -44,6 +48,11 @@ public:
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();
     static void displayFrame();
+
+    static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
+    static void disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
+    static void transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count);
+
 };
 
 #endif // BSP_HPP

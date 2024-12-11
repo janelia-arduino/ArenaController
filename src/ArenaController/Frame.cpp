@@ -32,8 +32,8 @@ public:
     static Frame instance;
 
 private:
-    std::uint8_t panel_set_index_col_;
-    std::uint8_t panel_set_index_row_;
+    std::uint8_t panel_set_row_index_;
+    std::uint8_t panel_set_col_index_;
     std::uint8_t const (*panel_buffer_)[];
 
 public:
@@ -44,7 +44,7 @@ protected:
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
     Q_STATE_DECL(TransferringGrayscaleFrame);
-    Q_STATE_DECL(DisplayingPanelSet);
+    Q_STATE_DECL(TransferringPanelSet);
 };
 
 } // namespace AC
@@ -82,7 +82,9 @@ Frame::Frame()
 //.${AOs::Frame::SM} .........................................................
 Q_STATE_DEF(Frame, initial) {
     //.${AOs::Frame::SM::initial}
+    BSP::initializeFrame();
     subscribe(TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG);
+    subscribe(PANEL_SET_TRANSFERRED_SIG);
     subscribe(FRAME_TRANSFERRED_SIG);
     return tran(&Inactive);
 }
@@ -116,8 +118,8 @@ Q_STATE_DEF(Frame, Active) {
         //.${AOs::Frame::SM::Active}
         case Q_ENTRY_SIG: {
             BSP::ledOn();
-            panel_set_index_col_ = 0;
-            panel_set_index_row_ = 0;
+            panel_set_row_index_ = 0;
+            panel_set_col_index_ = 0;
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -132,12 +134,9 @@ Q_STATE_DEF(Frame, Active) {
 Q_STATE_DEF(Frame, TransferringGrayscaleFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Frame::SM::Active::TransferringGrayscaleFrame}
-        case Q_ENTRY_SIG: {
-            delay(10);
-            static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
-            QF::PUBLISH(&frameTransferredEvt, this);
-            status_ = Q_RET_HANDLED;
+        //.${AOs::Frame::SM::Active::TransferringGray~::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&TransferringPanelSet);
             break;
         }
         //.${AOs::Frame::SM::Active::TransferringGray~::FRAME_TRANSFERRED}
@@ -152,10 +151,30 @@ Q_STATE_DEF(Frame, TransferringGrayscaleFrame) {
     }
     return status_;
 }
-//.${AOs::Frame::SM::Active::TransferringGray~::DisplayingPanelSet} ..........
-Q_STATE_DEF(Frame, DisplayingPanelSet) {
+//.${AOs::Frame::SM::Active::TransferringGray~::TransferringPanelSet} ........
+Q_STATE_DEF(Frame, TransferringPanelSet) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPanelSet}
+        case Q_ENTRY_SIG: {
+            BSP::enablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
+            BSP::transferPanelSet(panel_buffer_, AC::constants::byte_count_per_panel_grayscale);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPanelSet}
+        case Q_EXIT_SIG: {
+            BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPane~::PANEL_SET_TRANSFERRED}
+        case PANEL_SET_TRANSFERRED_SIG: {
+            static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
+            QF::PUBLISH(&frameTransferredEvt, this);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&TransferringGrayscaleFrame);
             break;

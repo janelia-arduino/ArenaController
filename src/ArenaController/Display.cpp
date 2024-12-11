@@ -33,6 +33,7 @@ public:
 
 private:
     std::uint8_t const (*panel_buffer_)[];
+    std::uint32_t display_frequency_hz_;
 
 public:
     Display();
@@ -81,6 +82,7 @@ Display::Display()
 //.${AOs::Display::SM} .......................................................
 Q_STATE_DEF(Display, initial) {
     //.${AOs::Display::SM::initial}
+    BSP::initializeDisplay();
     subscribe(DEACTIVATE_DISPLAY_SIG);
     subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
     subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
@@ -94,6 +96,7 @@ Q_STATE_DEF(Display, Inactive) {
         //.${AOs::Display::SM::Inactive::DISPLAY_UNIFORM_GRAYSCALE_FRAMES}
         case DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG: {
             panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)->panel_buffer;
+            display_frequency_hz_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)->display_frequency_hz;
             status_ = tran(&DisplayingUniformGrayscaleFrames);
             break;
         }
@@ -126,7 +129,7 @@ Q_STATE_DEF(Display, DisplayingUniformGrayscaleFrames) {
     switch (e->sig) {
         //.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames}
         case Q_ENTRY_SIG: {
-            BSP::armDisplayFrameTimer(200);
+            BSP::armDisplayFrameTimer(display_frequency_hz_);
             status_ = Q_RET_HANDLED;
             break;
         }
