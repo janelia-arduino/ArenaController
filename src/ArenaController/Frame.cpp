@@ -172,7 +172,7 @@ Q_STATE_DEF(Frame, TransferringPanelSet) {
         case PANEL_SET_TRANSFERRED_SIG: {
             static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
             QF::PUBLISH(&frameTransferredEvt, this);
-            status_ = Q_RET_HANDLED;
+            status_ = tran(&TransferringPanelSet);
             break;
         }
         default: {

@@ -383,20 +383,20 @@ panel_set_col_index_ = 0;</entry>
       <state name="TransferringPanelSet">
        <entry brief="enablePanelSetSelectPin(); transferPanelSet()">BSP::enablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
 BSP::transferPanelSet(panel_buffer_, AC::constants::byte_count_per_panel_grayscale);</entry>
-       <exit brief="disablePanelSetSelectPin()">BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);</exit>
-       <tran trig="PANEL_SET_TRANSFERRED">
+       <exit brief="disablePanelSetSelectPin(); updatePanelSetSelectIndicies()">BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);</exit>
+       <tran trig="PANEL_SET_TRANSFERRED" target="..">
         <action>static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
 QF::PUBLISH(&amp;frameTransferredEvt, this);</action>
-        <tran_glyph conn="12,44,3,-1,24">
-         <action box="0,-2,22,2"/>
+        <tran_glyph conn="28,50,2,2,2,9,-2">
+         <action box="-7,3,22,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="12,34,61,16">
+       <state_glyph node="22,34,50,16">
         <entry box="1,2,49,2"/>
-        <exit box="1,4,23,2"/>
+        <exit box="1,4,48,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="10,27,71,29"/>
+      <state_glyph node="10,27,71,38"/>
      </state>
      <state_glyph node="7,21,80,49">
       <entry box="1,2,25,2"/>
