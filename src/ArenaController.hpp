@@ -33,8 +33,8 @@ enum ArenaControllerSignals {
 
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG,
-    DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG,
-    FRAME_DISPLAYED_SIG,
+    TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG,
+    FRAME_TRANSFERRED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
     MAX_PUB_SIG,    // the last published signal
@@ -77,8 +77,8 @@ class DisplayUniformGrayscaleFramesEvt : public QP::QEvt {
 public:
     std::uint8_t const (*panel_buffer)[];
 };
-//.${Shared::DisplayUniformGrayscaleFrameEvt} ................................
-class DisplayUniformGrayscaleFrameEvt : public QP::QEvt {
+//.${Shared::TransferUniformGrayscaleFrameEvt} ...............................
+class TransferUniformGrayscaleFrameEvt : public QP::QEvt {
 public:
     std::uint8_t const (*panel_buffer)[];
 };

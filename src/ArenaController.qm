@@ -154,7 +154,7 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
      <action>subscribe(DEACTIVATE_DISPLAY_SIG);
 subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
-subscribe(FRAME_DISPLAYED_SIG);</action>
+subscribe(FRAME_TRANSFERRED_SIG);</action>
      <initial_glyph conn="40,4,4,0,3">
       <action box="0,-2,10,2"/>
      </initial_glyph>
@@ -184,22 +184,22 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
       </initial>
       <state name="WaitingToDisplayFrame">
        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../2">
-        <tran_glyph conn="41,41,2,0,4">
+        <tran_glyph conn="41,41,2,3,4">
          <action box="1,1,22,2"/>
         </tran_glyph>
        </tran>
        <state_glyph node="32,34,20,7"/>
       </state>
       <state name="DisplayingFrame">
-       <entry brief="displayFrame()">static AC::DisplayUniformGrayscaleFrameEvt displayUniformGrayscaleFrameEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG, 0U, 0U};
-displayUniformGrayscaleFrameEvt.panel_buffer = panel_buffer_;
-QF::PUBLISH(&amp;displayUniformGrayscaleFrameEvt, this);</entry>
-       <tran trig="FRAME_DISPLAYED" target="../../1">
-        <tran_glyph conn="34,48,3,3,-4,-10,2">
-         <action box="-19,-6,18,2"/>
+       <entry brief="transferFrame()">static AC::TransferUniformGrayscaleFrameEvt transferUniformGrayscaleFrameEvt = { AC::TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG, 0U, 0U};
+transferUniformGrayscaleFrameEvt.panel_buffer = panel_buffer_;
+QF::PUBLISH(&amp;transferUniformGrayscaleFrameEvt, this);</entry>
+       <tran trig="FRAME_TRANSFERRED" target="../../1">
+        <tran_glyph conn="34,48,3,1,-4,-10,2">
+         <action box="-19,1,18,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="34,45,14,6">
+       <state_glyph node="34,45,17,6">
         <entry box="1,2,13,2"/>
        </state_glyph>
       </state>
@@ -334,21 +334,23 @@ QF::PUBLISH(&amp;displayUniformGrayscaleFrameEvt, this);</entry>
    </attribute>
    <attribute name="panel_set_index_col_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="panel_set_index_row_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG);
-subscribe(FRAME_DISPLAYED_SIG);</action>
+     <action>subscribe(TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG);
+subscribe(FRAME_TRANSFERRED_SIG);</action>
      <initial_glyph conn="37,4,4,0,4">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Inactive">
      <entry brief="ledOff()">BSP::ledOff();</entry>
-     <tran trig="DISPLAY_UNIFORM_GRAYSCALE_FRAME" target="../../2/0">
-      <tran_glyph conn="36,17,2,0,13">
+     <tran trig="TRANSFER_UNIFORM_GRAYSCALE_FRAME" target="../../2/0">
+      <action>panel_buffer_ = Q_EVT_CAST(TransferUniformGrayscaleFrameEvt)-&gt;panel_buffer;</action>
+      <tran_glyph conn="36,17,2,0,10">
        <action box="0,1,32,2"/>
       </tran_glyph>
      </tran>
@@ -357,22 +359,32 @@ subscribe(FRAME_DISPLAYED_SIG);</action>
      </state_glyph>
     </state>
     <state name="Active">
-     <entry brief="ledOn()">BSP::ledOn();</entry>
-     <state name="DisplayingUniformGrayscaleFrame">
-      <entry brief="delay(10)">delay(2);
-static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
-QF::PUBLISH(&amp;frameDisplayedEvt, this);</entry>
-      <tran trig="FRAME_DISPLAYED" target="../../../1">
-       <tran_glyph conn="54,37,1,1,23,-24,-33">
-        <action box="2,-27,17,2"/>
+     <entry brief="resetPanelSetSelectIndicies()">BSP::ledOn();
+panel_set_index_col_ = 0;
+panel_set_index_row_ = 0;</entry>
+     <state name="TransferringGrayscaleFrame">
+      <entry brief="delay(10)">delay(10);
+static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
+QF::PUBLISH(&amp;frameTransferredEvt, this);</entry>
+      <tran trig="FRAME_TRANSFERRED" target="../../../1">
+       <tran_glyph conn="70,34,1,1,8,-21,-34">
+        <action box="-25,-24,20,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="21,30,33,18">
+      <state name="DisplayingPanelSet">
+       <entry brief="enablePanelSetSelectPin()"/>
+       <exit brief="disablePanelSetSelectPin()"/>
+       <state_glyph node="24,34,34,16">
+        <entry box="1,2,23,2"/>
+        <exit box="1,4,23,2"/>
+       </state_glyph>
+      </state>
+      <state_glyph node="21,27,49,29">
        <entry box="1,2,18,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="7,23,80,47">
-      <entry box="1,2,11,2"/>
+     <state_glyph node="7,21,80,49">
+      <entry box="1,2,25,2"/>
      </state_glyph>
     </state>
     <state_diagram size="96,73"/>
@@ -384,7 +396,7 @@ QF::PUBLISH(&amp;frameDisplayedEvt, this);</entry>
   <class name="DisplayUniformGrayscaleFramesEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
   </class>
-  <class name="DisplayUniformGrayscaleFrameEvt" superclass="qpcpp::QEvt">
+  <class name="TransferUniformGrayscaleFrameEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
@@ -422,8 +434,8 @@ enum ArenaControllerSignals {
 
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG,
-    DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG,
-    FRAME_DISPLAYED_SIG,
+    TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG,
+    FRAME_TRANSFERRED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
     MAX_PUB_SIG,    // the last published signal

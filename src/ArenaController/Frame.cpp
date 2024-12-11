@@ -34,6 +34,7 @@ public:
 private:
     std::uint8_t panel_set_index_col_;
     std::uint8_t panel_set_index_row_;
+    std::uint8_t const (*panel_buffer_)[];
 
 public:
     Frame();
@@ -42,7 +43,8 @@ protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
-    Q_STATE_DECL(DisplayingUniformGrayscaleFrame);
+    Q_STATE_DECL(TransferringGrayscaleFrame);
+    Q_STATE_DECL(DisplayingPanelSet);
 };
 
 } // namespace AC
@@ -80,8 +82,8 @@ Frame::Frame()
 //.${AOs::Frame::SM} .........................................................
 Q_STATE_DEF(Frame, initial) {
     //.${AOs::Frame::SM::initial}
-    subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG);
-    subscribe(FRAME_DISPLAYED_SIG);
+    subscribe(TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG);
+    subscribe(FRAME_TRANSFERRED_SIG);
     return tran(&Inactive);
 }
 //.${AOs::Frame::SM::Inactive} ...............................................
@@ -94,9 +96,10 @@ Q_STATE_DEF(Frame, Inactive) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Frame::SM::Inactive::DISPLAY_UNIFORM_GRAYSCALE_FRAME}
-        case DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG: {
-            status_ = tran(&DisplayingUniformGrayscaleFrame);
+        //.${AOs::Frame::SM::Inactive::TRANSFER_UNIFORM_GRAYSCALE_FRAME}
+        case TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG: {
+            panel_buffer_ = Q_EVT_CAST(TransferUniformGrayscaleFrameEvt)->panel_buffer;
+            status_ = tran(&TransferringGrayscaleFrame);
             break;
         }
         default: {
@@ -113,6 +116,8 @@ Q_STATE_DEF(Frame, Active) {
         //.${AOs::Frame::SM::Active}
         case Q_ENTRY_SIG: {
             BSP::ledOn();
+            panel_set_index_col_ = 0;
+            panel_set_index_row_ = 0;
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -123,25 +128,36 @@ Q_STATE_DEF(Frame, Active) {
     }
     return status_;
 }
-//.${AOs::Frame::SM::Active::DisplayingUniformGrayscaleFrame} ................
-Q_STATE_DEF(Frame, DisplayingUniformGrayscaleFrame) {
+//.${AOs::Frame::SM::Active::TransferringGrayscaleFrame} .....................
+Q_STATE_DEF(Frame, TransferringGrayscaleFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Frame::SM::Active::DisplayingUniformGrayscaleFrame}
+        //.${AOs::Frame::SM::Active::TransferringGrayscaleFrame}
         case Q_ENTRY_SIG: {
-            delay(2);
-            static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
-            QF::PUBLISH(&frameDisplayedEvt, this);
+            delay(10);
+            static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
+            QF::PUBLISH(&frameTransferredEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Frame::SM::Active::DisplayingUnifor~::FRAME_DISPLAYED}
-        case FRAME_DISPLAYED_SIG: {
+        //.${AOs::Frame::SM::Active::TransferringGray~::FRAME_TRANSFERRED}
+        case FRAME_TRANSFERRED_SIG: {
             status_ = tran(&Inactive);
             break;
         }
         default: {
             status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Frame::SM::Active::TransferringGray~::DisplayingPanelSet} ..........
+Q_STATE_DEF(Frame, DisplayingPanelSet) {
+    QP::QState status_;
+    switch (e->sig) {
+        default: {
+            status_ = super(&TransferringGrayscaleFrame);
             break;
         }
     }
