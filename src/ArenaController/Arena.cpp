@@ -127,10 +127,6 @@ Q_STATE_DEF(Arena, AllOn) {
         case Q_ENTRY_SIG: {
             static AC::DisplayUniformGrayscaleFramesEvt displayUniformGrayscaleFramesEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG, 0U, 0U};
             displayUniformGrayscaleFramesEvt.panel_buffer = &AC::constants::all_on_grayscale_pattern;
-            Serial.print("displayUniformGrayscaleFramesEvt.panel_buffer: ");
-            Serial.println((long long)displayUniformGrayscaleFramesEvt.panel_buffer);
-            Serial.print("&AC::constants::all_on_grayscale_pattern: ");
-            Serial.println((long long)(&AC::constants::all_on_grayscale_pattern));
             QF::PUBLISH(&displayUniformGrayscaleFramesEvt, this);
             status_ = Q_RET_HANDLED;
             break;

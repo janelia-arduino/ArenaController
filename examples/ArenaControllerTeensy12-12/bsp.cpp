@@ -87,7 +87,7 @@ static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SI
 static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetClientConnectedEvt = { AC::ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
 static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
-static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
+// static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -251,7 +251,7 @@ void BSP::displayFrame()
   ledOn();
   delay(2);
   ledOff();
-  QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
+  // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 
 //----------------------------------------------------------------------------

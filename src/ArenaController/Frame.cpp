@@ -41,6 +41,8 @@ public:
 protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Inactive);
+    Q_STATE_DECL(Active);
+    Q_STATE_DECL(DisplayingUniformGrayscaleFrame);
 };
 
 } // namespace AC
@@ -78,14 +80,68 @@ Frame::Frame()
 //.${AOs::Frame::SM} .........................................................
 Q_STATE_DEF(Frame, initial) {
     //.${AOs::Frame::SM::initial}
+    subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG);
+    subscribe(FRAME_DISPLAYED_SIG);
     return tran(&Inactive);
 }
 //.${AOs::Frame::SM::Inactive} ...............................................
 Q_STATE_DEF(Frame, Inactive) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::Frame::SM::Inactive}
+        case Q_ENTRY_SIG: {
+            BSP::ledOff();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Frame::SM::Inactive::DISPLAY_UNIFORM_GRAYSCALE_FRAME}
+        case DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG: {
+            status_ = tran(&DisplayingUniformGrayscaleFrame);
+            break;
+        }
         default: {
             status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Frame::SM::Active} .................................................
+Q_STATE_DEF(Frame, Active) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Frame::SM::Active}
+        case Q_ENTRY_SIG: {
+            BSP::ledOn();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Frame::SM::Active::DisplayingUniformGrayscaleFrame} ................
+Q_STATE_DEF(Frame, DisplayingUniformGrayscaleFrame) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Frame::SM::Active::DisplayingUniformGrayscaleFrame}
+        case Q_ENTRY_SIG: {
+            delay(2);
+            static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
+            QF::PUBLISH(&frameDisplayedEvt, this);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Frame::SM::Active::DisplayingUnifor~::FRAME_DISPLAYED}
+        case FRAME_DISPLAYED_SIG: {
+            status_ = tran(&Inactive);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
             break;
         }
     }

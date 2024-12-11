@@ -91,12 +91,6 @@ Q_STATE_DEF(Display, initial) {
 Q_STATE_DEF(Display, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Inactive}
-        case Q_ENTRY_SIG: {
-            BSP::ledOff();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::Display::SM::Inactive::DISPLAY_UNIFORM_GRAYSCALE_FRAMES}
         case DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG: {
             panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)->panel_buffer;
@@ -132,8 +126,6 @@ Q_STATE_DEF(Display, DisplayingUniformGrayscaleFrames) {
     switch (e->sig) {
         //.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames}
         case Q_ENTRY_SIG: {
-            Serial.print("panel_buffer_: ");
-            Serial.println((long long)panel_buffer_);
             BSP::armDisplayFrameTimer(200);
             status_ = Q_RET_HANDLED;
             break;
@@ -178,7 +170,9 @@ Q_STATE_DEF(Display, DisplayingFrame) {
     switch (e->sig) {
         //.${AOs::Display::SM::Active::DisplayingUnifor~::DisplayingFrame}
         case Q_ENTRY_SIG: {
-            BSP::displayFrame();
+            static AC::DisplayUniformGrayscaleFrameEvt displayUniformGrayscaleFrameEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG, 0U, 0U};
+            displayUniformGrayscaleFrameEvt.panel_buffer = panel_buffer_;
+            QF::PUBLISH(&displayUniformGrayscaleFrameEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }

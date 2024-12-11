@@ -33,6 +33,7 @@ enum ArenaControllerSignals {
 
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG,
+    DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
@@ -73,6 +74,11 @@ namespace AC {
 class CommandEvt : public QP::QEvt {};
 //.${Shared::DisplayUniformGrayscaleFramesEvt} ...............................
 class DisplayUniformGrayscaleFramesEvt : public QP::QEvt {
+public:
+    std::uint8_t const (*panel_buffer)[];
+};
+//.${Shared::DisplayUniformGrayscaleFrameEvt} ................................
+class DisplayUniformGrayscaleFrameEvt : public QP::QEvt {
 public:
     std::uint8_t const (*panel_buffer)[];
 };

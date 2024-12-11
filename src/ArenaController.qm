@@ -56,10 +56,6 @@ subscribe(ALL_OFF_SIG);</action>
      <state name="AllOn">
       <entry brief="displayAllOnFrames()">static AC::DisplayUniformGrayscaleFramesEvt displayUniformGrayscaleFramesEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG, 0U, 0U};
 displayUniformGrayscaleFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
-Serial.print(&quot;displayUniformGrayscaleFramesEvt.panel_buffer: &quot;);
-Serial.println((long long)displayUniformGrayscaleFramesEvt.panel_buffer);
-Serial.print(&quot;&amp;AC::constants::all_on_grayscale_pattern: &quot;);
-Serial.println((long long)(&amp;AC::constants::all_on_grayscale_pattern));
 QF::PUBLISH(&amp;displayUniformGrayscaleFramesEvt, this);</entry>
       <state_glyph node="42,32,25,6">
        <entry box="1,2,20,2"/>
@@ -159,32 +155,27 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
 subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
 subscribe(FRAME_DISPLAYED_SIG);</action>
-     <initial_glyph conn="40,7,4,0,4">
+     <initial_glyph conn="40,4,4,0,3">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Inactive">
-     <entry brief="ledOff()">BSP::ledOff();</entry>
      <tran trig="DISPLAY_UNIFORM_GRAYSCALE_FRAMES" target="../../2/1">
       <action>panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;panel_buffer;</action>
-      <tran_glyph conn="46,13,1,1,40,13,-12">
-       <action box="5,-2,34,2"/>
+      <tran_glyph conn="40,14,2,0,10">
+       <action box="1,1,34,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="34,11,12,7">
-      <entry box="1,2,9,2"/>
-     </state_glyph>
+     <state_glyph node="34,7,12,7"/>
     </state>
     <state name="Active">
      <tran trig="DEACTIVATE_DISPLAY" target="../../1">
-      <tran_glyph conn="6,23,3,3,-2,-10,30">
-       <action box="5,-12,18,3"/>
+      <tran_glyph conn="6,23,3,3,-2,-14,30">
+       <action box="5,-16,18,3"/>
       </tran_glyph>
      </tran>
      <state name="DisplayingUniformGrayscaleFrames">
-      <entry brief="armDisplayFrameTimer(200Hz)">Serial.print(&quot;panel_buffer_: &quot;);
-Serial.println((long long)panel_buffer_);
-BSP::armDisplayFrameTimer(200);</entry>
+      <entry brief="armDisplayFrameTimer(200Hz)">BSP::armDisplayFrameTimer(200);</entry>
       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
       <initial target="../1">
        <initial_glyph conn="41,31,4,0,3">
@@ -200,7 +191,9 @@ BSP::armDisplayFrameTimer(200);</entry>
        <state_glyph node="32,34,20,7"/>
       </state>
       <state name="DisplayingFrame">
-       <entry brief="displayFrame()">BSP::displayFrame();</entry>
+       <entry brief="displayFrame()">static AC::DisplayUniformGrayscaleFrameEvt displayUniformGrayscaleFrameEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG, 0U, 0U};
+displayUniformGrayscaleFrameEvt.panel_buffer = panel_buffer_;
+QF::PUBLISH(&amp;displayUniformGrayscaleFrameEvt, this);</entry>
        <tran trig="FRAME_DISPLAYED" target="../../1">
         <tran_glyph conn="34,48,3,3,-4,-10,2">
          <action box="-19,-6,18,2"/>
@@ -346,20 +339,52 @@ BSP::armDisplayFrameTimer(200);</entry>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <initial_glyph conn="37,9,4,0,4">
+     <action>subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG);
+subscribe(FRAME_DISPLAYED_SIG);</action>
+     <initial_glyph conn="37,4,4,0,4">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Inactive">
-     <state_glyph node="28,13,16,9"/>
+     <entry brief="ledOff()">BSP::ledOff();</entry>
+     <tran trig="DISPLAY_UNIFORM_GRAYSCALE_FRAME" target="../../2/0">
+      <tran_glyph conn="36,17,2,0,13">
+       <action box="0,1,32,2"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="28,8,16,9">
+      <entry box="1,2,12,2"/>
+     </state_glyph>
     </state>
-    <state_diagram size="80,50"/>
+    <state name="Active">
+     <entry brief="ledOn()">BSP::ledOn();</entry>
+     <state name="DisplayingUniformGrayscaleFrame">
+      <entry brief="delay(10)">delay(2);
+static QEvt const frameDisplayedEvt = { AC::FRAME_DISPLAYED_SIG, 0U, 0U};
+QF::PUBLISH(&amp;frameDisplayedEvt, this);</entry>
+      <tran trig="FRAME_DISPLAYED" target="../../../1">
+       <tran_glyph conn="54,37,1,1,23,-24,-33">
+        <action box="2,-27,17,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="21,30,33,18">
+       <entry box="1,2,18,2"/>
+      </state_glyph>
+     </state>
+     <state_glyph node="7,23,80,47">
+      <entry box="1,2,11,2"/>
+     </state_glyph>
+    </state>
+    <state_diagram size="96,73"/>
    </statechart>
   </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
   <class name="DisplayUniformGrayscaleFramesEvt" superclass="qpcpp::QEvt">
+   <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+  </class>
+  <class name="DisplayUniformGrayscaleFrameEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
@@ -397,6 +422,7 @@ enum ArenaControllerSignals {
 
     DEACTIVATE_DISPLAY_SIG,
     DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG,
+    DISPLAY_UNIFORM_GRAYSCALE_FRAME_SIG,
     FRAME_DISPLAYED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
