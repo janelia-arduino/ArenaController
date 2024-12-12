@@ -13,9 +13,9 @@
   <item id="AOs::Display::SM">0,33,1106,625</item>
   <item id="AOs::Frame::SM">0,0,874,625,*</item>
   <item id=".::ArenaController.hpp">-129,0,1003,765</item>
-  <item id="./ArenaController::ArenaController.cpp">278,358,596,300</item>
+  <item id="./ArenaController::ArenaController.cpp">0,358,596,300</item>
   <item id=".::bsp.hpp">0,0,1003,765</item>
-  <item id=".::Constants.hpp">278,0,596,300</item>
+  <item id=".::Constants.hpp">0,33,874,625</item>
  </group>
  <group name="search">
   <item name="options">2032128</item>

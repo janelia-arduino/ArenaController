@@ -294,6 +294,16 @@ void BSP::displayFrame()
   // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 
+uint8_t BSP::getPanelSetMaxRow()
+{
+  return AC::constants::panel_set_max_row;
+}
+
+uint8_t BSP::getPanelSetMaxCol()
+{
+  return AC::constants::panel_set_max_col;
+}
+
 void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
 {
   for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)

@@ -49,8 +49,11 @@ public:
     static void disarmDisplayFrameTimer();
     static void displayFrame();
 
-    static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
-    static void disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
+    static uint8_t getPanelSetMaxRow();
+    static uint8_t getPanelSetMaxCol();
+
+    static void enablePanelSetSelectPin(uint8_t index_row, uint8_t index_col);
+    static void disablePanelSetSelectPin(uint8_t index_row, uint8_t index_col);
     static void transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count);
 
 };

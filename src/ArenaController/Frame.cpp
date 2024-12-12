@@ -32,9 +32,11 @@ public:
     static Frame instance;
 
 private:
-    std::uint8_t panel_set_row_index_;
-    std::uint8_t panel_set_col_index_;
+    std::uint8_t panel_set_index_row_;
+    std::uint8_t panel_set_index_col_;
     std::uint8_t const (*panel_buffer_)[];
+    std::uint8_t panel_set_max_row_;
+    std::uint8_t panel_set_max_col_;
 
 public:
     Frame();
@@ -101,6 +103,8 @@ Q_STATE_DEF(Frame, Inactive) {
         //.${AOs::Frame::SM::Inactive::TRANSFER_UNIFORM_GRAYSCALE_FRAME}
         case TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG: {
             panel_buffer_ = Q_EVT_CAST(TransferUniformGrayscaleFrameEvt)->panel_buffer;
+            panel_set_max_row_ = BSP::getPanelSetMaxRow();
+            panel_set_max_col_ = BSP::getPanelSetMaxCol();
             status_ = tran(&TransferringGrayscaleFrame);
             break;
         }
@@ -118,8 +122,8 @@ Q_STATE_DEF(Frame, Active) {
         //.${AOs::Frame::SM::Active}
         case Q_ENTRY_SIG: {
             BSP::ledOn();
-            panel_set_row_index_ = 0;
-            panel_set_col_index_ = 0;
+            panel_set_index_row_ = 0;
+            panel_set_index_col_ = 0;
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -157,22 +161,39 @@ Q_STATE_DEF(Frame, TransferringPanelSet) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPanelSet}
         case Q_ENTRY_SIG: {
-            BSP::enablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
+            BSP::enablePanelSetSelectPin(panel_set_index_row_, panel_set_index_col_);
             BSP::transferPanelSet(panel_buffer_, AC::constants::byte_count_per_panel_grayscale);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPanelSet}
         case Q_EXIT_SIG: {
-            BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
+            BSP::disablePanelSetSelectPin(panel_set_index_row_, panel_set_index_col_);
+            ++panel_set_index_row_;
+            if (panel_set_index_row_ == panel_set_max_row_)
+            {
+                panel_set_index_row_ = 0;
+                ++panel_set_index_col_;
+            }
+            if (panel_set_index_col_ == panel_set_max_col_)
+            {
+                panel_set_index_col_ = 0;
+            }
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPane~::PANEL_SET_TRANSFERRED}
         case PANEL_SET_TRANSFERRED_SIG: {
-            static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
-            QF::PUBLISH(&frameTransferredEvt, this);
-            status_ = tran(&TransferringPanelSet);
+            //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPane~::PANEL_SET_TRANSF~::[frameNotTransferred()]}
+            if ((panel_set_index_row_ != (panel_set_max_row_-1)) || (panel_set_index_col_ != (panel_set_max_col_-1))) {
+                status_ = tran(&TransferringPanelSet);
+            }
+            //.${AOs::Frame::SM::Active::TransferringGray~::TransferringPane~::PANEL_SET_TRANSF~::[else]}
+            else {
+                static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
+                QF::PUBLISH(&frameTransferredEvt, this);
+                status_ = Q_RET_HANDLED;
+            }
             break;
         }
         default: {
