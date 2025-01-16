@@ -53,6 +53,7 @@ enum ArenaControllerSignals {
     ETHERNET_SERVER_INITIALIZED_SIG,
     ETHERNET_CLIENT_CONNECTED_SIG,
 
+    WATCHDOG_TIMEOUT_SIG, // signal for Watchdog timeout event
     SERIAL_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
     ETHERNET_TIMEOUT_SIG, // signal for EthernetCommandInterface timeout event
 
@@ -89,6 +90,7 @@ extern QP::QActive * const AO_Display;
 extern QP::QActive * const AO_SerialCommandInterface;
 extern QP::QActive * const AO_EthernetCommandInterface;
 extern QP::QActive * const AO_Frame;
+extern QP::QActive * const AO_Watchdog;
 
 } // namespace AC
 //.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

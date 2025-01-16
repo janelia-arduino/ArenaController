@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Watchdog_t4.h>
 #include <QNEthernet.h>
 #include <TimerOne.h>
 #include <TimerThree.h>
@@ -84,8 +85,11 @@ static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_
 static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateEthernetCommandInterfaceEvt = { AC::DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const serialReadyEvt = { AC::SERIAL_READY_SIG, 0U, 0U};
+
+static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
 static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
 static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
+
 static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
 static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
@@ -93,11 +97,36 @@ static QEvt const ethernetClientConnectedEvt = { AC::ETHERNET_CLIENT_CONNECTED_S
 static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
 static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
 
+static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
 
 //----------------------------------------------------------------------------
 // Local functions
+void processCommandString(String command)
+{
+  if (command.equalsIgnoreCase("RESET"))
+  {
+    QF::PUBLISH(&resetEvt, &l_TIMER_ID);
+  }
+  if (command.equalsIgnoreCase("LED_ON"))
+  {
+    BSP::ledOn();
+  }
+  else if (command.equalsIgnoreCase("LED_OFF"))
+  {
+    BSP::ledOff();
+  }
+  else if (command.equalsIgnoreCase("ALL_ON"))
+  {
+    QF::PUBLISH(&allOnEvt, &l_TIMER_ID);
+  }
+  else if (command.equalsIgnoreCase("ALL_OFF"))
+  {
+    QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
+  }
+}
+
 
 //----------------------------------------------------------------------------
 // BSP functions
@@ -109,6 +138,7 @@ void BSP::init()
 
   // setup pins
   pinMode(LED_BUILTIN, OUTPUT);
+  ledOff();
 
   for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
   {
@@ -128,6 +158,29 @@ void BSP::init()
   QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
 #endif
+}
+
+void BSP::ledOff()
+{
+  digitalWriteFast(LED_BUILTIN, LOW);
+}
+
+void BSP::ledOn()
+{
+  digitalWriteFast(LED_BUILTIN, HIGH);
+}
+
+void BSP::initializeWatchdog()
+{
+  WDT_timings_t config;
+  config.trigger = AC::constants::watchdog_delay_s; /* in seconds, 0->128 */
+  config.timeout = AC::constants::watchdog_delay_s; /* in seconds, 0->128 */
+  wdt.begin(config);
+}
+
+void BSP::feedWatchdog()
+{
+  wdt.feed();
 }
 
 void BSP::initializeArena()
@@ -196,14 +249,7 @@ void BSP::pollSerialCommand()
   if (AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available() > 0)
   {
     String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
-    if (command.equalsIgnoreCase("ALL_ON"))
-    {
-      QF::PUBLISH(&allOnEvt, &l_TIMER_ID);
-    }
-    else if (command.equalsIgnoreCase("ALL_OFF"))
-    {
-      QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
-    }
+    processCommandString(command);
   }
 }
 
@@ -256,16 +302,6 @@ void BSP::pollEthernetCommand()
   // Serial.println(Ethernet.localIP());
 }
 
-void BSP::ledOff()
-{
-  digitalWriteFast(LED_BUILTIN, LOW);
-}
-
-void BSP::ledOn()
-{
-  digitalWriteFast(LED_BUILTIN, HIGH);
-}
-
 void displayFrameTimerHandler()
 {
   QF::PUBLISH(&displayFrameTimeoutEvt, &l_TIMER_ID);
@@ -288,9 +324,7 @@ void BSP::disarmDisplayFrameTimer()
 
 void BSP::displayFrame()
 {
-  ledOn();
   delay(2);
-  ledOff();
   // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 

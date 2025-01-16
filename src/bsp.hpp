@@ -26,6 +26,12 @@ public:
 
     static void init();
 
+    static void ledOff();
+    static void ledOn();
+
+    static void initializeWatchdog();
+    static void feedWatchdog();
+
     static void initializeArena();
     static void initializeDisplay();
     static void initializeFrame();
@@ -41,9 +47,6 @@ public:
     static void beginEthernetServer();
     static void checkForEthernetClient();
     static void pollEthernetCommand();
-
-    static void ledOff();
-    static void ledOn();
 
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();

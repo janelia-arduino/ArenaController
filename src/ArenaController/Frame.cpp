@@ -94,12 +94,6 @@ Q_STATE_DEF(Frame, initial) {
 Q_STATE_DEF(Frame, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Frame::SM::Inactive}
-        case Q_ENTRY_SIG: {
-            BSP::ledOff();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::Frame::SM::Inactive::TRANSFER_UNIFORM_GRAYSCALE_FRAME}
         case TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG: {
             panel_buffer_ = Q_EVT_CAST(TransferUniformGrayscaleFrameEvt)->panel_buffer;
@@ -121,7 +115,6 @@ Q_STATE_DEF(Frame, Active) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Active}
         case Q_ENTRY_SIG: {
-            BSP::ledOn();
             panel_set_index_row_ = 0;
             panel_set_index_col_ = 0;
             status_ = Q_RET_HANDLED;

@@ -356,7 +356,6 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
      </initial_glyph>
     </initial>
     <state name="Inactive">
-     <entry brief="ledOff()">BSP::ledOff();</entry>
      <tran trig="TRANSFER_UNIFORM_GRAYSCALE_FRAME" target="../../2/0">
       <action>panel_buffer_ = Q_EVT_CAST(TransferUniformGrayscaleFrameEvt)-&gt;panel_buffer;
 panel_set_max_row_ = BSP::getPanelSetMaxRow();
@@ -365,13 +364,10 @@ panel_set_max_col_ = BSP::getPanelSetMaxCol();</action>
        <action box="0,1,32,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="28,8,16,9">
-      <entry box="1,2,12,2"/>
-     </state_glyph>
+     <state_glyph node="28,8,16,9"/>
     </state>
     <state name="Active">
-     <entry brief="ledOn(); resetIndicies();">BSP::ledOn();
-panel_set_index_row_ = 0;
+     <entry brief="resetIndicies();">panel_set_index_row_ = 0;
 panel_set_index_col_ = 0;</entry>
      <state name="TransferringGrayscaleFrame">
       <initial target="../2">
@@ -431,6 +427,46 @@ QF::PUBLISH(&amp;frameTransferredEvt, this);</action>
     <state_diagram size="96,73"/>
    </statechart>
   </class>
+  <class name="Watchdog" superclass="qpcpp::QActive">
+   <attribute name="instance" type="Watchdog" visibility="0x00" properties="0x01"/>
+   <attribute name="watchdog_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
+   <operation name="Watchdog" type="" visibility="0x00" properties="0x00">
+    <code>: QActive(Q_STATE_CAST(&amp;Watchdog::initial)),
+    watchdog_time_evt_(this, WATCHDOG_TIMEOUT_SIG, 0U)</code>
+   </operation>
+   <statechart properties="0x00">
+    <initial target="../1">
+     <action>BSP::initializeWatchdog();
+subscribe(RESET_SIG);</action>
+     <initial_glyph conn="23,4,4,0,4">
+      <action box="0,-2,10,2"/>
+     </initial_glyph>
+    </initial>
+    <state name="Feeding">
+     <entry brief="armWatchdogTimer(10Hz)">watchdog_time_evt_.armX(BSP::TICKS_PER_SEC/10, BSP::TICKS_PER_SEC/10);</entry>
+     <exit brief="disarmWatchdogTimer()">watchdog_time_evt_.disarm();</exit>
+     <tran trig="WATCHDOG_TIMEOUT">
+      <action brief="feedWatchdog()">BSP::feedWatchdog();</action>
+      <tran_glyph conn="14,18,3,-1,20">
+       <action box="0,-2,20,6"/>
+      </tran_glyph>
+     </tran>
+     <tran trig="RESET" target="../../2">
+      <tran_glyph conn="24,25,2,0,6">
+       <action box="1,2,10,2"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="14,8,28,17">
+      <entry box="1,2,23,2"/>
+      <exit box="1,4,23,2"/>
+     </state_glyph>
+    </state>
+    <state name="Resetting">
+     <state_glyph node="14,31,28,13"/>
+    </state>
+    <state_diagram size="80,50"/>
+   </statechart>
+  </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
@@ -455,6 +491,9 @@ QF::PUBLISH(&amp;frameTransferredEvt, this);</action>
   </attribute>
   <attribute name="AO_Frame" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Frame::instance;</code>
+  </attribute>
+  <attribute name="AO_Watchdog" type="QP::QActive * const" visibility="0x00" properties="0x00">
+   <code>= &amp;Watchdog::instance;</code>
   </attribute>
  </package>
  <directory name=".">
@@ -496,6 +535,7 @@ enum ArenaControllerSignals {
     ETHERNET_SERVER_INITIALIZED_SIG,
     ETHERNET_CLIENT_CONNECTED_SIG,
 
+    WATCHDOG_TIMEOUT_SIG, // signal for Watchdog timeout event
     SERIAL_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
     ETHERNET_TIMEOUT_SIG, // signal for EthernetCommandInterface timeout event
 
@@ -527,6 +567,12 @@ public:
 
     static void init();
 
+    static void ledOff();
+    static void ledOn();
+
+    static void initializeWatchdog();
+    static void feedWatchdog();
+
     static void initializeArena();
     static void initializeDisplay();
     static void initializeFrame();
@@ -542,9 +588,6 @@ public:
     static void beginEthernetServer();
     static void checkForEthernetClient();
     static void pollEthernetCommand();
-
-    static void ledOff();
-    static void ledOn();
 
     static void armDisplayFrameTimer(uint32_t frequency_hz);
     static void disarmDisplayFrameTimer();
@@ -572,6 +615,8 @@ namespace AC
 {
 namespace constants
 {
+constexpr uint32_t watchdog_delay_s = 2;
+
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;
 constexpr uint8_t spi_data_mode = SPI_MODE0;
@@ -749,28 +794,33 @@ void setup() {
     QF::psInit(subscrSto, Q_DIM(subscrSto));
 
    // statically allocate event queues for the AOs and start them...
+    static QEvt const *watchdog_queueSto[2];
+    AC::AO_Watchdog-&gt;start(1U, // priority
+        watchdog_queueSto, Q_DIM(watchdog_queueSto),
+        (void *)0, 0U); // no stack
+
     static QEvt const *serial_command_interface_queueSto[10];
-    AC::AO_SerialCommandInterface-&gt;start(1U, // priority
+    AC::AO_SerialCommandInterface-&gt;start(2U, // priority
         serial_command_interface_queueSto, Q_DIM(serial_command_interface_queueSto),
         (void *)0, 0U); // no stack
 
     static QEvt const *ethernet_command_interface_queueSto[10];
-    AC::AO_EthernetCommandInterface-&gt;start(2U, // priority
+    AC::AO_EthernetCommandInterface-&gt;start(3U, // priority
         ethernet_command_interface_queueSto, Q_DIM(ethernet_command_interface_queueSto),
         (void *)0, 0U); // no stack
 
     static QEvt const *arena_queueSto[10];
-    AC::AO_Arena-&gt;start(3U, // priority
+    AC::AO_Arena-&gt;start(4U, // priority
         arena_queueSto, Q_DIM(arena_queueSto),
         (void *)0, 0U); // no stack
 
     static QEvt const *display_queueSto[10];
-    AC::AO_Display-&gt;start(4U, // priority
+    AC::AO_Display-&gt;start(5U, // priority
         display_queueSto, Q_DIM(display_queueSto),
         (void *)0, 0U); // no stack
 
     static QEvt const *frame_queueSto[10];
-    AC::AO_Frame-&gt;start(5U, // priority
+    AC::AO_Frame-&gt;start(6U, // priority
         frame_queueSto, Q_DIM(frame_queueSto),
         (void *)0, 0U); // no stack
 
@@ -855,6 +905,24 @@ $define${Shared::AO_Frame}
 //============================================================================
 // generate definition of the AO
 $define${AOs::Frame}</text>
+  </file>
+  <file name="Watchdog.cpp">
+   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+
+
+using namespace QP;
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Watchdog}
+
+//============================================================================
+// generate definition of to opaque pointer to the AO
+$define${Shared::AO_Watchdog}
+
+//============================================================================
+// generate definition of the AO
+$define${AOs::Watchdog}</text>
   </file>
  </directory>
 </model>
