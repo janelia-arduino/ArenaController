@@ -103,13 +103,13 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = tran(&AllOff);
             break;
         }
-        //.${AOs::Arena::SM::ArenaOn::RESET}
-        case RESET_SIG: {
-            status_ = tran(&ArenaOn);
-            break;
-        }
         //.${AOs::Arena::SM::ArenaOn::ALL_OFF}
         case ALL_OFF_SIG: {
+            status_ = tran(&AllOff);
+            break;
+        }
+        //.${AOs::Arena::SM::ArenaOn::RESET}
+        case RESET_SIG: {
             status_ = tran(&AllOff);
             break;
         }

@@ -44,13 +44,13 @@ subscribe(ALL_OFF_SIG);</action>
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
-     <tran trig="RESET" target="..">
-      <tran_glyph conn="98,22,1,1,5,5,-5">
-       <action box="0,-2,7,3"/>
-      </tran_glyph>
-     </tran>
      <tran trig="ALL_OFF" target="../4">
       <tran_glyph conn="31,26,3,3,11">
+       <action box="0,-2,10,2"/>
+      </tran_glyph>
+     </tran>
+     <tran trig="RESET" target="../4">
+      <tran_glyph conn="31,31,3,2,13,-3">
        <action box="0,-2,10,2"/>
       </tran_glyph>
      </tran>
@@ -59,7 +59,7 @@ subscribe(ALL_OFF_SIG);</action>
 displayUniformGrayscaleFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
 displayUniformGrayscaleFramesEvt.display_frequency_hz = 200;
 QF::PUBLISH(&amp;displayUniformGrayscaleFramesEvt, this);</entry>
-      <state_glyph node="42,32,25,6">
+      <state_glyph node="42,34,25,6">
        <entry box="1,2,20,2"/>
       </state_glyph>
      </state>
@@ -67,7 +67,7 @@ QF::PUBLISH(&amp;displayUniformGrayscaleFramesEvt, this);</entry>
       <entry brief="deactivateDisplay()">static QEvt const deactivateDisplayEvt = { AC::DEACTIVATE_DISPLAY_SIG, 0U, 0U};
 QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
       <tran trig="ALL_ON" target="../../3">
-       <tran_glyph conn="54,28,2,0,4">
+       <tran_glyph conn="54,28,2,0,6">
         <action box="2,1,10,2"/>
        </tran_glyph>
       </tran>
@@ -80,7 +80,7 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
       <exit box="1,4,24,2"/>
      </state_glyph>
     </state>
-    <state_diagram size="131,68"/>
+    <state_diagram size="107,68"/>
    </statechart>
   </class>
   <class name="SerialCommandInterface" superclass="qpcpp::QActive">
