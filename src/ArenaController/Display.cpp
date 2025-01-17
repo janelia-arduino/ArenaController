@@ -178,7 +178,8 @@ Q_STATE_DEF(Display, DisplayingFrame) {
             static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
             transferFrameEvt.panel_buffer = panel_buffer_;
             transferFrameEvt.panel_buffer_byte_count = panel_buffer_byte_count_;
-            transferFrameEvt.region_row_panel_count = region_row_panel_count_;
+            transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
+            transferFrameEvt.region_col_panel_count = BSP::getRegionColPanelCountMax();
             QF::PUBLISH(&transferFrameEvt, this);
             status_ = Q_RET_HANDLED;
             break;

@@ -82,6 +82,9 @@ constexpr uint8_t byte_count_per_panel_binary = \
   byte_count_per_quarter_panel_binary * \
   quarter_panel_count_per_panel; // 36
 
+// region
+constexpr uint8_t region_count_per_frame_max = 2;
+
 // panel pattern
 constexpr uint8_t all_on_grayscale_pattern[byte_count_per_panel_grayscale] =
 {

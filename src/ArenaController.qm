@@ -60,7 +60,7 @@ displayFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
 displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
 displayFramesEvt.display_frequency_hz = 200;
 QF::PUBLISH(&amp;displayFramesEvt, this);</entry>
-      <state_glyph node="42,34,25,6">
+      <state_glyph node="42,34,35,7">
        <entry box="1,2,20,2"/>
       </state_glyph>
      </state>
@@ -76,12 +76,12 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
        <entry box="1,2,17,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="31,14,67,44">
+     <state_glyph node="31,14,67,56">
       <entry box="1,2,23,2"/>
       <exit box="1,4,24,2"/>
      </state_glyph>
     </state>
-    <state_diagram size="107,68"/>
+    <state_diagram size="107,77"/>
    </statechart>
   </class>
   <class name="SerialCommandInterface" superclass="qpcpp::QActive">
@@ -202,7 +202,8 @@ display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;display_frequency_hz;</
        <entry brief="transferFrame()">static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
 transferFrameEvt.panel_buffer = panel_buffer_;
 transferFrameEvt.panel_buffer_byte_count = panel_buffer_byte_count_;
-transferFrameEvt.region_row_panel_count = region_row_panel_count_;
+transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
+transferFrameEvt.region_col_panel_count = BSP::getRegionColPanelCountMax();
 QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
        <tran trig="FRAME_TRANSFERRED" target="../../1">
         <tran_glyph conn="34,48,3,1,-4,-10,2">
@@ -365,8 +366,8 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
      <tran trig="TRANSFER_FRAME" target="../../2/0">
       <action>panel_buffer_ = Q_EVT_CAST(TransferFrameEvt)-&gt;panel_buffer;
 panel_buffer_byte_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;panel_buffer_byte_count;
-region_row_panel_count_ = BSP::getRegionRowPanelCountMax();
-region_col_panel_count_ = BSP::getRegionColPanelCountMax();</action>
+region_row_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_row_panel_count;
+region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_count;</action>
       <tran_glyph conn="36,17,2,0,10">
        <action box="0,1,32,2"/>
       </tran_glyph>
@@ -470,6 +471,25 @@ subscribe(RESET_SIG);</action>
     </state>
     <state name="Resetting">
      <state_glyph node="14,31,28,13"/>
+    </state>
+    <state_diagram size="80,50"/>
+   </statechart>
+  </class>
+  <class name="Region" superclass="qpcpp::QHsm">
+   <attribute name="instances[constants::region_count_per_frame_max]" type="Region" visibility="0x00" properties="0x01">
+    <documentation>static instances (Singletons)</documentation>
+   </attribute>
+   <operation name="Region" type="" visibility="0x00" properties="0x02">
+    <code>  : QHsm(&amp;initial)</code>
+   </operation>
+   <statechart properties="0x00">
+    <initial target="../1">
+     <initial_glyph conn="36,10,4,0,5">
+      <action box="0,-2,10,2"/>
+     </initial_glyph>
+    </initial>
+    <state name="state1">
+     <state_glyph node="24,15,25,15"/>
     </state>
     <state_diagram size="80,50"/>
    </statechart>
@@ -681,6 +701,9 @@ constexpr uint8_t byte_count_per_panel_grayscale = \
 constexpr uint8_t byte_count_per_panel_binary = \
   byte_count_per_quarter_panel_binary * \
   quarter_panel_count_per_panel; // 36
+
+// region
+constexpr uint8_t region_count_per_frame_max = 2;
 
 // panel pattern
 constexpr uint8_t all_on_grayscale_pattern[byte_count_per_panel_grayscale] =
@@ -934,6 +957,24 @@ $define${Shared::AO_Watchdog}
 //============================================================================
 // generate definition of the AO
 $define${AOs::Watchdog}</text>
+  </file>
+  <file name="Region.cpp">
+   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+
+
+using namespace QP;
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Region}
+
+//============================================================================
+// generate definition of to opaque pointer to the AO
+//$define${Shared::AO_Region}
+
+//============================================================================
+// generate definition of the AO
+$define${AOs::Region}</text>
   </file>
  </directory>
 </model>

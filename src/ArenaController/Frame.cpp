@@ -99,8 +99,8 @@ Q_STATE_DEF(Frame, Inactive) {
         case TRANSFER_FRAME_SIG: {
             panel_buffer_ = Q_EVT_CAST(TransferFrameEvt)->panel_buffer;
             panel_buffer_byte_count_ = Q_EVT_CAST(TransferFrameEvt)->panel_buffer_byte_count;
-            region_row_panel_count_ = BSP::getRegionRowPanelCountMax();
-            region_col_panel_count_ = BSP::getRegionColPanelCountMax();
+            region_row_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_row_panel_count;
+            region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_col_panel_count;
             status_ = tran(&TransferringFrame);
             break;
         }
