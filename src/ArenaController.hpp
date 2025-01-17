@@ -79,11 +79,15 @@ class DisplayFramesEvt : public QP::QEvt {
 public:
     std::uint8_t const (*panel_buffer)[];
     std::uint32_t display_frequency_hz;
+    std::uint8_t panel_buffer_byte_count;
 };
 //.${Shared::TransferFrameEvt} ...............................................
 class TransferFrameEvt : public QP::QEvt {
 public:
     std::uint8_t const (*panel_buffer)[];
+    std::uint8_t panel_buffer_byte_count;
+    std::uint8_t region_row_panel_count;
+    std::uint8_t region_col_panel_count;
 };
 extern QP::QActive * const AO_Arena;
 extern QP::QActive * const AO_Display;

@@ -57,6 +57,7 @@ subscribe(ALL_OFF_SIG);</action>
      <state name="AllOn">
       <entry brief="displayAllOnFrames()">static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
 displayFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
+displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
 displayFramesEvt.display_frequency_hz = 200;
 QF::PUBLISH(&amp;displayFramesEvt, this);</entry>
       <state_glyph node="42,34,25,6">
@@ -149,6 +150,7 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
    <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
    <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
    </operation>
@@ -166,6 +168,7 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
     <state name="Inactive">
      <tran trig="DISPLAY_FRAMES" target="../../2/1">
       <action>panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer;
+panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer_byte_count;
 display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;display_frequency_hz;</action>
       <tran_glyph conn="40,14,2,0,10">
        <action box="1,1,34,2"/>
@@ -198,6 +201,8 @@ display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;display_frequency_hz;</
       <state name="DisplayingFrame">
        <entry brief="transferFrame()">static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
 transferFrameEvt.panel_buffer = panel_buffer_;
+transferFrameEvt.panel_buffer_byte_count = panel_buffer_byte_count_;
+transferFrameEvt.region_row_panel_count = region_row_panel_count_;
 QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
        <tran trig="FRAME_TRANSFERRED" target="../../1">
         <tran_glyph conn="34,48,3,1,-4,-10,2">
@@ -337,11 +342,12 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
    <attribute name="instance" type="Frame" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <attribute name="panel_set_index_row_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="panel_set_index_col_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_set_row_index_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_set_col_index_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
-   <attribute name="panel_set_max_row_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="panel_set_max_col_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="region_row_panel_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="region_col_panel_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
@@ -358,8 +364,9 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
     <state name="Inactive">
      <tran trig="TRANSFER_FRAME" target="../../2/0">
       <action>panel_buffer_ = Q_EVT_CAST(TransferFrameEvt)-&gt;panel_buffer;
-panel_set_max_row_ = BSP::getPanelSetMaxRow();
-panel_set_max_col_ = BSP::getPanelSetMaxCol();</action>
+panel_buffer_byte_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;panel_buffer_byte_count;
+region_row_panel_count_ = BSP::getRegionRowPanelCountMax();
+region_col_panel_count_ = BSP::getRegionColPanelCountMax();</action>
       <tran_glyph conn="36,17,2,0,10">
        <action box="0,1,32,2"/>
       </tran_glyph>
@@ -367,9 +374,9 @@ panel_set_max_col_ = BSP::getPanelSetMaxCol();</action>
      <state_glyph node="28,8,16,9"/>
     </state>
     <state name="Active">
-     <entry brief="resetIndicies();">panel_set_index_row_ = 0;
-panel_set_index_col_ = 0;</entry>
-     <state name="TransferringGrayscaleFrame">
+     <entry brief="resetIndicies();">panel_set_row_index_ = 0;
+panel_set_col_index_ = 0;</entry>
+     <state name="TransferringFrame">
       <initial target="../2">
        <initial_glyph conn="40,31,4,0,3">
         <action box="0,-2,10,2"/>
@@ -381,22 +388,22 @@ panel_set_index_col_ = 0;</entry>
        </tran_glyph>
       </tran>
       <state name="TransferringPanelSet">
-       <entry brief="enablePanelSetSelectPin(); transferPanelSet()">BSP::enablePanelSetSelectPin(panel_set_index_row_, panel_set_index_col_);
-BSP::transferPanelSet(panel_buffer_, AC::constants::byte_count_per_panel_grayscale);</entry>
-       <exit brief="disablePanelSetSelectPin(); updatePanelSetSelectIndicies()">BSP::disablePanelSetSelectPin(panel_set_index_row_, panel_set_index_col_);
-++panel_set_index_row_;
-if (panel_set_index_row_ == panel_set_max_row_)
+       <entry brief="enablePanelSetSelectPin(); transferPanelSet()">BSP::enablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
+BSP::transferPanelSet(panel_buffer_, panel_buffer_byte_count_);</entry>
+       <exit brief="disablePanelSetSelectPin(); updatePanelSetSelectIndicies()">BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
+++panel_set_row_index_;
+if (panel_set_row_index_ == region_row_panel_count_)
 {
-    panel_set_index_row_ = 0;
-    ++panel_set_index_col_;
+    panel_set_row_index_ = 0;
+    ++panel_set_col_index_;
 }
-if (panel_set_index_col_ == panel_set_max_col_)
+if (panel_set_col_index_ == region_col_panel_count_)
 {
-    panel_set_index_col_ = 0;
+    panel_set_col_index_ = 0;
 }</exit>
        <tran trig="PANEL_SET_TRANSFERRED">
         <choice target="../..">
-         <guard brief="frameNotTransferred()">(panel_set_index_row_ != (panel_set_max_row_-1)) || (panel_set_index_col_ != (panel_set_max_col_-1))</guard>
+         <guard brief="frameNotTransferred()">(panel_set_row_index_ != (region_row_panel_count_-1)) || (panel_set_col_index_ != (region_col_panel_count_-1))</guard>
          <choice_glyph conn="43,55,5,2,6,-5">
           <action box="1,0,26,2"/>
          </choice_glyph>
@@ -473,9 +480,13 @@ subscribe(RESET_SIG);</action>
   <class name="DisplayFramesEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="TransferFrameEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="region_row_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="region_col_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
@@ -593,11 +604,11 @@ public:
     static void disarmDisplayFrameTimer();
     static void displayFrame();
 
-    static uint8_t getPanelSetMaxRow();
-    static uint8_t getPanelSetMaxCol();
+    static uint8_t getRegionRowPanelCountMax();
+    static uint8_t getRegionColPanelCountMax();
 
-    static void enablePanelSetSelectPin(uint8_t index_row, uint8_t index_col);
-    static void disablePanelSetSelectPin(uint8_t index_row, uint8_t index_col);
+    static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
+    static void disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
     static void transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count);
 
 };
@@ -615,7 +626,7 @@ namespace AC
 {
 namespace constants
 {
-constexpr uint32_t watchdog_delay_s = 2;
+constexpr uint32_t watchdog_delay_s = 1;
 
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;

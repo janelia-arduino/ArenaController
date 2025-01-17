@@ -5,6 +5,7 @@
 #include <TimerThree.h>
 #include <SPI.h>
 #include <EventResponder.h>
+#include <SdFat.h>
 
 #include "bsp.hpp"
 #include "ArenaController.hpp"
@@ -34,23 +35,23 @@ constexpr uint32_t spi_clock_speed = 5000000;
 constexpr uint8_t reset_pin = 34;
 
 // frame
-constexpr uint8_t panel_count_max_per_frame_row = 5;
-constexpr uint8_t panel_count_max_per_frame_col = 12;
-constexpr uint8_t panel_count_max_per_frame = \
-  panel_count_max_per_frame_row * panel_count_max_per_frame_col; // 60
-constexpr uint16_t byte_count_max_per_frame_grayscale = \
-  panel_count_max_per_frame * \
+constexpr uint8_t panel_count_per_frame_row_max = 5;
+constexpr uint8_t panel_count_per_frame_col_max = 12;
+constexpr uint8_t panel_count_per_frame_max = \
+  panel_count_per_frame_row_max * panel_count_per_frame_col_max; // 60
+constexpr uint16_t byte_count_per_frame_grayscale_max = \
+  panel_count_per_frame_max * \
   byte_count_per_panel_grayscale; // 7920
 
 // region
 constexpr uint8_t region_count_per_frame = 2;
 constexpr SPIClass * region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
 
-constexpr uint8_t panel_set_max_row = panel_count_max_per_frame_row;
-constexpr uint8_t panel_set_max_col = \
-  panel_count_max_per_frame_col/region_count_per_frame; // 6
+constexpr uint8_t region_row_panel_count_max = panel_count_per_frame_row_max;
+constexpr uint8_t region_col_panel_count_max = \
+  panel_count_per_frame_col_max/region_count_per_frame; // 6
 
-constexpr uint8_t panel_set_select_pins[panel_set_max_row][panel_set_max_col] =
+constexpr uint8_t panel_set_select_pins[region_row_panel_count_max][region_col_panel_count_max] =
 {
   {0, 6, 24, 31, 20, 39},
   {2, 7, 25, 32, 17, 38},
@@ -62,8 +63,8 @@ constexpr uint8_t panel_set_select_pins[panel_set_max_row][panel_set_max_col] =
 // files
 constexpr char base_dir_str[] = "patterns";
 constexpr uint8_t filename_length_max = 15;
-constexpr uint16_t frame_count_max_y = 1;
-constexpr uint16_t frame_count_max_x = 20;
+constexpr uint16_t frame_count_y_max = 1;
+constexpr uint16_t frame_count_x_max = 20;
 
 } // namespace constants
 } // namespace AC
@@ -173,7 +174,7 @@ void BSP::ledOn()
 void BSP::initializeWatchdog()
 {
   WDT_timings_t config;
-  config.trigger = AC::constants::watchdog_delay_s; /* in seconds, 0->128 */
+  config.trigger = AC::constants::watchdog_delay_s * 10; /* in seconds, 0->128 */
   config.timeout = AC::constants::watchdog_delay_s; /* in seconds, 0->128 */
   wdt.begin(config);
 }
@@ -208,11 +209,11 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
 void BSP::initializeFrame()
 {
   transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);
-  for (uint8_t panel_set_index_col = 0; panel_set_index_col<AC::constants::panel_set_max_col; ++panel_set_index_col)
+  for (uint8_t panel_set_col_index = 0; panel_set_col_index<AC::constants::region_col_panel_count_max; ++panel_set_col_index)
   {
-    for (uint8_t panel_set_index_row = 0; panel_set_index_row<AC::constants::panel_set_max_row; ++panel_set_index_row)
+    for (uint8_t panel_set_row_index = 0; panel_set_row_index<AC::constants::region_row_panel_count_max; ++panel_set_row_index)
     {
-      const uint8_t & pss_pin = AC::constants::panel_set_select_pins[panel_set_index_row][panel_set_index_col];
+      const uint8_t & pss_pin = AC::constants::panel_set_select_pins[panel_set_row_index][panel_set_col_index];
       pinMode(pss_pin, OUTPUT);
       digitalWriteFast(pss_pin, HIGH);
     }
@@ -328,14 +329,14 @@ void BSP::displayFrame()
   // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 
-uint8_t BSP::getPanelSetMaxRow()
+uint8_t BSP::getRegionRowPanelCountMax()
 {
-  return AC::constants::panel_set_max_row;
+  return AC::constants::region_row_panel_count_max;
 }
 
-uint8_t BSP::getPanelSetMaxCol()
+uint8_t BSP::getRegionColPanelCountMax()
 {
-  return AC::constants::panel_set_max_col;
+  return AC::constants::region_col_panel_count_max;
 }
 
 void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)

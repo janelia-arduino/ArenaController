@@ -34,6 +34,7 @@ public:
 private:
     std::uint8_t const (*panel_buffer_)[];
     std::uint32_t display_frequency_hz_;
+    std::uint8_t panel_buffer_byte_count_;
 
 public:
     Display();
@@ -96,6 +97,7 @@ Q_STATE_DEF(Display, Inactive) {
         //.${AOs::Display::SM::Inactive::DISPLAY_FRAMES}
         case DISPLAY_FRAMES_SIG: {
             panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer;
+            panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer_byte_count;
             display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)->display_frequency_hz;
             status_ = tran(&DisplayingFrames);
             break;
@@ -175,6 +177,8 @@ Q_STATE_DEF(Display, DisplayingFrame) {
         case Q_ENTRY_SIG: {
             static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
             transferFrameEvt.panel_buffer = panel_buffer_;
+            transferFrameEvt.panel_buffer_byte_count = panel_buffer_byte_count_;
+            transferFrameEvt.region_row_panel_count = region_row_panel_count_;
             QF::PUBLISH(&transferFrameEvt, this);
             status_ = Q_RET_HANDLED;
             break;

@@ -26,7 +26,7 @@ namespace AC
 {
 namespace constants
 {
-constexpr uint32_t watchdog_delay_s = 2;
+constexpr uint32_t watchdog_delay_s = 1;
 
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;
