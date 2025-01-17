@@ -55,10 +55,10 @@ subscribe(ALL_OFF_SIG);</action>
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="displayAllOnFrames()">static AC::DisplayUniformGrayscaleFramesEvt displayUniformGrayscaleFramesEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG, 0U, 0U};
-displayUniformGrayscaleFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
-displayUniformGrayscaleFramesEvt.display_frequency_hz = 200;
-QF::PUBLISH(&amp;displayUniformGrayscaleFramesEvt, this);</entry>
+      <entry brief="displayAllOnFrames()">static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
+displayFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
+displayFramesEvt.display_frequency_hz = 200;
+QF::PUBLISH(&amp;displayFramesEvt, this);</entry>
       <state_glyph node="42,34,25,6">
        <entry box="1,2,20,2"/>
       </state_glyph>
@@ -156,7 +156,7 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
     <initial target="../1">
      <action>BSP::initializeDisplay();
 subscribe(DEACTIVATE_DISPLAY_SIG);
-subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
+subscribe(DISPLAY_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
 subscribe(FRAME_TRANSFERRED_SIG);</action>
      <initial_glyph conn="40,4,4,0,3">
@@ -164,9 +164,9 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
      </initial_glyph>
     </initial>
     <state name="Inactive">
-     <tran trig="DISPLAY_UNIFORM_GRAYSCALE_FRAMES" target="../../2/1">
-      <action>panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;panel_buffer;
-display_frequency_hz_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;display_frequency_hz;</action>
+     <tran trig="DISPLAY_FRAMES" target="../../2/1">
+      <action>panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer;
+display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;display_frequency_hz;</action>
       <tran_glyph conn="40,14,2,0,10">
        <action box="1,1,34,2"/>
       </tran_glyph>
@@ -179,7 +179,7 @@ display_frequency_hz_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;display
        <action box="5,-16,18,3"/>
       </tran_glyph>
      </tran>
-     <state name="DisplayingUniformGrayscaleFrames">
+     <state name="DisplayingFrames">
       <entry brief="armDisplayFrameTimer()">BSP::armDisplayFrameTimer(display_frequency_hz_);</entry>
       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
       <initial target="../1">
@@ -196,9 +196,9 @@ display_frequency_hz_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)-&gt;display
        <state_glyph node="32,34,20,7"/>
       </state>
       <state name="DisplayingFrame">
-       <entry brief="transferFrame()">static AC::TransferUniformGrayscaleFrameEvt transferUniformGrayscaleFrameEvt = { AC::TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG, 0U, 0U};
-transferUniformGrayscaleFrameEvt.panel_buffer = panel_buffer_;
-QF::PUBLISH(&amp;transferUniformGrayscaleFrameEvt, this);</entry>
+       <entry brief="transferFrame()">static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
+transferFrameEvt.panel_buffer = panel_buffer_;
+QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
        <tran trig="FRAME_TRANSFERRED" target="../../1">
         <tran_glyph conn="34,48,3,1,-4,-10,2">
          <action box="-19,1,18,2"/>
@@ -348,7 +348,7 @@ QF::PUBLISH(&amp;transferUniformGrayscaleFrameEvt, this);</entry>
    <statechart properties="0x00">
     <initial target="../1">
      <action>BSP::initializeFrame();
-subscribe(TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG);
+subscribe(TRANSFER_FRAME_SIG);
 subscribe(PANEL_SET_TRANSFERRED_SIG);
 subscribe(FRAME_TRANSFERRED_SIG);</action>
      <initial_glyph conn="37,4,4,0,4">
@@ -356,8 +356,8 @@ subscribe(FRAME_TRANSFERRED_SIG);</action>
      </initial_glyph>
     </initial>
     <state name="Inactive">
-     <tran trig="TRANSFER_UNIFORM_GRAYSCALE_FRAME" target="../../2/0">
-      <action>panel_buffer_ = Q_EVT_CAST(TransferUniformGrayscaleFrameEvt)-&gt;panel_buffer;
+     <tran trig="TRANSFER_FRAME" target="../../2/0">
+      <action>panel_buffer_ = Q_EVT_CAST(TransferFrameEvt)-&gt;panel_buffer;
 panel_set_max_row_ = BSP::getPanelSetMaxRow();
 panel_set_max_col_ = BSP::getPanelSetMaxCol();</action>
       <tran_glyph conn="36,17,2,0,10">
@@ -470,11 +470,11 @@ subscribe(RESET_SIG);</action>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
-  <class name="DisplayUniformGrayscaleFramesEvt" superclass="qpcpp::QEvt">
+  <class name="DisplayFramesEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
-  <class name="TransferUniformGrayscaleFrameEvt" superclass="qpcpp::QEvt">
+  <class name="TransferFrameEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
@@ -514,8 +514,8 @@ enum ArenaControllerSignals {
     ALL_OFF_SIG,
 
     DEACTIVATE_DISPLAY_SIG,
-    DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG,
-    TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG,
+    DISPLAY_FRAMES_SIG,
+    TRANSFER_FRAME_SIG,
     PANEL_SET_TRANSFERRED_SIG,
     FRAME_TRANSFERRED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,

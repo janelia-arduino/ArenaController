@@ -42,7 +42,7 @@ protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
-    Q_STATE_DECL(DisplayingUniformGrayscaleFrames);
+    Q_STATE_DECL(DisplayingFrames);
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayingFrame);
 };
@@ -84,7 +84,7 @@ Q_STATE_DEF(Display, initial) {
     //.${AOs::Display::SM::initial}
     BSP::initializeDisplay();
     subscribe(DEACTIVATE_DISPLAY_SIG);
-    subscribe(DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG);
+    subscribe(DISPLAY_FRAMES_SIG);
     subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
     subscribe(FRAME_TRANSFERRED_SIG);
     return tran(&Inactive);
@@ -93,11 +93,11 @@ Q_STATE_DEF(Display, initial) {
 Q_STATE_DEF(Display, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Inactive::DISPLAY_UNIFORM_GRAYSCALE_FRAMES}
-        case DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG: {
-            panel_buffer_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)->panel_buffer;
-            display_frequency_hz_ = Q_EVT_CAST(DisplayUniformGrayscaleFramesEvt)->display_frequency_hz;
-            status_ = tran(&DisplayingUniformGrayscaleFrames);
+        //.${AOs::Display::SM::Inactive::DISPLAY_FRAMES}
+        case DISPLAY_FRAMES_SIG: {
+            panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer;
+            display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)->display_frequency_hz;
+            status_ = tran(&DisplayingFrames);
             break;
         }
         default: {
@@ -123,23 +123,23 @@ Q_STATE_DEF(Display, Active) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames} .............
-Q_STATE_DEF(Display, DisplayingUniformGrayscaleFrames) {
+//.${AOs::Display::SM::Active::DisplayingFrames} .............................
+Q_STATE_DEF(Display, DisplayingFrames) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames}
+        //.${AOs::Display::SM::Active::DisplayingFrames}
         case Q_ENTRY_SIG: {
             BSP::armDisplayFrameTimer(display_frequency_hz_);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingUniformGrayscaleFrames}
+        //.${AOs::Display::SM::Active::DisplayingFrames}
         case Q_EXIT_SIG: {
             BSP::disarmDisplayFrameTimer();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingUnifor~::initial}
+        //.${AOs::Display::SM::Active::DisplayingFrames::initial}
         case Q_INIT_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
             break;
@@ -151,41 +151,41 @@ Q_STATE_DEF(Display, DisplayingUniformGrayscaleFrames) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingUnifor~::WaitingToDisplayFrame} .....
+//.${AOs::Display::SM::Active::DisplayingFrames::WaitingToDisplayFrame} ......
 Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingUnifor~::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
+        //.${AOs::Display::SM::Active::DisplayingFrames::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
         case DISPLAY_FRAME_TIMEOUT_SIG: {
             status_ = tran(&DisplayingFrame);
             break;
         }
         default: {
-            status_ = super(&DisplayingUniformGrayscaleFrames);
+            status_ = super(&DisplayingFrames);
             break;
         }
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingUnifor~::DisplayingFrame} ...........
+//.${AOs::Display::SM::Active::DisplayingFrames::DisplayingFrame} ............
 Q_STATE_DEF(Display, DisplayingFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingUnifor~::DisplayingFrame}
+        //.${AOs::Display::SM::Active::DisplayingFrames::DisplayingFrame}
         case Q_ENTRY_SIG: {
-            static AC::TransferUniformGrayscaleFrameEvt transferUniformGrayscaleFrameEvt = { AC::TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG, 0U, 0U};
-            transferUniformGrayscaleFrameEvt.panel_buffer = panel_buffer_;
-            QF::PUBLISH(&transferUniformGrayscaleFrameEvt, this);
+            static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
+            transferFrameEvt.panel_buffer = panel_buffer_;
+            QF::PUBLISH(&transferFrameEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingUnifor~::DisplayingFrame::FRAME_TRANSFERRED}
+        //.${AOs::Display::SM::Active::DisplayingFrames::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
             break;
         }
         default: {
-            status_ = super(&DisplayingUniformGrayscaleFrames);
+            status_ = super(&DisplayingFrames);
             break;
         }
     }

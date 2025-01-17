@@ -126,10 +126,10 @@ Q_STATE_DEF(Arena, AllOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOn}
         case Q_ENTRY_SIG: {
-            static AC::DisplayUniformGrayscaleFramesEvt displayUniformGrayscaleFramesEvt = { AC::DISPLAY_UNIFORM_GRAYSCALE_FRAMES_SIG, 0U, 0U};
-            displayUniformGrayscaleFramesEvt.panel_buffer = &AC::constants::all_on_grayscale_pattern;
-            displayUniformGrayscaleFramesEvt.display_frequency_hz = 200;
-            QF::PUBLISH(&displayUniformGrayscaleFramesEvt, this);
+            static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
+            displayFramesEvt.panel_buffer = &AC::constants::all_on_grayscale_pattern;
+            displayFramesEvt.display_frequency_hz = 200;
+            QF::PUBLISH(&displayFramesEvt, this);
             status_ = Q_RET_HANDLED;
             break;
         }

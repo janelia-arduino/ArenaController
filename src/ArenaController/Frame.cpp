@@ -85,7 +85,7 @@ Frame::Frame()
 Q_STATE_DEF(Frame, initial) {
     //.${AOs::Frame::SM::initial}
     BSP::initializeFrame();
-    subscribe(TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG);
+    subscribe(TRANSFER_FRAME_SIG);
     subscribe(PANEL_SET_TRANSFERRED_SIG);
     subscribe(FRAME_TRANSFERRED_SIG);
     return tran(&Inactive);
@@ -94,9 +94,9 @@ Q_STATE_DEF(Frame, initial) {
 Q_STATE_DEF(Frame, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Frame::SM::Inactive::TRANSFER_UNIFORM_GRAYSCALE_FRAME}
-        case TRANSFER_UNIFORM_GRAYSCALE_FRAME_SIG: {
-            panel_buffer_ = Q_EVT_CAST(TransferUniformGrayscaleFrameEvt)->panel_buffer;
+        //.${AOs::Frame::SM::Inactive::TRANSFER_FRAME}
+        case TRANSFER_FRAME_SIG: {
+            panel_buffer_ = Q_EVT_CAST(TransferFrameEvt)->panel_buffer;
             panel_set_max_row_ = BSP::getPanelSetMaxRow();
             panel_set_max_col_ = BSP::getPanelSetMaxCol();
             status_ = tran(&TransferringGrayscaleFrame);
