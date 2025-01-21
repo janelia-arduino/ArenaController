@@ -31,6 +31,9 @@ class Region : public QP::QHsm {
 public:
     static Region instances[constants::region_count_per_frame_max];
 
+private:
+    SPIClass * spi_ptr_;
+
 public:
     Region()
       : QHsm(&initial)
@@ -44,18 +47,32 @@ protected:
 } // namespace AC
 //.$enddecl${AOs::Region} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-//============================================================================
-// generate definition of to opaque pointer to the AO
-//$define${Shared::AO_Region}
+// helper function to provide the ID of this mine ............................
+static inline uint8_t REGION_ID(AC::Region const * const me) {
+    return static_cast<uint8_t>(me - &AC::Region::instances[0]);
+}
 
 //============================================================================
-// generate definition of the AO
 //.$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 //. Check for the minimum required QP version
 #if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
 #error qpcpp version 6.9.0 or higher required
 #endif
 //.$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//.$define${Shared::getRegionInstance} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+namespace AC {
+
+//.${Shared::getRegionInstance} ..............................................
+QP::QHsm * getRegionInstance(std::uint8_t id) {
+    Q_REQUIRE(id < Q_DIM(Region::instances));
+    return &Region::instances[id];
+}
+
+} // namespace AC
+//.$enddef${Shared::getRegionInstance} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+//============================================================================
+// generate definition of the AO
 //.$define${AOs::Region} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 

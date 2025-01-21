@@ -38,6 +38,7 @@ private:
     std::uint8_t region_row_panel_count_;
     std::uint8_t region_col_panel_count_;
     std::uint8_t panel_buffer_byte_count_;
+    QP::QHsm * regions_[constants::region_count_per_frame_max];
 
 public:
     Frame();

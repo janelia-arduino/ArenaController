@@ -95,6 +95,8 @@ extern QP::QActive * const AO_SerialCommandInterface;
 extern QP::QActive * const AO_EthernetCommandInterface;
 extern QP::QActive * const AO_Frame;
 extern QP::QActive * const AO_Watchdog;
+//.${Shared::getRegionInstance} ..............................................
+QP::QHsm * getRegionInstance(std::uint8_t id) ;
 
 } // namespace AC
 //.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

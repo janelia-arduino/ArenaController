@@ -36,7 +36,7 @@ constexpr uint8_t spi_data_mode = SPI_MODE0;
 constexpr uint8_t mac_address_size = 6;
 
 // Conversions
-constexpr uint32_t MICROSECONDS_PER_SECOND = 1000000;
+constexpr uint32_t microseconds_per_second = 1000000;
 
 // message byte
 constexpr uint8_t bit_count_per_byte = 8;

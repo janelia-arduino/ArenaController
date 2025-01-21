@@ -192,7 +192,7 @@ void BSP::initializeArena()
 
 void BSP::initializeDisplay()
 {
-  uint32_t period_us = AC::constants::MICROSECONDS_PER_SECOND;
+  uint32_t period_us = AC::constants::microseconds_per_second;
   Timer3.initialize(period_us);
   Timer3.stop();
 }
@@ -310,7 +310,7 @@ void displayFrameTimerHandler()
 
 void BSP::armDisplayFrameTimer(uint32_t frequency_hz)
 {
-  uint32_t period_us = AC::constants::MICROSECONDS_PER_SECOND / frequency_hz;
+  uint32_t period_us = AC::constants::microseconds_per_second / frequency_hz;
   Timer3.stop();
   Timer3.setPeriod(period_us);
   Timer3.attachInterrupt(displayFrameTimerHandler);

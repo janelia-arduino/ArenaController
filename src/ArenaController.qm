@@ -349,6 +349,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
    <attribute name="region_row_panel_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="region_col_panel_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
    <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="regions_[constants::region_count_per_frame_max]" type="QP::QHsm *" visibility="0x02" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
@@ -479,6 +480,7 @@ subscribe(RESET_SIG);</action>
    <attribute name="instances[constants::region_count_per_frame_max]" type="Region" visibility="0x00" properties="0x01">
     <documentation>static instances (Singletons)</documentation>
    </attribute>
+   <attribute name="spi_ptr_" type="SPIClass *" visibility="0x02" properties="0x00"/>
    <operation name="Region" type="" visibility="0x00" properties="0x02">
     <code>  : QHsm(&amp;initial)</code>
    </operation>
@@ -526,6 +528,11 @@ subscribe(RESET_SIG);</action>
   <attribute name="AO_Watchdog" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Watchdog::instance;</code>
   </attribute>
+  <operation name="getRegionInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
+   <parameter name="id" type="std::uint8_t"/>
+   <code>Q_REQUIRE(id &lt; Q_DIM(Region::instances));
+return &amp;Region::instances[id];</code>
+  </operation>
  </package>
  <directory name=".">
   <file name="ArenaController.hpp">
@@ -656,7 +663,7 @@ constexpr uint8_t spi_data_mode = SPI_MODE0;
 constexpr uint8_t mac_address_size = 6;
 
 // Conversions
-constexpr uint32_t MICROSECONDS_PER_SECOND = 1000000;
+constexpr uint32_t microseconds_per_second = 1000000;
 
 // message byte
 constexpr uint8_t bit_count_per_byte = 8;
@@ -968,9 +975,13 @@ using namespace QP;
 // generate declaration of the active object
 $declare${AOs::Region}
 
+// helper function to provide the ID of this mine ............................
+static inline uint8_t REGION_ID(AC::Region const * const me) {
+    return static_cast&lt;uint8_t&gt;(me - &amp;AC::Region::instances[0]);
+}
+
 //============================================================================
-// generate definition of to opaque pointer to the AO
-//$define${Shared::AO_Region}
+$define${Shared::getRegionInstance}
 
 //============================================================================
 // generate definition of the AO
