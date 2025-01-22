@@ -41,6 +41,7 @@ public:
 
 protected:
     Q_STATE_DECL(initial);
+    Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
     Q_STATE_DECL(DisplayingFrames);
@@ -88,18 +89,22 @@ Q_STATE_DEF(Display, initial) {
     subscribe(DISPLAY_FRAMES_SIG);
     subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
     subscribe(FRAME_TRANSFERRED_SIG);
-    return tran(&Inactive);
+    display_frequency_hz_ = constants::display_frequency_hz_default;
+    return tran(&Initialized);
 }
-//.${AOs::Display::SM::Inactive} .............................................
-Q_STATE_DEF(Display, Inactive) {
+//.${AOs::Display::SM::Initialized} ..........................................
+Q_STATE_DEF(Display, Initialized) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Inactive::DISPLAY_FRAMES}
-        case DISPLAY_FRAMES_SIG: {
-            panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer;
-            panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer_byte_count;
-            display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)->display_frequency_hz;
-            status_ = tran(&DisplayingFrames);
+        //.${AOs::Display::SM::Initialized::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&Inactive);
+            break;
+        }
+        //.${AOs::Display::SM::Initialized::SET_DISPLAY_FREQUENCY}
+        case SET_DISPLAY_FREQUENCY_SIG: {
+            display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)->display_frequency_hz;
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {
@@ -109,41 +114,65 @@ Q_STATE_DEF(Display, Inactive) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active} ...............................................
+//.${AOs::Display::SM::Initialized::Inactive} ................................
+Q_STATE_DEF(Display, Inactive) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Display::SM::Initialized::Inactive::DISPLAY_FRAMES}
+        case DISPLAY_FRAMES_SIG: {
+            panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer;
+            panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer_byte_count;
+            status_ = tran(&DisplayingFrames);
+            break;
+        }
+        default: {
+            status_ = super(&Initialized);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Display::SM::Initialized::Active} ..................................
 Q_STATE_DEF(Display, Active) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DEACTIVATE_DISPLAY}
+        //.${AOs::Display::SM::Initialized::Active::DEACTIVATE_DISPLAY}
         case DEACTIVATE_DISPLAY_SIG: {
             status_ = tran(&Inactive);
             break;
         }
         default: {
-            status_ = super(&top);
+            status_ = super(&Initialized);
             break;
         }
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingFrames} .............................
+//.${AOs::Display::SM::Initialized::Active::DisplayingFrames} ................
 Q_STATE_DEF(Display, DisplayingFrames) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingFrames}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames}
         case Q_ENTRY_SIG: {
             BSP::armDisplayFrameTimer(display_frequency_hz_);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingFrames}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames}
         case Q_EXIT_SIG: {
             BSP::disarmDisplayFrameTimer();
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingFrames::initial}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::initial}
         case Q_INIT_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
+            break;
+        }
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::SET_DISPLAY_FREQUENCY}
+        case SET_DISPLAY_FREQUENCY_SIG: {
+            display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)->display_frequency_hz;
+            status_ = tran(&DisplayingFrames);
             break;
         }
         default: {
@@ -153,11 +182,11 @@ Q_STATE_DEF(Display, DisplayingFrames) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingFrames::WaitingToDisplayFrame} ......
+//.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToDisplayFrame} 
 Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingFrames::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
         case DISPLAY_FRAME_TIMEOUT_SIG: {
             status_ = tran(&DisplayingFrame);
             break;
@@ -169,11 +198,11 @@ Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Active::DisplayingFrames::DisplayingFrame} ............
+//.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame} 
 Q_STATE_DEF(Display, DisplayingFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Active::DisplayingFrames::DisplayingFrame}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame}
         case Q_ENTRY_SIG: {
             static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
             transferFrameEvt.panel_buffer = panel_buffer_;
@@ -184,7 +213,7 @@ Q_STATE_DEF(Display, DisplayingFrame) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Active::DisplayingFrames::DisplayingFrame::FRAME_TRANSFERRED}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
             break;

@@ -40,18 +40,21 @@ enum ArenaControllerSignals {
 
     MAX_PUB_SIG,    // the last published signal
 
-    // bsp POST to SerialCommandInterface
+    // POST to SerialCommandInterface
     ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     SERIAL_READY_SIG,
 
-    // bsp POST to EthernetCommandInterface
+    // POST to EthernetCommandInterface
     ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     ETHERNET_INITIALIZED_SIG,
     ETHERNET_IP_ADDRESS_FOUND_SIG,
     ETHERNET_SERVER_INITIALIZED_SIG,
     ETHERNET_CLIENT_CONNECTED_SIG,
+
+    // POST to Display
+    SET_DISPLAY_FREQUENCY_SIG,
 
     WATCHDOG_TIMEOUT_SIG, // signal for Watchdog timeout event
     SERIAL_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
@@ -78,7 +81,6 @@ class CommandEvt : public QP::QEvt {};
 class DisplayFramesEvt : public QP::QEvt {
 public:
     std::uint8_t const (*panel_buffer)[];
-    std::uint32_t display_frequency_hz;
     std::uint8_t panel_buffer_byte_count;
 };
 //.${Shared::TransferFrameEvt} ...............................................
@@ -88,6 +90,11 @@ public:
     std::uint8_t panel_buffer_byte_count;
     std::uint8_t region_row_panel_count;
     std::uint8_t region_col_panel_count;
+};
+//.${Shared::SetDisplayFrequencyEvt} .........................................
+class SetDisplayFrequencyEvt : public QP::QEvt {
+public:
+    std::uint32_t display_frequency_hz;
 };
 extern QP::QActive * const AO_Arena;
 extern QP::QActive * const AO_Display;

@@ -129,7 +129,6 @@ Q_STATE_DEF(Arena, AllOn) {
             static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
             displayFramesEvt.panel_buffer = &AC::constants::all_on_grayscale_pattern;
             displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
-            displayFramesEvt.display_frequency_hz = 200;
             QF::PUBLISH(&displayFramesEvt, this);
             status_ = Q_RET_HANDLED;
             break;

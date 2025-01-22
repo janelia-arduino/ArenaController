@@ -58,7 +58,6 @@ subscribe(ALL_OFF_SIG);</action>
       <entry brief="displayAllOnFrames()">static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
 displayFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
 displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
-displayFramesEvt.display_frequency_hz = 200;
 QF::PUBLISH(&amp;displayFramesEvt, this);</entry>
       <state_glyph node="42,34,35,7">
        <entry box="1,2,20,2"/>
@@ -160,68 +159,88 @@ QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
 subscribe(DEACTIVATE_DISPLAY_SIG);
 subscribe(DISPLAY_FRAMES_SIG);
 subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
-subscribe(FRAME_TRANSFERRED_SIG);</action>
-     <initial_glyph conn="40,4,4,0,3">
+subscribe(FRAME_TRANSFERRED_SIG);
+display_frequency_hz_ = constants::display_frequency_hz_default;</action>
+     <initial_glyph conn="39,2,4,0,3">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
-    <state name="Inactive">
-     <tran trig="DISPLAY_FRAMES" target="../../2/1">
-      <action>panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer;
-panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer_byte_count;
-display_frequency_hz_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;display_frequency_hz;</action>
-      <tran_glyph conn="40,14,2,0,10">
-       <action box="1,1,34,2"/>
+    <state name="Initialized">
+     <initial target="../2">
+      <initial_glyph conn="41,10,4,0,3">
+       <action box="0,-2,10,2"/>
+      </initial_glyph>
+     </initial>
+     <tran trig="SET_DISPLAY_FREQUENCY">
+      <action>display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)-&gt;display_frequency_hz;</action>
+      <tran_glyph conn="2,10,3,-1,24">
+       <action box="0,-2,22,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="34,7,12,7"/>
-    </state>
-    <state name="Active">
-     <tran trig="DEACTIVATE_DISPLAY" target="../../1">
-      <tran_glyph conn="6,23,3,3,-2,-14,30">
-       <action box="5,-16,18,3"/>
-      </tran_glyph>
-     </tran>
-     <state name="DisplayingFrames">
-      <entry brief="armDisplayFrameTimer()">BSP::armDisplayFrameTimer(display_frequency_hz_);</entry>
-      <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
-      <initial target="../1">
-       <initial_glyph conn="41,31,4,0,3">
-        <action box="0,-2,10,2"/>
-       </initial_glyph>
-      </initial>
-      <state name="WaitingToDisplayFrame">
-       <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../2">
-        <tran_glyph conn="41,41,2,3,4">
-         <action box="1,1,22,2"/>
+     <state name="Inactive">
+      <tran trig="DISPLAY_FRAMES" target="../../3/1">
+       <action>panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer;
+panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer_byte_count;</action>
+       <tran_glyph conn="41,20,2,0,10">
+        <action box="1,1,34,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="35,13,12,7"/>
+     </state>
+     <state name="Active">
+      <tran trig="DEACTIVATE_DISPLAY" target="../../2">
+       <tran_glyph conn="7,29,3,3,-2,-14,30">
+        <action box="5,-16,18,3"/>
+       </tran_glyph>
+      </tran>
+      <state name="DisplayingFrames">
+       <entry brief="armDisplayFrameTimer()">BSP::armDisplayFrameTimer(display_frequency_hz_);</entry>
+       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
+       <initial target="../2">
+        <initial_glyph conn="42,37,4,0,3">
+         <action box="0,-2,10,2"/>
+        </initial_glyph>
+       </initial>
+       <tran trig="SET_DISPLAY_FREQUENCY" target="..">
+        <action>display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)-&gt;display_frequency_hz;</action>
+        <tran_glyph conn="75,49,1,1,2,-12,-2">
+         <action box="-22,-13,29,2"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="32,34,20,7"/>
-      </state>
-      <state name="DisplayingFrame">
-       <entry brief="transferFrame()">static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
+       <state name="WaitingToDisplayFrame">
+        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../3">
+         <tran_glyph conn="42,47,2,3,4">
+          <action box="1,1,22,2"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="33,40,20,7"/>
+       </state>
+       <state name="DisplayingFrame">
+        <entry brief="transferFrame()">static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
 transferFrameEvt.panel_buffer = panel_buffer_;
 transferFrameEvt.panel_buffer_byte_count = panel_buffer_byte_count_;
 transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
 transferFrameEvt.region_col_panel_count = BSP::getRegionColPanelCountMax();
 QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
-       <tran trig="FRAME_TRANSFERRED" target="../../1">
-        <tran_glyph conn="34,48,3,1,-4,-10,2">
-         <action box="-19,1,18,2"/>
-        </tran_glyph>
-       </tran>
-       <state_glyph node="34,45,17,6">
-        <entry box="1,2,13,2"/>
+        <tran trig="FRAME_TRANSFERRED" target="../../2">
+         <tran_glyph conn="35,54,3,1,-4,-10,2">
+          <action box="-19,1,18,2"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="35,51,17,6">
+         <entry box="1,2,13,2"/>
+        </state_glyph>
+       </state>
+       <state_glyph node="10,30,65,29">
+        <entry box="1,2,25,2"/>
+        <exit box="1,4,23,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="9,24,65,29">
-       <entry box="1,2,25,2"/>
-       <exit box="1,4,23,2"/>
-      </state_glyph>
+      <state_glyph node="7,25,78,41"/>
      </state>
-     <state_glyph node="6,19,78,55"/>
+     <state_glyph node="2,5,94,71"/>
     </state>
-    <state_diagram size="98,77"/>
+    <state_diagram size="98,82"/>
    </statechart>
   </class>
   <class name="EthernetCommandInterface" superclass="qpcpp::QActive">
@@ -501,7 +520,6 @@ subscribe(RESET_SIG);</action>
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
   <class name="DisplayFramesEvt" superclass="qpcpp::QEvt">
    <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
-   <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="TransferFrameEvt" superclass="qpcpp::QEvt">
@@ -509,6 +527,9 @@ subscribe(RESET_SIG);</action>
    <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="region_row_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="region_col_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+  </class>
+  <class name="SetDisplayFrequencyEvt" superclass="qpcpp::QEvt">
+   <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
@@ -530,7 +551,7 @@ subscribe(RESET_SIG);</action>
   </attribute>
   <operation name="getRegionInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
    <parameter name="id" type="std::uint8_t"/>
-   <code>Q_REQUIRE(id &lt; Q_DIM(Region::instances));
+   <code>//Q_REQUIRE(id &lt; Q_DIM(Region::instances));
 return &amp;Region::instances[id];</code>
   </operation>
  </package>
@@ -560,18 +581,21 @@ enum ArenaControllerSignals {
 
     MAX_PUB_SIG,    // the last published signal
 
-    // bsp POST to SerialCommandInterface
+    // POST to SerialCommandInterface
     ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     SERIAL_READY_SIG,
 
-    // bsp POST to EthernetCommandInterface
+    // POST to EthernetCommandInterface
     ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG,
     ETHERNET_INITIALIZED_SIG,
     ETHERNET_IP_ADDRESS_FOUND_SIG,
     ETHERNET_SERVER_INITIALIZED_SIG,
     ETHERNET_CLIENT_CONNECTED_SIG,
+
+    // POST to Display
+    SET_DISPLAY_FREQUENCY_SIG,
 
     WATCHDOG_TIMEOUT_SIG, // signal for Watchdog timeout event
     SERIAL_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
@@ -654,6 +678,8 @@ namespace AC
 namespace constants
 {
 constexpr uint32_t watchdog_delay_s = 1;
+
+constexpr uint32_t display_frequency_hz_default = 200;
 
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;

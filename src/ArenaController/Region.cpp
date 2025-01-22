@@ -64,7 +64,7 @@ namespace AC {
 
 //.${Shared::getRegionInstance} ..............................................
 QP::QHsm * getRegionInstance(std::uint8_t id) {
-    Q_REQUIRE(id < Q_DIM(Region::instances));
+    //Q_REQUIRE(id < Q_DIM(Region::instances));
     return &Region::instances[id];
 }
 

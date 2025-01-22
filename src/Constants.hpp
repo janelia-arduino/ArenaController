@@ -28,6 +28,8 @@ namespace constants
 {
 constexpr uint32_t watchdog_delay_s = 1;
 
+constexpr uint32_t display_frequency_hz_default = 200;
+
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;
 constexpr uint8_t spi_data_mode = SPI_MODE0;

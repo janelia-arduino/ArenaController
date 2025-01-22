@@ -126,6 +126,15 @@ void processCommandString(String command)
   {
     QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
   }
+  else if (command.startsWith("SET_DISPLAY_FREQUENCY"))
+  {
+    command.replace("SET_DISPLAY_FREQUENCY", "");
+    command.trim();
+    uint32_t frequency = command.toInt();
+    static AC::SetDisplayFrequencyEvt setDisplayFrequencyEvt = { AC::SET_DISPLAY_FREQUENCY_SIG, 0U, 0U};
+    setDisplayFrequencyEvt.display_frequency_hz = frequency;
+    AC::AO_Display->POST(&setDisplayFrequencyEvt, &l_TIMER_ID);
+  }
 }
 
 
