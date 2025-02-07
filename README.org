@@ -13,9 +13,10 @@
 - URL: https://github.com/janelia-arduino/ArenaController
 - Author: Peter Polidoro
 - Email: peter@polidoro.io
-- Copyright: 2024 Howard Hughes Medical Institute
+- Copyright: 2025 Howard Hughes Medical Institute
 - References:
   - https://reiserlab.github.io/Modular-LED-Display/
+  - https://github.com/iorodeo/LED-Display_G4_Hardware_Arena
   - https://www.pjrc.com/store/teensy41.html
   - https://www.pjrc.com/store/ethernet_kit.html
   - https://github.com/vjmuzik/NativeEthernet

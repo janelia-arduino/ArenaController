@@ -101,6 +101,7 @@ static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 
 static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
+static uint8_t frame_buffer[AC::constants::];
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -256,10 +257,13 @@ void BSP::beginSerial()
 
 void BSP::pollSerialCommand()
 {
-  if (AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available() > 0)
+  uint32_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+  if (bytes_available > 0)
   {
-    String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
-    processCommandString(command);
+    Serial.print("bytes_available = ");
+    Serial.println(bytes_available);
+    // String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
+    // processCommandString(command);
   }
 }
 
