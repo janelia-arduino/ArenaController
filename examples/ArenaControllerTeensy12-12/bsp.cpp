@@ -19,7 +19,6 @@ namespace AC
 namespace constants
 {
 // Ethernet Communication Interface
-// constexpr IPAddress ip(192, 168, 10, 196);
 constexpr uint16_t port = 62222;
 
 // Serial Communication Interface
@@ -79,8 +78,6 @@ static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
-static EthernetServer ethernet_server{AC::constants::port};
-static EthernetClient ethernet_client;
 static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
@@ -101,7 +98,10 @@ static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 
 static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
-static uint8_t frame_buffer[AC::constants::];
+// static uint8_t frame_buffer[AC::constants::];
+
+static EthernetServer ethernet_server{AC::constants::port};
+static EthernetClient ethernet_client;
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -260,10 +260,10 @@ void BSP::pollSerialCommand()
   uint32_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
   if (bytes_available > 0)
   {
-    Serial.print("bytes_available = ");
-    Serial.println(bytes_available);
-    // String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
-    // processCommandString(command);
+    // Serial.print("bytes_available = ");
+    // Serial.println(bytes_available);
+    String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
+    processCommandString(command);
   }
 }
 
@@ -286,11 +286,11 @@ void BSP::checkForEthernetIPAddress()
 
 void BSP::beginEthernetServer()
 {
-  Serial.println("beginEthernetServer()");
-  IPAddress ip_address = Ethernet.localIP();
-  Serial.println(ip_address);
-  // ethernet_server.begin();
-  // AC::AO_EthernetCommandInterface->POST(&ethernetServerInitializedEvt, &l_TIMER_ID);
+  ethernet_server.begin();
+  if (ethernet_server)
+  {
+    AC::AO_EthernetCommandInterface->POST(&ethernetServerInitializedEvt, &l_TIMER_ID);
+  }
 }
 
 void BSP::checkForEthernetClient()
