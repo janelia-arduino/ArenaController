@@ -42,8 +42,6 @@ protected:
     Q_STATE_DECL(Unintitalized);
     Q_STATE_DECL(IPAddressFound);
     Q_STATE_DECL(ServerRunning);
-    Q_STATE_DECL(WaitingForClient);
-    Q_STATE_DECL(ClientConnected);
     Q_STATE_DECL(WaitingForIPAddress);
 };
 
@@ -182,52 +180,14 @@ Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
 Q_STATE_DEF(EthernetCommandInterface, ServerRunning) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::ServerRunning::initial}
-        case Q_INIT_SIG: {
-            status_ = tran(&WaitingForClient);
-            break;
-        }
-        default: {
-            status_ = super(&Active);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::EthernetCommandI~::SM::Active::ServerRunning::WaitingForClient} ....
-Q_STATE_DEF(EthernetCommandInterface, WaitingForClient) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::ServerRunning::WaitingForClient::ETHERNET_TIMEOUT}
-        case ETHERNET_TIMEOUT_SIG: {
-            BSP::checkForEthernetClient();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::EthernetCommandI~::SM::Active::ServerRunning::WaitingForClient::ETHERNET_CLIENT_CONNECTED}
-        case ETHERNET_CLIENT_CONNECTED_SIG: {
-            status_ = tran(&ClientConnected);
-            break;
-        }
-        default: {
-            status_ = super(&ServerRunning);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::EthernetCommandI~::SM::Active::ServerRunning::ClientConnected} .....
-Q_STATE_DEF(EthernetCommandInterface, ClientConnected) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::ServerRunning::ClientConnected::ETHERNET_TIMEOUT}
+        //.${AOs::EthernetCommandI~::SM::Active::ServerRunning::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
             BSP::pollEthernetCommand();
             status_ = Q_RET_HANDLED;
             break;
         }
         default: {
-            status_ = super(&ServerRunning);
+            status_ = super(&Active);
             break;
         }
     }

@@ -45,7 +45,6 @@ public:
     static void beginEthernet();
     static void checkForEthernetIPAddress();
     static void beginEthernetServer();
-    static void checkForEthernetClient();
     static void pollEthernetCommand();
 
     static void armDisplayFrameTimer(uint32_t frequency_hz);

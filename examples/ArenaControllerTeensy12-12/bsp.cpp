@@ -91,7 +91,6 @@ static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
 static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
 static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
-static QEvt const ethernetClientConnectedEvt = { AC::ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
 static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
 static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
 
@@ -101,12 +100,21 @@ static uint8_t transfer_panel_complete_count;
 // static uint8_t frame_buffer[AC::constants::];
 
 static EthernetServer ethernet_server{AC::constants::port};
-static EthernetClient ethernet_client;
 
 //----------------------------------------------------------------------------
 // Local functions
-void processCommandString(String command)
+String ipAddressToString(const IPAddress& ipAddress)
 {
+  return String(ipAddress[0]) + String(".") +\
+  String(ipAddress[1]) + String(".") +\
+  String(ipAddress[2]) + String(".") +\
+  String(ipAddress[3]);
+}
+
+String processCommandString(String command)
+{
+  command.trim();
+  String response = command;
   if (command.equalsIgnoreCase("RESET"))
   {
     QF::PUBLISH(&resetEvt, &l_TIMER_ID);
@@ -127,6 +135,18 @@ void processCommandString(String command)
   {
     QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
   }
+  else if (command.equalsIgnoreCase("EHS"))
+  {
+    response = String(Ethernet.hardwareStatus());
+  }
+  else if (command.equalsIgnoreCase("ELS"))
+  {
+    response = String(Ethernet.linkStatus());
+  }
+  else if (command.equalsIgnoreCase("GET_IP_ADDRESS"))
+  {
+    response = ipAddressToString(Ethernet.localIP());
+  }
   else if (command.startsWith("SET_DISPLAY_FREQUENCY"))
   {
     command.replace("SET_DISPLAY_FREQUENCY", "");
@@ -136,6 +156,7 @@ void processCommandString(String command)
     setDisplayFrequencyEvt.display_frequency_hz = frequency;
     AC::AO_Display->POST(&setDisplayFrequencyEvt, &l_TIMER_ID);
   }
+  return response;
 }
 
 
@@ -257,13 +278,11 @@ void BSP::beginSerial()
 
 void BSP::pollSerialCommand()
 {
-  uint32_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
-  if (bytes_available > 0)
+  if (AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available())
   {
-    // Serial.print("bytes_available = ");
-    // Serial.println(bytes_available);
     String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
-    processCommandString(command);
+    String response = processCommandString(command);
+    Serial.print(response);
   }
 }
 
@@ -293,27 +312,15 @@ void BSP::beginEthernetServer()
   }
 }
 
-void BSP::checkForEthernetClient()
-{
-  // ethernet_client = ethernet_server.available();
-  // if (ethernet_client)
-  // {
-  //   Serial.println("Ethernet client connected!");
-  //   AC::AO_EthernetCommandInterface->POST(&ethernetClientConnectedEvt, &l_TIMER_ID);
-  // }
-  // else
-  // {
-  //   Serial.print("No Ethernet client connected. ");
-  //   Serial.print("My IP address: ");
-  //   Serial.println(Ethernet.localIP());
-  // }
-}
-
 void BSP::pollEthernetCommand()
 {
-  // print your local IP address:
-  // Serial.print("My IP address: ");
-  // Serial.println(Ethernet.localIP());
+  EthernetClient ethernet_client = ethernet_server.accept();
+  if (ethernet_client && ethernet_client.available())
+  {
+    String command = ethernet_client.readStringUntil('\n');
+    String response = processCommandString(command);
+    ethernet_client.write(response.c_str());
+  }
 }
 
 void displayFrameTimerHandler()

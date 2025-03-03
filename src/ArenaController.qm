@@ -306,35 +306,13 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
       <state_glyph node="14,36,32,11"/>
      </state>
      <state name="ServerRunning">
-      <initial target="../1">
-       <initial_glyph conn="37,55,4,0,3">
-        <action box="0,-2,10,2"/>
-       </initial_glyph>
-      </initial>
-      <state name="WaitingForClient">
-       <tran trig="ETHERNET_TIMEOUT">
-        <action brief="checkForEthernetClient()">BSP::checkForEthernetClient();</action>
-        <tran_glyph conn="17,62,3,-1,20">
-         <action box="0,-2,26,4"/>
-        </tran_glyph>
-       </tran>
-       <tran trig="ETHERNET_CLIENT_CONNECTED" target="../../2">
-        <tran_glyph conn="45,60,1,1,4,10,-4">
-         <action box="0,-2,26,2"/>
-        </tran_glyph>
-       </tran>
-       <state_glyph node="17,58,28,8"/>
-      </state>
-      <state name="ClientConnected">
-       <tran trig="ETHERNET_TIMEOUT">
-        <action brief="pollEthernetCommand()">BSP::pollEthernetCommand();</action>
-        <tran_glyph conn="17,72,3,-1,20">
-         <action box="0,-2,19,4"/>
-        </tran_glyph>
-       </tran>
-       <state_glyph node="17,68,28,10"/>
-      </state>
-      <state_glyph node="14,49,64,37"/>
+      <tran trig="ETHERNET_TIMEOUT">
+       <action brief="pollEthernetCommand()">BSP::pollEthernetCommand();</action>
+       <tran_glyph conn="14,56,3,-1,20">
+        <action box="0,-2,21,5"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="14,49,64,12"/>
      </state>
      <state name="WaitingForIPAddress">
       <tran trig="ETHERNET_TIMEOUT">
@@ -350,7 +328,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
       </tran>
       <state_glyph node="55,24,25,10"/>
      </state>
-     <state_glyph node="8,16,99,72">
+     <state_glyph node="8,16,99,50">
       <entry box="1,2,24,2"/>
       <exit box="1,4,24,2"/>
      </state_glyph>
@@ -592,7 +570,6 @@ enum ArenaControllerSignals {
     ETHERNET_INITIALIZED_SIG,
     ETHERNET_IP_ADDRESS_FOUND_SIG,
     ETHERNET_SERVER_INITIALIZED_SIG,
-    ETHERNET_CLIENT_CONNECTED_SIG,
 
     // POST to Display
     SET_DISPLAY_FREQUENCY_SIG,
@@ -648,7 +625,6 @@ public:
     static void beginEthernet();
     static void checkForEthernetIPAddress();
     static void beginEthernetServer();
-    static void checkForEthernetClient();
     static void pollEthernetCommand();
 
     static void armDisplayFrameTimer(uint32_t frequency_hz);
