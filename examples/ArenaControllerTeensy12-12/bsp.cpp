@@ -21,6 +21,8 @@ namespace constants
 // Ethernet Communication Interface
 constexpr uint16_t port = 62222;
 
+constexpr byte first_command_byte_max = 32;
+
 // Serial Communication Interface
 //HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
 usb_serial_class & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
@@ -64,6 +66,8 @@ constexpr char base_dir_str[] = "patterns";
 constexpr uint8_t filename_length_max = 15;
 constexpr uint16_t frame_count_y_max = 1;
 constexpr uint16_t frame_count_x_max = 20;
+
+constexpr uint16_t byte_count_per_command_header_max = 7;
 
 } // namespace constants
 } // namespace AC
@@ -151,10 +155,8 @@ String processCommandString(String command)
   {
     command.replace("SET_DISPLAY_FREQUENCY", "");
     command.trim();
-    uint32_t frequency = command.toInt();
-    static AC::SetDisplayFrequencyEvt setDisplayFrequencyEvt = { AC::SET_DISPLAY_FREQUENCY_SIG, 0U, 0U};
-    setDisplayFrequencyEvt.display_frequency_hz = frequency;
-    AC::AO_Display->POST(&setDisplayFrequencyEvt, &l_TIMER_ID);
+    uint32_t frequency_hz = command.toInt();
+    BSP::setDisplayFrequency(frequency_hz);
   }
   return response;
 }
@@ -278,11 +280,24 @@ void BSP::beginSerial()
 
 void BSP::pollSerialCommand()
 {
-  if (AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available())
+  size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+  if (bytes_available)
   {
-    String command = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
-    String response = processCommandString(command);
-    Serial.print(response);
+    byte command_byte_array[bytes_available];
+    Serial.readBytes(command_byte_array, bytes_available);
+    byte first_byte = command_byte_array[0];
+
+    // check to see if command is string
+    if (first_byte > AC::constants::first_command_byte_max)
+    {
+      char command_str[bytes_available + 1];
+      memcpy(command_str, command_byte_array, bytes_available);
+      command_str[bytes_available] = 0;
+      String command_string = String(command_str);
+      String response = processCommandString(command_string);
+      Serial.println(response);
+      return;
+    }
   }
 }
 
@@ -347,6 +362,13 @@ void BSP::displayFrame()
 {
   delay(2);
   // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
+}
+
+void BSP::setDisplayFrequency(uint32_t frequency_hz)
+{
+  static AC::SetDisplayFrequencyEvt setDisplayFrequencyEvt = { AC::SET_DISPLAY_FREQUENCY_SIG, 0U, 0U};
+  setDisplayFrequencyEvt.display_frequency_hz = frequency_hz;
+  AC::AO_Display->POST(&setDisplayFrequencyEvt, &l_TIMER_ID);
 }
 
 uint8_t BSP::getRegionRowPanelCountMax()
