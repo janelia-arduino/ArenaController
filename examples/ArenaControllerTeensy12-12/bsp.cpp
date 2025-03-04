@@ -67,7 +67,7 @@ constexpr uint8_t filename_length_max = 15;
 constexpr uint16_t frame_count_y_max = 1;
 constexpr uint16_t frame_count_x_max = 20;
 
-constexpr uint16_t byte_count_per_command_header_max = 7;
+constexpr uint16_t byte_count_per_command_max = 16;
 
 } // namespace constants
 } // namespace AC
@@ -104,6 +104,8 @@ static uint8_t transfer_panel_complete_count;
 // static uint8_t frame_buffer[AC::constants::];
 
 static EthernetServer ethernet_server{AC::constants::port};
+
+static byte command_byte_array[AC::constants::byte_count_per_command_max];
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -283,21 +285,21 @@ void BSP::pollSerialCommand()
   size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
   if (bytes_available)
   {
-    byte command_byte_array[bytes_available];
-    Serial.readBytes(command_byte_array, bytes_available);
-    byte first_byte = command_byte_array[0];
+    byte first_byte = Serial.read();
 
-    // check to see if command is string
-    if (first_byte > AC::constants::first_command_byte_max)
-    {
-      char command_str[bytes_available + 1];
-      memcpy(command_str, command_byte_array, bytes_available);
-      command_str[bytes_available] = 0;
-      String command_string = String(command_str);
-      String response = processCommandString(command_string);
-      Serial.println(response);
-      return;
-    }
+    // byte command_byte_array[bytes_available];
+    // Serial.readBytes(command_byte_array, bytes_available);
+    // // check to see if command is string
+    // if (first_byte > AC::constants::first_command_byte_max)
+    // {
+    //   char command_str[bytes_available + 1];
+    //   memcpy(command_str, command_byte_array, bytes_available);
+    //   command_str[bytes_available] = 0;
+    //   String command_string = String(command_str);
+    //   String response = processCommandString(command_string);
+    //   Serial.println(response);
+    //   return;
+    // }
   }
 }
 
