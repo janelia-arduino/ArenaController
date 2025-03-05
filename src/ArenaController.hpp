@@ -38,6 +38,10 @@ enum ArenaControllerSignals {
     FRAME_TRANSFERRED_SIG,
     DISPLAY_FRAME_TIMEOUT_SIG,
 
+    SERIAL_COMMAND_AVAILABLE_SIG,
+    ETHERNET_COMMAND_AVAILABLE_SIG,
+    COMMAND_PROCESSED_SIG,
+
     MAX_PUB_SIG,    // the last published signal
 
     // POST to SerialCommandInterface

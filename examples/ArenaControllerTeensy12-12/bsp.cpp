@@ -18,10 +18,12 @@ namespace AC
 {
 namespace constants
 {
+constexpr uint16_t byte_count_per_command_max = 16;
+constexpr byte first_command_byte_max_value = 32;
+
 // Ethernet Communication Interface
 constexpr uint16_t port = 62222;
 
-constexpr byte first_command_byte_max = 32;
 
 // Serial Communication Interface
 //HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
@@ -66,9 +68,6 @@ constexpr char base_dir_str[] = "patterns";
 constexpr uint8_t filename_length_max = 15;
 constexpr uint16_t frame_count_y_max = 1;
 constexpr uint16_t frame_count_x_max = 20;
-
-constexpr uint16_t byte_count_per_command_max = 16;
-
 } // namespace constants
 } // namespace AC
 
@@ -82,19 +81,22 @@ static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
+static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
+static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
+static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
+
 static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateEthernetCommandInterfaceEvt = { AC::DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const serialReadyEvt = { AC::SERIAL_READY_SIG, 0U, 0U};
-
-static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
-static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
-static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
-
 static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
 static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
+static QEvt const serialCommandAvailableEvt = { AC::SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
+static QEvt const ethernetCommandAvailableEvt = { AC::ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
+static QEvt const commandProcessedEvt = { AC::COMMAND_PROCESSED_SIG, 0U, 0U};
+
 static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
 static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
 
@@ -104,6 +106,9 @@ static uint8_t transfer_panel_complete_count;
 // static uint8_t frame_buffer[AC::constants::];
 
 static EthernetServer ethernet_server{AC::constants::port};
+static IPAddress static_ip{192, 168, 10, 62};
+static IPAddress subnet_mask{255, 255, 255, 0};
+static IPAddress gateway{192, 168, 10, 1};
 
 static byte command_byte_array[AC::constants::byte_count_per_command_max];
 
@@ -285,27 +290,45 @@ void BSP::pollSerialCommand()
   size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
   if (bytes_available)
   {
-    byte first_byte = Serial.read();
+    QF::PUBLISH(&serialCommandAvailableEvt, &l_TIMER_ID);
+  }
+}
+
+void BSP::readSerialCommand()
+{
+  byte first_byte = Serial.read();
+  Serial.println(first_byte);
+  // check to see if command is string
+  if (first_byte > AC::constants::first_command_byte_max_value)
+  {
+    size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+    byte command_byte_array[bytes_available];
+    Serial.readBytes(command_byte_array, bytes_available);
+
+    char command_str[bytes_available + 2];
+    command_str[0] = first_byte;
+    // memcpy(command_str + 1, command_byte_array, bytes_available);
+    // memcpy(command_str, command_byte_array, bytes_available);
+    command_str[bytes_available] = 0;
+    String command_string = String(command_str);
+    String response = processCommandString(command_string);
+    Serial.println(response);
+    QF::PUBLISH(&commandProcessedEvt, &l_TIMER_ID);
+   return;
+  }
+
+  // size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+  // if (bytes_available)
+  // {
 
     // byte command_byte_array[bytes_available];
     // Serial.readBytes(command_byte_array, bytes_available);
-    // // check to see if command is string
-    // if (first_byte > AC::constants::first_command_byte_max)
-    // {
-    //   char command_str[bytes_available + 1];
-    //   memcpy(command_str, command_byte_array, bytes_available);
-    //   command_str[bytes_available] = 0;
-    //   String command_string = String(command_str);
-    //   String response = processCommandString(command_string);
-    //   Serial.println(response);
-    //   return;
-    // }
-  }
+  // }
 }
 
 void BSP::beginEthernet()
 {
-  if (Ethernet.begin())
+  if (Ethernet.begin(static_ip, subnet_mask, gateway))
   {
     AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_TIMER_ID);
   }
@@ -334,9 +357,10 @@ void BSP::pollEthernetCommand()
   EthernetClient ethernet_client = ethernet_server.accept();
   if (ethernet_client && ethernet_client.available())
   {
-    String command = ethernet_client.readStringUntil('\n');
-    String response = processCommandString(command);
-    ethernet_client.write(response.c_str());
+    QF::PUBLISH(&ethernetCommandAvailableEvt, &l_TIMER_ID);
+    // String command = ethernet_client.readStringUntil('\n');
+    // String response = processCommandString(command);
+    // ethernet_client.write(response.c_str());
   }
 }
 

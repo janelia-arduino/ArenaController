@@ -41,6 +41,7 @@ public:
 
     static void beginSerial();
     static void pollSerialCommand();
+    static void readSerialCommand();
 
     static void beginEthernet();
     static void checkForEthernetIPAddress();

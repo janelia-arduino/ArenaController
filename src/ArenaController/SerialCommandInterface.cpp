@@ -39,7 +39,9 @@ protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Active);
     Q_STATE_DECL(NotReady);
-    Q_STATE_DECL(Ready);
+    Q_STATE_DECL(PollingForNewCommand);
+    Q_STATE_DECL(Waiting);
+    Q_STATE_DECL(ProcessingCommand);
     Q_STATE_DECL(Inactive);
 };
 
@@ -79,12 +81,27 @@ SerialCommandInterface::SerialCommandInterface()
 //.${AOs::SerialCommandInt~::SM} .............................................
 Q_STATE_DEF(SerialCommandInterface, initial) {
     //.${AOs::SerialCommandInt~::SM::initial}
+    subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
+    subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
+    subscribe(COMMAND_PROCESSED_SIG);
     return tran(&Inactive);
 }
 //.${AOs::SerialCommandInt~::SM::Active} .....................................
 Q_STATE_DEF(SerialCommandInterface, Active) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::SerialCommandInt~::SM::Active}
+        case Q_ENTRY_SIG: {
+            serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active}
+        case Q_EXIT_SIG: {
+            serial_time_evt_.disarm();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //.${AOs::SerialCommandInt~::SM::Active::initial}
         case Q_INIT_SIG: {
             status_ = tran(&NotReady);
@@ -93,6 +110,11 @@ Q_STATE_DEF(SerialCommandInterface, Active) {
         //.${AOs::SerialCommandInt~::SM::Active::DEACTIVATE_SERIAL_COMMAND_INTERF~}
         case DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG: {
             status_ = tran(&Inactive);
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active::SERIAL_TIMEOUT}
+        case SERIAL_TIMEOUT_SIG: {
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {
@@ -114,7 +136,7 @@ Q_STATE_DEF(SerialCommandInterface, NotReady) {
         }
         //.${AOs::SerialCommandInt~::SM::Active::NotReady::SERIAL_READY}
         case SERIAL_READY_SIG: {
-            status_ = tran(&Ready);
+            status_ = tran(&PollingForNewCommand);
             break;
         }
         default: {
@@ -124,26 +146,57 @@ Q_STATE_DEF(SerialCommandInterface, NotReady) {
     }
     return status_;
 }
-//.${AOs::SerialCommandInt~::SM::Active::Ready} ..............................
-Q_STATE_DEF(SerialCommandInterface, Ready) {
+//.${AOs::SerialCommandInt~::SM::Active::PollingForNewCommand} ...............
+Q_STATE_DEF(SerialCommandInterface, PollingForNewCommand) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::SerialCommandInt~::SM::Active::Ready}
-        case Q_ENTRY_SIG: {
-            serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::SerialCommandInt~::SM::Active::Ready}
-        case Q_EXIT_SIG: {
-            serial_time_evt_.disarm();
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::SerialCommandInt~::SM::Active::Ready::SERIAL_TIMEOUT}
+        //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_TIMEOUT}
         case SERIAL_TIMEOUT_SIG: {
             BSP::pollSerialCommand();
             status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
+        case ETHERNET_COMMAND_AVAILABLE_SIG: {
+            status_ = tran(&Waiting);
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_AVAILABLE}
+        case SERIAL_COMMAND_AVAILABLE_SIG: {
+            BSP::readSerialCommand();
+            status_ = tran(&ProcessingCommand);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::SerialCommandInt~::SM::Active::Waiting} ............................
+Q_STATE_DEF(SerialCommandInterface, Waiting) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::SerialCommandInt~::SM::Active::Waiting::COMMAND_PROCESSED}
+        case COMMAND_PROCESSED_SIG: {
+            status_ = tran(&PollingForNewCommand);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::SerialCommandInt~::SM::Active::ProcessingCommand} ..................
+Q_STATE_DEF(SerialCommandInterface, ProcessingCommand) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::SerialCommandInt~::SM::Active::ProcessingComman~::COMMAND_PROCESSED}
+        case COMMAND_PROCESSED_SIG: {
+            status_ = tran(&PollingForNewCommand);
             break;
         }
         default: {
