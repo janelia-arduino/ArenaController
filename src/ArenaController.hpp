@@ -44,7 +44,7 @@ enum ArenaControllerSignals {
 
     MAX_PUB_SIG,    // the last published signal
 
-    // POST to SerialCommandInterface
+   // POST to SerialCommandInterface
     ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
     SERIAL_READY_SIG,

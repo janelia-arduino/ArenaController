@@ -110,10 +110,14 @@ static IPAddress static_ip{192, 168, 10, 62};
 static IPAddress subnet_mask{255, 255, 255, 0};
 static IPAddress gateway{192, 168, 10, 1};
 
-static byte command_byte_array[AC::constants::byte_count_per_command_max];
+// static byte command_byte_array[AC::constants::byte_count_per_command_max];
 
 //----------------------------------------------------------------------------
 // Local functions
+void watchdogCallback ()
+{
+}
+
 String ipAddressToString(const IPAddress& ipAddress)
 {
   return String(ipAddress[0]) + String(".") +\
@@ -121,53 +125,6 @@ String ipAddressToString(const IPAddress& ipAddress)
   String(ipAddress[2]) + String(".") +\
   String(ipAddress[3]);
 }
-
-String processCommandString(String command)
-{
-  command.trim();
-  String response = command;
-  if (command.equalsIgnoreCase("RESET"))
-  {
-    QF::PUBLISH(&resetEvt, &l_TIMER_ID);
-  }
-  if (command.equalsIgnoreCase("LED_ON"))
-  {
-    BSP::ledOn();
-  }
-  else if (command.equalsIgnoreCase("LED_OFF"))
-  {
-    BSP::ledOff();
-  }
-  else if (command.equalsIgnoreCase("ALL_ON"))
-  {
-    QF::PUBLISH(&allOnEvt, &l_TIMER_ID);
-  }
-  else if (command.equalsIgnoreCase("ALL_OFF"))
-  {
-    QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
-  }
-  else if (command.equalsIgnoreCase("EHS"))
-  {
-    response = String(Ethernet.hardwareStatus());
-  }
-  else if (command.equalsIgnoreCase("ELS"))
-  {
-    response = String(Ethernet.linkStatus());
-  }
-  else if (command.equalsIgnoreCase("GET_IP_ADDRESS"))
-  {
-    response = ipAddressToString(Ethernet.localIP());
-  }
-  else if (command.startsWith("SET_DISPLAY_FREQUENCY"))
-  {
-    command.replace("SET_DISPLAY_FREQUENCY", "");
-    command.trim();
-    uint32_t frequency_hz = command.toInt();
-    BSP::setDisplayFrequency(frequency_hz);
-  }
-  return response;
-}
-
 
 //----------------------------------------------------------------------------
 // BSP functions
@@ -214,8 +171,9 @@ void BSP::ledOn()
 void BSP::initializeWatchdog()
 {
   WDT_timings_t config;
-  config.trigger = AC::constants::watchdog_delay_s * 10; /* in seconds, 0->128 */
-  config.timeout = AC::constants::watchdog_delay_s; /* in seconds, 0->128 */
+  config.trigger = AC::constants::watchdog_trigger_s;
+  config.timeout = AC::constants::watchdog_timeout_s;
+  config.callback = watchdogCallback;
   wdt.begin(config);
 }
 
@@ -278,6 +236,53 @@ void BSP::deactivateCommandInterfaces()
   AC::AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_TIMER_ID);
 }
 
+String BSP::processStringCommand(String command)
+{
+  command.trim();
+  String response = command;
+  if (command.equalsIgnoreCase("RESET"))
+  {
+    QF::PUBLISH(&resetEvt, &l_TIMER_ID);
+  }
+  if (command.equalsIgnoreCase("LED_ON"))
+  {
+    BSP::ledOn();
+  }
+  else if (command.equalsIgnoreCase("LED_OFF"))
+  {
+    BSP::ledOff();
+  }
+  else if (command.equalsIgnoreCase("ALL_ON"))
+  {
+    QF::PUBLISH(&allOnEvt, &l_TIMER_ID);
+  }
+  else if (command.equalsIgnoreCase("ALL_OFF"))
+  {
+    QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
+  }
+  else if (command.equalsIgnoreCase("EHS"))
+  {
+    response = String(Ethernet.hardwareStatus());
+  }
+  else if (command.equalsIgnoreCase("ELS"))
+  {
+    response = String(Ethernet.linkStatus());
+  }
+  else if (command.equalsIgnoreCase("GET_IP_ADDRESS"))
+  {
+    response = ipAddressToString(Ethernet.localIP());
+  }
+  else if (command.startsWith("SET_DISPLAY_FREQUENCY"))
+  {
+    command.replace("SET_DISPLAY_FREQUENCY", "");
+    command.trim();
+    uint32_t frequency_hz = command.toInt();
+    BSP::setDisplayFrequency(frequency_hz);
+  }
+  QF::PUBLISH(&commandProcessedEvt, &l_TIMER_ID);
+  return response;
+}
+
 void BSP::beginSerial()
 {
   AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
@@ -294,37 +299,49 @@ void BSP::pollSerialCommand()
   }
 }
 
-void BSP::readSerialCommand()
+uint8_t BSP::readSerialByte()
 {
-  byte first_byte = Serial.read();
-  Serial.println(first_byte);
-  // check to see if command is string
-  if (first_byte > AC::constants::first_command_byte_max_value)
-  {
-    size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
-    byte command_byte_array[bytes_available];
-    Serial.readBytes(command_byte_array, bytes_available);
-
-    char command_str[bytes_available + 2];
-    command_str[0] = first_byte;
-    // memcpy(command_str + 1, command_byte_array, bytes_available);
-    // memcpy(command_str, command_byte_array, bytes_available);
-    command_str[bytes_available] = 0;
-    String command_string = String(command_str);
-    String response = processCommandString(command_string);
-    Serial.println(response);
-    QF::PUBLISH(&commandProcessedEvt, &l_TIMER_ID);
-   return;
-  }
-
-  // size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
-  // if (bytes_available)
-  // {
-
-    // byte command_byte_array[bytes_available];
-    // Serial.readBytes(command_byte_array, bytes_available);
-  // }
+  return AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.read();
 }
+
+String BSP::readSerialStringCommand(uint8_t first_byte)
+{
+  String command_tail = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
+  return String(String((char)first_byte) + command_tail);
+}
+
+void BSP::writeSerialStringResponse(String response)
+{
+  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.println(response);
+}
+
+// void BSP::readSerialStringCommand(uint8_t first_byte)
+// {
+//     String command_tail = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
+//     String command_string = String(String((char)first_byte) + command_tail);
+//     // size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+//     // byte command_byte_array[bytes_available];
+//     // Serial.readBytes(command_byte_array, bytes_available);
+
+//     // char command_str[bytes_available + 2];
+//     // command_str[0] = first_byte;
+//     // // memcpy(command_str + 1, command_byte_array, bytes_available);
+//     // // memcpy(command_str, command_byte_array, bytes_available);
+//     // command_str[bytes_available] = 0;
+//     // String command_string = String(command_str);
+//     String response = processCommandString(command_string);
+//     Serial.println(response);
+//     QF::PUBLISH(&commandProcessedEvt, &l_TIMER_ID);
+//    return;
+
+//   // size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+//   // if (bytes_available)
+//   // {
+
+//     // byte command_byte_array[bytes_available];
+//     // Serial.readBytes(command_byte_array, bytes_available);
+//   // }
+// }
 
 void BSP::beginEthernet()
 {

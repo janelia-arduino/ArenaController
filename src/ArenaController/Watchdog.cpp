@@ -38,6 +38,7 @@ public:
 protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Feeding);
+    Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Resetting);
 };
 
@@ -77,8 +78,8 @@ Watchdog::Watchdog()
 //.${AOs::Watchdog::SM} ......................................................
 Q_STATE_DEF(Watchdog, initial) {
     //.${AOs::Watchdog::SM::initial}
-    BSP::initializeWatchdog();
     subscribe(RESET_SIG);
+    BSP::initializeWatchdog();
     return tran(&Feeding);
 }
 //.${AOs::Watchdog::SM::Feeding} .............................................
@@ -87,7 +88,7 @@ Q_STATE_DEF(Watchdog, Feeding) {
     switch (e->sig) {
         //.${AOs::Watchdog::SM::Feeding}
         case Q_ENTRY_SIG: {
-            watchdog_time_evt_.armX(BSP::TICKS_PER_SEC/10, BSP::TICKS_PER_SEC/10);
+            watchdog_time_evt_.armX(BSP::TICKS_PER_SEC, BSP::TICKS_PER_SEC);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -97,10 +98,9 @@ Q_STATE_DEF(Watchdog, Feeding) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Watchdog::SM::Feeding::WATCHDOG_TIMEOUT}
-        case WATCHDOG_TIMEOUT_SIG: {
-            BSP::feedWatchdog();
-            status_ = Q_RET_HANDLED;
+        //.${AOs::Watchdog::SM::Feeding::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&Initialized);
             break;
         }
         //.${AOs::Watchdog::SM::Feeding::RESET}
@@ -110,6 +110,23 @@ Q_STATE_DEF(Watchdog, Feeding) {
         }
         default: {
             status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Watchdog::SM::Feeding::Initialized} ................................
+Q_STATE_DEF(Watchdog, Initialized) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Watchdog::SM::Feeding::Initialized::WATCHDOG_TIMEOUT}
+        case WATCHDOG_TIMEOUT_SIG: {
+            BSP::feedWatchdog();
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&Feeding);
             break;
         }
     }

@@ -31,6 +31,9 @@ class SerialCommandInterface : public QP::QActive {
 public:
     QP::QTimeEvt serial_time_evt_;
     static SerialCommandInterface instance;
+    std::uint8_t first_command_byte_;
+    String string_command_;
+    String string_response_;
 
 public:
     SerialCommandInterface();
@@ -41,7 +44,8 @@ protected:
     Q_STATE_DECL(NotReady);
     Q_STATE_DECL(PollingForNewCommand);
     Q_STATE_DECL(Waiting);
-    Q_STATE_DECL(ProcessingCommand);
+    Q_STATE_DECL(ProcessingBinaryCommand);
+    Q_STATE_DECL(ProcessingStringCommand);
     Q_STATE_DECL(Inactive);
 };
 
@@ -163,8 +167,16 @@ Q_STATE_DEF(SerialCommandInterface, PollingForNewCommand) {
         }
         //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_AVAILABLE}
         case SERIAL_COMMAND_AVAILABLE_SIG: {
-            BSP::readSerialCommand();
-            status_ = tran(&ProcessingCommand);
+            first_command_byte_ = BSP::readSerialByte();
+            //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_A~::[binary_command]}
+            if ((first_command_byte_ <= constants::first_command_byte_max_value_binary)) {
+                status_ = tran(&ProcessingBinaryCommand);
+            }
+            //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_A~::[else]}
+            else {
+                string_command_ = BSP::readSerialStringCommand(first_command_byte_);
+                status_ = tran(&ProcessingStringCommand);
+            }
             break;
         }
         default: {
@@ -190,12 +202,36 @@ Q_STATE_DEF(SerialCommandInterface, Waiting) {
     }
     return status_;
 }
-//.${AOs::SerialCommandInt~::SM::Active::ProcessingCommand} ..................
-Q_STATE_DEF(SerialCommandInterface, ProcessingCommand) {
+//.${AOs::SerialCommandInt~::SM::Active::ProcessingBinaryCommand} ............
+Q_STATE_DEF(SerialCommandInterface, ProcessingBinaryCommand) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::SerialCommandInt~::SM::Active::ProcessingComman~::COMMAND_PROCESSED}
+        //.${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
+            //BSP::writeSerialBinaryResponse();
+            status_ = tran(&PollingForNewCommand);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::SerialCommandInt~::SM::Active::ProcessingStringCommand} ............
+Q_STATE_DEF(SerialCommandInterface, ProcessingStringCommand) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::SerialCommandInt~::SM::Active::ProcessingStringCommand}
+        case Q_ENTRY_SIG: {
+            string_response_ = BSP::processStringCommand(string_command_);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::SerialCommandInt~::SM::Active::ProcessingString~::COMMAND_PROCESSED}
+        case COMMAND_PROCESSED_SIG: {
+            BSP::writeSerialStringResponse(string_response_);
             status_ = tran(&PollingForNewCommand);
             break;
         }

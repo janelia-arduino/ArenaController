@@ -39,9 +39,13 @@ public:
     static void activateCommandInterfaces();
     static void deactivateCommandInterfaces();
 
+    static String processStringCommand(String command);
+
     static void beginSerial();
     static void pollSerialCommand();
-    static void readSerialCommand();
+    static uint8_t readSerialByte();
+    static String readSerialStringCommand(uint8_t first_byte);
+    static void writeSerialStringResponse(String response);
 
     static void beginEthernet();
     static void checkForEthernetIPAddress();

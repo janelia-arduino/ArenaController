@@ -15,10 +15,12 @@
   <item id=".::ArenaController.hpp">-48,33,1050,625</item>
   <item id="AOs::Region::SM">131,0,871,625</item>
   <item id="./ArenaController::ArenaController.cpp">0,0,596,300</item>
-  <item id=".::bsp.hpp">0,0,1002,625,*</item>
-  <item id=".::Constants.hpp">128,33,874,625</item>
-  <item id="./ArenaController::Region.cpp">0,0,871,625</item>
-  <item id="AOs::EthernetCommandInterface::SM">0,33,1002,625</item>
+  <item id=".::bsp.hpp">0,33,1002,625</item>
+  <item id=".::Constants.hpp">128,0,874,625</item>
+  <item id="./ArenaController::Region.cpp">0,33,871,625</item>
+  <item id="AOs::EthernetCommandInterface::SM">0,0,1002,625</item>
+  <item id="AOs::SerialCommandInterface::SM">0,0,932,625,*</item>
+  <item id="AOs::Watchdog::SM">0,0,640,480</item>
  </group>
  <group name="search">
   <item name="options">2032128</item>
