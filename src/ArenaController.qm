@@ -1025,6 +1025,7 @@ void loop() {
   </file>
   <file name="SerialCommandInterface.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+#include &quot;Command.hpp&quot;
 
 
 using namespace QP;
@@ -1143,6 +1144,8 @@ using namespace QP;
 
 namespace AC {
 
+static QP::QSpyId const l_COMMAND_ID = { 0U }; // QSpy source ID
+
 Command * const CommandPtr = &amp;Command::instance;
 Command Command::instance;
 
@@ -1157,7 +1160,7 @@ String Command::processStringCommand(String command)
   String response = command;
   if (command.equalsIgnoreCase(&quot;RESET&quot;))
   {
-    QF::PUBLISH(&amp;resetEvt, this);
+    QF::PUBLISH(&amp;resetEvt, &amp;l_COMMAND_ID);
   }
   if (command.equalsIgnoreCase(&quot;LED_ON&quot;))
   {
@@ -1169,32 +1172,32 @@ String Command::processStringCommand(String command)
   }
   else if (command.equalsIgnoreCase(&quot;ALL_ON&quot;))
   {
-    QF::PUBLISH(&amp;allOnEvt, this);
+    QF::PUBLISH(&amp;allOnEvt, &amp;l_COMMAND_ID);
   }
   else if (command.equalsIgnoreCase(&quot;ALL_OFF&quot;))
   {
-    QF::PUBLISH(&amp;allOffEvt, this);
+    QF::PUBLISH(&amp;allOffEvt, &amp;l_COMMAND_ID);
   }
   else if (command.equalsIgnoreCase(&quot;EHS&quot;))
   {
-    response = String(Ethernet.hardwareStatus());
+    //response = String(Ethernet.hardwareStatus());
   }
   else if (command.equalsIgnoreCase(&quot;ELS&quot;))
   {
-    response = String(Ethernet.linkStatus());
+    //response = String(Ethernet.linkStatus());
   }
   else if (command.equalsIgnoreCase(&quot;GET_IP_ADDRESS&quot;))
   {
-    response = ipAddressToString(Ethernet.localIP());
+    //response = ipAddressToString(Ethernet.localIP());
   }
   else if (command.startsWith(&quot;SET_DISPLAY_FREQUENCY&quot;))
   {
-    command.replace(&quot;SET_DISPLAY_FREQUENCY&quot;, &quot;&quot;);
-    command.trim();
-    uint32_t frequency_hz = command.toInt();
-    BSP::setDisplayFrequency(frequency_hz);
+    //command.replace(&quot;SET_DISPLAY_FREQUENCY&quot;, &quot;&quot;);
+    //command.trim();
+    //uint32_t frequency_hz = command.toInt();
+    //BSP::setDisplayFrequency(frequency_hz);
   }
-  QF::PUBLISH(&amp;commandProcessedEvt, this);
+  QF::PUBLISH(&amp;commandProcessedEvt, &amp;l_COMMAND_ID);
   return response;
 }
 

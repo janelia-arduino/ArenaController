@@ -17,6 +17,7 @@
 //
 //.$endhead${./ArenaControlle~::SerialCommandInterface.cpp} ^^^^^^^^^^^^^^^^^^
 #include "ArenaController.hpp"  // ArenaController application interface
+#include "Command.hpp"
 
 
 using namespace QP;

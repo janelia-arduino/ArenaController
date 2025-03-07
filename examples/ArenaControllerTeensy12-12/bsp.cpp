@@ -98,7 +98,6 @@ static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 
 static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
-// static uint8_t frame_buffer[AC::constants::];
 
 static EthernetServer ethernet_server{AC::constants::port};
 static IPAddress static_ip{192, 168, 10, 62};
