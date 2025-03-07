@@ -81,10 +81,6 @@ static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
-static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
-static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
-static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
-
 static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
@@ -95,7 +91,6 @@ static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SI
 static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
 static QEvt const serialCommandAvailableEvt = { AC::SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
 static QEvt const ethernetCommandAvailableEvt = { AC::ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
-static QEvt const commandProcessedEvt = { AC::COMMAND_PROCESSED_SIG, 0U, 0U};
 
 static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
 static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
@@ -234,53 +229,6 @@ void BSP::deactivateCommandInterfaces()
 #endif
 
   AC::AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_TIMER_ID);
-}
-
-String BSP::processStringCommand(String command)
-{
-  command.trim();
-  String response = command;
-  if (command.equalsIgnoreCase("RESET"))
-  {
-    QF::PUBLISH(&resetEvt, &l_TIMER_ID);
-  }
-  if (command.equalsIgnoreCase("LED_ON"))
-  {
-    BSP::ledOn();
-  }
-  else if (command.equalsIgnoreCase("LED_OFF"))
-  {
-    BSP::ledOff();
-  }
-  else if (command.equalsIgnoreCase("ALL_ON"))
-  {
-    QF::PUBLISH(&allOnEvt, &l_TIMER_ID);
-  }
-  else if (command.equalsIgnoreCase("ALL_OFF"))
-  {
-    QF::PUBLISH(&allOffEvt, &l_TIMER_ID);
-  }
-  else if (command.equalsIgnoreCase("EHS"))
-  {
-    response = String(Ethernet.hardwareStatus());
-  }
-  else if (command.equalsIgnoreCase("ELS"))
-  {
-    response = String(Ethernet.linkStatus());
-  }
-  else if (command.equalsIgnoreCase("GET_IP_ADDRESS"))
-  {
-    response = ipAddressToString(Ethernet.localIP());
-  }
-  else if (command.startsWith("SET_DISPLAY_FREQUENCY"))
-  {
-    command.replace("SET_DISPLAY_FREQUENCY", "");
-    command.trim();
-    uint32_t frequency_hz = command.toInt();
-    BSP::setDisplayFrequency(frequency_hz);
-  }
-  QF::PUBLISH(&commandProcessedEvt, &l_TIMER_ID);
-  return response;
 }
 
 void BSP::beginSerial()

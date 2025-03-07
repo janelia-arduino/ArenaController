@@ -225,7 +225,7 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingStringCommand) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active::ProcessingStringCommand}
         case Q_ENTRY_SIG: {
-            string_response_ = BSP::processStringCommand(string_command_);
+            string_response_ = AC::CommandPtr->processStringCommand(string_command_);
             status_ = Q_RET_HANDLED;
             break;
         }

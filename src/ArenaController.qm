@@ -183,7 +183,7 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
       <state_glyph node="75,64,26,10"/>
      </state>
      <state name="ProcessingStringCommand">
-      <entry brief="processStringCommand()">string_response_ = BSP::processStringCommand(string_command_);</entry>
+      <entry brief="processStringCommand()">string_response_ = AC::CommandPtr-&gt;processStringCommand(string_command_);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeSerialStringResponse()">BSP::writeSerialStringResponse(string_response_);</action>
        <tran_glyph conn="19,64,0,3,-15,14">
@@ -921,6 +921,30 @@ constexpr uint8_t identify_quarter_panels_grayscale_pattern[byte_count_per_panel
 #endif
 </text>
   </file>
+  <file name="Command.hpp">
+   <text>#ifndef COMMAND_HPP
+#define COMMAND_HPP
+
+#include &lt;Arduino.h&gt;
+
+#include &quot;bsp.hpp&quot;
+#include &quot;ArenaController.hpp&quot;
+
+
+namespace AC {
+
+class Command
+{
+public:
+  static Command instance;
+  String processStringCommand(String command);
+};
+
+extern Command * const CommandPtr;
+
+} // namespace AC
+#endif</text>
+  </file>
  </directory>
  <directory name="./ArenaController">
   <file name="Arena.cpp">
@@ -1110,6 +1134,72 @@ $define${Shared::getRegionInstance}
 //============================================================================
 // generate definition of the AO
 $define${AOs::Region}</text>
+  </file>
+  <file name="Command.cpp">
+   <text>#include &quot;Command.hpp&quot;
+
+
+using namespace QP;
+
+namespace AC {
+
+Command * const CommandPtr = &amp;Command::instance;
+Command Command::instance;
+
+static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
+static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
+static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
+static QEvt const commandProcessedEvt = { AC::COMMAND_PROCESSED_SIG, 0U, 0U};
+
+String Command::processStringCommand(String command)
+{
+  command.trim();
+  String response = command;
+  if (command.equalsIgnoreCase(&quot;RESET&quot;))
+  {
+    QF::PUBLISH(&amp;resetEvt, this);
+  }
+  if (command.equalsIgnoreCase(&quot;LED_ON&quot;))
+  {
+    BSP::ledOn();
+  }
+  else if (command.equalsIgnoreCase(&quot;LED_OFF&quot;))
+  {
+    BSP::ledOff();
+  }
+  else if (command.equalsIgnoreCase(&quot;ALL_ON&quot;))
+  {
+    QF::PUBLISH(&amp;allOnEvt, this);
+  }
+  else if (command.equalsIgnoreCase(&quot;ALL_OFF&quot;))
+  {
+    QF::PUBLISH(&amp;allOffEvt, this);
+  }
+  else if (command.equalsIgnoreCase(&quot;EHS&quot;))
+  {
+    response = String(Ethernet.hardwareStatus());
+  }
+  else if (command.equalsIgnoreCase(&quot;ELS&quot;))
+  {
+    response = String(Ethernet.linkStatus());
+  }
+  else if (command.equalsIgnoreCase(&quot;GET_IP_ADDRESS&quot;))
+  {
+    response = ipAddressToString(Ethernet.localIP());
+  }
+  else if (command.startsWith(&quot;SET_DISPLAY_FREQUENCY&quot;))
+  {
+    command.replace(&quot;SET_DISPLAY_FREQUENCY&quot;, &quot;&quot;);
+    command.trim();
+    uint32_t frequency_hz = command.toInt();
+    BSP::setDisplayFrequency(frequency_hz);
+  }
+  QF::PUBLISH(&amp;commandProcessedEvt, this);
+  return response;
+}
+
+} // namespace AC
+</text>
   </file>
  </directory>
 </model>
