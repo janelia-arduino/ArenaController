@@ -28,14 +28,14 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action brief="Arena_InitialTransition()">FSP::Arena_InitialTransition(this);</action>
+     <action brief="initializeAndSubscribe()">FSP::Arena_InitialTransition(this);</action>
      <initial_glyph conn="49,10,4,0,4">
       <action box="1,1,28,2"/>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="Arena_ArenaOn_entry()">FSP::Arena_ArenaOn_entry(this);</entry>
-     <exit brief="Arena_ArenaOn_exit()">FSP::Arena_ArenaOn_exit(this);</exit>
+     <entry brief="activateCommandInterfaces()">FSP::Arena_ArenaOn_entry(this);</entry>
+     <exit brief="deactivateCommandInterfaces()">FSP::Arena_ArenaOn_exit(this);</exit>
      <initial target="../4">
       <initial_glyph conn="60,20,4,0,3">
        <action box="0,-2,10,2"/>
@@ -52,16 +52,16 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="Arena_ArenaOn_AllOn_entry()">FSP::Arena_ArenaOn_AllOn_entry(this);</entry>
+      <entry brief="displayAllOnFrames()">FSP::Arena_AllOn_entry(this);</entry>
       <state_glyph node="42,45,35,10">
        <entry box="1,2,28,2"/>
       </state_glyph>
      </state>
      <state name="AllOff">
-      <entry brief="Arena_ArenaOn_AllOff_entry()">FSP::Arena_ArenaOn_AllOff_entry(this);</entry>
+      <entry brief="deactivateDisplay()">FSP::Arena_AllOff_entry(this);</entry>
       <tran trig="ALL_ON" target="../../3">
        <tran_glyph conn="54,34,2,0,11">
-        <action box="4,8,10,2"/>
+        <action box="1,4,10,2"/>
        </tran_glyph>
       </tran>
       <state_glyph node="42,23,35,11">
@@ -69,8 +69,8 @@ This structure of the code is recommended for applications with only one active 
       </state_glyph>
      </state>
      <state_glyph node="31,14,67,56">
-      <entry box="1,2,23,2"/>
-      <exit box="1,4,24,2"/>
+      <entry box="1,2,24,2"/>
+      <exit box="1,4,26,2"/>
      </state_glyph>
     </state>
     <state_diagram size="107,77"/>
@@ -88,14 +88,14 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../2">
-     <action brief="SerialCommandInterface_InitialTransition()">FSP::SerialCommandInterface_InitialTransition(this);</action>
+     <action brief="subscribe()">FSP::SerialCommandInterface_InitialTransition(this);</action>
      <initial_glyph conn="46,8,4,0,3">
-      <action box="1,-1,34,3"/>
+      <action box="1,0,34,3"/>
      </initial_glyph>
     </initial>
     <state name="Active">
-     <entry brief="SerialCommandInterface_Active_entry()">FSP::SerialCommandInterface_Active_entry(this);</entry>
-     <exit brief="SerialCommandInterface_Active_exit()">FSP::SerialCommandInterface_Active_exit(this);</exit>
+     <entry brief="armSerialTimer()">FSP::SerialCommandInterface_Active_entry(this);</entry>
+     <exit brief="disarmSerialTimer()">FSP::SerialCommandInterface_Active_exit(this);</exit>
      <initial target="../3">
       <initial_glyph conn="36,28,4,0,4">
        <action box="0,-2,10,2"/>
@@ -112,21 +112,21 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <state name="NotReady">
-      <entry brief="beginSerial()">BSP::beginSerial();</entry>
+      <entry brief="beginSerial()">FSP::SerialCommandInterface_NotReady_entry(this);</entry>
       <tran trig="SERIAL_READY" target="../../4">
-       <tran_glyph conn="51,34,1,1,16,11,-3">
+       <tran_glyph conn="71,34,1,1,16,11,-23">
         <action box="2,-3,13,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="29,32,22,8">
-       <entry box="1,2,13,2"/>
+      <state_glyph node="29,32,42,8">
+       <entry box="1,2,40,2"/>
       </state_glyph>
      </state>
      <state name="PollingForNewCommand">
       <tran trig="SERIAL_TIMEOUT">
-       <action brief="pollSerialCommand()">BSP::pollSerialCommand();</action>
+       <action brief="pollSerialCommand()">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(this);</action>
        <tran_glyph conn="33,53,3,-1,16">
-        <action box="0,-2,24,4"/>
+        <action box="0,-2,18,4"/>
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../5">
@@ -135,9 +135,9 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <tran trig="SERIAL_COMMAND_AVAILABLE">
-       <action brief="readFirstCommandByte()">first_command_byte_ = BSP::readSerialByte();</action>
+       <action brief="readFirstByte()">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE(this);</action>
        <choice target="../../../6">
-        <guard brief="binary_command">(first_command_byte_ &lt;= constants::first_command_byte_max_value_binary)</guard>
+        <guard brief="binary_command">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_if_guard(this)</guard>
         <action brief="readSerialBinaryCommand()"/>
         <choice_glyph conn="36,63,5,3,30,9,9">
          <action box="25,10,22,4"/>
@@ -145,7 +145,7 @@ This structure of the code is recommended for applications with only one active 
        </choice>
        <choice target="../../../7">
         <guard brief="else"/>
-        <action brief="readSerialStringCommand()">string_command_ = BSP::readSerialStringCommand(first_command_byte_);</action>
+        <action brief="readSerialStringCommand()">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_else_action(this);</action>
         <choice_glyph conn="36,63,5,1,-2,8,-2">
          <action box="-3,9,22,4"/>
         </choice_glyph>
@@ -166,7 +166,7 @@ This structure of the code is recommended for applications with only one active 
      </state>
      <state name="ProcessingBinaryCommand">
       <tran trig="COMMAND_PROCESSED" target="../../4">
-       <action brief="writeSerialBinaryResponse()">//BSP::writeSerialBinaryResponse();</action>
+       <action brief="writeSerialBinaryResponse()">FSP::SerialCommandInterface_ProcessingBinaryCommand_COMMAND_PROCESSED(this);</action>
        <tran_glyph conn="84,64,0,1,-8,-20">
         <action box="1,-7,21,4"/>
        </tran_glyph>
@@ -174,9 +174,9 @@ This structure of the code is recommended for applications with only one active 
       <state_glyph node="75,64,26,10"/>
      </state>
      <state name="ProcessingStringCommand">
-      <entry brief="processStringCommand()">string_response_ = FSP::processStringCommand(string_command_);</entry>
+      <entry brief="processStringCommand()">FSP::SerialCommandInterface_ProcessingStringCommand_entry(this);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
-       <action brief="writeSerialStringResponse()">BSP::writeSerialStringResponse(string_response_);</action>
+       <action brief="writeSerialStringResponse()">FSP::SerialCommandInterface_ProcessingStringCommand_COMMAND_PROCESSED(this);</action>
        <tran_glyph conn="19,64,0,3,-15,14">
         <action box="-10,-20,20,5"/>
        </tran_glyph>

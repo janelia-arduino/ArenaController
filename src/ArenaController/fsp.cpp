@@ -3,12 +3,14 @@
 
 using namespace QP;
 
+using namespace AC;
+
 static QSpyId const l_COMMAND_ID = { 1U }; // QSpy source ID
 
-static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
-static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
-static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
-static QEvt const commandProcessedEvt = { AC::COMMAND_PROCESSED_SIG, 0U, 0U};
+static CommandEvt const resetEvt = { RESET_SIG, 0U, 0U};
+static CommandEvt const allOnEvt = { ALL_ON_SIG, 0U, 0U};
+static CommandEvt const allOffEvt = { ALL_OFF_SIG, 0U, 0U};
+static QEvt const commandProcessedEvt = { COMMAND_PROCESSED_SIG, 0U, 0U};
 
 void FSP::ArenaController_setup()
 {
@@ -16,92 +18,136 @@ void FSP::ArenaController_setup()
   BSP::init(); // initialize the BSP
 
   // init publish-subscribe
-  static QSubscrList subscrSto[AC::MAX_PUB_SIG];
+  static QSubscrList subscrSto[MAX_PUB_SIG];
   QF::psInit(subscrSto, Q_DIM(subscrSto));
 
   // statically allocate event queues for the AOs and start them...
   static QEvt const *watchdog_queueSto[2];
-  AC::AO_Watchdog->start(1U, // priority
+  AO_Watchdog->start(1U, // priority
     watchdog_queueSto, Q_DIM(watchdog_queueSto),
     (void *)0, 0U); // no stack
 
   static QEvt const *serial_command_interface_queueSto[10];
-  AC::AO_SerialCommandInterface->start(2U, // priority
+  AO_SerialCommandInterface->start(2U, // priority
     serial_command_interface_queueSto, Q_DIM(serial_command_interface_queueSto),
     (void *)0, 0U); // no stack
 
   static QEvt const *ethernet_command_interface_queueSto[10];
-  AC::AO_EthernetCommandInterface->start(3U, // priority
+  AO_EthernetCommandInterface->start(3U, // priority
     ethernet_command_interface_queueSto, Q_DIM(ethernet_command_interface_queueSto),
     (void *)0, 0U); // no stack
 
   static QEvt const *arena_queueSto[10];
-  AC::AO_Arena->start(4U, // priority
+  AO_Arena->start(4U, // priority
     arena_queueSto, Q_DIM(arena_queueSto),
     (void *)0, 0U); // no stack
 
   static QEvt const *display_queueSto[10];
-  AC::AO_Display->start(5U, // priority
+  AO_Display->start(5U, // priority
     display_queueSto, Q_DIM(display_queueSto),
     (void *)0, 0U); // no stack
 
   static QEvt const *frame_queueSto[10];
-  AC::AO_Frame->start(6U, // priority
+  AO_Frame->start(6U, // priority
     frame_queueSto, Q_DIM(frame_queueSto),
     (void *)0, 0U); // no stack
 
   //...
 }
 
-void FSP::Arena_InitialTransition(QActive * const ao)
+void FSP::Arena_InitialTransition(QP::QActive * const ao)
 {
   BSP::initializeArena();
-  ao->subscribe(AC::RESET_SIG);
-  ao->subscribe(AC::ALL_ON_SIG);
-  ao->subscribe(AC::ALL_OFF_SIG);
+  ao->subscribe(RESET_SIG);
+  ao->subscribe(ALL_ON_SIG);
+  ao->subscribe(ALL_OFF_SIG);
 }
 
-void FSP::Arena_ArenaOn_entry(QActive * const ao)
+void FSP::Arena_ArenaOn_entry(QP::QActive * const ao)
 {
   BSP::activateCommandInterfaces();
 }
 
-void FSP::Arena_ArenaOn_exit(QActive * const ao)
+void FSP::Arena_ArenaOn_exit(QP::QActive * const ao)
 {
   BSP::deactivateCommandInterfaces();
 }
 
-void FSP::Arena_ArenaOn_AllOff_entry(QActive * const ao)
+void FSP::Arena_AllOff_entry(QP::QActive * const ao)
 {
-  static QEvt const deactivateDisplayEvt = { AC::DEACTIVATE_DISPLAY_SIG, 0U, 0U};
+  static QEvt const deactivateDisplayEvt = { DEACTIVATE_DISPLAY_SIG, 0U, 0U};
   QF::PUBLISH(&deactivateDisplayEvt, ao);
 }
 
-void FSP::Arena_ArenaOn_AllOn_entry(QActive * const ao)
+void FSP::Arena_AllOn_entry(QP::QActive * const ao)
 {
-  static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
-  displayFramesEvt.panel_buffer = &AC::constants::all_on_grayscale_pattern;
-  displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
+  static DisplayFramesEvt displayFramesEvt = { DISPLAY_FRAMES_SIG, 0U, 0U};
+  displayFramesEvt.panel_buffer = &constants::all_on_grayscale_pattern;
+  displayFramesEvt.panel_buffer_byte_count = constants::byte_count_per_panel_grayscale;
   QF::PUBLISH(&displayFramesEvt, ao);
 }
 
 void FSP::SerialCommandInterface_InitialTransition(QActive * const ao)
 {
-  ao->subscribe(AC::SERIAL_COMMAND_AVAILABLE_SIG);
-  ao->subscribe(AC::ETHERNET_COMMAND_AVAILABLE_SIG);
-  ao->subscribe(AC::COMMAND_PROCESSED_SIG);
+  ao->subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(COMMAND_PROCESSED_SIG);
 }
 
 void FSP::SerialCommandInterface_Active_entry(QActive * const ao)
 {
-  AC::SerialCommandInterface * const sci = static_cast<AC::SerialCommandInterface * const>(ao);
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   sci->serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
 }
 
 void FSP::SerialCommandInterface_Active_exit(QActive * const ao)
 {
-  AC::SerialCommandInterface * const sci = static_cast<AC::SerialCommandInterface * const>(ao);
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   sci->serial_time_evt_.disarm();
+}
+
+void FSP::SerialCommandInterface_NotReady_entry(QActive * const ao)
+{
+  BSP::beginSerial();
+}
+
+void FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(QActive * const ao)
+{
+  BSP::pollSerialCommand();
+}
+
+void FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE(QActive * const ao)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  sci->first_command_byte_ = BSP::readSerialByte();
+}
+
+bool FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_if_guard(QActive * const ao)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  return (sci->first_command_byte_ <= constants::first_command_byte_max_value_binary);
+}
+
+void FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_else_action(QActive * const ao)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  sci->string_command_ = BSP::readSerialStringCommand(sci->first_command_byte_);
+}
+
+void FSP::SerialCommandInterface_ProcessingStringCommand_entry(QActive * const ao)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  sci->string_response_ = FSP::processStringCommand(sci->string_command_);
+}
+
+void FSP::SerialCommandInterface_ProcessingStringCommand_COMMAND_PROCESSED(QActive * const ao)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  BSP::writeSerialStringResponse(sci->string_response_);
+}
+
+void FSP::SerialCommandInterface_ProcessingBinaryCommand_COMMAND_PROCESSED(QActive * const ao)
+{
 }
 
 String FSP::processStringCommand(String command)

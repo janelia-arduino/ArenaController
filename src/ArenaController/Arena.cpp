@@ -100,7 +100,7 @@ Q_STATE_DEF(Arena, AllOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOn}
         case Q_ENTRY_SIG: {
-            FSP::Arena_ArenaOn_AllOn_entry(this);
+            FSP::Arena_AllOn_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -117,7 +117,7 @@ Q_STATE_DEF(Arena, AllOff) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOff}
         case Q_ENTRY_SIG: {
-            FSP::Arena_ArenaOn_AllOff_entry(this);
+            FSP::Arena_AllOff_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
