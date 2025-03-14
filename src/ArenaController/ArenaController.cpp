@@ -24,46 +24,7 @@ namespace ArduinoInterface {
 
 //............................................................................
 void setup() {
-
-    QF::init(); // initialize the framework
-    BSP::init(); // initialize the BSP
-
-    // init publish-subscribe
-    static QSubscrList subscrSto[AC::MAX_PUB_SIG];
-    QF::psInit(subscrSto, Q_DIM(subscrSto));
-
-   // statically allocate event queues for the AOs and start them...
-    static QEvt const *watchdog_queueSto[2];
-    AC::AO_Watchdog->start(1U, // priority
-        watchdog_queueSto, Q_DIM(watchdog_queueSto),
-        (void *)0, 0U); // no stack
-
-    static QEvt const *serial_command_interface_queueSto[10];
-    AC::AO_SerialCommandInterface->start(2U, // priority
-        serial_command_interface_queueSto, Q_DIM(serial_command_interface_queueSto),
-        (void *)0, 0U); // no stack
-
-    static QEvt const *ethernet_command_interface_queueSto[10];
-    AC::AO_EthernetCommandInterface->start(3U, // priority
-        ethernet_command_interface_queueSto, Q_DIM(ethernet_command_interface_queueSto),
-        (void *)0, 0U); // no stack
-
-    static QEvt const *arena_queueSto[10];
-    AC::AO_Arena->start(4U, // priority
-        arena_queueSto, Q_DIM(arena_queueSto),
-        (void *)0, 0U); // no stack
-
-    static QEvt const *display_queueSto[10];
-    AC::AO_Display->start(5U, // priority
-        display_queueSto, Q_DIM(display_queueSto),
-        (void *)0, 0U); // no stack
-
-    static QEvt const *frame_queueSto[10];
-    AC::AO_Frame->start(6U, // priority
-        frame_queueSto, Q_DIM(frame_queueSto),
-        (void *)0, 0U); // no stack
-
-   //...
+    FSP::ArenaController_setup();
 }
 
 //............................................................................

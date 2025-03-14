@@ -28,17 +28,14 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>BSP::initializeArena();
-subscribe(RESET_SIG);
-subscribe(ALL_ON_SIG);
-subscribe(ALL_OFF_SIG);</action>
+     <action brief="Arena_InitialTransition();">FSP::Arena_InitialTransition(this);</action>
      <initial_glyph conn="49,10,4,0,4">
-      <action box="-1,-1,10,2"/>
+      <action box="1,1,28,2"/>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="activateCommandInterfaces()">BSP::activateCommandInterfaces();</entry>
-     <exit brief="deactivateCommandInterfaces()">BSP::deactivateCommandInterfaces();</exit>
+     <entry brief="Arena_ArenaOn_entry();">FSP::Arena_ArenaOn_entry(this);</entry>
+     <exit brief="Arena_ArenaOn_exit();">FSP::Arena_ArenaOn_exit(this);</exit>
      <initial target="../4">
       <initial_glyph conn="60,20,4,0,3">
        <action box="0,-2,10,2"/>
@@ -50,29 +47,25 @@ subscribe(ALL_OFF_SIG);</action>
       </tran_glyph>
      </tran>
      <tran trig="RESET" target="../4">
-      <tran_glyph conn="31,31,3,2,13,-3">
+      <tran_glyph conn="31,37,3,2,13,-3">
        <action box="0,-2,10,2"/>
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="displayAllOnFrames()">static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
-displayFramesEvt.panel_buffer = &amp;AC::constants::all_on_grayscale_pattern;
-displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
-QF::PUBLISH(&amp;displayFramesEvt, this);</entry>
-      <state_glyph node="42,34,35,7">
-       <entry box="1,2,20,2"/>
+      <entry brief="Arena_ArenaOn_AllOn_entry();">FSP::Arena_ArenaOn_AllOn_entry(this);</entry>
+      <state_glyph node="42,45,35,10">
+       <entry box="1,2,28,2"/>
       </state_glyph>
      </state>
      <state name="AllOff">
-      <entry brief="deactivateDisplay()">static QEvt const deactivateDisplayEvt = { AC::DEACTIVATE_DISPLAY_SIG, 0U, 0U};
-QF::PUBLISH(&amp;deactivateDisplayEvt, this);</entry>
+      <entry brief="Arena_ArenaOn_AllOff_entry();">FSP::Arena_ArenaOn_AllOff_entry(this);</entry>
       <tran trig="ALL_ON" target="../../3">
-       <tran_glyph conn="54,28,2,0,6">
-        <action box="2,1,10,2"/>
+       <tran_glyph conn="54,34,2,0,11">
+        <action box="4,8,10,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="42,23,25,5">
-       <entry box="1,2,17,2"/>
+      <state_glyph node="42,23,35,11">
+       <entry box="1,2,27,2"/>
       </state_glyph>
      </state>
      <state_glyph node="31,14,67,56">
@@ -692,7 +685,7 @@ namespace ArduinoInterface {
 
 //............................................................................
 void setup() {
-    FSP::setupArenaController();
+    FSP::ArenaController_setup();
 }
 
 //............................................................................

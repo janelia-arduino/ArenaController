@@ -2,6 +2,7 @@
 #define BSP_HPP
 #include "constants.hpp"
 
+
 struct BSP {
   enum { TICKS_PER_SEC = 100} ;
 

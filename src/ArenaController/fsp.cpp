@@ -3,14 +3,14 @@
 
 using namespace QP;
 
-static QP::QSpyId const l_COMMAND_ID = { 1U }; // QSpy source ID
+static QSpyId const l_COMMAND_ID = { 1U }; // QSpy source ID
 
 static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
 static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
 static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
 static QEvt const commandProcessedEvt = { AC::COMMAND_PROCESSED_SIG, 0U, 0U};
 
-void FSP::setupArenaController()
+void FSP::ArenaController_setup()
 {
   QF::init(); // initialize the framework
   BSP::init(); // initialize the BSP
@@ -51,6 +51,38 @@ void FSP::setupArenaController()
     (void *)0, 0U); // no stack
 
   //...
+}
+
+void FSP::Arena_InitialTransition(QActive * const ao)
+{
+  BSP::initializeArena();
+  ao->subscribe(AC::RESET_SIG);
+  ao->subscribe(AC::ALL_ON_SIG);
+  ao->subscribe(AC::ALL_OFF_SIG);
+}
+
+void FSP::Arena_ArenaOn_entry(QActive * const ao)
+{
+  BSP::activateCommandInterfaces();
+}
+
+void FSP::Arena_ArenaOn_exit(QActive * const ao)
+{
+  BSP::deactivateCommandInterfaces();
+}
+
+void FSP::Arena_ArenaOn_AllOff_entry(QActive * const ao)
+{
+  static QEvt const deactivateDisplayEvt = { AC::DEACTIVATE_DISPLAY_SIG, 0U, 0U};
+  QF::PUBLISH(&deactivateDisplayEvt, ao);
+}
+
+void FSP::Arena_ArenaOn_AllOn_entry(QActive * const ao)
+{
+  static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
+  displayFramesEvt.panel_buffer = &AC::constants::all_on_grayscale_pattern;
+  displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
+  QF::PUBLISH(&displayFramesEvt, ao);
 }
 
 String FSP::processStringCommand(String command)

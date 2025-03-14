@@ -76,10 +76,7 @@ Arena::Arena()
 //.${AOs::Arena::SM} .........................................................
 Q_STATE_DEF(Arena, initial) {
     //.${AOs::Arena::SM::initial}
-    BSP::initializeArena();
-    subscribe(RESET_SIG);
-    subscribe(ALL_ON_SIG);
-    subscribe(ALL_OFF_SIG);
+    FSP::Arena_InitialTransition(this);
     return tran(&ArenaOn);
 }
 //.${AOs::Arena::SM::ArenaOn} ................................................
@@ -88,13 +85,13 @@ Q_STATE_DEF(Arena, ArenaOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn}
         case Q_ENTRY_SIG: {
-            BSP::activateCommandInterfaces();
+            FSP::Arena_ArenaOn_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Arena::SM::ArenaOn}
         case Q_EXIT_SIG: {
-            BSP::deactivateCommandInterfaces();
+            FSP::Arena_ArenaOn_exit(this);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -146,8 +143,7 @@ Q_STATE_DEF(Arena, AllOff) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOff}
         case Q_ENTRY_SIG: {
-            static QEvt const deactivateDisplayEvt = { AC::DEACTIVATE_DISPLAY_SIG, 0U, 0U};
-            QF::PUBLISH(&deactivateDisplayEvt, this);
+            FSP::Arena_ArenaOn_AllOff_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
