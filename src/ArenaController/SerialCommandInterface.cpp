@@ -16,41 +16,10 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::SerialCommandInterface.cpp} ^^^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "SerialCommandInterface.hpp"
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-//.$declare${AOs::SerialCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::SerialCommandInterface} ............................................
-class SerialCommandInterface : public QP::QActive {
-public:
-    QP::QTimeEvt serial_time_evt_;
-    static SerialCommandInterface instance;
-    std::uint8_t first_command_byte_;
-    String string_command_;
-    String string_response_;
-
-public:
-    SerialCommandInterface();
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Active);
-    Q_STATE_DECL(NotReady);
-    Q_STATE_DECL(PollingForNewCommand);
-    Q_STATE_DECL(Waiting);
-    Q_STATE_DECL(ProcessingBinaryCommand);
-    Q_STATE_DECL(ProcessingStringCommand);
-    Q_STATE_DECL(Inactive);
-};
-
-} // namespace AC
-//.$enddecl${AOs::SerialCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -85,9 +54,7 @@ SerialCommandInterface::SerialCommandInterface()
 //.${AOs::SerialCommandInt~::SM} .............................................
 Q_STATE_DEF(SerialCommandInterface, initial) {
     //.${AOs::SerialCommandInt~::SM::initial}
-    subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
-    subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
-    subscribe(COMMAND_PROCESSED_SIG);
+    FSP::SerialCommandInterface_InitialTransition(this);
     return tran(&Inactive);
 }
 //.${AOs::SerialCommandInt~::SM::Active} .....................................
@@ -96,13 +63,13 @@ Q_STATE_DEF(SerialCommandInterface, Active) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active}
         case Q_ENTRY_SIG: {
-            serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
+            FSP::SerialCommandInterface_Active_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::SerialCommandInt~::SM::Active}
         case Q_EXIT_SIG: {
-            serial_time_evt_.disarm();
+            FSP::SerialCommandInterface_Active_exit(this);
             status_ = Q_RET_HANDLED;
             break;
         }

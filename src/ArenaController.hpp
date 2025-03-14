@@ -19,7 +19,7 @@
 #ifndef ARENA_CONTROLLER_HPP
 #define ARENA_CONTROLLER_HPP
 
-#include "qpcpp.hpp"   // QP-C++ framework
+#include "qpcpp.hpp"
 #include "bsp.hpp"
 #include "fsp.hpp"
 #include "signals.hpp"
@@ -30,7 +30,7 @@ namespace ArduinoInterface {
 void setup();
 void loop();
 
-} // namespace ArduinoInterface
+}
 
 //.$declare${Shared} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
@@ -68,4 +68,4 @@ QP::QHsm * getRegionInstance(std::uint8_t id) ;
 } // namespace AC
 //.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#endif // ARENA_CONTROLLER_HPP
+#endif

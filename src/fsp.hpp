@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "ArenaController.hpp"
+#include "SerialCommandInterface.hpp"
 
 
 struct FSP
@@ -14,6 +15,10 @@ struct FSP
   static void Arena_ArenaOn_exit(QP::QActive * const ao);
   static void Arena_ArenaOn_AllOff_entry(QP::QActive * const ao);
   static void Arena_ArenaOn_AllOn_entry(QP::QActive * const ao);
+
+  static void SerialCommandInterface_InitialTransition(QP::QActive * const ao);
+  static void SerialCommandInterface_Active_entry(QP::QActive * const ao);
+  static void SerialCommandInterface_Active_exit(QP::QActive * const ao);
 
   static String processStringCommand(String command);
 };

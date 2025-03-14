@@ -85,6 +85,25 @@ void FSP::Arena_ArenaOn_AllOn_entry(QActive * const ao)
   QF::PUBLISH(&displayFramesEvt, ao);
 }
 
+void FSP::SerialCommandInterface_InitialTransition(QActive * const ao)
+{
+  ao->subscribe(AC::SERIAL_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(AC::ETHERNET_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(AC::COMMAND_PROCESSED_SIG);
+}
+
+void FSP::SerialCommandInterface_Active_entry(QActive * const ao)
+{
+  AC::SerialCommandInterface * const sci = static_cast<AC::SerialCommandInterface * const>(ao);
+  sci->serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
+}
+
+void FSP::SerialCommandInterface_Active_exit(QActive * const ao)
+{
+  AC::SerialCommandInterface * const sci = static_cast<AC::SerialCommandInterface * const>(ao);
+  sci->serial_time_evt_.disarm();
+}
+
 String FSP::processStringCommand(String command)
 {
   command.trim();

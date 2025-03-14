@@ -28,14 +28,14 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action brief="Arena_InitialTransition();">FSP::Arena_InitialTransition(this);</action>
+     <action brief="Arena_InitialTransition()">FSP::Arena_InitialTransition(this);</action>
      <initial_glyph conn="49,10,4,0,4">
       <action box="1,1,28,2"/>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="Arena_ArenaOn_entry();">FSP::Arena_ArenaOn_entry(this);</entry>
-     <exit brief="Arena_ArenaOn_exit();">FSP::Arena_ArenaOn_exit(this);</exit>
+     <entry brief="Arena_ArenaOn_entry()">FSP::Arena_ArenaOn_entry(this);</entry>
+     <exit brief="Arena_ArenaOn_exit()">FSP::Arena_ArenaOn_exit(this);</exit>
      <initial target="../4">
       <initial_glyph conn="60,20,4,0,3">
        <action box="0,-2,10,2"/>
@@ -52,13 +52,13 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="Arena_ArenaOn_AllOn_entry();">FSP::Arena_ArenaOn_AllOn_entry(this);</entry>
+      <entry brief="Arena_ArenaOn_AllOn_entry()">FSP::Arena_ArenaOn_AllOn_entry(this);</entry>
       <state_glyph node="42,45,35,10">
        <entry box="1,2,28,2"/>
       </state_glyph>
      </state>
      <state name="AllOff">
-      <entry brief="Arena_ArenaOn_AllOff_entry();">FSP::Arena_ArenaOn_AllOff_entry(this);</entry>
+      <entry brief="Arena_ArenaOn_AllOff_entry()">FSP::Arena_ArenaOn_AllOff_entry(this);</entry>
       <tran trig="ALL_ON" target="../../3">
        <tran_glyph conn="54,34,2,0,11">
         <action box="4,8,10,2"/>
@@ -88,16 +88,14 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../2">
-     <action>subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
-subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
-subscribe(COMMAND_PROCESSED_SIG);</action>
+     <action brief="SerialCommandInterface_InitialTransition()">FSP::SerialCommandInterface_InitialTransition(this);</action>
      <initial_glyph conn="46,8,4,0,3">
-      <action box="0,-2,10,2"/>
+      <action box="1,-1,34,3"/>
      </initial_glyph>
     </initial>
     <state name="Active">
-     <entry brief="armSerialTimer(50Hz)">serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);</entry>
-     <exit brief="disarmSerialTimer()">serial_time_evt_.disarm();</exit>
+     <entry brief="SerialCommandInterface_Active_entry()">FSP::SerialCommandInterface_Active_entry(this);</entry>
+     <exit brief="SerialCommandInterface_Active_exit()">FSP::SerialCommandInterface_Active_exit(this);</exit>
      <initial target="../3">
       <initial_glyph conn="36,28,4,0,4">
        <action box="0,-2,10,2"/>
@@ -188,8 +186,8 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
       </state_glyph>
      </state>
      <state_glyph node="3,21,106,59">
-      <entry box="1,2,21,2"/>
-      <exit box="1,4,21,2"/>
+      <entry box="1,2,36,2"/>
+      <exit box="1,4,34,2"/>
      </state_glyph>
     </state>
     <state name="Inactive">
@@ -638,7 +636,7 @@ return &amp;Region::instances[id];</code>
    <text>#ifndef ARENA_CONTROLLER_HPP
 #define ARENA_CONTROLLER_HPP
 
-#include &quot;qpcpp.hpp&quot;   // QP-C++ framework
+#include &quot;qpcpp.hpp&quot;
 #include &quot;bsp.hpp&quot;
 #include &quot;fsp.hpp&quot;
 #include &quot;signals.hpp&quot;
@@ -649,24 +647,110 @@ namespace ArduinoInterface {
 void setup();
 void loop();
 
-} // namespace ArduinoInterface
+}
 
 $declare${Shared}
 
-#endif // ARENA_CONTROLLER_HPP
-   </text>
+#endif</text>
   </file>
- </directory>
- <directory name="./ArenaController">
-  <file name="Arena.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+  <file name="SerialCommandInterface.hpp">
+   <text>#ifndef SERIAL_COMMAND_INTERFACE_HPP
+#define SERIAL_COMMAND_INTERFACE_HPP
+
+#include &quot;ArenaController.hpp&quot;
 
 
-using namespace QP;
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::SerialCommandInterface}
+
+#endif</text>
+  </file>
+  <file name="Arena.hpp">
+   <text>#ifndef ARENA_HPP
+#define ARENA_HPP
+
+#include &quot;ArenaController.hpp&quot;
+
 
 //============================================================================
 // generate declaration of the active object
 $declare${AOs::Arena}
+
+#endif</text>
+  </file>
+  <file name="Display.hpp">
+   <text>#ifndef DISPLAY_HPP
+#define DISPLAY_HPP
+
+#include &quot;ArenaController.hpp&quot;
+
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Display}
+
+#endif</text>
+  </file>
+  <file name="EthernetCommandInterface.hpp">
+   <text>#ifndef ETHERNET_COMMAND_INTERFACE_HPP
+#define ETHERNET_COMMAND_INTERFACE_HPP
+
+#include &quot;ArenaController.hpp&quot;
+
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::EthernetCommandInterface}
+
+#endif</text>
+  </file>
+  <file name="Frame.hpp">
+   <text>#ifndef FRAME_HPP
+#define FRAME_HPP
+
+#include &quot;ArenaController.hpp&quot;
+
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Frame}
+
+#endif</text>
+  </file>
+  <file name="Watchdog.hpp">
+   <text>#ifndef WATCHDOG_HPP
+#define WATCHDOG_HPP
+
+#include &quot;ArenaController.hpp&quot;
+
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Watchdog}
+
+#endif</text>
+  </file>
+  <file name="Region.hpp">
+   <text>#ifndef REGION_HPP
+#define REGION_HPP
+
+#include &quot;ArenaController.hpp&quot;
+
+
+//============================================================================
+// generate declaration of the active object
+$declare${AOs::Region}
+
+#endif</text>
+  </file>
+ </directory>
+ <directory name="./ArenaController">
+  <file name="Arena.cpp">
+   <text>#include &quot;Arena.hpp&quot;
+
+
+using namespace QP;
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -696,14 +780,10 @@ void loop() {
 } // namespace AC</text>
   </file>
   <file name="SerialCommandInterface.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+   <text>#include &quot;SerialCommandInterface.hpp&quot;
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-$declare${AOs::SerialCommandInterface}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -714,14 +794,10 @@ $define${Shared::AO_SerialCommandInterface}
 $define${AOs::SerialCommandInterface}</text>
   </file>
   <file name="Display.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+   <text>#include &quot;Display.hpp&quot;
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-$declare${AOs::Display}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -732,14 +808,10 @@ $define${Shared::AO_Display}
 $define${AOs::Display}</text>
   </file>
   <file name="EthernetCommandInterface.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+   <text>#include &quot;EthernetCommandInterface.hpp&quot;
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-$declare${AOs::EthernetCommandInterface}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -750,14 +822,10 @@ $define${Shared::AO_EthernetCommandInterface}
 $define${AOs::EthernetCommandInterface}</text>
   </file>
   <file name="Frame.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+   <text>#include &quot;Frame.hpp&quot;
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-$declare${AOs::Frame}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -768,14 +836,10 @@ $define${Shared::AO_Frame}
 $define${AOs::Frame}</text>
   </file>
   <file name="Watchdog.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+   <text>#include &quot;Watchdog.hpp&quot;
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-$declare${AOs::Watchdog}
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -786,14 +850,10 @@ $define${Shared::AO_Watchdog}
 $define${AOs::Watchdog}</text>
   </file>
   <file name="Region.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+   <text>#include &quot;Region.hpp&quot;
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-$declare${AOs::Region}
 
 // helper function to provide the ID of this mine ............................
 static inline uint8_t REGION_ID(AC::Region const * const me) {

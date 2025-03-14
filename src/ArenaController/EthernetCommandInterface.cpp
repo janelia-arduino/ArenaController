@@ -16,39 +16,10 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::EthernetCommandInterface.cpp} ^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "EthernetCommandInterface.hpp"
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-//.$declare${AOs::EthernetCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::EthernetCommandInterface} ..........................................
-class EthernetCommandInterface : public QP::QActive {
-public:
-    static EthernetCommandInterface instance;
-    QP::QTimeEvt ethernet_time_evt_;
-
-public:
-    EthernetCommandInterface();
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Inactive);
-    Q_STATE_DECL(Active);
-    Q_STATE_DECL(Unintitalized);
-    Q_STATE_DECL(IPAddressFound);
-    Q_STATE_DECL(PollingForNewCommand);
-    Q_STATE_DECL(WaitingForIPAddress);
-    Q_STATE_DECL(Waiting);
-    Q_STATE_DECL(ProcessingCommand);
-};
-
-} // namespace AC
-//.$enddecl${AOs::EthernetCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of to opaque pointer to the AO

@@ -16,43 +16,10 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::Frame.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "Frame.hpp"
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-//.$declare${AOs::Frame} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::Frame} .............................................................
-class Frame : public QP::QActive {
-public:
-    static Frame instance;
-
-private:
-    std::uint8_t panel_set_row_index_;
-    std::uint8_t panel_set_col_index_;
-    std::uint8_t const (*panel_buffer_)[];
-    std::uint8_t region_row_panel_count_;
-    std::uint8_t region_col_panel_count_;
-    std::uint8_t panel_buffer_byte_count_;
-    QP::QHsm * regions_[constants::region_count_per_frame_max];
-
-public:
-    Frame();
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Inactive);
-    Q_STATE_DECL(Active);
-    Q_STATE_DECL(TransferringFrame);
-    Q_STATE_DECL(TransferringPanelSet);
-};
-
-} // namespace AC
-//.$enddecl${AOs::Frame} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of to opaque pointer to the AO

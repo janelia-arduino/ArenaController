@@ -16,41 +16,10 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::Display.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "Display.hpp"
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-//.$declare${AOs::Display} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::Display} ...........................................................
-class Display : public QP::QActive {
-public:
-    static Display instance;
-
-private:
-    std::uint8_t const (*panel_buffer_)[];
-    std::uint32_t display_frequency_hz_;
-    std::uint8_t panel_buffer_byte_count_;
-
-public:
-    Display();
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Initialized);
-    Q_STATE_DECL(Inactive);
-    Q_STATE_DECL(Active);
-    Q_STATE_DECL(DisplayingFrames);
-    Q_STATE_DECL(WaitingToDisplayFrame);
-    Q_STATE_DECL(DisplayingFrame);
-};
-
-} // namespace AC
-//.$enddecl${AOs::Display} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of to opaque pointer to the AO

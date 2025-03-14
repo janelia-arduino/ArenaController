@@ -16,34 +16,10 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::Watchdog.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "Watchdog.hpp"
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-//.$declare${AOs::Watchdog} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::Watchdog} ..........................................................
-class Watchdog : public QP::QActive {
-public:
-    static Watchdog instance;
-    QP::QTimeEvt watchdog_time_evt_;
-
-public:
-    Watchdog();
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Feeding);
-    Q_STATE_DECL(Initialized);
-    Q_STATE_DECL(Resetting);
-};
-
-} // namespace AC
-//.$enddecl${AOs::Watchdog} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of to opaque pointer to the AO

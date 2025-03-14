@@ -16,36 +16,10 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::Region.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "Region.hpp"
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-//.$declare${AOs::Region} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::Region} ............................................................
-class Region : public QP::QHsm {
-public:
-    static Region instances[constants::region_count_per_frame_max];
-
-private:
-    SPIClass * spi_ptr_;
-
-public:
-    Region()
-      : QHsm(&initial)
-    {}
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(state1);
-};
-
-} // namespace AC
-//.$enddecl${AOs::Region} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // helper function to provide the ID of this mine ............................
 static inline uint8_t REGION_ID(AC::Region const * const me) {

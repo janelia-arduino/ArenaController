@@ -16,33 +16,10 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::Arena.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "Arena.hpp"
 
 
 using namespace QP;
-
-//============================================================================
-// generate declaration of the active object
-//.$declare${AOs::Arena} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
-
-//.${AOs::Arena} .............................................................
-class Arena : public QP::QActive {
-public:
-    static Arena instance;
-
-public:
-    Arena();
-
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(ArenaOn);
-    Q_STATE_DECL(AllOn);
-    Q_STATE_DECL(AllOff);
-};
-
-} // namespace AC
-//.$enddecl${AOs::Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
@@ -123,10 +100,7 @@ Q_STATE_DEF(Arena, AllOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOn}
         case Q_ENTRY_SIG: {
-            static AC::DisplayFramesEvt displayFramesEvt = { AC::DISPLAY_FRAMES_SIG, 0U, 0U};
-            displayFramesEvt.panel_buffer = &AC::constants::all_on_grayscale_pattern;
-            displayFramesEvt.panel_buffer_byte_count = AC::constants::byte_count_per_panel_grayscale;
-            QF::PUBLISH(&displayFramesEvt, this);
+            FSP::Arena_ArenaOn_AllOn_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
