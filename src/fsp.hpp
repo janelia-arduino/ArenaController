@@ -5,6 +5,8 @@
 #include "ArenaController.hpp"
 #include "Arena.hpp"
 #include "SerialCommandInterface.hpp"
+#include "EthernetCommandInterface.hpp"
+#include "Frame.hpp"
 
 #include "constants.hpp"
 
@@ -30,6 +32,21 @@ struct FSP
   static void SerialCommandInterface_ProcessingStringCommand_entry(QP::QActive * const ao);
   static void SerialCommandInterface_ProcessingStringCommand_COMMAND_PROCESSED(QP::QActive * const ao);
   static void SerialCommandInterface_ProcessingBinaryCommand_COMMAND_PROCESSED(QP::QActive * const ao);
+
+  static void EthernetCommandInterface_InitialTransition(QP::QActive * const ao);
+  static void EthernetCommandInterface_Active_entry(QP::QActive * const ao);
+  static void EthernetCommandInterface_Active_exit(QP::QActive * const ao);
+  static void EthernetCommandInterface_Uninitialized_SERIAL_TIMEOUT(QP::QActive * const ao);
+  static void EthernetCommandInterface_WaitingForIPAddress_SERIAL_TIMEOUT(QP::QActive * const ao);
+  static void EthernetCommandInterface_IPAddressFound_SERIAL_TIMEOUT(QP::QActive * const ao);
+  static void EthernetCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(QP::QActive * const ao);
+
+  static void Frame_InitialTransition(QP::QActive * const ao);
+  static void Frame_Active_entry(QP::QActive * const ao);
+  static void Frame_TransferringPanelSet_entry(QP::QActive * const ao);
+  static void Frame_TransferringPanelSet_exit(QP::QActive * const ao);
+  static bool Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(QP::QActive * const ao);
+  static void Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(QP::QActive * const ao);
 
   static String processStringCommand(String command);
 };

@@ -308,11 +308,9 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
-subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
-subscribe(COMMAND_PROCESSED_SIG);</action>
+     <action brief="subscribe()">FSP::EthernetCommandInterface_InitialTransition(this);</action>
      <initial_glyph conn="55,1,4,0,2">
-      <action box="0,-2,10,2"/>
+      <action box="1,0,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Inactive">
@@ -324,8 +322,8 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
      <state_glyph node="49,3,14,9"/>
     </state>
     <state name="Active">
-     <entry brief="armEthernetTimer(50Hz)">ethernet_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);</entry>
-     <exit brief="disarmEthernetTimer()">ethernet_time_evt_.disarm();</exit>
+     <entry brief="armEthernetTimer()">FSP::EthernetCommandInterface_Active_entry(this);</entry>
+     <exit brief="disarmEthernetTimer()">FSP::EthernetCommandInterface_Active_exit(this);</exit>
      <initial target="../3">
       <initial_glyph conn="12,29,5,3,3">
        <action box="0,-2,10,2"/>
@@ -348,7 +346,7 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="beginEthernet()">BSP::beginEthernet();</action>
+       <action brief="beginEthernet()">FSP::EthernetCommandInterface_Uninitialized_SERIAL_TIMEOUT(this);</action>
        <tran_glyph conn="15,32,3,-1,18">
         <action box="0,-2,18,5"/>
        </tran_glyph>
@@ -362,7 +360,7 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="beginEthernetServer()">BSP::beginEthernetServer();</action>
+       <action brief="beginEthernetServer()">FSP::EthernetCommandInterface_IPAddressFound_SERIAL_TIMEOUT(this);</action>
        <tran_glyph conn="15,44,3,-1,18">
         <action box="0,-2,18,4"/>
        </tran_glyph>
@@ -371,7 +369,7 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
      </state>
      <state name="PollingForNewCommand">
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="pollEthernetCommand()">BSP::pollEthernetCommand();</action>
+       <action brief="pollEthernetCommand()">FSP::EthernetCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(this);</action>
        <tran_glyph conn="15,57,3,-1,20">
         <action box="0,-2,21,5"/>
        </tran_glyph>
@@ -390,7 +388,7 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
      </state>
      <state name="WaitingForIPAddress">
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="checkForIPAddress()">BSP::checkForEthernetIPAddress();</action>
+       <action brief="checkForIPAddress()">FSP::EthernetCommandInterface_WaitingForIPAddress_SERIAL_TIMEOUT(this);</action>
        <tran_glyph conn="56,32,3,-1,18">
         <action box="0,-2,17,4"/>
        </tran_glyph>
@@ -430,24 +428,21 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
    <attribute name="instance" type="Frame" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <attribute name="panel_set_row_index_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="panel_set_col_index_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
-   <attribute name="region_row_panel_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="region_col_panel_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
-   <attribute name="regions_[constants::region_count_per_frame_max]" type="QP::QHsm *" visibility="0x02" properties="0x00"/>
+   <attribute name="panel_set_row_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="panel_set_col_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="region_row_panel_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="region_col_panel_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="regions_[constants::region_count_per_frame_max]" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>BSP::initializeFrame();
-subscribe(TRANSFER_FRAME_SIG);
-subscribe(PANEL_SET_TRANSFERRED_SIG);
-subscribe(FRAME_TRANSFERRED_SIG);</action>
+     <action brief="initializeAndSubscribe()">FSP::Frame_InitialTransition(this);</action>
      <initial_glyph conn="37,4,4,0,4">
-      <action box="0,-2,10,2"/>
+      <action box="1,1,20,3"/>
      </initial_glyph>
     </initial>
     <state name="Inactive">
@@ -463,8 +458,7 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
      <state_glyph node="28,8,16,9"/>
     </state>
     <state name="Active">
-     <entry brief="resetIndicies();">panel_set_row_index_ = 0;
-panel_set_col_index_ = 0;</entry>
+     <entry brief="resetIndicies();">FSP::Frame_Active_entry(this);</entry>
      <state name="TransferringFrame">
       <initial target="../2">
        <initial_glyph conn="40,31,4,0,3">
@@ -477,30 +471,18 @@ panel_set_col_index_ = 0;</entry>
        </tran_glyph>
       </tran>
       <state name="TransferringPanelSet">
-       <entry brief="enablePanelSetSelectPin(); transferPanelSet()">BSP::enablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
-BSP::transferPanelSet(panel_buffer_, panel_buffer_byte_count_);</entry>
-       <exit brief="disablePanelSetSelectPin(); updatePanelSetSelectIndicies()">BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
-++panel_set_row_index_;
-if (panel_set_row_index_ == region_row_panel_count_)
-{
-    panel_set_row_index_ = 0;
-    ++panel_set_col_index_;
-}
-if (panel_set_col_index_ == region_col_panel_count_)
-{
-    panel_set_col_index_ = 0;
-}</exit>
+       <entry brief="enablePanelSetSelectPin(); transferPanelSet()">FSP::Frame_TransferringPanelSet_entry(this);</entry>
+       <exit brief="disablePanelSetSelectPin(); updatePanelSetSelectIndicies()">FSP::Frame_TransferringPanelSet_exit(this);</exit>
        <tran trig="PANEL_SET_TRANSFERRED">
         <choice target="../..">
-         <guard brief="frameNotTransferred()">(panel_set_row_index_ != (region_row_panel_count_-1)) || (panel_set_col_index_ != (region_col_panel_count_-1))</guard>
+         <guard brief="frameNotTransferred()">FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(this)</guard>
          <choice_glyph conn="43,55,5,2,6,-5">
           <action box="1,0,26,2"/>
          </choice_glyph>
         </choice>
         <choice>
          <guard brief="else"/>
-         <action brief="publishFrameTransferred()">static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
-QF::PUBLISH(&amp;frameTransferredEvt, this);</action>
+         <action brief="publishFrameTransferred()">FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(this);</action>
          <choice_glyph conn="43,55,4,-1,4,5">
           <action box="6,3,18,6"/>
          </choice_glyph>

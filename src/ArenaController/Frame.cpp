@@ -53,10 +53,7 @@ Frame::Frame()
 //.${AOs::Frame::SM} .........................................................
 Q_STATE_DEF(Frame, initial) {
     //.${AOs::Frame::SM::initial}
-    BSP::initializeFrame();
-    subscribe(TRANSFER_FRAME_SIG);
-    subscribe(PANEL_SET_TRANSFERRED_SIG);
-    subscribe(FRAME_TRANSFERRED_SIG);
+    FSP::Frame_InitialTransition(this);
     return tran(&Inactive);
 }
 //.${AOs::Frame::SM::Inactive} ...............................................
@@ -85,8 +82,7 @@ Q_STATE_DEF(Frame, Active) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Active}
         case Q_ENTRY_SIG: {
-            panel_set_row_index_ = 0;
-            panel_set_col_index_ = 0;
+            FSP::Frame_Active_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -124,37 +120,25 @@ Q_STATE_DEF(Frame, TransferringPanelSet) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPanelSet}
         case Q_ENTRY_SIG: {
-            BSP::enablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
-            BSP::transferPanelSet(panel_buffer_, panel_buffer_byte_count_);
+            FSP::Frame_TransferringPanelSet_entry(this);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPanelSet}
         case Q_EXIT_SIG: {
-            BSP::disablePanelSetSelectPin(panel_set_row_index_, panel_set_col_index_);
-            ++panel_set_row_index_;
-            if (panel_set_row_index_ == region_row_panel_count_)
-            {
-                panel_set_row_index_ = 0;
-                ++panel_set_col_index_;
-            }
-            if (panel_set_col_index_ == region_col_panel_count_)
-            {
-                panel_set_col_index_ = 0;
-            }
+            FSP::Frame_TransferringPanelSet_exit(this);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPane~::PANEL_SET_TRANSFERRED}
         case PANEL_SET_TRANSFERRED_SIG: {
             //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[frameNotTransferred()]}
-            if ((panel_set_row_index_ != (region_row_panel_count_-1)) || (panel_set_col_index_ != (region_col_panel_count_-1))) {
+            if (FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(this)) {
                 status_ = tran(&TransferringPanelSet);
             }
             //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[else]}
             else {
-                static QEvt const frameTransferredEvt = { AC::FRAME_TRANSFERRED_SIG, 0U, 0U};
-                QF::PUBLISH(&frameTransferredEvt, this);
+                FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(this);
                 status_ = Q_RET_HANDLED;
             }
             break;

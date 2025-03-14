@@ -31,8 +31,6 @@ namespace AC {
 class Frame : public QP::QActive {
 public:
     static Frame instance;
-
-private:
     std::uint8_t panel_set_row_index_;
     std::uint8_t panel_set_col_index_;
     std::uint8_t const (*panel_buffer_)[];

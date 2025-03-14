@@ -150,6 +150,96 @@ void FSP::SerialCommandInterface_ProcessingBinaryCommand_COMMAND_PROCESSED(QActi
 {
 }
 
+void FSP::EthernetCommandInterface_InitialTransition(QActive * const ao)
+{
+  ao->subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(COMMAND_PROCESSED_SIG);
+}
+
+void FSP::EthernetCommandInterface_Active_entry(QActive * const ao)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  eci->ethernet_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
+}
+
+void FSP::EthernetCommandInterface_Active_exit(QActive * const ao)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  eci->ethernet_time_evt_.disarm();
+}
+
+void FSP::EthernetCommandInterface_Uninitialized_SERIAL_TIMEOUT(QActive * const ao)
+{
+  BSP::beginEthernet();
+}
+
+void FSP::EthernetCommandInterface_WaitingForIPAddress_SERIAL_TIMEOUT(QActive * const ao)
+{
+  BSP::checkForEthernetIPAddress();
+}
+
+void FSP::EthernetCommandInterface_IPAddressFound_SERIAL_TIMEOUT(QActive * const ao)
+{
+  BSP::beginEthernetServer();
+}
+
+void FSP::EthernetCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(QActive * const ao)
+{
+  BSP::pollEthernetCommand();
+}
+
+void FSP::Frame_InitialTransition(QP::QActive * const ao)
+{
+  BSP::initializeFrame();
+  ao->subscribe(TRANSFER_FRAME_SIG);
+  ao->subscribe(PANEL_SET_TRANSFERRED_SIG);
+  ao->subscribe(FRAME_TRANSFERRED_SIG);
+}
+
+void FSP::Frame_Active_entry(QActive * const ao)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  frame->panel_set_row_index_ = 0;
+  frame->panel_set_col_index_ = 0;
+}
+
+void FSP::Frame_TransferringPanelSet_entry(QActive * const ao)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  BSP::enablePanelSetSelectPin(frame->panel_set_row_index_, frame->panel_set_col_index_);
+  BSP::transferPanelSet(frame->panel_buffer_, frame->panel_buffer_byte_count_);
+}
+
+void FSP::Frame_TransferringPanelSet_exit(QActive * const ao)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  BSP::disablePanelSetSelectPin(frame->panel_set_row_index_, frame->panel_set_col_index_);
+  ++frame->panel_set_row_index_;
+  if (frame->panel_set_row_index_ == frame->region_row_panel_count_)
+  {
+    frame->panel_set_row_index_ = 0;
+    ++frame->panel_set_col_index_;
+  }
+  if (frame->panel_set_col_index_ == frame->region_col_panel_count_)
+  {
+    frame->panel_set_col_index_ = 0;
+  }
+}
+
+bool FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(QP::QActive * const ao)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  return (frame->panel_set_row_index_ != (frame->region_row_panel_count_-1)) ||
+    (frame->panel_set_col_index_ != (frame->region_col_panel_count_-1));
+}
+
+void FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(QP::QActive * const ao)
+{
+  static QEvt const frameTransferredEvt = { FRAME_TRANSFERRED_SIG, 0U, 0U};
+  QF::PUBLISH(&frameTransferredEvt, ao);
+}
+
 String FSP::processStringCommand(String command)
 {
   command.trim();
