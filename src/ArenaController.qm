@@ -514,15 +514,14 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>subscribe(RESET_SIG);
-BSP::initializeWatchdog();</action>
+     <action brief="initializeAndSubscribe()">FSP::Watchdog_InitialTransition(this);</action>
      <initial_glyph conn="23,4,4,0,4">
       <action box="0,-2,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Feeding">
-     <entry brief="armWatchdogTimer(1Hz)">watchdog_time_evt_.armX(BSP::TICKS_PER_SEC, BSP::TICKS_PER_SEC);</entry>
-     <exit brief="disarmWatchdogTimer()">watchdog_time_evt_.disarm();</exit>
+     <entry brief="armWatchdogTimer()">FSP::Watchdog_Feeding_entry(this);</entry>
+     <exit brief="disarmWatchdogTimer()">FSP::Watchdog_Feeding_exit(this);</exit>
      <initial target="../2">
       <initial_glyph conn="49,22,5,1,-4">
        <action box="0,-2,10,2"/>
@@ -535,7 +534,7 @@ BSP::initializeWatchdog();</action>
      </tran>
      <state name="Initialized">
       <tran trig="WATCHDOG_TIMEOUT">
-       <action brief="feedWatchdog()">BSP::feedWatchdog();</action>
+       <action brief="feedWatchdog()">FSP::Watchdog_Initialized_WATCHDOG_TIMEOUT(this);</action>
        <tran_glyph conn="17,22,3,-1,22">
         <action box="0,-2,23,5"/>
        </tran_glyph>

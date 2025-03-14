@@ -240,6 +240,29 @@ void FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(QP::QActi
   QF::PUBLISH(&frameTransferredEvt, ao);
 }
 
+void FSP::Watchdog_InitialTransition(QP::QActive * const ao)
+{
+  ao->subscribe(RESET_SIG);
+  BSP::initializeWatchdog();
+}
+
+void FSP::Watchdog_Feeding_entry(QP::QActive * const ao)
+{
+  Watchdog * const watchdog = static_cast<Watchdog * const>(ao);
+  watchdog->watchdog_time_evt_.armX(BSP::TICKS_PER_SEC, BSP::TICKS_PER_SEC);
+}
+
+void FSP::Watchdog_Feeding_exit(QP::QActive * const ao)
+{
+  Watchdog * const watchdog = static_cast<Watchdog * const>(ao);
+  watchdog->watchdog_time_evt_.disarm();
+}
+
+void FSP::Watchdog_Initialized_WATCHDOG_TIMEOUT(QP::QActive * const ao)
+{
+  BSP::feedWatchdog();
+}
+
 String FSP::processStringCommand(String command)
 {
   command.trim();

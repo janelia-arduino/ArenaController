@@ -7,6 +7,7 @@
 #include "SerialCommandInterface.hpp"
 #include "EthernetCommandInterface.hpp"
 #include "Frame.hpp"
+#include "Watchdog.hpp"
 
 #include "constants.hpp"
 
@@ -47,6 +48,11 @@ struct FSP
   static void Frame_TransferringPanelSet_exit(QP::QActive * const ao);
   static bool Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(QP::QActive * const ao);
   static void Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(QP::QActive * const ao);
+
+  static void Watchdog_InitialTransition(QP::QActive * const ao);
+  static void Watchdog_Feeding_entry(QP::QActive * const ao);
+  static void Watchdog_Feeding_exit(QP::QActive * const ao);
+  static void Watchdog_Initialized_WATCHDOG_TIMEOUT(QP::QActive * const ao);
 
   static String processStringCommand(String command);
 };
