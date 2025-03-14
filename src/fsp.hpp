@@ -9,6 +9,8 @@
 
 struct FSP
 {
+  static void setupArenaController();
+
   static String processStringCommand(String command);
 };
 
