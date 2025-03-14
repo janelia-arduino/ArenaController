@@ -21,6 +21,7 @@
 
 #include "qpcpp.hpp"   // QP-C++ framework
 #include "bsp.hpp"
+#include "fsp.hpp"
 
 namespace AC {
 

@@ -28,7 +28,8 @@ constexpr uint16_t port = 62222;
 // Serial Communication Interface
 //HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
 usb_serial_class & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
-usb_serial_class & QS_SERIAL_STREAM = Serial;
+// usb_serial_class & QS_SERIAL_STREAM = Serial1;
+HardwareSerial & QS_SERIAL_STREAM = Serial1;
 constexpr uint32_t SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE = 115200;
 constexpr uint16_t SERIAL_COMMUNICATION_INTERFACE_TIMEOUT = 100;
 

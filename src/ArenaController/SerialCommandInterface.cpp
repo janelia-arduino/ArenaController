@@ -17,7 +17,6 @@
 //
 //.$endhead${./ArenaControlle~::SerialCommandInterface.cpp} ^^^^^^^^^^^^^^^^^^
 #include "ArenaController.hpp"  // ArenaController application interface
-#include "Command.hpp"
 
 
 using namespace QP;
@@ -226,7 +225,7 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingStringCommand) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active::ProcessingStringCommand}
         case Q_ENTRY_SIG: {
-            string_response_ = AC::CommandPtr->processStringCommand(string_command_);
+            string_response_ = FSP::processStringCommand(string_command_);
             status_ = Q_RET_HANDLED;
             break;
         }

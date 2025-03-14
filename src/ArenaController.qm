@@ -183,7 +183,7 @@ subscribe(COMMAND_PROCESSED_SIG);</action>
       <state_glyph node="75,64,26,10"/>
      </state>
      <state name="ProcessingStringCommand">
-      <entry brief="processStringCommand()">string_response_ = AC::CommandPtr-&gt;processStringCommand(string_command_);</entry>
+      <entry brief="processStringCommand()">string_response_ = FSP::processStringCommand(string_command_);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeSerialStringResponse()">BSP::writeSerialStringResponse(string_response_);</action>
        <tran_glyph conn="19,64,0,3,-15,14">
@@ -647,6 +647,7 @@ return &amp;Region::instances[id];</code>
 
 #include &quot;qpcpp.hpp&quot;   // QP-C++ framework
 #include &quot;bsp.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 namespace AC {
 
@@ -705,59 +706,6 @@ $declare${Shared}
 
 #endif // ARENA_CONTROLLER_HPP
    </text>
-  </file>
-  <file name="bsp.hpp">
-   <text>#ifndef BSP_HPP
-#define BSP_HPP
-#include &quot;Constants.hpp&quot;
-
-class BSP {
-public:
-    enum { TICKS_PER_SEC = 100} ;
-
-    static void init();
-
-    static void ledOff();
-    static void ledOn();
-
-    static void initializeWatchdog();
-    static void feedWatchdog();
-
-    static void initializeArena();
-    static void initializeDisplay();
-    static void initializeFrame();
-
-    static void activateCommandInterfaces();
-    static void deactivateCommandInterfaces();
-
-    static String processStringCommand(String command);
-
-    static void beginSerial();
-    static void pollSerialCommand();
-    static uint8_t readSerialByte();
-    static String readSerialStringCommand(uint8_t first_byte);
-    static void writeSerialStringResponse(String response);
-
-    static void beginEthernet();
-    static void checkForEthernetIPAddress();
-    static void beginEthernetServer();
-    static void pollEthernetCommand();
-
-    static void armDisplayFrameTimer(uint32_t frequency_hz);
-    static void disarmDisplayFrameTimer();
-    static void displayFrame();
-    static void setDisplayFrequency(uint32_t frequency_hz);
-
-    static uint8_t getRegionRowPanelCountMax();
-    static uint8_t getRegionColPanelCountMax();
-
-    static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
-    static void disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
-    static void transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count);
-
-};
-
-#endif // BSP_HPP</text>
   </file>
   <file name="Constants.hpp">
    <text>#ifndef ARENA_CONTROLLER_CONSTANTS_HPP
@@ -921,30 +869,6 @@ constexpr uint8_t identify_quarter_panels_grayscale_pattern[byte_count_per_panel
 #endif
 </text>
   </file>
-  <file name="Command.hpp">
-   <text>#ifndef COMMAND_HPP
-#define COMMAND_HPP
-
-#include &lt;Arduino.h&gt;
-
-#include &quot;bsp.hpp&quot;
-#include &quot;ArenaController.hpp&quot;
-
-
-namespace AC {
-
-class Command
-{
-public:
-  static Command instance;
-  String processStringCommand(String command);
-};
-
-extern Command * const CommandPtr;
-
-} // namespace AC
-#endif</text>
-  </file>
  </directory>
  <directory name="./ArenaController">
   <file name="Arena.cpp">
@@ -1025,7 +949,6 @@ void loop() {
   </file>
   <file name="SerialCommandInterface.cpp">
    <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
-#include &quot;Command.hpp&quot;
 
 
 using namespace QP;
@@ -1135,74 +1058,6 @@ $define${Shared::getRegionInstance}
 //============================================================================
 // generate definition of the AO
 $define${AOs::Region}</text>
-  </file>
-  <file name="Command.cpp">
-   <text>#include &quot;Command.hpp&quot;
-
-
-using namespace QP;
-
-namespace AC {
-
-static QP::QSpyId const l_COMMAND_ID = { 0U }; // QSpy source ID
-
-Command * const CommandPtr = &amp;Command::instance;
-Command Command::instance;
-
-static AC::CommandEvt const resetEvt = { AC::RESET_SIG, 0U, 0U};
-static AC::CommandEvt const allOnEvt = { AC::ALL_ON_SIG, 0U, 0U};
-static AC::CommandEvt const allOffEvt = { AC::ALL_OFF_SIG, 0U, 0U};
-static QEvt const commandProcessedEvt = { AC::COMMAND_PROCESSED_SIG, 0U, 0U};
-
-String Command::processStringCommand(String command)
-{
-  command.trim();
-  String response = command;
-  if (command.equalsIgnoreCase(&quot;RESET&quot;))
-  {
-    QF::PUBLISH(&amp;resetEvt, &amp;l_COMMAND_ID);
-  }
-  if (command.equalsIgnoreCase(&quot;LED_ON&quot;))
-  {
-    BSP::ledOn();
-  }
-  else if (command.equalsIgnoreCase(&quot;LED_OFF&quot;))
-  {
-    BSP::ledOff();
-  }
-  else if (command.equalsIgnoreCase(&quot;ALL_ON&quot;))
-  {
-    QF::PUBLISH(&amp;allOnEvt, &amp;l_COMMAND_ID);
-  }
-  else if (command.equalsIgnoreCase(&quot;ALL_OFF&quot;))
-  {
-    QF::PUBLISH(&amp;allOffEvt, &amp;l_COMMAND_ID);
-  }
-  else if (command.equalsIgnoreCase(&quot;EHS&quot;))
-  {
-    //response = String(Ethernet.hardwareStatus());
-  }
-  else if (command.equalsIgnoreCase(&quot;ELS&quot;))
-  {
-    //response = String(Ethernet.linkStatus());
-  }
-  else if (command.equalsIgnoreCase(&quot;GET_IP_ADDRESS&quot;))
-  {
-    //response = ipAddressToString(Ethernet.localIP());
-  }
-  else if (command.startsWith(&quot;SET_DISPLAY_FREQUENCY&quot;))
-  {
-    //command.replace(&quot;SET_DISPLAY_FREQUENCY&quot;, &quot;&quot;);
-    //command.trim();
-    //uint32_t frequency_hz = command.toInt();
-    //BSP::setDisplayFrequency(frequency_hz);
-  }
-  QF::PUBLISH(&amp;commandProcessedEvt, &amp;l_COMMAND_ID);
-  return response;
-}
-
-} // namespace AC
-</text>
   </file>
  </directory>
 </model>
