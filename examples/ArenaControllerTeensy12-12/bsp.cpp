@@ -300,13 +300,6 @@ void BSP::displayFrame()
   // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
 }
 
-void BSP::setDisplayFrequency(uint32_t frequency_hz)
-{
-  static AC::SetDisplayFrequencyEvt setDisplayFrequencyEvt = { AC::SET_DISPLAY_FREQUENCY_SIG, 0U, 0U};
-  setDisplayFrequencyEvt.display_frequency_hz = frequency_hz;
-  AC::AO_Display->POST(&setDisplayFrequencyEvt, &l_TIMER_ID);
-}
-
 uint8_t BSP::getRegionRowPanelCountMax()
 {
   return AC::constants::region_row_panel_count_max;

@@ -29,7 +29,6 @@ struct BSP {
   static void pollEthernetCommand();
 
   static void displayFrame();
-  static void setDisplayFrequency(uint32_t frequency_hz);
 
   static uint8_t getRegionRowPanelCountMax();
   static uint8_t getRegionColPanelCountMax();
