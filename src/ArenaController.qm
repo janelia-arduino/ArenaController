@@ -28,47 +28,47 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action brief="initializeAndSubscribe()">FSP::Arena_InitialTransition(this);</action>
-     <initial_glyph conn="49,10,4,0,4">
-      <action box="1,1,28,2"/>
+     <action brief="initializeAndSubscribe()">FSP::Arena_initializeAndSubscribe(this, e);</action>
+     <initial_glyph conn="50,10,4,0,3">
+      <action box="1,0,28,2"/>
      </initial_glyph>
     </initial>
     <state name="ArenaOn">
-     <entry brief="activateCommandInterfaces()">FSP::Arena_ArenaOn_entry(this);</entry>
-     <exit brief="deactivateCommandInterfaces()">FSP::Arena_ArenaOn_exit(this);</exit>
+     <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
+     <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
      <initial target="../4">
-      <initial_glyph conn="60,20,4,0,3">
+      <initial_glyph conn="61,19,4,0,3">
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
      <tran trig="ALL_OFF" target="../4">
-      <tran_glyph conn="31,26,3,3,11">
+      <tran_glyph conn="32,25,3,3,11">
        <action box="0,-2,10,2"/>
       </tran_glyph>
      </tran>
      <tran trig="RESET" target="../4">
-      <tran_glyph conn="31,37,3,2,13,-3">
+      <tran_glyph conn="32,36,3,2,13,-3">
        <action box="0,-2,10,2"/>
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="displayAllOnFrames()">FSP::Arena_AllOn_entry(this);</entry>
-      <state_glyph node="42,45,35,10">
+      <entry brief="displayAllOnFrames()">FSP::Arena_displayAllOnFrames(this, e);</entry>
+      <state_glyph node="43,44,35,10">
        <entry box="1,2,28,2"/>
       </state_glyph>
      </state>
      <state name="AllOff">
-      <entry brief="deactivateDisplay()">FSP::Arena_AllOff_entry(this);</entry>
+      <entry brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</entry>
       <tran trig="ALL_ON" target="../../3">
-       <tran_glyph conn="54,34,2,0,11">
+       <tran_glyph conn="55,33,2,0,11">
         <action box="1,4,10,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="42,23,35,11">
+      <state_glyph node="43,22,35,11">
        <entry box="1,2,27,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="31,14,67,56">
+     <state_glyph node="32,13,67,56">
       <entry box="1,2,24,2"/>
       <exit box="1,4,26,2"/>
      </state_glyph>
@@ -88,14 +88,14 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../2">
-     <action brief="subscribe()">FSP::SerialCommandInterface_InitialTransition(this);</action>
+     <action brief="subscribe()">FSP::SerialCommandInterface_subscribe(this, e);</action>
      <initial_glyph conn="46,8,4,0,3">
       <action box="1,0,34,3"/>
      </initial_glyph>
     </initial>
     <state name="Active">
-     <entry brief="armSerialTimer()">FSP::SerialCommandInterface_Active_entry(this);</entry>
-     <exit brief="disarmSerialTimer()">FSP::SerialCommandInterface_Active_exit(this);</exit>
+     <entry brief="armSerialTimer()">FSP::SerialCommandInterface_armSerialTimer(this, e);</entry>
+     <exit brief="disarmSerialTimer()">FSP::SerialCommandInterface_disarmSerialTimer(this, e);</exit>
      <initial target="../3">
       <initial_glyph conn="36,28,4,0,4">
        <action box="0,-2,10,2"/>
@@ -112,7 +112,7 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <state name="NotReady">
-      <entry brief="beginSerial()">FSP::SerialCommandInterface_NotReady_entry(this);</entry>
+      <entry brief="beginSerial()">FSP::SerialCommandInterface_beginSerial(this, e);</entry>
       <tran trig="SERIAL_READY" target="../../4">
        <tran_glyph conn="71,34,1,1,16,11,-23">
         <action box="2,-3,13,2"/>
@@ -124,7 +124,7 @@ This structure of the code is recommended for applications with only one active 
      </state>
      <state name="PollingForNewCommand">
       <tran trig="SERIAL_TIMEOUT">
-       <action brief="pollSerialCommand()">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(this);</action>
+       <action brief="pollSerialCommand()">FSP::SerialCommandInterface_pollSerialCommand(this, e);</action>
        <tran_glyph conn="33,53,3,-1,16">
         <action box="0,-2,18,4"/>
        </tran_glyph>
@@ -135,17 +135,17 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <tran trig="SERIAL_COMMAND_AVAILABLE">
-       <action brief="readFirstByte()">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE(this);</action>
+       <action brief="readFirstByte()">FSP::SerialCommandInterface_readFirstByte(this, e);</action>
        <choice target="../../../6">
-        <guard brief="binary_command">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_if_guard(this)</guard>
+        <guard brief="ifBinaryCommand()">FSP::SerialCommandInterface_ifBinaryCommand(this, e)</guard>
         <action brief="readSerialBinaryCommand()"/>
         <choice_glyph conn="36,63,5,3,30,9,9">
-         <action box="25,10,22,4"/>
+         <action box="24,11,22,4"/>
         </choice_glyph>
        </choice>
        <choice target="../../../7">
         <guard brief="else"/>
-        <action brief="readSerialStringCommand()">FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_else_action(this);</action>
+        <action brief="readSerialStringCommand()">FSP::SerialCommandInterface_readSerialStringCommand(this, e);</action>
         <choice_glyph conn="36,63,5,1,-2,8,-2">
          <action box="-3,9,22,4"/>
         </choice_glyph>
@@ -166,7 +166,7 @@ This structure of the code is recommended for applications with only one active 
      </state>
      <state name="ProcessingBinaryCommand">
       <tran trig="COMMAND_PROCESSED" target="../../4">
-       <action brief="writeSerialBinaryResponse()">FSP::SerialCommandInterface_ProcessingBinaryCommand_COMMAND_PROCESSED(this);</action>
+       <action brief="writeSerialBinaryResponse()">FSP::SerialCommandInterface_writeSerialBinaryResponse(this, e);</action>
        <tran_glyph conn="84,64,0,1,-8,-20">
         <action box="1,-7,21,4"/>
        </tran_glyph>
@@ -174,9 +174,9 @@ This structure of the code is recommended for applications with only one active 
       <state_glyph node="75,64,26,10"/>
      </state>
      <state name="ProcessingStringCommand">
-      <entry brief="processStringCommand()">FSP::SerialCommandInterface_ProcessingStringCommand_entry(this);</entry>
+      <entry brief="processStringCommand()">FSP::SerialCommandInterface_processStringCommand(this, e);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
-       <action brief="writeSerialStringResponse()">FSP::SerialCommandInterface_ProcessingStringCommand_COMMAND_PROCESSED(this);</action>
+       <action brief="writeSerialStringResponse()">FSP::SerialCommandInterface_writeSerialStringResponse(this, e);</action>
        <tran_glyph conn="19,64,0,3,-15,14">
         <action box="-10,-20,20,5"/>
        </tran_glyph>
@@ -203,22 +203,17 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
-   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x02" properties="0x00"/>
-   <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x02" properties="0x00"/>
-   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x02" properties="0x00"/>
+   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action>BSP::initializeDisplay();
-subscribe(DEACTIVATE_DISPLAY_SIG);
-subscribe(DISPLAY_FRAMES_SIG);
-subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
-subscribe(FRAME_TRANSFERRED_SIG);
-display_frequency_hz_ = constants::display_frequency_hz_default;</action>
+     <action brief="initializeAndSubscribe()">FSP::Display_initializeAndSubscribe(this, e);</action>
      <initial_glyph conn="39,2,4,0,3">
-      <action box="0,-2,10,2"/>
+      <action box="1,0,26,2"/>
      </initial_glyph>
     </initial>
     <state name="Initialized">
@@ -228,15 +223,14 @@ display_frequency_hz_ = constants::display_frequency_hz_default;</action>
       </initial_glyph>
      </initial>
      <tran trig="SET_DISPLAY_FREQUENCY">
-      <action>display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)-&gt;display_frequency_hz;</action>
+      <action brief="setDisplayFrequency()">FSP::Display_setDisplayFrequency(this, e);</action>
       <tran_glyph conn="2,10,3,-1,24">
-       <action box="0,-2,22,2"/>
+       <action box="0,-2,23,4"/>
       </tran_glyph>
      </tran>
      <state name="Inactive">
       <tran trig="DISPLAY_FRAMES" target="../../3/1">
-       <action>panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer;
-panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer_byte_count;</action>
+       <action brief="displayFrames()">FSP::Display_displayFrames(this, e);</action>
        <tran_glyph conn="41,20,2,0,10">
         <action box="1,1,34,2"/>
        </tran_glyph>
@@ -250,17 +244,17 @@ panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer_byte_co
        </tran_glyph>
       </tran>
       <state name="DisplayingFrames">
-       <entry brief="armDisplayFrameTimer()">BSP::armDisplayFrameTimer(display_frequency_hz_);</entry>
-       <exit brief="disarmDisplayFrameTimer()">BSP::disarmDisplayFrameTimer();</exit>
+       <entry brief="armDisplayFrameTimer()">FSP::Display_armDisplayFrameTimer(this, e);</entry>
+       <exit brief="disarmDisplayFrameTimer()">FSP::Display_disarmDisplayFrameTimer(this, e);</exit>
        <initial target="../2">
         <initial_glyph conn="42,37,4,0,3">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
        <tran trig="SET_DISPLAY_FREQUENCY" target="..">
-        <action>display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)-&gt;display_frequency_hz;</action>
+        <action brief="setDisplayFrequency()">FSP::Display_setDisplayFrequency(this, e);</action>
         <tran_glyph conn="75,49,1,1,2,-12,-2">
-         <action box="-22,-13,29,2"/>
+         <action box="-22,-13,30,4"/>
         </tran_glyph>
        </tran>
        <state name="WaitingToDisplayFrame">
@@ -272,12 +266,7 @@ panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)-&gt;panel_buffer_byte_co
         <state_glyph node="33,40,20,7"/>
        </state>
        <state name="DisplayingFrame">
-        <entry brief="transferFrame()">static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
-transferFrameEvt.panel_buffer = panel_buffer_;
-transferFrameEvt.panel_buffer_byte_count = panel_buffer_byte_count_;
-transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
-transferFrameEvt.region_col_panel_count = BSP::getRegionColPanelCountMax();
-QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
+        <entry brief="transferFrame()">FSP::Display_transferFrame(this, e);</entry>
         <tran trig="FRAME_TRANSFERRED" target="../../2">
          <tran_glyph conn="35,54,3,1,-4,-10,2">
           <action box="-19,1,18,2"/>
@@ -308,7 +297,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action brief="subscribe()">FSP::EthernetCommandInterface_InitialTransition(this);</action>
+     <action brief="subscribe()">FSP::EthernetCommandInterface_subscribe(this, e);</action>
      <initial_glyph conn="55,1,4,0,2">
       <action box="1,0,10,2"/>
      </initial_glyph>
@@ -322,8 +311,8 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
      <state_glyph node="49,3,14,9"/>
     </state>
     <state name="Active">
-     <entry brief="armEthernetTimer()">FSP::EthernetCommandInterface_Active_entry(this);</entry>
-     <exit brief="disarmEthernetTimer()">FSP::EthernetCommandInterface_Active_exit(this);</exit>
+     <entry brief="armEthernetTimer()">FSP::EthernetCommandInterface_armEthernetTimer(this, e);</entry>
+     <exit brief="disarmEthernetTimer()">FSP::EthernetCommandInterface_disarmEthernetTimer(this, e);</exit>
      <initial target="../3">
       <initial_glyph conn="12,29,5,3,3">
        <action box="0,-2,10,2"/>
@@ -346,7 +335,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="beginEthernet()">FSP::EthernetCommandInterface_Uninitialized_SERIAL_TIMEOUT(this);</action>
+       <action brief="beginEthernet()">FSP::EthernetCommandInterface_beginEthernet(this, e);</action>
        <tran_glyph conn="15,32,3,-1,18">
         <action box="0,-2,18,5"/>
        </tran_glyph>
@@ -360,7 +349,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="beginEthernetServer()">FSP::EthernetCommandInterface_IPAddressFound_SERIAL_TIMEOUT(this);</action>
+       <action brief="beginEthernetServer()">FSP::EthernetCommandInterface_beginEthernetServer(this, e);</action>
        <tran_glyph conn="15,44,3,-1,18">
         <action box="0,-2,18,4"/>
        </tran_glyph>
@@ -369,7 +358,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
      </state>
      <state name="PollingForNewCommand">
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="pollEthernetCommand()">FSP::EthernetCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(this);</action>
+       <action brief="pollEthernetCommand()">FSP::EthernetCommandInterface_pollEthernetCommand(this, e);</action>
        <tran_glyph conn="15,57,3,-1,20">
         <action box="0,-2,21,5"/>
        </tran_glyph>
@@ -388,7 +377,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
      </state>
      <state name="WaitingForIPAddress">
       <tran trig="ETHERNET_TIMEOUT">
-       <action brief="checkForIPAddress()">FSP::EthernetCommandInterface_WaitingForIPAddress_SERIAL_TIMEOUT(this);</action>
+       <action brief="checkForIPAddress()">FSP::EthernetCommandInterface_checkForIPAddress(this, e);</action>
        <tran_glyph conn="56,32,3,-1,18">
         <action box="0,-2,17,4"/>
        </tran_glyph>
@@ -440,7 +429,7 @@ QF::PUBLISH(&amp;transferFrameEvt, this);</entry>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action brief="initializeAndSubscribe()">FSP::Frame_InitialTransition(this);</action>
+     <action brief="initializeAndSubscribe()">FSP::Frame_initializeAndSubscribe(this, e);</action>
      <initial_glyph conn="37,4,4,0,4">
       <action box="1,1,20,3"/>
      </initial_glyph>
@@ -458,7 +447,7 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
      <state_glyph node="28,8,16,9"/>
     </state>
     <state name="Active">
-     <entry brief="resetIndicies();">FSP::Frame_Active_entry(this);</entry>
+     <entry brief="resetIndicies();">FSP::Frame_resetIndicies(this, e);</entry>
      <state name="TransferringFrame">
       <initial target="../2">
        <initial_glyph conn="40,31,4,0,3">
@@ -471,18 +460,18 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
        </tran_glyph>
       </tran>
       <state name="TransferringPanelSet">
-       <entry brief="enablePanelSetSelectPin(); transferPanelSet()">FSP::Frame_TransferringPanelSet_entry(this);</entry>
-       <exit brief="disablePanelSetSelectPin(); updatePanelSetSelectIndicies()">FSP::Frame_TransferringPanelSet_exit(this);</exit>
+       <entry brief="beginTransferPanelSet()">FSP::Frame_beginTransferPanelSet(this, e);</entry>
+       <exit brief="endTransferPanelSet()">FSP::Frame_endTransferPanelSet(this, e);</exit>
        <tran trig="PANEL_SET_TRANSFERRED">
         <choice target="../..">
-         <guard brief="frameNotTransferred()">FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(this)</guard>
+         <guard brief="ifFrameNotTransferred()">FSP::Frame_ifFrameNotTransferred(this, e)</guard>
          <choice_glyph conn="43,55,5,2,6,-5">
           <action box="1,0,26,2"/>
          </choice_glyph>
         </choice>
         <choice>
          <guard brief="else"/>
-         <action brief="publishFrameTransferred()">FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(this);</action>
+         <action brief="publishFrameTransferred()">FSP::Frame_publishFrameTransferred(this, e);</action>
          <choice_glyph conn="43,55,4,-1,4,5">
           <action box="6,3,18,6"/>
          </choice_glyph>
@@ -514,14 +503,14 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
-     <action brief="initializeAndSubscribe()">FSP::Watchdog_InitialTransition(this);</action>
+     <action brief="initializeAndSubscribe()">FSP::Watchdog_initializeAndSubscribe(this, e);</action>
      <initial_glyph conn="23,4,4,0,4">
-      <action box="0,-2,10,2"/>
+      <action box="1,0,21,3"/>
      </initial_glyph>
     </initial>
     <state name="Feeding">
-     <entry brief="armWatchdogTimer()">FSP::Watchdog_Feeding_entry(this);</entry>
-     <exit brief="disarmWatchdogTimer()">FSP::Watchdog_Feeding_exit(this);</exit>
+     <entry brief="armWatchdogTimer()">FSP::Watchdog_armWatchdogTimer(this, e);</entry>
+     <exit brief="disarmWatchdogTimer()">FSP::Watchdog_disarmWatchdogTimer(this, e);</exit>
      <initial target="../2">
       <initial_glyph conn="49,22,5,1,-4">
        <action box="0,-2,10,2"/>
@@ -534,7 +523,7 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
      </tran>
      <state name="Initialized">
       <tran trig="WATCHDOG_TIMEOUT">
-       <action brief="feedWatchdog()">FSP::Watchdog_Initialized_WATCHDOG_TIMEOUT(this);</action>
+       <action brief="feedWatchdog()">FSP::Watchdog_feedWatchdog(this, e);</action>
        <tran_glyph conn="17,22,3,-1,22">
         <action box="0,-2,23,5"/>
        </tran_glyph>
@@ -618,9 +607,7 @@ return &amp;Region::instances[id];</code>
 #define ARENA_CONTROLLER_HPP
 
 #include &quot;qpcpp.hpp&quot;
-#include &quot;bsp.hpp&quot;
 #include &quot;fsp.hpp&quot;
-#include &quot;signals.hpp&quot;
 
 
 namespace ArduinoInterface {

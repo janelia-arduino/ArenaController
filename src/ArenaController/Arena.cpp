@@ -53,7 +53,7 @@ Arena::Arena()
 //.${AOs::Arena::SM} .........................................................
 Q_STATE_DEF(Arena, initial) {
     //.${AOs::Arena::SM::initial}
-    FSP::Arena_InitialTransition(this);
+    FSP::Arena_initializeAndSubscribe(this, e);
     return tran(&ArenaOn);
 }
 //.${AOs::Arena::SM::ArenaOn} ................................................
@@ -62,13 +62,13 @@ Q_STATE_DEF(Arena, ArenaOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn}
         case Q_ENTRY_SIG: {
-            FSP::Arena_ArenaOn_entry(this);
+            FSP::Arena_activateCommandInterfaces(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Arena::SM::ArenaOn}
         case Q_EXIT_SIG: {
-            FSP::Arena_ArenaOn_exit(this);
+            FSP::Arena_deactivateCommandInterfaces(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -100,7 +100,7 @@ Q_STATE_DEF(Arena, AllOn) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOn}
         case Q_ENTRY_SIG: {
-            FSP::Arena_AllOn_entry(this);
+            FSP::Arena_displayAllOnFrames(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -117,7 +117,7 @@ Q_STATE_DEF(Arena, AllOff) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::AllOff}
         case Q_ENTRY_SIG: {
-            FSP::Arena_AllOff_entry(this);
+            FSP::Arena_deactivateDisplay(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

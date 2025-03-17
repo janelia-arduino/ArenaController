@@ -2,57 +2,69 @@
 #define FSP_HPP
 
 #include <Arduino.h>
+
+#include "constants.hpp"
+#include "bsp.hpp"
+#include "signals.hpp"
+
 #include "ArenaController.hpp"
 #include "Arena.hpp"
+#include "Display.hpp"
 #include "SerialCommandInterface.hpp"
 #include "EthernetCommandInterface.hpp"
 #include "Frame.hpp"
 #include "Watchdog.hpp"
 
-#include "constants.hpp"
 
 
 struct FSP
 {
   static void ArenaController_setup();
 
-  static void Arena_InitialTransition(QP::QActive * const ao);
-  static void Arena_ArenaOn_entry(QP::QActive * const ao);
-  static void Arena_ArenaOn_exit(QP::QActive * const ao);
-  static void Arena_AllOff_entry(QP::QActive * const ao);
-  static void Arena_AllOn_entry(QP::QActive * const ao);
+  static void Arena_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_activateCommandInterfaces(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_deactivateCommandInterfaces(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_deactivateDisplay(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_displayAllOnFrames(QP::QActive * const ao, QP::QEvt const * e);
 
-  static void SerialCommandInterface_InitialTransition(QP::QActive * const ao);
-  static void SerialCommandInterface_Active_entry(QP::QActive * const ao);
-  static void SerialCommandInterface_Active_exit(QP::QActive * const ao);
-  static void SerialCommandInterface_NotReady_entry(QP::QActive * const ao);
-  static void SerialCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(QP::QActive * const ao);
-  static void SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE(QP::QActive * const ao);
-  static bool SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_if_guard(QP::QActive * const ao);
-  static void SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_else_action(QP::QActive * const ao);
-  static void SerialCommandInterface_ProcessingStringCommand_entry(QP::QActive * const ao);
-  static void SerialCommandInterface_ProcessingStringCommand_COMMAND_PROCESSED(QP::QActive * const ao);
-  static void SerialCommandInterface_ProcessingBinaryCommand_COMMAND_PROCESSED(QP::QActive * const ao);
+  static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_setDisplayFrequency(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_displayFrames(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_armDisplayFrameTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_disarmDisplayFrameTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_transferFrame(QP::QActive * const ao, QP::QEvt const * e);
 
-  static void EthernetCommandInterface_InitialTransition(QP::QActive * const ao);
-  static void EthernetCommandInterface_Active_entry(QP::QActive * const ao);
-  static void EthernetCommandInterface_Active_exit(QP::QActive * const ao);
-  static void EthernetCommandInterface_Uninitialized_SERIAL_TIMEOUT(QP::QActive * const ao);
-  static void EthernetCommandInterface_WaitingForIPAddress_SERIAL_TIMEOUT(QP::QActive * const ao);
-  static void EthernetCommandInterface_IPAddressFound_SERIAL_TIMEOUT(QP::QActive * const ao);
-  static void EthernetCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(QP::QActive * const ao);
+  static void SerialCommandInterface_subscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_armSerialTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_disarmSerialTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_beginSerial(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_pollSerialCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_readFirstByte(QP::QActive * const ao, QP::QEvt const * e);
+  static bool SerialCommandInterface_ifBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_readSerialStringCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_processStringCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_writeSerialStringResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_writeSerialBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 
-  static void Frame_InitialTransition(QP::QActive * const ao);
-  static void Frame_Active_entry(QP::QActive * const ao);
-  static void Frame_TransferringPanelSet_entry(QP::QActive * const ao);
-  static void Frame_TransferringPanelSet_exit(QP::QActive * const ao);
-  static bool Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(QP::QActive * const ao);
-  static void Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(QP::QActive * const ao);
+  static void EthernetCommandInterface_subscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_armEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_disarmEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_beginEthernet(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_checkForIPAddress(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_beginEthernetServer(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_pollEthernetCommand(QP::QActive * const ao, QP::QEvt const * e);
 
-  static void Watchdog_InitialTransition(QP::QActive * const ao);
-  static void Watchdog_Feeding_entry(QP::QActive * const ao);
-  static void Watchdog_Feeding_exit(QP::QActive * const ao);
-  static void Watchdog_Initialized_WATCHDOG_TIMEOUT(QP::QActive * const ao);
+  static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_resetIndicies(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_beginTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_endTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);
+  static bool Frame_ifFrameNotTransferred(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_publishFrameTransferred(QP::QActive * const ao, QP::QEvt const * e);
+
+  static void Watchdog_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void Watchdog_armWatchdogTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Watchdog_disarmWatchdogTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Watchdog_feedWatchdog(QP::QActive * const ao, QP::QEvt const * e);
 
   static String processStringCommand(String command);
 };

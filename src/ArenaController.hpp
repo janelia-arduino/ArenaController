@@ -20,9 +20,7 @@
 #define ARENA_CONTROLLER_HPP
 
 #include "qpcpp.hpp"
-#include "bsp.hpp"
 #include "fsp.hpp"
-#include "signals.hpp"
 
 
 namespace ArduinoInterface {

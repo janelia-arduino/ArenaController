@@ -54,7 +54,7 @@ EthernetCommandInterface::EthernetCommandInterface()
 //.${AOs::EthernetCommandI~::SM} .............................................
 Q_STATE_DEF(EthernetCommandInterface, initial) {
     //.${AOs::EthernetCommandI~::SM::initial}
-    FSP::EthernetCommandInterface_InitialTransition(this);
+    FSP::EthernetCommandInterface_subscribe(this, e);
     return tran(&Inactive);
 }
 //.${AOs::EthernetCommandI~::SM::Inactive} ...................................
@@ -79,13 +79,13 @@ Q_STATE_DEF(EthernetCommandInterface, Active) {
     switch (e->sig) {
         //.${AOs::EthernetCommandI~::SM::Active}
         case Q_ENTRY_SIG: {
-            FSP::EthernetCommandInterface_Active_entry(this);
+            FSP::EthernetCommandInterface_armEthernetTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::EthernetCommandI~::SM::Active}
         case Q_EXIT_SIG: {
-            FSP::EthernetCommandInterface_Active_exit(this);
+            FSP::EthernetCommandInterface_disarmEthernetTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -122,7 +122,7 @@ Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::Unintitalized::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_Uninitialized_SERIAL_TIMEOUT(this);
+            FSP::EthernetCommandInterface_beginEthernet(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -144,7 +144,7 @@ Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_IPAddressFound_SERIAL_TIMEOUT(this);
+            FSP::EthernetCommandInterface_beginEthernetServer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -161,7 +161,7 @@ Q_STATE_DEF(EthernetCommandInterface, PollingForNewCommand) {
     switch (e->sig) {
         //.${AOs::EthernetCommandI~::SM::Active::PollingForNewCom~::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(this);
+            FSP::EthernetCommandInterface_pollEthernetCommand(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -188,7 +188,7 @@ Q_STATE_DEF(EthernetCommandInterface, WaitingForIPAddress) {
     switch (e->sig) {
         //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_WaitingForIPAddress_SERIAL_TIMEOUT(this);
+            FSP::EthernetCommandInterface_checkForIPAddress(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

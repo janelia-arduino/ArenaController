@@ -54,7 +54,7 @@ SerialCommandInterface::SerialCommandInterface()
 //.${AOs::SerialCommandInt~::SM} .............................................
 Q_STATE_DEF(SerialCommandInterface, initial) {
     //.${AOs::SerialCommandInt~::SM::initial}
-    FSP::SerialCommandInterface_InitialTransition(this);
+    FSP::SerialCommandInterface_subscribe(this, e);
     return tran(&Inactive);
 }
 //.${AOs::SerialCommandInt~::SM::Active} .....................................
@@ -63,13 +63,13 @@ Q_STATE_DEF(SerialCommandInterface, Active) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active}
         case Q_ENTRY_SIG: {
-            FSP::SerialCommandInterface_Active_entry(this);
+            FSP::SerialCommandInterface_armSerialTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::SerialCommandInt~::SM::Active}
         case Q_EXIT_SIG: {
-            FSP::SerialCommandInterface_Active_exit(this);
+            FSP::SerialCommandInterface_disarmSerialTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -101,7 +101,7 @@ Q_STATE_DEF(SerialCommandInterface, NotReady) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active::NotReady}
         case Q_ENTRY_SIG: {
-            FSP::SerialCommandInterface_NotReady_entry(this);
+            FSP::SerialCommandInterface_beginSerial(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -123,7 +123,7 @@ Q_STATE_DEF(SerialCommandInterface, PollingForNewCommand) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_TIMEOUT}
         case SERIAL_TIMEOUT_SIG: {
-            FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_TIMEOUT(this);
+            FSP::SerialCommandInterface_pollSerialCommand(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -134,14 +134,14 @@ Q_STATE_DEF(SerialCommandInterface, PollingForNewCommand) {
         }
         //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_AVAILABLE}
         case SERIAL_COMMAND_AVAILABLE_SIG: {
-            FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE(this);
-            //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_A~::[binary_command]}
-            if (FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_if_guard(this)) {
+            FSP::SerialCommandInterface_readFirstByte(this, e);
+            //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_A~::[ifBinaryCommand()]}
+            if (FSP::SerialCommandInterface_ifBinaryCommand(this, e)) {
                 status_ = tran(&ProcessingBinaryCommand);
             }
             //.${AOs::SerialCommandInt~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_A~::[else]}
             else {
-                FSP::SerialCommandInterface_PollingForNewCommand_SERIAL_COMMAND_AVAILABLE_else_action(this);
+                FSP::SerialCommandInterface_readSerialStringCommand(this, e);
                 status_ = tran(&ProcessingStringCommand);
             }
             break;
@@ -175,7 +175,7 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingBinaryCommand) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
-            FSP::SerialCommandInterface_ProcessingBinaryCommand_COMMAND_PROCESSED(this);
+            FSP::SerialCommandInterface_writeSerialBinaryResponse(this, e);
             status_ = tran(&PollingForNewCommand);
             break;
         }
@@ -192,13 +192,13 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingStringCommand) {
     switch (e->sig) {
         //.${AOs::SerialCommandInt~::SM::Active::ProcessingStringCommand}
         case Q_ENTRY_SIG: {
-            FSP::SerialCommandInterface_ProcessingStringCommand_entry(this);
+            FSP::SerialCommandInterface_processStringCommand(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::SerialCommandInt~::SM::Active::ProcessingString~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
-            FSP::SerialCommandInterface_ProcessingStringCommand_COMMAND_PROCESSED(this);
+            FSP::SerialCommandInterface_writeSerialStringResponse(this, e);
             status_ = tran(&PollingForNewCommand);
             break;
         }

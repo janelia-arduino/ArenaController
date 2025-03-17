@@ -53,7 +53,7 @@ Frame::Frame()
 //.${AOs::Frame::SM} .........................................................
 Q_STATE_DEF(Frame, initial) {
     //.${AOs::Frame::SM::initial}
-    FSP::Frame_InitialTransition(this);
+    FSP::Frame_initializeAndSubscribe(this, e);
     return tran(&Inactive);
 }
 //.${AOs::Frame::SM::Inactive} ...............................................
@@ -82,7 +82,7 @@ Q_STATE_DEF(Frame, Active) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Active}
         case Q_ENTRY_SIG: {
-            FSP::Frame_Active_entry(this);
+            FSP::Frame_resetIndicies(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -120,25 +120,25 @@ Q_STATE_DEF(Frame, TransferringPanelSet) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPanelSet}
         case Q_ENTRY_SIG: {
-            FSP::Frame_TransferringPanelSet_entry(this);
+            FSP::Frame_beginTransferPanelSet(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPanelSet}
         case Q_EXIT_SIG: {
-            FSP::Frame_TransferringPanelSet_exit(this);
+            FSP::Frame_endTransferPanelSet(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPane~::PANEL_SET_TRANSFERRED}
         case PANEL_SET_TRANSFERRED_SIG: {
-            //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[frameNotTransferred()]}
-            if (FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_if_guard(this)) {
+            //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[ifFrameNotTransferred()]}
+            if (FSP::Frame_ifFrameNotTransferred(this, e)) {
                 status_ = tran(&TransferringPanelSet);
             }
             //.${AOs::Frame::SM::Active::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[else]}
             else {
-                FSP::Frame_TransferringPanelSet_PANEL_SET_TRANSFERRED_else_action(this);
+                FSP::Frame_publishFrameTransferred(this, e);
                 status_ = Q_RET_HANDLED;
             }
             break;

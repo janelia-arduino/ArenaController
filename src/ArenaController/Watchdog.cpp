@@ -54,7 +54,7 @@ Watchdog::Watchdog()
 //.${AOs::Watchdog::SM} ......................................................
 Q_STATE_DEF(Watchdog, initial) {
     //.${AOs::Watchdog::SM::initial}
-    FSP::Watchdog_InitialTransition(this);
+    FSP::Watchdog_initializeAndSubscribe(this, e);
     return tran(&Feeding);
 }
 //.${AOs::Watchdog::SM::Feeding} .............................................
@@ -63,13 +63,13 @@ Q_STATE_DEF(Watchdog, Feeding) {
     switch (e->sig) {
         //.${AOs::Watchdog::SM::Feeding}
         case Q_ENTRY_SIG: {
-            FSP::Watchdog_Feeding_entry(this);
+            FSP::Watchdog_armWatchdogTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Watchdog::SM::Feeding}
         case Q_EXIT_SIG: {
-            FSP::Watchdog_Feeding_exit(this);
+            FSP::Watchdog_disarmWatchdogTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -96,7 +96,7 @@ Q_STATE_DEF(Watchdog, Initialized) {
     switch (e->sig) {
         //.${AOs::Watchdog::SM::Feeding::Initialized::WATCHDOG_TIMEOUT}
         case WATCHDOG_TIMEOUT_SIG: {
-            FSP::Watchdog_Initialized_WATCHDOG_TIMEOUT(this);
+            FSP::Watchdog_feedWatchdog(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

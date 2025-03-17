@@ -53,12 +53,7 @@ Display::Display()
 //.${AOs::Display::SM} .......................................................
 Q_STATE_DEF(Display, initial) {
     //.${AOs::Display::SM::initial}
-    BSP::initializeDisplay();
-    subscribe(DEACTIVATE_DISPLAY_SIG);
-    subscribe(DISPLAY_FRAMES_SIG);
-    subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
-    subscribe(FRAME_TRANSFERRED_SIG);
-    display_frequency_hz_ = constants::display_frequency_hz_default;
+    FSP::Display_initializeAndSubscribe(this, e);
     return tran(&Initialized);
 }
 //.${AOs::Display::SM::Initialized} ..........................................
@@ -72,7 +67,7 @@ Q_STATE_DEF(Display, Initialized) {
         }
         //.${AOs::Display::SM::Initialized::SET_DISPLAY_FREQUENCY}
         case SET_DISPLAY_FREQUENCY_SIG: {
-            display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)->display_frequency_hz;
+            FSP::Display_setDisplayFrequency(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -89,8 +84,7 @@ Q_STATE_DEF(Display, Inactive) {
     switch (e->sig) {
         //.${AOs::Display::SM::Initialized::Inactive::DISPLAY_FRAMES}
         case DISPLAY_FRAMES_SIG: {
-            panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer;
-            panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer_byte_count;
+            FSP::Display_displayFrames(this, e);
             status_ = tran(&DisplayingFrames);
             break;
         }
@@ -123,13 +117,13 @@ Q_STATE_DEF(Display, DisplayingFrames) {
     switch (e->sig) {
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames}
         case Q_ENTRY_SIG: {
-            BSP::armDisplayFrameTimer(display_frequency_hz_);
+            FSP::Display_armDisplayFrameTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames}
         case Q_EXIT_SIG: {
-            BSP::disarmDisplayFrameTimer();
+            FSP::Display_disarmDisplayFrameTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -140,7 +134,7 @@ Q_STATE_DEF(Display, DisplayingFrames) {
         }
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::SET_DISPLAY_FREQUENCY}
         case SET_DISPLAY_FREQUENCY_SIG: {
-            display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)->display_frequency_hz;
+            FSP::Display_setDisplayFrequency(this, e);
             status_ = tran(&DisplayingFrames);
             break;
         }
@@ -173,12 +167,7 @@ Q_STATE_DEF(Display, DisplayingFrame) {
     switch (e->sig) {
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame}
         case Q_ENTRY_SIG: {
-            static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
-            transferFrameEvt.panel_buffer = panel_buffer_;
-            transferFrameEvt.panel_buffer_byte_count = panel_buffer_byte_count_;
-            transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
-            transferFrameEvt.region_col_panel_count = BSP::getRegionColPanelCountMax();
-            QF::PUBLISH(&transferFrameEvt, this);
+            FSP::Display_transferFrame(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

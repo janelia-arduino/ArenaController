@@ -31,8 +31,6 @@ namespace AC {
 class Display : public QP::QActive {
 public:
     static Display instance;
-
-private:
     std::uint8_t const (*panel_buffer_)[];
     std::uint32_t display_frequency_hz_;
     std::uint8_t panel_buffer_byte_count_;
