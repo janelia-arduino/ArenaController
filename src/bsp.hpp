@@ -17,16 +17,19 @@ struct BSP {
 
   static String processStringCommand(String command);
 
-  static void beginSerial();
-  static void pollSerialCommand();
+  static bool beginSerial();
+  static bool pollSerialCommand();
   static uint8_t readSerialByte();
   static String readSerialStringCommand(uint8_t first_byte);
   static void writeSerialStringResponse(String response);
 
-  static void beginEthernet();
-  static void checkForEthernetIPAddress();
-  static void beginEthernetServer();
-  static void pollEthernetCommand();
+  static bool beginEthernet();
+  static bool checkForEthernetIPAddress();
+  static bool beginEthernetServer();
+  static bool checkForEthernetClient();
+  static bool pollEthernetCommand();
+  static void readEthernetBinaryCommand();
+  static void writeEthernetBinaryResponse();
 
   static void displayFrame();
 

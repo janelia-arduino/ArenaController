@@ -47,6 +47,7 @@ protected:
     Q_STATE_DECL(WaitingForIPAddress);
     Q_STATE_DECL(Waiting);
     Q_STATE_DECL(ProcessingCommand);
+    Q_STATE_DECL(WaitingForClient);
 };
 
 } // namespace AC

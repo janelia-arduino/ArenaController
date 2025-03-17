@@ -17,16 +17,11 @@ namespace AC
 {
 namespace constants
 {
-// Ethernet Communication Interface
-constexpr uint16_t port = 62222;
-
 // Serial Communication Interface
 //HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
 usb_serial_class & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
 // usb_serial_class & QS_SERIAL_STREAM = Serial1;
 HardwareSerial & QS_SERIAL_STREAM = Serial1;
-constexpr uint32_t SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE = 115200;
-constexpr uint16_t SERIAL_COMMUNICATION_INTERFACE_TIMEOUT = 100;
 
 // SPI Settings
 constexpr uint32_t spi_clock_speed = 5000000;
@@ -73,17 +68,10 @@ constexpr uint16_t frame_count_x_max = 20;
 // un-comment if QS instrumentation needed
 #define QS_ON
 
-static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
+static QP::QSpyId const l_BSP_ID = { 0U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
-static QEvt const serialReadyEvt = { AC::SERIAL_READY_SIG, 0U, 0U};
-static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
-static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
-static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
-static QEvt const serialCommandAvailableEvt = { AC::SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
-static QEvt const ethernetCommandAvailableEvt = { AC::ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
-
 static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
 
 static WDT_T4<WDT1> wdt;
@@ -91,11 +79,10 @@ static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
 
 static EthernetServer ethernet_server{AC::constants::port};
+static EthernetClient ethernet_client;
 static IPAddress static_ip{192, 168, 10, 62};
 static IPAddress subnet_mask{255, 255, 255, 0};
 static IPAddress gateway{192, 168, 10, 1};
-
-// static byte command_byte_array[AC::constants::byte_count_per_command_max];
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -134,7 +121,7 @@ void BSP::init()
   QS_INIT(nullptr);
 
   // output QS dictionaries...
-  QS_OBJ_DICTIONARY(&l_TIMER_ID);
+  QS_OBJ_DICTIONARY(&l_BSP_ID);
 
   // setup the QS filters...
   QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
@@ -178,7 +165,7 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
   ++transfer_panel_complete_count;
   if (transfer_panel_complete_count == AC::constants::region_count_per_frame)
   {
-    QF::PUBLISH(&panelSetTransferredEvt, &l_TIMER_ID);
+    QF::PUBLISH(&panelSetTransferredEvt, &l_BSP_ID);
   }
 }
 
@@ -196,20 +183,16 @@ void BSP::initializeFrame()
   }
 }
 
-void BSP::beginSerial()
+bool BSP::beginSerial()
 {
-  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.begin(AC::constants::SERIAL_COMMUNICATION_INTERFACE_BAUD_RATE);
-  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.setTimeout(AC::constants::SERIAL_COMMUNICATION_INTERFACE_TIMEOUT);
-  AC::AO_SerialCommandInterface->POST(&serialReadyEvt, &l_TIMER_ID);
+  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.begin(AC::constants::serial_baud_rate);
+  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.setTimeout(AC::constants::serial_timeout);
+  return true;
 }
 
-void BSP::pollSerialCommand()
+bool BSP::pollSerialCommand()
 {
-  size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
-  if (bytes_available)
-  {
-    QF::PUBLISH(&serialCommandAvailableEvt, &l_TIMER_ID);
-  }
+  return AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
 }
 
 uint8_t BSP::readSerialByte()
@@ -244,7 +227,7 @@ void BSP::writeSerialStringResponse(String response)
 //     // String command_string = String(command_str);
 //     String response = processCommandString(command_string);
 //     Serial.println(response);
-//     QF::PUBLISH(&commandProcessedEvt, &l_TIMER_ID);
+//     QF::PUBLISH(&commandProcessedEvt, &l_BSP_ID);
 //    return;
 
 //   // size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
@@ -256,48 +239,49 @@ void BSP::writeSerialStringResponse(String response)
 //   // }
 // }
 
-void BSP::beginEthernet()
+bool BSP::beginEthernet()
 {
-  if (Ethernet.begin(static_ip, subnet_mask, gateway))
-  {
-    AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_TIMER_ID);
-  }
+  return Ethernet.begin(static_ip, subnet_mask, gateway);
 }
 
-void BSP::checkForEthernetIPAddress()
+bool BSP::checkForEthernetIPAddress()
 {
-  IPAddress ip_address = Ethernet.localIP();
-  if (ip_address)
-  {
-    AC::AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_TIMER_ID);
-  }
+  return Ethernet.localIP();
 }
 
-void BSP::beginEthernetServer()
+bool BSP::beginEthernetServer()
 {
   ethernet_server.begin();
   if (ethernet_server)
-  {
-    AC::AO_EthernetCommandInterface->POST(&ethernetServerInitializedEvt, &l_TIMER_ID);
-  }
+    return true;
+  return false;
 }
 
-void BSP::pollEthernetCommand()
+bool BSP::checkForEthernetClient()
 {
-  EthernetClient ethernet_client = ethernet_server.accept();
-  if (ethernet_client && ethernet_client.available())
-  {
-    QF::PUBLISH(&ethernetCommandAvailableEvt, &l_TIMER_ID);
-    // String command = ethernet_client.readStringUntil('\n');
-    // String response = processCommandString(command);
-    // ethernet_client.write(response.c_str());
-  }
+  ethernet_client = ethernet_server.accept();
+  if (ethernet_client)
+    return true;
+  return false;
+}
+
+bool BSP::pollEthernetCommand()
+{
+  return ethernet_client.available();
+}
+
+void BSP::readEthernetBinaryCommand()
+{
+  // EthernetClient ethernet_client = ethernet_server.accept();
+  // uint16_t available_bytes = ethernet_client.available();
+  // Serial.print("available_bytes: ");
+  // Serial.println(available_bytes);
 }
 
 void BSP::displayFrame()
 {
   delay(2);
-  // QF::PUBLISH(&frameDisplayedEvt, &l_TIMER_ID);
+  // QF::PUBLISH(&frameDisplayedEvt, &l_BSP_ID);
 }
 
 uint8_t BSP::getRegionRowPanelCountMax()
@@ -365,7 +349,7 @@ void BSP::transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer
 // interrupts.................................................................
 void TIMER_HANDLER()
 {
-  QF::TICK_X(0, &l_TIMER_ID); // process time events for tick rate 0
+  QF::TICK_X(0, &l_BSP_ID); // process time events for tick rate 0
 }
 //............................................................................
 void QF::onStartup()

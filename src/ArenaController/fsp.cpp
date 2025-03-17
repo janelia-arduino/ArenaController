@@ -11,13 +11,25 @@ static CommandEvt const resetEvt = { RESET_SIG, 0U, 0U};
 static CommandEvt const allOnEvt = { ALL_ON_SIG, 0U, 0U};
 static CommandEvt const allOffEvt = { ALL_OFF_SIG, 0U, 0U};
 
-static QEvt const activateSerialCommandInterfaceEvt = { ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const activateEthernetCommandInterfaceEvt = { ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const deactivateSerialCommandInterfaceEvt = { DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const deactivateEthernetCommandInterfaceEvt = { DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const deactivateDisplayEvt = { DEACTIVATE_DISPLAY_SIG, 0U, 0U};
-static QEvt const frameTransferredEvt = { FRAME_TRANSFERRED_SIG, 0U, 0U};
-static QEvt const commandProcessedEvt = { COMMAND_PROCESSED_SIG, 0U, 0U};
+static QEvt const activateSerialCommandInterfaceEvt = {ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivateSerialCommandInterfaceEvt = {DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const serialReadyEvt = {SERIAL_READY_SIG, 0U, 0U};
+static QEvt const serialCommandAvailableEvt = {SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
+
+static QEvt const activateEthernetCommandInterfaceEvt = {ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivateEthernetCommandInterfaceEvt = {DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const ethernetInitializedEvt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
+static QEvt const ethernetIPAddressFoundEvt = {ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
+static QEvt const ethernetServerInitializedEvt = {ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
+static QEvt const ethernetClientConnectedEvt = {ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
+static QEvt const ethernetCommandAvailableEvt = {ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
+
+static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
+static QEvt const frameTransferredEvt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
+static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
+
+//----------------------------------------------------------------------------
+// Local functions
 
 void FSP::ArenaController_setup()
 {
@@ -162,12 +174,20 @@ void FSP::SerialCommandInterface_disarmSerialTimer(QActive * const ao, QEvt cons
 
 void FSP::SerialCommandInterface_beginSerial(QActive * const ao, QEvt const * e)
 {
-  BSP::beginSerial();
+  bool serial_ready = BSP::beginSerial();
+  if (serial_ready)
+  {
+    AC::AO_SerialCommandInterface->POST(&serialReadyEvt, &l_FSP_ID);
+  }
 }
 
 void FSP::SerialCommandInterface_pollSerialCommand(QActive * const ao, QEvt const * e)
 {
-  BSP::pollSerialCommand();
+  bool bytes_available = BSP::pollSerialCommand();
+  if (bytes_available)
+  {
+    QF::PUBLISH(&serialCommandAvailableEvt, &l_FSP_ID);
+  }
 }
 
 void FSP::SerialCommandInterface_readFirstByte(QActive * const ao, QEvt const * e)
@@ -225,28 +245,54 @@ void FSP::EthernetCommandInterface_disarmEthernetTimer(QActive * const ao, QEvt 
 
 void FSP::EthernetCommandInterface_beginEthernet(QActive * const ao, QEvt const * e)
 {
-  BSP::beginEthernet();
+  bool ethernet_begun = BSP::beginEthernet();
+  if (ethernet_begun)
+  {
+    AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_FSP_ID);
+  }
 }
 
 void FSP::EthernetCommandInterface_checkForIPAddress(QActive * const ao, QEvt const * e)
 {
-  BSP::checkForEthernetIPAddress();
+  bool ip_address_found = BSP::checkForEthernetIPAddress();
+  if (ip_address_found)
+  {
+    AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_FSP_ID);
+  }
 }
 
-void FSP::EthernetCommandInterface_beginEthernetServer(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_beginServer(QActive * const ao, QEvt const * e)
 {
-  BSP::beginEthernetServer();
+  bool ethernet_server_begun = BSP::beginEthernetServer();
+  if (ethernet_server_begun)
+  {
+    AO_EthernetCommandInterface->POST(&ethernetServerInitializedEvt, &l_FSP_ID);
+  }
+}
+
+void FSP::EthernetCommandInterface_checkForClient(QActive * const ao, QEvt const * e)
+{
+  bool ethernet_client_connected = BSP::checkForEthernetClient();
+  if (ethernet_client_connected)
+  {
+    QF::PUBLISH(&ethernetClientConnectedEvt, &l_FSP_ID);
+  }
 }
 
 void FSP::EthernetCommandInterface_pollEthernetCommand(QActive * const ao, QEvt const * e)
 {
-  BSP::pollEthernetCommand();
+  bool bytes_available = BSP::pollEthernetCommand();
+  if (bytes_available)
+  {
+    QF::PUBLISH(&ethernetCommandAvailableEvt, &l_FSP_ID);
+  }
 }
 
 void FSP::EthernetCommandInterface_readEthernetBinaryCommand(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  // eci->string_command_ = BSP::readSerialStringCommand(sci->first_command_byte_);
+  BSP::readEthernetBinaryCommand();
+  // eci->binary_command_ = BSP::readEthernetBinaryCommand(sci->first_command_byte_);
 }
 
 void FSP::EthernetCommandInterface_writeEthernetBinaryResponse(QActive * const ao, QEvt const * e)
