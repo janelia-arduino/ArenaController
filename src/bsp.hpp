@@ -4,8 +4,6 @@
 
 
 struct BSP {
-  enum { TICKS_PER_SEC = 100} ;
-
   static void init();
 
   static void ledOff();
@@ -17,9 +15,6 @@ struct BSP {
   static void initializeArena();
   static void initializeDisplay();
   static void initializeFrame();
-
-  static void activateCommandInterfaces();
-  static void deactivateCommandInterfaces();
 
   static String processStringCommand(String command);
 

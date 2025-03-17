@@ -32,6 +32,7 @@ class EthernetCommandInterface : public QP::QActive {
 public:
     static EthernetCommandInterface instance;
     QP::QTimeEvt ethernet_time_evt_;
+    std::uint8_t binary_command_[constants::byte_count_per_command_max];
 
 public:
     EthernetCommandInterface();

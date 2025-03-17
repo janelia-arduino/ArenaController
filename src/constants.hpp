@@ -8,14 +8,18 @@ namespace AC
 {
 namespace constants
 {
+constexpr uint32_t ticks_per_second = 1000;
+
 // duration before callback fires
-constexpr uint32_t watchdog_trigger_s = 1;
+constexpr uint32_t watchdog_trigger_seconds = 1;
 // duration before watchdog expires
-constexpr uint32_t watchdog_timeout_s = 2;
+constexpr uint32_t watchdog_timeout_seconds = 2;
 
 constexpr uint32_t display_frequency_hz_default = 200;
 
+// Commands
 constexpr byte first_command_byte_max_value_binary = 32;
+constexpr byte byte_count_per_command_max = 16;
 
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;

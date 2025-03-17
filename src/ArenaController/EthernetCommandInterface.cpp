@@ -172,6 +172,7 @@ Q_STATE_DEF(EthernetCommandInterface, PollingForNewCommand) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::PollingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
         case ETHERNET_COMMAND_AVAILABLE_SIG: {
+            FSP::EthernetCommandInterface_readEthernetBinaryCommand(this, e);
             status_ = tran(&ProcessingCommand);
             break;
         }

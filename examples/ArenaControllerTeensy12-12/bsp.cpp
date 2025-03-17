@@ -18,12 +18,8 @@ namespace AC
 {
 namespace constants
 {
-constexpr uint16_t byte_count_per_command_max = 16;
-constexpr byte first_command_byte_max_value = 32;
-
 // Ethernet Communication Interface
 constexpr uint16_t port = 62222;
-
 
 // Serial Communication Interface
 //HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
@@ -76,16 +72,12 @@ constexpr uint16_t frame_count_x_max = 20;
 // QS facilities
 
 // un-comment if QS instrumentation needed
-//#define QS_ON
+#define QS_ON
 
 static QP::QSpyId const l_TIMER_ID = { 0U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
-static QEvt const activateSerialCommandInterfaceEvt = { AC::ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const activateEthernetCommandInterfaceEvt = { AC::ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const deactivateSerialCommandInterfaceEvt = { AC::DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const deactivateEthernetCommandInterfaceEvt = { AC::DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const serialReadyEvt = { AC::SERIAL_READY_SIG, 0U, 0U};
 static QEvt const ethernetInitializedEvt = { AC::ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetIPAddressFoundEvt = { AC::ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
@@ -166,8 +158,8 @@ void BSP::ledOn()
 void BSP::initializeWatchdog()
 {
   WDT_timings_t config;
-  config.trigger = AC::constants::watchdog_trigger_s;
-  config.timeout = AC::constants::watchdog_timeout_s;
+  config.trigger = AC::constants::watchdog_trigger_seconds;
+  config.timeout = AC::constants::watchdog_timeout_seconds;
   config.callback = watchdogCallback;
   wdt.begin(config);
 }
@@ -211,24 +203,6 @@ void BSP::initializeFrame()
       digitalWriteFast(pss_pin, HIGH);
     }
   }
-}
-
-void BSP::activateCommandInterfaces()
-{
-#ifndef QS_ON
-  AC::AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_TIMER_ID);
-#endif
-
-  AC::AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_TIMER_ID);
-}
-
-void BSP::deactivateCommandInterfaces()
-{
-#ifndef QS_ON
-  AC::AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_TIMER_ID);
-#endif
-
-  AC::AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_TIMER_ID);
 }
 
 void BSP::beginSerial()
@@ -433,7 +407,7 @@ void TIMER_HANDLER()
 void QF::onStartup()
 {
   // configure the timer-counter channel........
-  Timer1.initialize(TIMER1_CLCK_HZ / BSP::TICKS_PER_SEC);
+  Timer1.initialize(TIMER1_CLCK_HZ / AC::constants::ticks_per_second);
   Timer1.attachInterrupt(TIMER_HANDLER);
   // ...
 }

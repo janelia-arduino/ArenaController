@@ -5,11 +5,18 @@ using namespace QP;
 
 using namespace AC;
 
-static QSpyId const l_COMMAND_ID = { 1U }; // QSpy source ID
+static QSpyId const l_FSP_ID = { 1U }; // QSpy source ID
 
 static CommandEvt const resetEvt = { RESET_SIG, 0U, 0U};
 static CommandEvt const allOnEvt = { ALL_ON_SIG, 0U, 0U};
 static CommandEvt const allOffEvt = { ALL_OFF_SIG, 0U, 0U};
+
+static QEvt const activateSerialCommandInterfaceEvt = { ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const activateEthernetCommandInterfaceEvt = { ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivateSerialCommandInterfaceEvt = { DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivateEthernetCommandInterfaceEvt = { DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivateDisplayEvt = { DEACTIVATE_DISPLAY_SIG, 0U, 0U};
+static QEvt const frameTransferredEvt = { FRAME_TRANSFERRED_SIG, 0U, 0U};
 static QEvt const commandProcessedEvt = { COMMAND_PROCESSED_SIG, 0U, 0U};
 
 void FSP::ArenaController_setup()
@@ -65,17 +72,18 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  BSP::activateCommandInterfaces();
+  AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
+  AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  BSP::deactivateCommandInterfaces();
+  AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
+  AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
 {
-  static QEvt const deactivateDisplayEvt = { DEACTIVATE_DISPLAY_SIG, 0U, 0U};
   QF::PUBLISH(&deactivateDisplayEvt, ao);
 }
 
@@ -125,7 +133,7 @@ void FSP::Display_disarmDisplayFrameTimer(QActive * const ao, QEvt const * e)
 void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  static AC::TransferFrameEvt transferFrameEvt = { AC::TRANSFER_FRAME_SIG, 0U, 0U};
+  static TransferFrameEvt transferFrameEvt = { TRANSFER_FRAME_SIG, 0U, 0U};
   transferFrameEvt.panel_buffer = display->panel_buffer_;
   transferFrameEvt.panel_buffer_byte_count = display->panel_buffer_byte_count_;
   transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
@@ -143,7 +151,7 @@ void FSP::SerialCommandInterface_subscribe(QActive * const ao, QEvt const * e)
 void FSP::SerialCommandInterface_armSerialTimer(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  sci->serial_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
+  sci->serial_time_evt_.armX(constants::ticks_per_second/2, constants::ticks_per_second/50);
 }
 
 void FSP::SerialCommandInterface_disarmSerialTimer(QActive * const ao, QEvt const * e)
@@ -206,7 +214,7 @@ void FSP::EthernetCommandInterface_subscribe(QActive * const ao, QEvt const * e)
 void FSP::EthernetCommandInterface_armEthernetTimer(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  eci->ethernet_time_evt_.armX(BSP::TICKS_PER_SEC/2, BSP::TICKS_PER_SEC/50);
+  eci->ethernet_time_evt_.armX(constants::ticks_per_second/2, constants::ticks_per_second/50);
 }
 
 void FSP::EthernetCommandInterface_disarmEthernetTimer(QActive * const ao, QEvt const * e)
@@ -233,6 +241,18 @@ void FSP::EthernetCommandInterface_beginEthernetServer(QActive * const ao, QEvt 
 void FSP::EthernetCommandInterface_pollEthernetCommand(QActive * const ao, QEvt const * e)
 {
   BSP::pollEthernetCommand();
+}
+
+void FSP::EthernetCommandInterface_readEthernetBinaryCommand(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  // eci->string_command_ = BSP::readSerialStringCommand(sci->first_command_byte_);
+}
+
+void FSP::EthernetCommandInterface_writeEthernetBinaryResponse(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  // eci->string_command_ = BSP::readSerialStringCommand(sci->first_command_byte_);
 }
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -282,7 +302,6 @@ bool FSP::Frame_ifFrameNotTransferred(QActive * const ao, QEvt const * e)
 
 void FSP::Frame_publishFrameTransferred(QActive * const ao, QEvt const * e)
 {
-  static QEvt const frameTransferredEvt = { FRAME_TRANSFERRED_SIG, 0U, 0U};
   QF::PUBLISH(&frameTransferredEvt, ao);
 }
 
@@ -295,7 +314,7 @@ void FSP::Watchdog_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 void FSP::Watchdog_armWatchdogTimer(QActive * const ao, QEvt const * e)
 {
   Watchdog * const watchdog = static_cast<Watchdog * const>(ao);
-  watchdog->watchdog_time_evt_.armX(BSP::TICKS_PER_SEC, BSP::TICKS_PER_SEC);
+  watchdog->watchdog_time_evt_.armX(constants::ticks_per_second, constants::ticks_per_second);
 }
 
 void FSP::Watchdog_disarmWatchdogTimer(QActive * const ao, QEvt const * e)
@@ -315,7 +334,7 @@ String FSP::processStringCommand(String command)
   String response = command;
   if (command.equalsIgnoreCase("RESET"))
   {
-    QF::PUBLISH(&resetEvt, &l_COMMAND_ID);
+    QF::PUBLISH(&resetEvt, &l_FSP_ID);
   }
   if (command.equalsIgnoreCase("LED_ON"))
   {
@@ -327,11 +346,11 @@ String FSP::processStringCommand(String command)
   }
   else if (command.equalsIgnoreCase("ALL_ON"))
   {
-    QF::PUBLISH(&allOnEvt, &l_COMMAND_ID);
+    QF::PUBLISH(&allOnEvt, &l_FSP_ID);
   }
   else if (command.equalsIgnoreCase("ALL_OFF"))
   {
-    QF::PUBLISH(&allOffEvt, &l_COMMAND_ID);
+    QF::PUBLISH(&allOffEvt, &l_FSP_ID);
   }
   else if (command.equalsIgnoreCase("EHS"))
   {
@@ -352,6 +371,6 @@ String FSP::processStringCommand(String command)
     //uint32_t frequency_hz = command.toInt();
     //BSP::setDisplayFrequency(frequency_hz);
   }
-  QF::PUBLISH(&commandProcessedEvt, &l_COMMAND_ID);
+  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
   return response;
 }
