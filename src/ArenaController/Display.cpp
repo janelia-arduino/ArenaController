@@ -47,7 +47,8 @@ namespace AC {
 Display Display::instance;
 //.${AOs::Display::Display} ..................................................
 Display::Display()
-: QActive(Q_STATE_CAST(&Display::initial))
+: QActive(Q_STATE_CAST(&Display::initial)),
+    display_time_evt_(this, DISPLAY_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::Display::SM} .......................................................
@@ -149,8 +150,8 @@ Q_STATE_DEF(Display, DisplayingFrames) {
 Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToDisplay~::DISPLAY_FRAME_TIMEOUT}
-        case DISPLAY_FRAME_TIMEOUT_SIG: {
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToDisplay~::DISPLAY_TIMEOUT}
+        case DISPLAY_TIMEOUT_SIG: {
             status_ = tran(&DisplayingFrame);
             break;
         }

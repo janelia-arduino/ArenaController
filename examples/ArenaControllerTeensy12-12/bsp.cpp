@@ -2,7 +2,6 @@
 #include <Watchdog_t4.h>
 #include <QNEthernet.h>
 #include <TimerOne.h>
-#include <TimerThree.h>
 #include <SPI.h>
 #include <EventResponder.h>
 #include <SdFat.h>
@@ -85,7 +84,6 @@ static QEvt const ethernetServerInitializedEvt = { AC::ETHERNET_SERVER_INITIALIZ
 static QEvt const serialCommandAvailableEvt = { AC::SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
 static QEvt const ethernetCommandAvailableEvt = { AC::ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
 
-static QEvt const displayFrameTimeoutEvt = { AC::DISPLAY_FRAME_TIMEOUT_SIG, 0U, 0U};
 static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
 
 static WDT_T4<WDT1> wdt;
@@ -173,13 +171,6 @@ void BSP::initializeArena()
 {
   pinMode(AC::constants::reset_pin, OUTPUT);
   digitalWriteFast(AC::constants::reset_pin, LOW);
-}
-
-void BSP::initializeDisplay()
-{
-  uint32_t period_us = AC::constants::microseconds_per_second;
-  Timer3.initialize(period_us);
-  Timer3.stop();
 }
 
 void transferPanelCompleteCallback(EventResponderRef event_responder)
@@ -301,26 +292,6 @@ void BSP::pollEthernetCommand()
     // String response = processCommandString(command);
     // ethernet_client.write(response.c_str());
   }
-}
-
-void displayFrameTimerHandler()
-{
-  QF::PUBLISH(&displayFrameTimeoutEvt, &l_TIMER_ID);
-}
-
-void BSP::armDisplayFrameTimer(uint32_t frequency_hz)
-{
-  uint32_t period_us = AC::constants::microseconds_per_second / frequency_hz;
-  Timer3.stop();
-  Timer3.setPeriod(period_us);
-  Timer3.attachInterrupt(displayFrameTimerHandler);
-  Timer3.start();
-}
-
-void BSP::disarmDisplayFrameTimer()
-{
-  Timer3.stop();
-  Timer3.detachInterrupt();
 }
 
 void BSP::displayFrame()

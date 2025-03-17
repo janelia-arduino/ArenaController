@@ -98,10 +98,8 @@ void FSP::Arena_displayAllOnFrames(QActive * const ao, QEvt const * e)
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  BSP::initializeDisplay();
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(DISPLAY_FRAMES_SIG);
-  ao->subscribe(DISPLAY_FRAME_TIMEOUT_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
   display->display_frequency_hz_ = constants::display_frequency_hz_default;
 }
@@ -122,12 +120,14 @@ void FSP::Display_displayFrames(QActive * const ao, QEvt const * e)
 void FSP::Display_armDisplayFrameTimer(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  BSP::armDisplayFrameTimer(display->display_frequency_hz_);
+  display->display_time_evt_.armX(constants::ticks_per_second/display->display_frequency_hz_,
+    constants::ticks_per_second/display->display_frequency_hz_);
 }
 
 void FSP::Display_disarmDisplayFrameTimer(QActive * const ao, QEvt const * e)
 {
-  BSP::disarmDisplayFrameTimer();
+  Display * const display = static_cast<Display * const>(ao);
+  display->display_time_evt_.disarm();
 }
 
 void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)

@@ -206,8 +206,10 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="display_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
-    <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
+    <code>: QActive(Q_STATE_CAST(&amp;Display::initial)),
+    display_time_evt_(this, DISPLAY_TIMEOUT_SIG, 0U)</code>
    </operation>
    <statechart properties="0x00">
     <initial target="../1">
@@ -258,7 +260,7 @@ This structure of the code is recommended for applications with only one active 
         </tran_glyph>
        </tran>
        <state name="WaitingToDisplayFrame">
-        <tran trig="DISPLAY_FRAME_TIMEOUT" target="../../3">
+        <tran trig="DISPLAY_TIMEOUT" target="../../3">
          <tran_glyph conn="42,47,2,3,4">
           <action box="1,1,22,2"/>
          </tran_glyph>

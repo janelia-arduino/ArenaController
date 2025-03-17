@@ -13,7 +13,6 @@ struct BSP {
   static void feedWatchdog();
 
   static void initializeArena();
-  static void initializeDisplay();
   static void initializeFrame();
 
   static String processStringCommand(String command);
@@ -29,8 +28,6 @@ struct BSP {
   static void beginEthernetServer();
   static void pollEthernetCommand();
 
-  static void armDisplayFrameTimer(uint32_t frequency_hz);
-  static void disarmDisplayFrameTimer();
   static void displayFrame();
   static void setDisplayFrequency(uint32_t frequency_hz);
 

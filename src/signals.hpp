@@ -18,13 +18,12 @@ enum ArenaControllerSignals {
   TRANSFER_FRAME_SIG,
   PANEL_SET_TRANSFERRED_SIG,
   FRAME_TRANSFERRED_SIG,
-  DISPLAY_FRAME_TIMEOUT_SIG,
 
   SERIAL_COMMAND_AVAILABLE_SIG,
   ETHERNET_COMMAND_AVAILABLE_SIG,
   COMMAND_PROCESSED_SIG,
 
-  MAX_PUB_SIG,    // the last published signal
+  MAX_PUB_SIG, // the last published signal
 
   // POST to SerialCommandInterface
   ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG,
@@ -41,11 +40,12 @@ enum ArenaControllerSignals {
   // POST to Display
   SET_DISPLAY_FREQUENCY_SIG,
 
-  WATCHDOG_TIMEOUT_SIG, // signal for Watchdog timeout event
-  SERIAL_TIMEOUT_SIG, // signal for SerialCommandInterface timeout event
-  ETHERNET_TIMEOUT_SIG, // signal for EthernetCommandInterface timeout event
+  WATCHDOG_TIMEOUT_SIG,
+  SERIAL_TIMEOUT_SIG,
+  ETHERNET_TIMEOUT_SIG,
+  DISPLAY_TIMEOUT_SIG,
 
-  MAX_SIG         // the last signal
+  MAX_SIG // the last signal
 };
 
 } // namespace AC
