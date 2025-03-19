@@ -25,7 +25,9 @@ struct BSP {
 
   static bool beginEthernet();
   static bool checkForEthernetIPAddress();
-  static void getIpAddressString(char * ip_address_str);
+  static void getServerIpAddressString(char * ip_address_str);
+  static void getEthernetHardwareStatusString(char * hardware_status_str);
+  static void getEthernetLinkStatusString(char * link_status_str);
   static bool beginEthernetServer();
   static bool checkForEthernetClient();
   static bool pollEthernetCommand();

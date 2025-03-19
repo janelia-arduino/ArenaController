@@ -9,18 +9,18 @@
   <item name="backups">0</item>
  </group>
  <group name="windows">
-  <item id=".::Region.hpp">338,300,596,300</item>
-  <item id="./ArenaController::Region.cpp">0,33,871,625</item>
-  <item id="AOs::Arena::SM">2,0,932,625</item>
-  <item id="AOs::SerialCommandInterface::SM">0,0,934,625,*</item>
-  <item id="AOs::EthernetCommandInterface::SM">-68,0,1002,625</item>
-  <item id="AOs::Frame::SM">0,0,640,480</item>
-  <item id="AOs::Watchdog::SM">0,33,934,625</item>
+  <item id=".::Region.hpp">0,0,596,300</item>
+  <item id="./ArenaController::Region.cpp">63,229,871,625</item>
+  <item id="AOs::Arena::SM">0,0,932,625</item>
+  <item id="AOs::SerialCommandInterface::SM">0,229,934,625</item>
+  <item id="AOs::EthernetCommandInterface::SM">0,0,934,821,*</item>
+  <item id="AOs::Frame::SM">0,374,640,480</item>
+  <item id="AOs::Watchdog::SM">0,229,934,625</item>
   <item id="AOs::Region::SM">294,0,640,480</item>
-  <item id=".::ArenaController.hpp">0,0,596,300</item>
-  <item id=".::Frame.hpp">0,325,596,300</item>
-  <item id=".::SerialCommandInterface.hpp">338,325,596,300</item>
-  <item id="AOs::Display::SM">294,0,640,480</item>
+  <item id=".::ArenaController.hpp">338,554,596,300</item>
+  <item id=".::Frame.hpp">338,0,596,300</item>
+  <item id=".::SerialCommandInterface.hpp">0,0,596,300</item>
+  <item id="AOs::Display::SM">0,374,640,480</item>
  </group>
  <group name="search">
   <item name="options">2032128</item>

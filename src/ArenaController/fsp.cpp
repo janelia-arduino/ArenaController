@@ -389,15 +389,15 @@ void FSP::processStringCommand(const char * command, char * response)
   }
   else if (strcmp(command, "EHS") == 0)
   {
-    //response = String(Ethernet.hardwareStatus());
+    BSP::getEthernetHardwareStatusString(response);
   }
   else if (strcmp(command, "ELS") == 0)
   {
-    //response = String(Ethernet.linkStatus());
+    BSP::getEthernetLinkStatusString(response);
   }
-  else if (strcmp(command, "GET_IP_ADDRESS") == 0)
+  else if (strcmp(command, "SIP") == 0)
   {
-    BSP::getIpAddressString(response);
+    BSP::getServerIpAddressString(response);
   }
   else if (strcmp(command, "SET_DISPLAY_FREQUENCY") == 0)
   {
