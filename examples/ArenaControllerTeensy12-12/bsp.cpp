@@ -287,6 +287,8 @@ void BSP::getEthernetHardwareStatusString(char * hardware_status_str)
 
 void BSP::getEthernetLinkStatusString(char * link_status_str)
 {
+  Serial.print("hasLinkState: ");
+  Serial.println(Ethernet.driverCapabilities().hasLinkState);
   link_status_str[0] = '\0';
   EthernetLinkStatus status = Ethernet.linkStatus();
   switch (status)
