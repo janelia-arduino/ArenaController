@@ -69,7 +69,7 @@ struct FSP
   static void Watchdog_disarmWatchdogTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Watchdog_feedWatchdog(QP::QActive * const ao, QP::QEvt const * e);
 
-  static String processStringCommand(String command);
+  static void processStringCommand(const char * command, char * response);
 };
 
 #endif // FSP_HPP

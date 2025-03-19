@@ -40,7 +40,7 @@ constexpr uint16_t byte_count_per_frame_grayscale_max = \
 // region
 constexpr uint8_t region_count_per_frame = 2;
 constexpr SPIClass * region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
-constexpr uint8_t region_cipo_pins[region_count_per_frame] = [12, 1];
+constexpr uint8_t region_cipo_pins[region_count_per_frame] = {12, 1};
 
 constexpr uint8_t region_row_panel_count_max = panel_count_per_frame_row_max;
 constexpr uint8_t region_col_panel_count_max = \
@@ -90,12 +90,9 @@ void watchdogCallback ()
 {
 }
 
-String ipAddressToString(const IPAddress& ipAddress)
+void ipAddressToString(IPAddress ip_address, char * ip_address_str)
 {
-  return String(ipAddress[0]) + String(".") +\
-  String(ipAddress[1]) + String(".") +\
-  String(ipAddress[2]) + String(".") +\
-  String(ipAddress[3]);
+  sprintf(ip_address_str,"%u.%u.%u.%u", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 }
 
 //----------------------------------------------------------------------------
@@ -201,13 +198,18 @@ uint8_t BSP::readSerialByte()
   return AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.read();
 }
 
-String BSP::readSerialStringCommand(uint8_t first_byte)
+void BSP::readSerialStringCommand(char * command_str, char first_char)
 {
-  String command_tail = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
-  return String(String((char)first_byte) + command_tail);
+  char command_tail[AC::constants::string_command_length_max];
+  size_t chars_read = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readBytesUntil(AC::constants::command_termination_character,
+    command_tail, AC::constants::string_command_length_max - 1);
+  command_tail[chars_read] = '\0';
+  command_str[0] = first_char;
+  command_str[1] = '\0';
+  strcat(command_str, command_tail);
 }
 
-void BSP::writeSerialStringResponse(String response)
+void BSP::writeSerialStringResponse(char * response)
 {
   AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.println(response);
 }
@@ -250,6 +252,12 @@ bool BSP::checkForEthernetIPAddress()
   return Ethernet.localIP();
 }
 
+void BSP::getIpAddressString(char * ip_address_str)
+{
+  IPAddress ip_address = Ethernet.localIP();
+  ipAddressToString(ip_address, ip_address_str);
+}
+
 bool BSP::beginEthernetServer()
 {
   ethernet_server.begin();
@@ -262,7 +270,6 @@ bool BSP::pollEthernetCommand()
   if (ethernet_client)
   {
     IPAddress ip = ethernet_client.remoteIP();
-    printf("Client connected: %u.%u.%u.%u\r\n", ip[0], ip[1], ip[2], ip[3]);
     ethernet_client.close();
   }
   return false;

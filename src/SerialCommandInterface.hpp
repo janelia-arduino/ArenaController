@@ -33,8 +33,8 @@ public:
     QP::QTimeEvt serial_time_evt_;
     static SerialCommandInterface instance;
     std::uint8_t first_command_byte_;
-    String string_command_;
-    String string_response_;
+    char string_command_[constants::string_command_length_max];
+    char string_response_[constants::string_response_length_max];
 
 public:
     SerialCommandInterface();

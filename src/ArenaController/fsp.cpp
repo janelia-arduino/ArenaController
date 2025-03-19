@@ -204,13 +204,13 @@ bool FSP::SerialCommandInterface_ifBinaryCommand(QActive * const ao, QEvt const 
 void FSP::SerialCommandInterface_readSerialStringCommand(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  sci->string_command_ = BSP::readSerialStringCommand(sci->first_command_byte_);
+  BSP::readSerialStringCommand(sci->string_command_, (char)sci->first_command_byte_);
 }
 
 void FSP::SerialCommandInterface_processStringCommand(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  sci->string_response_ = FSP::processStringCommand(sci->string_command_);
+  FSP::processStringCommand(sci->string_command_, sci->string_response_);
 }
 
 void FSP::SerialCommandInterface_writeSerialStringResponse(QActive * const ao, QEvt const * e)
@@ -364,45 +364,44 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
   BSP::feedWatchdog();
 }
 
-String FSP::processStringCommand(String command)
+void FSP::processStringCommand(const char * command, char * response)
 {
-  command.trim();
-  String response = command;
-  if (command.equalsIgnoreCase("RESET"))
+  strcpy(response, command);
+  if (strcmp(command, "RESET") == 0)
   {
     QF::PUBLISH(&resetEvt, &l_FSP_ID);
   }
-  if (command.equalsIgnoreCase("LED_ON"))
+  if (strcmp(command, "LED_ON") == 0)
   {
     BSP::ledOn();
   }
-  else if (command.equalsIgnoreCase("LED_OFF"))
+  else if (strcmp(command, "LED_OFF") == 0)
   {
     BSP::ledOff();
   }
-  else if (command.equalsIgnoreCase("ALL_ON"))
+  else if (strcmp(command, "ALL_ON") == 0)
   {
     QF::PUBLISH(&allOnEvt, &l_FSP_ID);
   }
-  else if (command.equalsIgnoreCase("ALL_OFF"))
+  else if (strcmp(command, "ALL_OFF") == 0)
   {
     QF::PUBLISH(&allOffEvt, &l_FSP_ID);
   }
-  else if (command.equalsIgnoreCase("EHS"))
+  else if (strcmp(command, "EHS") == 0)
   {
     //response = String(Ethernet.hardwareStatus());
   }
-  else if (command.equalsIgnoreCase("ELS"))
+  else if (strcmp(command, "ELS") == 0)
   {
     //response = String(Ethernet.linkStatus());
   }
-  else if (command.equalsIgnoreCase("GET_IP_ADDRESS"))
+  else if (strcmp(command, "GET_IP_ADDRESS") == 0)
   {
-    // response = ipAddressToString(Ethernet.localIP());
+    BSP::getIpAddressString(response);
   }
-  else if (command.startsWith("SET_DISPLAY_FREQUENCY"))
+  else if (strcmp(command, "SET_DISPLAY_FREQUENCY") == 0)
   {
-    //command.replace("SET_DISPLAY_FREQUENCY", "");
+    //command.replace("SET_DISPLAY_FREQUENCY", "") == 0;
     //command.trim();
     //uint32_t frequency_hz = command.toInt();
     //BSP::setDisplayFrequency(frequency_hz);

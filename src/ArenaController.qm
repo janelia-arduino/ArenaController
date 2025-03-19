@@ -80,8 +80,8 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="serial_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="instance" type="SerialCommandInterface" visibility="0x00" properties="0x01"/>
    <attribute name="first_command_byte_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="string_command_" type="String" visibility="0x00" properties="0x00"/>
-   <attribute name="string_response_" type="String" visibility="0x00" properties="0x00"/>
+   <attribute name="string_command_[constants::string_command_length_max]" type="char" visibility="0x00" properties="0x00"/>
+   <attribute name="string_response_[constants::string_response_length_max]" type="char" visibility="0x00" properties="0x00"/>
    <operation name="SerialCommandInterface" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;SerialCommandInterface::initial)),
     serial_time_evt_(this, SERIAL_TIMEOUT_SIG, 0U)</code>

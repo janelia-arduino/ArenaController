@@ -20,11 +20,12 @@ struct BSP {
   static bool beginSerial();
   static bool pollSerialCommand();
   static uint8_t readSerialByte();
-  static String readSerialStringCommand(uint8_t first_byte);
-  static void writeSerialStringResponse(String response);
+  static void readSerialStringCommand(char * command_str, char first_char);
+  static void writeSerialStringResponse(char * response);
 
   static bool beginEthernet();
   static bool checkForEthernetIPAddress();
+  static void getIpAddressString(char * ip_address_str);
   static bool beginEthernetServer();
   static bool checkForEthernetClient();
   static bool pollEthernetCommand();
