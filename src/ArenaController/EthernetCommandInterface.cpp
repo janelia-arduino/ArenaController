@@ -139,7 +139,7 @@ Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
     switch (e->sig) {
         //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_SERVER_INITIALIZED}
         case ETHERNET_SERVER_INITIALIZED_SIG: {
-            status_ = tran(&WaitingForClient);
+            status_ = tran(&PollingForNewCommand);
             break;
         }
         //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_TIMEOUT}
@@ -227,28 +227,6 @@ Q_STATE_DEF(EthernetCommandInterface, ProcessingCommand) {
     switch (e->sig) {
         //.${AOs::EthernetCommandI~::SM::Active::ProcessingComman~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
-            status_ = tran(&PollingForNewCommand);
-            break;
-        }
-        default: {
-            status_ = super(&Active);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::EthernetCommandI~::SM::Active::WaitingForClient} ...................
-Q_STATE_DEF(EthernetCommandInterface, WaitingForClient) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::WaitingForClient::ETHERNET_TIMEOUT}
-        case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_checkForClient(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::EthernetCommandI~::SM::Active::WaitingForClient::ETHERNET_CLIENT_CONNECTED}
-        case ETHERNET_CLIENT_CONNECTED_SIG: {
             status_ = tran(&PollingForNewCommand);
             break;
         }

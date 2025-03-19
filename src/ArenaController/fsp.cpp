@@ -21,7 +21,6 @@ static QEvt const deactivateEthernetCommandInterfaceEvt = {DEACTIVATE_ETHERNET_C
 static QEvt const ethernetInitializedEvt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetIPAddressFoundEvt = {ETHERNET_IP_ADDRESS_FOUND_SIG, 0U, 0U};
 static QEvt const ethernetServerInitializedEvt = {ETHERNET_SERVER_INITIALIZED_SIG, 0U, 0U};
-static QEvt const ethernetClientConnectedEvt = {ETHERNET_CLIENT_CONNECTED_SIG, 0U, 0U};
 static QEvt const ethernetCommandAvailableEvt = {ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
 
 static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
@@ -270,15 +269,6 @@ void FSP::EthernetCommandInterface_beginServer(QActive * const ao, QEvt const * 
   }
 }
 
-void FSP::EthernetCommandInterface_checkForClient(QActive * const ao, QEvt const * e)
-{
-  bool ethernet_client_connected = BSP::checkForEthernetClient();
-  if (ethernet_client_connected)
-  {
-    QF::PUBLISH(&ethernetClientConnectedEvt, &l_FSP_ID);
-  }
-}
-
 void FSP::EthernetCommandInterface_pollEthernetCommand(QActive * const ao, QEvt const * e)
 {
   bool bytes_available = BSP::pollEthernetCommand();
@@ -408,7 +398,7 @@ String FSP::processStringCommand(String command)
   }
   else if (command.equalsIgnoreCase("GET_IP_ADDRESS"))
   {
-    //response = ipAddressToString(Ethernet.localIP());
+    // response = ipAddressToString(Ethernet.localIP());
   }
   else if (command.startsWith("SET_DISPLAY_FREQUENCY"))
   {

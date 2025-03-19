@@ -40,6 +40,7 @@ constexpr uint16_t byte_count_per_frame_grayscale_max = \
 // region
 constexpr uint8_t region_count_per_frame = 2;
 constexpr SPIClass * region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
+constexpr uint8_t region_cipo_pins[region_count_per_frame] = [12, 1];
 
 constexpr uint8_t region_row_panel_count_max = panel_count_per_frame_row_max;
 constexpr uint8_t region_col_panel_count_max = \
@@ -79,7 +80,6 @@ static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
 
 static EthernetServer ethernet_server{AC::constants::port};
-static EthernetClient ethernet_client;
 static IPAddress static_ip{192, 168, 10, 62};
 static IPAddress subnet_mask{255, 255, 255, 0};
 static IPAddress gateway{192, 168, 10, 1};
@@ -112,6 +112,7 @@ void BSP::init()
 
   for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
   {
+    pinMode(AC::constants::region_cipo_pins[region_index], INPUT);
     SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
     spi_ptr->begin();
   }
@@ -252,22 +253,19 @@ bool BSP::checkForEthernetIPAddress()
 bool BSP::beginEthernetServer()
 {
   ethernet_server.begin();
-  if (ethernet_server)
-    return true;
-  return false;
-}
-
-bool BSP::checkForEthernetClient()
-{
-  ethernet_client = ethernet_server.accept();
-  if (ethernet_client)
-    return true;
-  return false;
+  return ethernet_server ? true : false;
 }
 
 bool BSP::pollEthernetCommand()
 {
-  return ethernet_client.available();
+  EthernetClient ethernet_client = ethernet_server.accept();
+  if (ethernet_client)
+  {
+    IPAddress ip = ethernet_client.remoteIP();
+    printf("Client connected: %u.%u.%u.%u\r\n", ip[0], ip[1], ip[2], ip[3]);
+    ethernet_client.close();
+  }
+  return false;
 }
 
 void BSP::readEthernetBinaryCommand()
