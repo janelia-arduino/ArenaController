@@ -407,5 +407,4 @@ void FSP::processStringCommand(const char * command, char * response)
     //BSP::setDisplayFrequency(frequency_hz);
   }
   QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
-  return response;
 }
