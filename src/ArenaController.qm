@@ -615,11 +615,10 @@ return &amp;Region::instances[id];</code>
 #include &quot;fsp.hpp&quot;
 
 
-namespace ArduinoInterface {
-
+namespace ArduinoInterface
+{
 void setup();
 void loop();
-
 }
 
 $declare${Shared}
@@ -734,23 +733,22 @@ $define${Shared::AO_Arena}
 $define${AOs::Arena}</text>
   </file>
   <file name="ArenaController.cpp">
-   <text>#include &quot;ArenaController.hpp&quot;  // ArenaController application interface
+   <text>#include &quot;ArenaController.hpp&quot;
 
 using namespace QP;
 
-namespace ArduinoInterface {
-
-//............................................................................
-void setup() {
-    FSP::ArenaController_setup();
+namespace ArduinoInterface
+{
+void setup()
+{
+  FSP::ArenaController_setup();
 }
 
-//............................................................................
-void loop() {
-    QF::run(); // run the QF/C++ framework
+void loop()
+{
+  QF::run();
 }
-
-} // namespace AC</text>
+}</text>
   </file>
   <file name="SerialCommandInterface.cpp">
    <text>#include &quot;SerialCommandInterface.hpp&quot;

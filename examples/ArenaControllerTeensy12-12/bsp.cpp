@@ -69,7 +69,7 @@ constexpr uint16_t frame_count_x_max = 20;
 // un-comment if QS instrumentation needed
 #define QS_ON
 
-static QP::QSpyId const l_BSP_ID = { 0U }; // QSpy source ID
+static QP::QSpyId const l_BSP_ID = { 1U }; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
@@ -288,7 +288,7 @@ void BSP::getEthernetHardwareStatusString(char * hardware_status_str)
 void BSP::getEthernetLinkStatusString(char * link_status_str)
 {
   Serial.print("hasLinkState: ");
-  Serial.println(Ethernet.driverCapabilities().hasLinkState);
+  // Serial.println(Ethernet.driverCapabilities().hasLinkState);
   link_status_str[0] = '\0';
   EthernetLinkStatus status = Ethernet.linkStatus();
   switch (status)

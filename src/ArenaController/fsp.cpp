@@ -5,7 +5,7 @@ using namespace QP;
 
 using namespace AC;
 
-static QSpyId const l_FSP_ID = { 1U }; // QSpy source ID
+static QSpyId const l_FSP_ID = { 0U }; // QSpy source ID
 
 static CommandEvt const resetEvt = { RESET_SIG, 0U, 0U};
 static CommandEvt const allOnEvt = { ALL_ON_SIG, 0U, 0U};

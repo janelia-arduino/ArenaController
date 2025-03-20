@@ -16,20 +16,19 @@
 // for more details.
 //
 //.$endhead${./ArenaControlle~::ArenaController.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^
-#include "ArenaController.hpp"  // ArenaController application interface
+#include "ArenaController.hpp"
 
 using namespace QP;
 
-namespace ArduinoInterface {
-
-//............................................................................
-void setup() {
-    FSP::ArenaController_setup();
+namespace ArduinoInterface
+{
+void setup()
+{
+  FSP::ArenaController_setup();
 }
 
-//............................................................................
-void loop() {
-    QF::run(); // run the QF/C++ framework
+void loop()
+{
+  QF::run();
 }
-
-} // namespace AC
+}

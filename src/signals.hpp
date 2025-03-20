@@ -4,10 +4,11 @@
 #include "qpcpp.hpp"
 
 
-namespace AC {
+namespace AC
+{
 
-enum ArenaControllerSignals {
-
+enum ArenaControllerSignals
+{
   // commands from serial or ethernet interface
   RESET_SIG = QP::Q_USER_SIG,
   ALL_ON_SIG,

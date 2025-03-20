@@ -23,11 +23,10 @@
 #include "fsp.hpp"
 
 
-namespace ArduinoInterface {
-
+namespace ArduinoInterface
+{
 void setup();
 void loop();
-
 }
 
 //.$declare${Shared} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
