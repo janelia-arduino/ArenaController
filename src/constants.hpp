@@ -20,7 +20,7 @@ constexpr uint32_t serial_baud_rate = 115200;
 constexpr uint16_t serial_timeout = 100;
 
 // Ethernet Communication Interface
-constexpr uint16_t port = 62222;
+constexpr uint16_t ethernet_server_port = 62222;
 
 constexpr uint32_t display_frequency_hz_default = 200;
 

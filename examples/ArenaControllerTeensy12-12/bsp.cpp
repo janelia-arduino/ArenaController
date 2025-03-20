@@ -79,7 +79,7 @@ static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
 
-static EthernetServer ethernet_server{AC::constants::port};
+static EthernetServer ethernet_server{AC::constants::ethernet_server_port};
 static IPAddress static_ip{192, 168, 10, 62};
 static IPAddress subnet_mask{255, 255, 255, 0};
 static IPAddress gateway{192, 168, 10, 1};
