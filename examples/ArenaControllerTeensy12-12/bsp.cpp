@@ -18,10 +18,11 @@ namespace AC
 namespace constants
 {
 // Serial Communication Interface
-//HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
-usb_serial_class & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
-// usb_serial_class & QS_SERIAL_STREAM = Serial1;
-HardwareSerial & QS_SERIAL_STREAM = Serial1;
+HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial1;
+usb_serial_class & QS_SERIAL_STREAM = Serial;
+
+// usb_serial_class & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
+// HardwareSerial & QS_SERIAL_STREAM = Serial1;
 
 // SPI Settings
 constexpr uint32_t spi_clock_speed = 5000000;
@@ -65,9 +66,6 @@ constexpr uint16_t frame_count_x_max = 20;
 
 //----------------------------------------------------------------------------
 // QS facilities
-
-// un-comment if QS instrumentation needed
-#define QS_ON
 
 static QP::QSpyId const l_BSP_ID = { 1U }; // QSpy source ID
 
@@ -113,19 +111,7 @@ void BSP::init()
     SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
     spi_ptr->begin();
   }
-
-
-#ifdef QS_ON
-  QS_INIT(nullptr);
-
-  // output QS dictionaries...
   QS_OBJ_DICTIONARY(&l_BSP_ID);
-
-  // setup the QS filters...
-  QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
-  QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
-  QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
-#endif
 }
 
 void BSP::ledOff()
@@ -140,16 +126,16 @@ void BSP::ledOn()
 
 void BSP::initializeWatchdog()
 {
-  WDT_timings_t config;
-  config.trigger = AC::constants::watchdog_trigger_seconds;
-  config.timeout = AC::constants::watchdog_timeout_seconds;
-  config.callback = watchdogCallback;
-  wdt.begin(config);
+  // WDT_timings_t config;
+  // config.trigger = AC::constants::watchdog_trigger_seconds;
+  // config.timeout = AC::constants::watchdog_timeout_seconds;
+  // config.callback = watchdogCallback;
+  // wdt.begin(config);
 }
 
 void BSP::feedWatchdog()
 {
-  wdt.feed();
+  // wdt.feed();
 }
 
 void BSP::initializeArena()
@@ -190,6 +176,7 @@ bool BSP::beginSerial()
 
 bool BSP::pollSerialCommand()
 {
+  Serial.println("polling");
   return AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
 }
 
@@ -287,7 +274,7 @@ void BSP::getEthernetHardwareStatusString(char * hardware_status_str)
 
 void BSP::getEthernetLinkStatusString(char * link_status_str)
 {
-  Serial.print("hasLinkState: ");
+  // Serial.print("hasLinkState: ");
   // Serial.println(Ethernet.driverCapabilities().hasLinkState);
   link_status_str[0] = '\0';
   EthernetLinkStatus status = Ethernet.linkStatus();
@@ -422,8 +409,6 @@ void QV::onIdle()
 #else
   QF_INT_ENABLE(); // simply re-enable interrupts
 
-#ifdef QS_ON
-
   // transmit QS outgoing data (QS-TX)
   uint16_t len = AC::constants::QS_SERIAL_STREAM.availableForWrite();
   if (len > 0U)
@@ -445,9 +430,6 @@ void QV::onIdle()
     } while (--len > 0U);
     QS::rxParse();
   }
-
-#endif // QS_ON
-
 #endif
 }
 //............................................................................
@@ -468,8 +450,6 @@ extern "C" Q_NORETURN Q_onAssert(char const * const module, int location)
 
 //----------------------------------------------------------------------------
 // QS callbacks...
-#ifdef QS_ON
-
 //............................................................................
 bool QP::QS::onStartup(void const * arg)
 {
@@ -486,8 +466,6 @@ void QP::QS::onCommand(uint8_t cmdId, uint32_t param1,
 {
 }
 
-#endif // QS_ON
-
 //............................................................................
 void QP::QS::onCleanup()
 {
@@ -500,7 +478,6 @@ QP::QSTimeCtr QP::QS::onGetTime()
 //............................................................................
 void QP::QS::onFlush()
 {
-#ifdef QS_ON
   uint16_t len = 0xFFFFU; // big number to get as many bytes as available
   uint8_t const *buf = QS::getBlock(&len); // get continguous block of data
   while (buf != nullptr)
@@ -510,7 +487,6 @@ void QP::QS::onFlush()
     buf = QS::getBlock(&len); // try to get more data
   }
   AC::constants::QS_SERIAL_STREAM.flush(); // wait for the transmission of outgoing data to complete
-#endif // QS_ON
 }
 //............................................................................
 void QP::QS::onReset()

@@ -54,7 +54,7 @@ SerialCommandInterface::SerialCommandInterface()
 //.${AOs::SerialCommandInt~::SM} .............................................
 Q_STATE_DEF(SerialCommandInterface, initial) {
     //.${AOs::SerialCommandInt~::SM::initial}
-    FSP::SerialCommandInterface_subscribe(this, e);
+    FSP::SerialCommandInterface_initializeAndSubscribe(this, e);
     return tran(&Inactive);
 }
 //.${AOs::SerialCommandInt~::SM::Active} .....................................

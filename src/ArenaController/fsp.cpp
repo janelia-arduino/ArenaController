@@ -33,7 +33,34 @@ static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
 void FSP::ArenaController_setup()
 {
   QF::init(); // initialize the framework
+
+  QS_INIT(nullptr);
+
   BSP::init(); // initialize the BSP
+
+  // object dictionaries for AOs...
+  QS_OBJ_DICTIONARY(AC::AO_Arena);
+  QS_OBJ_DICTIONARY(AC::AO_SerialCommandInterface);
+  QS_OBJ_DICTIONARY(AC::AO_EthernetCommandInterface);
+  QS_OBJ_DICTIONARY(AC::AO_Display);
+  QS_OBJ_DICTIONARY(AC::AO_Frame);
+  QS_OBJ_DICTIONARY(AC::AO_Watchdog);
+
+  // signal dictionaries for globally published events...
+  QS_SIG_DICTIONARY(AC::RESET_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::ALL_ON_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::ALL_OFF_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::DEACTIVATE_DISPLAY_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::DISPLAY_FRAMES_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::TRANSFER_FRAME_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
+  QS_SIG_DICTIONARY(AC::COMMAND_PROCESSED_SIG, nullptr);
+
+  // setup the QS filters...
+  QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
+  QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
+  QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
 
   // init publish-subscribe
   static QSubscrList subscrSto[MAX_PUB_SIG];
@@ -70,7 +97,6 @@ void FSP::ArenaController_setup()
     frame_queueSto, Q_DIM(frame_queueSto),
     (void *)0, 0U); // no stack
 
-  //...
 }
 
 void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -84,13 +110,13 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
   AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
-  AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_FSP_ID);
+  // AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
   AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
-  AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_FSP_ID);
+  // AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
@@ -152,11 +178,18 @@ void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
   QF::PUBLISH(&transferFrameEvt, ao);
 }
 
-void FSP::SerialCommandInterface_subscribe(QActive * const ao, QEvt const * e)
+void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   ao->subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
   ao->subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
+
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  QS_OBJ_DICTIONARY(&(sci->serial_time_evt_));
+  QS_SIG_DICTIONARY(SERIAL_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, ao);
+  QS_SIG_DICTIONARY(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, ao);
+  QS_SIG_DICTIONARY(SERIAL_READY_SIG, ao);
 }
 
 void FSP::SerialCommandInterface_armSerialTimer(QActive * const ao, QEvt const * e)

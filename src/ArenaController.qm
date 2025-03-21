@@ -88,7 +88,7 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x00">
     <initial target="../2">
-     <action brief="subscribe()">FSP::SerialCommandInterface_subscribe(this, e);</action>
+     <action brief="initializeAndSubscribe()">FSP::SerialCommandInterface_initializeAndSubscribe(this, e);</action>
      <initial_glyph conn="46,8,4,0,3">
       <action box="1,0,34,3"/>
      </initial_glyph>
