@@ -17,13 +17,6 @@ namespace AC
 {
 namespace constants
 {
-// Serial Communication Interface
-HardwareSerial & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial1;
-usb_serial_class & QS_SERIAL_STREAM = Serial;
-
-// usb_serial_class & SERIAL_COMMUNICATION_INTERFACE_STREAM = Serial;
-// HardwareSerial & QS_SERIAL_STREAM = Serial1;
-
 // SPI Settings
 constexpr uint32_t spi_clock_speed = 5000000;
 
@@ -67,15 +60,22 @@ constexpr uint16_t frame_count_x_max = 20;
 //----------------------------------------------------------------------------
 // QS facilities
 
-static QP::QSpyId const l_BSP_ID = { 1U }; // QSpy source ID
+static QP::QSpyId const l_BSP_ID = {1U}; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
-static QEvt const panelSetTransferredEvt = { AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
+static QEvt const panelSetTransferredEvt = {AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
 
 static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
+
+// Serial Communication Interface
+static HardwareSerial & serial_communication_interface_stream = Serial1;
+static usb_serial_class & qs_serial_stream = Serial;
+
+// usb_serial_class & serial_communication_interface_stream = Serial;
+// HardwareSerial & qs_serial_stream = Serial1;
 
 static EthernetServer ethernet_server{AC::constants::ethernet_server_port};
 static IPAddress static_ip{192, 168, 10, 62};
@@ -169,25 +169,25 @@ void BSP::initializeFrame()
 
 bool BSP::beginSerial()
 {
-  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.begin(AC::constants::serial_baud_rate);
-  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.setTimeout(AC::constants::serial_timeout);
+  serial_communication_interface_stream.begin(AC::constants::serial_baud_rate);
+  serial_communication_interface_stream.setTimeout(AC::constants::serial_timeout);
   return true;
 }
 
 bool BSP::pollSerialCommand()
 {
-  return AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+  return serial_communication_interface_stream.available();
 }
 
 uint8_t BSP::readSerialByte()
 {
-  return AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.read();
+  return serial_communication_interface_stream.read();
 }
 
 void BSP::readSerialStringCommand(char * command_str, char first_char)
 {
   char command_tail[AC::constants::string_command_length_max];
-  size_t chars_read = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readBytesUntil(AC::constants::command_termination_character,
+  size_t chars_read = serial_communication_interface_stream.readBytesUntil(AC::constants::command_termination_character,
     command_tail, AC::constants::string_command_length_max - 1);
   command_tail[chars_read] = '\0';
   command_str[0] = first_char;
@@ -197,14 +197,14 @@ void BSP::readSerialStringCommand(char * command_str, char first_char)
 
 void BSP::writeSerialStringResponse(char * response)
 {
-  AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.println(response);
+  serial_communication_interface_stream.println(response);
 }
 
 // void BSP::readSerialStringCommand(uint8_t first_byte)
 // {
-//     String command_tail = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.readStringUntil('\n');
+//     String command_tail = serial_communication_interface_stream.readStringUntil('\n');
 //     String command_string = String(String((char)first_byte) + command_tail);
-//     // size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+//     // size_t bytes_available = serial_communication_interface_stream.available();
 //     // byte command_byte_array[bytes_available];
 //     // Serial.readBytes(command_byte_array, bytes_available);
 
@@ -219,7 +219,7 @@ void BSP::writeSerialStringResponse(char * response)
 //     QF::PUBLISH(&commandProcessedEvt, &l_BSP_ID);
 //    return;
 
-//   // size_t bytes_available = AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
+//   // size_t bytes_available = serial_communication_interface_stream.available();
 //   // if (bytes_available)
 //   // {
 
@@ -409,23 +409,23 @@ void QV::onIdle()
   QF_INT_ENABLE(); // simply re-enable interrupts
 
   // transmit QS outgoing data (QS-TX)
-  uint16_t len = AC::constants::QS_SERIAL_STREAM.availableForWrite();
+  uint16_t len = qs_serial_stream.availableForWrite();
   if (len > 0U)
   { // any space available in the output buffer?
     uint8_t const *buf = QS::getBlock(&len);
     if (buf)
     {
-      AC::constants::QS_SERIAL_STREAM.write(buf, len); // asynchronous and non-blocking
+      qs_serial_stream.write(buf, len); // asynchronous and non-blocking
     }
   }
 
   // receive QS incoming data (QS-RX)
-  len = AC::constants::QS_SERIAL_STREAM.available();
+  len = qs_serial_stream.available();
   if (len > 0U)
   {
     do
     {
-      QP::QS::rxPut(AC::constants::QS_SERIAL_STREAM.read());
+      QP::QS::rxPut(qs_serial_stream.read());
     } while (--len > 0U);
     QS::rxParse();
   }
@@ -456,7 +456,7 @@ bool QP::QS::onStartup(void const * arg)
   static uint8_t qsRxBuf[1024];  // buffer for QS receive channel (QS-RX)
   initBuf  (qsTxBuf, sizeof(qsTxBuf));
   rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
-  AC::constants::QS_SERIAL_STREAM.begin(115200); // run serial port at 115200 baud rate
+  qs_serial_stream.begin(115200); // run serial port at 115200 baud rate
   return true; // return success
 }
 //............................................................................
@@ -481,11 +481,11 @@ void QP::QS::onFlush()
   uint8_t const *buf = QS::getBlock(&len); // get continguous block of data
   while (buf != nullptr)
   { // data available?
-    AC::constants::QS_SERIAL_STREAM.write(buf, len); // might poll until all bytes fit
+    qs_serial_stream.write(buf, len); // might poll until all bytes fit
     len = 0xFFFFU; // big number to get as many bytes as available
     buf = QS::getBlock(&len); // try to get more data
   }
-  AC::constants::QS_SERIAL_STREAM.flush(); // wait for the transmission of outgoing data to complete
+  qs_serial_stream.flush(); // wait for the transmission of outgoing data to complete
 }
 //............................................................................
 void QP::QS::onReset()
