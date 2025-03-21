@@ -7,9 +7,9 @@ using namespace AC;
 
 static QSpyId const l_FSP_ID = { 0U }; // QSpy source ID
 
-static CommandEvt const resetEvt = { RESET_SIG, 0U, 0U};
-static CommandEvt const allOnEvt = { ALL_ON_SIG, 0U, 0U};
-static CommandEvt const allOffEvt = { ALL_OFF_SIG, 0U, 0U};
+static CommandEvt const resetEvt = {RESET_SIG, 0U, 0U};
+static CommandEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
+static CommandEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
 
 static QEvt const activateSerialCommandInterfaceEvt = {ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateSerialCommandInterfaceEvt = {DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
@@ -109,13 +109,13 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
+  // AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
   // AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
+  // AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
   // AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
@@ -139,6 +139,10 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(DISPLAY_FRAMES_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
   display->display_frequency_hz_ = constants::display_frequency_hz_default;
+
+  QS_OBJ_DICTIONARY(&(display->display_time_evt_));
+  QS_SIG_DICTIONARY(DISPLAY_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(SET_DISPLAY_FREQUENCY_SIG, ao);
 }
 
 void FSP::Display_setDisplayFrequency(QActive * const ao, QEvt const * e)
@@ -256,11 +260,20 @@ void FSP::SerialCommandInterface_writeSerialBinaryResponse(QActive * const ao, Q
 {
 }
 
-void FSP::EthernetCommandInterface_subscribe(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   ao->subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
   ao->subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
+
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  QS_OBJ_DICTIONARY(&(eci->ethernet_time_evt_));
+  QS_SIG_DICTIONARY(ETHERNET_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, ao);
+  QS_SIG_DICTIONARY(DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, ao);
+  QS_SIG_DICTIONARY(ETHERNET_INITIALIZED_SIG, ao);
+  QS_SIG_DICTIONARY(ETHERNET_IP_ADDRESS_FOUND_SIG, ao);
+  QS_SIG_DICTIONARY(ETHERNET_SERVER_INITIALIZED_SIG, ao);
 }
 
 void FSP::EthernetCommandInterface_armEthernetTimer(QActive * const ao, QEvt const * e)
@@ -378,6 +391,10 @@ void FSP::Watchdog_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   ao->subscribe(RESET_SIG);
   BSP::initializeWatchdog();
+
+  Watchdog * const watchdog = static_cast<Watchdog * const>(ao);
+  QS_OBJ_DICTIONARY(&(watchdog->watchdog_time_evt_));
+  QS_SIG_DICTIONARY(WATCHDOG_TIMEOUT_SIG, ao);
 }
 
 void FSP::Watchdog_armWatchdogTimer(QActive * const ao, QEvt const * e)

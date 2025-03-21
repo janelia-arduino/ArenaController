@@ -54,6 +54,11 @@ Arena::Arena()
 Q_STATE_DEF(Arena, initial) {
     //.${AOs::Arena::SM::initial}
     FSP::Arena_initializeAndSubscribe(this, e);
+
+    QS_FUN_DICTIONARY(&Arena::ArenaOn);
+    QS_FUN_DICTIONARY(&Arena::AllOn);
+    QS_FUN_DICTIONARY(&Arena::AllOff);
+
     return tran(&ArenaOn);
 }
 //.${AOs::Arena::SM::ArenaOn} ................................................

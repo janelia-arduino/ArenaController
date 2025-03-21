@@ -54,7 +54,17 @@ EthernetCommandInterface::EthernetCommandInterface()
 //.${AOs::EthernetCommandI~::SM} .............................................
 Q_STATE_DEF(EthernetCommandInterface, initial) {
     //.${AOs::EthernetCommandI~::SM::initial}
-    FSP::EthernetCommandInterface_subscribe(this, e);
+    FSP::EthernetCommandInterface_initializeAndSubscribe(this, e);
+
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::Inactive);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::Active);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::Unintitalized);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::IPAddressFound);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::PollingForNewCommand);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::WaitingForIPAddress);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingCommand);
+
     return tran(&Inactive);
 }
 //.${AOs::EthernetCommandI~::SM::Inactive} ...................................

@@ -54,6 +54,12 @@ Frame::Frame()
 Q_STATE_DEF(Frame, initial) {
     //.${AOs::Frame::SM::initial}
     FSP::Frame_initializeAndSubscribe(this, e);
+
+    QS_FUN_DICTIONARY(&Frame::Inactive);
+    QS_FUN_DICTIONARY(&Frame::Active);
+    QS_FUN_DICTIONARY(&Frame::TransferringFrame);
+    QS_FUN_DICTIONARY(&Frame::TransferringPanelSet);
+
     return tran(&Inactive);
 }
 //.${AOs::Frame::SM::Inactive} ...............................................

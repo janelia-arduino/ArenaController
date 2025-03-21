@@ -126,16 +126,16 @@ void BSP::ledOn()
 
 void BSP::initializeWatchdog()
 {
-  // WDT_timings_t config;
-  // config.trigger = AC::constants::watchdog_trigger_seconds;
-  // config.timeout = AC::constants::watchdog_timeout_seconds;
-  // config.callback = watchdogCallback;
-  // wdt.begin(config);
+  WDT_timings_t config;
+  config.trigger = AC::constants::watchdog_trigger_seconds;
+  config.timeout = AC::constants::watchdog_timeout_seconds;
+  config.callback = watchdogCallback;
+  wdt.begin(config);
 }
 
 void BSP::feedWatchdog()
 {
-  // wdt.feed();
+  wdt.feed();
 }
 
 void BSP::initializeArena()
@@ -176,7 +176,6 @@ bool BSP::beginSerial()
 
 bool BSP::pollSerialCommand()
 {
-  Serial.println("polling");
   return AC::constants::SERIAL_COMMUNICATION_INTERFACE_STREAM.available();
 }
 
@@ -453,8 +452,8 @@ extern "C" Q_NORETURN Q_onAssert(char const * const module, int location)
 //............................................................................
 bool QP::QS::onStartup(void const * arg)
 {
-  static uint8_t qsTxBuf[1024]; // buffer for QS transmit channel (QS-TX)
-  static uint8_t qsRxBuf[128];  // buffer for QS receive channel (QS-RX)
+  static uint8_t qsTxBuf[2048]; // buffer for QS transmit channel (QS-TX)
+  static uint8_t qsRxBuf[1024];  // buffer for QS receive channel (QS-RX)
   initBuf  (qsTxBuf, sizeof(qsTxBuf));
   rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
   AC::constants::QS_SERIAL_STREAM.begin(115200); // run serial port at 115200 baud rate
@@ -491,5 +490,7 @@ void QP::QS::onFlush()
 //............................................................................
 void QP::QS::onReset()
 {
-  //??? TBD for Teensy
+  WDT_timings_t config;
+  config.timeout = 0.1;
+  wdt.begin(config);
 }

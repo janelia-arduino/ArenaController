@@ -55,6 +55,11 @@ Watchdog::Watchdog()
 Q_STATE_DEF(Watchdog, initial) {
     //.${AOs::Watchdog::SM::initial}
     FSP::Watchdog_initializeAndSubscribe(this, e);
+
+    QS_FUN_DICTIONARY(&Watchdog::Feeding);
+    QS_FUN_DICTIONARY(&Watchdog::Initialized);
+    QS_FUN_DICTIONARY(&Watchdog::Resetting);
+
     return tran(&Feeding);
 }
 //.${AOs::Watchdog::SM::Feeding} .............................................

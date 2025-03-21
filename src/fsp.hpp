@@ -46,7 +46,7 @@ struct FSP
   static void SerialCommandInterface_writeSerialStringResponse(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_writeSerialBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 
-  static void EthernetCommandInterface_subscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_armEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_disarmEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_beginEthernet(QP::QActive * const ao, QP::QEvt const * e);

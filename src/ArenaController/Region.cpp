@@ -55,6 +55,9 @@ Region Region::instances[constants::region_count_per_frame_max];
 //.${AOs::Region::SM} ........................................................
 Q_STATE_DEF(Region, initial) {
     //.${AOs::Region::SM::initial}
+
+    QS_FUN_DICTIONARY(&Region::state1);
+
     return tran(&state1);
 }
 //.${AOs::Region::SM::state1} ................................................

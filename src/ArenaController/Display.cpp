@@ -55,6 +55,14 @@ Display::Display()
 Q_STATE_DEF(Display, initial) {
     //.${AOs::Display::SM::initial}
     FSP::Display_initializeAndSubscribe(this, e);
+
+    QS_FUN_DICTIONARY(&Display::Initialized);
+    QS_FUN_DICTIONARY(&Display::Inactive);
+    QS_FUN_DICTIONARY(&Display::Active);
+    QS_FUN_DICTIONARY(&Display::DisplayingFrames);
+    QS_FUN_DICTIONARY(&Display::WaitingToDisplayFrame);
+    QS_FUN_DICTIONARY(&Display::DisplayingFrame);
+
     return tran(&Initialized);
 }
 //.${AOs::Display::SM::Initialized} ..........................................
