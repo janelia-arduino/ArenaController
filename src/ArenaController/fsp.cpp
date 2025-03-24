@@ -278,6 +278,23 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
   QS_SIG_DICTIONARY(ETHERNET_SERVER_INITIALIZED_SIG, ao);
 }
 
+void FSP::EthernetCommandInterface_armMongooseTimer(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  eci->mongoose_time_evt_.armX(constants::ticks_per_second/2, constants::ticks_per_second/50);
+}
+
+void FSP::EthernetCommandInterface_disarmMongooseTimer(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  eci->mongoose_time_evt_.disarm();
+}
+
+void FSP::EthernetCommandInterface_pollMongoose(QActive * const ao, QEvt const * e)
+{
+  BSP::pollMongoose();
+}
+
 void FSP::EthernetCommandInterface_armEthernetTimer(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
