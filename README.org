@@ -19,7 +19,7 @@
   - https://github.com/floesche/LED-Display_G4_Hardware_Arena
   - https://www.pjrc.com/store/teensy41.html
   - https://www.pjrc.com/store/ethernet_kit.html
-  - https://github.com/vjmuzik/NativeEthernet
+  - https://mongoose.ws/
 
 * Modular LED Display
 

@@ -1,17 +1,15 @@
 #include <Arduino.h>
 #include <Watchdog_t4.h>
-#include <QNEthernet.h>
 #include <TimerOne.h>
 #include <SPI.h>
 #include <EventResponder.h>
-#include <SdFat.h>
 
 #include "bsp.hpp"
 #include "ArenaController.hpp"
 
 
 using namespace QP;
-using namespace qindesign::network;
+// using namespace qindesign::network;
 
 namespace AC
 {
@@ -77,10 +75,10 @@ static usb_serial_class & qs_serial_stream = Serial;
 // usb_serial_class & serial_communication_interface_stream = Serial;
 // HardwareSerial & qs_serial_stream = Serial1;
 
-static EthernetServer ethernet_server{AC::constants::ethernet_server_port};
-static IPAddress static_ip{192, 168, 10, 62};
-static IPAddress subnet_mask{255, 255, 255, 0};
-static IPAddress gateway{192, 168, 10, 1};
+// static EthernetServer ethernet_server{AC::constants::ethernet_server_port};
+// static IPAddress static_ip{192, 168, 10, 62};
+// static IPAddress subnet_mask{255, 255, 255, 0};
+// static IPAddress gateway{192, 168, 10, 1};
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -88,10 +86,10 @@ void watchdogCallback ()
 {
 }
 
-void ipAddressToString(IPAddress ip_address, char * ip_address_str)
-{
-  sprintf(ip_address_str,"%u.%u.%u.%u", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-}
+// void ipAddressToString(IPAddress ip_address, char * ip_address_str)
+// {
+//   sprintf(ip_address_str,"%u.%u.%u.%u", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
+// }
 
 //----------------------------------------------------------------------------
 // BSP functions
@@ -230,82 +228,82 @@ void BSP::writeSerialStringResponse(char * response)
 
 bool BSP::beginEthernet()
 {
-  return Ethernet.begin(static_ip, subnet_mask, gateway);
+  // return Ethernet.begin(static_ip, subnet_mask, gateway);
 }
 
 bool BSP::checkForEthernetIPAddress()
 {
-  return Ethernet.localIP();
+  // return Ethernet.localIP();
 }
 
 void BSP::getServerIpAddressString(char * ip_address_str)
 {
-  IPAddress ip_address = Ethernet.localIP();
-  ipAddressToString(ip_address, ip_address_str);
+  // IPAddress ip_address = Ethernet.localIP();
+  // ipAddressToString(ip_address, ip_address_str);
 }
 
 void BSP::getEthernetHardwareStatusString(char * hardware_status_str)
 {
-  hardware_status_str[0] = '\0';
-  EthernetHardwareStatus status = Ethernet.hardwareStatus();
-  switch (status)
-  {
-    case EthernetNoHardware:
-      strcpy(hardware_status_str, "NONE");
-      break;
-    case EthernetW5100:
-      strcpy(hardware_status_str, "W5100");
-      break;
-    case EthernetW5200:
-      strcpy(hardware_status_str, "W5200");
-      break;
-    case EthernetW5500:
-      strcpy(hardware_status_str, "W5500");
-      break;
-    case EthernetTeensy41:
-      strcpy(hardware_status_str, "TEENSY41");
-      break;
-    case EthernetOtherHardware:
-      strcpy(hardware_status_str, "OTHER");
-      break;
-  }
+  // hardware_status_str[0] = '\0';
+  // EthernetHardwareStatus status = Ethernet.hardwareStatus();
+  // switch (status)
+  // {
+  //   case EthernetNoHardware:
+  //     strcpy(hardware_status_str, "NONE");
+  //     break;
+  //   case EthernetW5100:
+  //     strcpy(hardware_status_str, "W5100");
+  //     break;
+  //   case EthernetW5200:
+  //     strcpy(hardware_status_str, "W5200");
+  //     break;
+  //   case EthernetW5500:
+  //     strcpy(hardware_status_str, "W5500");
+  //     break;
+  //   case EthernetTeensy41:
+  //     strcpy(hardware_status_str, "TEENSY41");
+  //     break;
+  //   case EthernetOtherHardware:
+  //     strcpy(hardware_status_str, "OTHER");
+  //     break;
+  // }
 }
 
 void BSP::getEthernetLinkStatusString(char * link_status_str)
 {
   // Serial.print("hasLinkState: ");
   // Serial.println(Ethernet.driverCapabilities().hasLinkState);
-  link_status_str[0] = '\0';
-  EthernetLinkStatus status = Ethernet.linkStatus();
-  switch (status)
-  {
-    case Unknown:
-      strcpy(link_status_str, "UNKNOWN");
-      break;
-    case LinkON:
-      strcpy(link_status_str, "ON");
-      break;
-    case LinkOFF:
-      strcpy(link_status_str, "OFF");
-      break;
-  }
+  // link_status_str[0] = '\0';
+  // EthernetLinkStatus status = Ethernet.linkStatus();
+  // switch (status)
+  // {
+  //   case Unknown:
+  //     strcpy(link_status_str, "UNKNOWN");
+  //     break;
+  //   case LinkON:
+  //     strcpy(link_status_str, "ON");
+  //     break;
+  //   case LinkOFF:
+  //     strcpy(link_status_str, "OFF");
+  //     break;
+  // }
 }
 
 bool BSP::beginEthernetServer()
 {
-  ethernet_server.begin();
-  return ethernet_server ? true : false;
+  // ethernet_server.begin();
+  // return ethernet_server ? true : false;
 }
 
 bool BSP::pollEthernetCommand()
 {
-  EthernetClient ethernet_client = ethernet_server.accept();
-  if (ethernet_client)
-  {
-    IPAddress ip = ethernet_client.remoteIP();
-    ethernet_client.close();
-  }
-  return false;
+  // EthernetClient ethernet_client = ethernet_server.accept();
+  // if (ethernet_client)
+  // {
+  //   IPAddress ip = ethernet_client.remoteIP();
+  //   ethernet_client.close();
+  // }
+  // return false;
 }
 
 void BSP::readEthernetBinaryCommand()

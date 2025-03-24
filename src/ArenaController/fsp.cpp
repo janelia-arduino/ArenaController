@@ -46,6 +46,8 @@ void FSP::ArenaController_setup()
   QS_OBJ_DICTIONARY(AC::AO_Frame);
   QS_OBJ_DICTIONARY(AC::AO_Watchdog);
 
+  QS_OBJ_DICTIONARY(&l_FSP_ID);
+
   // signal dictionaries for globally published events...
   QS_SIG_DICTIONARY(AC::RESET_SIG, nullptr);
   QS_SIG_DICTIONARY(AC::ALL_ON_SIG, nullptr);
