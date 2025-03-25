@@ -9,7 +9,8 @@ namespace AC
 
 enum ArenaControllerRecords
 {
-  LOG_LINE = QP::QS_USER,
+  MONGOOSE_LOG = QP::QS_USER,
+  USER_COMMENT,
 };
 
 } // namespace AC

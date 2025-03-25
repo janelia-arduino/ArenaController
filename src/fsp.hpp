@@ -51,6 +51,7 @@ struct FSP
   static void EthernetCommandInterface_armEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_disarmEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_initializeEthernet(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_pollMongoose(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_checkForIPAddress(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_beginServer(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_checkForClient(QP::QActive * const ao, QP::QEvt const * e);

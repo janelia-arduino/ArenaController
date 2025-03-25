@@ -111,6 +111,7 @@ Q_STATE_DEF(EthernetCommandInterface, Active) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
+            FSP::EthernetCommandInterface_pollMongoose(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -197,12 +198,6 @@ Q_STATE_DEF(EthernetCommandInterface, PollingForNewCommand) {
 Q_STATE_DEF(EthernetCommandInterface, WaitingForIPAddress) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_TIMEOUT}
-        case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_checkForIPAddress(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_IP_ADDRESS_FOUND}
         case ETHERNET_IP_ADDRESS_FOUND_SIG: {
             status_ = tran(&IPAddressFound);

@@ -4,10 +4,6 @@
 #include <SPI.h>
 #include <EventResponder.h>
 
-#include "bsp.hpp"
-#include "signals.hpp"
-#include "records.hpp"
-
 #include "ArenaController.hpp"
 
 
@@ -345,7 +341,7 @@ void log_fn(char ch, void *param)
   if ((ch == '\n') || (log_str_pos == (AC::constants::string_log_length_max - 1)))
   {
     log_str[log_str_pos] = 0;
-    QS_BEGIN_ID(AC::LOG_LINE, AC::AO_EthernetCommandInterface->m_prio)
+    QS_BEGIN_ID(AC::MONGOOSE_LOG, AC::AO_EthernetCommandInterface->m_prio)
       QS_STR(log_str);
     QS_END()
     log_str[0] = 0;
@@ -364,6 +360,11 @@ bool BSP::initializeEthernet()
   mongoose_init();
   return true;
   // return Ethernet.begin(static_ip, subnet_mask, gateway);
+}
+
+void BSP::pollMongoose()
+{
+  mongoose_poll();
 }
 
 bool BSP::checkForEthernetIPAddress()

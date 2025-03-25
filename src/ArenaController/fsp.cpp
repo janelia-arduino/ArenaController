@@ -59,6 +59,10 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(AC::ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(AC::COMMAND_PROCESSED_SIG, nullptr);
 
+  // user record dictionaries
+  QS_USR_DICTIONARY(AC::MONGOOSE_LOG);
+  QS_USR_DICTIONARY(AC::USER_COMMENT);
+
   // setup the QS filters...
   // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
   // QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
@@ -297,6 +301,16 @@ void FSP::EthernetCommandInterface_initializeEthernet(QActive * const ao, QEvt c
   {
     AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_FSP_ID);
   }
+}
+
+void FSP::EthernetCommandInterface_pollMongoose(QActive * const ao, QEvt const * e)
+{
+  BSP::pollMongoose();
+  // bool ip_address_found = BSP::checkForEthernetIPAddress();
+  // if (ip_address_found)
+  // {
+  //   AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_FSP_ID);
+  // }
 }
 
 void FSP::EthernetCommandInterface_checkForIPAddress(QActive * const ao, QEvt const * e)
