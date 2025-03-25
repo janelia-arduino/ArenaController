@@ -154,6 +154,7 @@ mkdir -p ~/tmp && cd ~/tmp && git clone https://github.com/janelia-arduino/Arena
 #+BEGIN_SRC sh
 python3 -m venv .venv
 source .venv/bin/activate
+pip install pip --upgrade
 pip install platformio
 pio --version
 #+END_SRC
