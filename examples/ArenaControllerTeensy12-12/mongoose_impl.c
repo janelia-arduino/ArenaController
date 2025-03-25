@@ -844,7 +844,7 @@ void mongoose_init(void) {
 
 void mongoose_poll(void) {
   glue_lock();
-  mg_mgr_poll(&g_mgr, 100);
+  mg_mgr_poll(&g_mgr, 10);
 #if WIZARD_ENABLE_WEBSOCKET
   send_websocket_data();
 #endif

@@ -48,8 +48,7 @@ EthernetCommandInterface EthernetCommandInterface::instance;
 //.${AOs::EthernetCommandI~::EthernetCommandInterface} .......................
 EthernetCommandInterface::EthernetCommandInterface()
 : QActive(Q_STATE_CAST(&EthernetCommandInterface::initial)),
-    ethernet_time_evt_(this, ETHERNET_TIMEOUT_SIG, 0U),
-    mongoose_time_evt_(this, MONGOOSE_TIMEOUT_SIG, 0U)
+    ethernet_time_evt_(this, ETHERNET_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::EthernetCommandI~::SM} .............................................
@@ -57,7 +56,6 @@ Q_STATE_DEF(EthernetCommandInterface, initial) {
     //.${AOs::EthernetCommandI~::SM::initial}
     FSP::EthernetCommandInterface_initializeAndSubscribe(this, e);
 
-    QS_FUN_DICTIONARY(&EthernetCommandInterface::MongooseRunning);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Inactive);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Active);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Unintitalized);
@@ -67,32 +65,52 @@ Q_STATE_DEF(EthernetCommandInterface, initial) {
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingCommand);
 
-    return tran(&MongooseRunning);
+    return tran(&Inactive);
 }
-//.${AOs::EthernetCommandI~::SM::MongooseRunning} ............................
-Q_STATE_DEF(EthernetCommandInterface, MongooseRunning) {
+//.${AOs::EthernetCommandI~::SM::Inactive} ...................................
+Q_STATE_DEF(EthernetCommandInterface, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning}
+        //.${AOs::EthernetCommandI~::SM::Inactive::ACTIVATE_ETHERNET_COMMAND_INTERF~}
+        case ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG: {
+            status_ = tran(&Active);
+            break;
+        }
+        default: {
+            status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::EthernetCommandI~::SM::Active} .....................................
+Q_STATE_DEF(EthernetCommandInterface, Active) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::EthernetCommandI~::SM::Active}
         case Q_ENTRY_SIG: {
-            FSP::EthernetCommandInterface_armMongooseTimer(this, e);
+            FSP::EthernetCommandInterface_armEthernetTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning}
+        //.${AOs::EthernetCommandI~::SM::Active}
         case Q_EXIT_SIG: {
-            FSP::EthernetCommandInterface_armMongooseTimer(this, e);
+            FSP::EthernetCommandInterface_disarmEthernetTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::initial}
+        //.${AOs::EthernetCommandI~::SM::Active::initial}
         case Q_INIT_SIG: {
+            status_ = tran(&Unintitalized);
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::DEACTIVATE_ETHERNET_COMMAND_INTE~}
+        case DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG: {
             status_ = tran(&Inactive);
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::MONGOOSE_TIMEOUT}
-        case MONGOOSE_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_pollMongoose(this, e);
+        //.${AOs::EthernetCommandI~::SM::Active::ETHERNET_TIMEOUT}
+        case ETHERNET_TIMEOUT_SIG: {
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -103,72 +121,18 @@ Q_STATE_DEF(EthernetCommandInterface, MongooseRunning) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Inactive} ..................
-Q_STATE_DEF(EthernetCommandInterface, Inactive) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Inactive::ACTIVATE_ETHERNET_COMMAND_INTERF~}
-        case ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG: {
-            status_ = tran(&Active);
-            break;
-        }
-        default: {
-            status_ = super(&MongooseRunning);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Active} ....................
-Q_STATE_DEF(EthernetCommandInterface, Active) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active}
-        case Q_ENTRY_SIG: {
-            FSP::EthernetCommandInterface_armEthernetTimer(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active}
-        case Q_EXIT_SIG: {
-            FSP::EthernetCommandInterface_disarmEthernetTimer(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::initial}
-        case Q_INIT_SIG: {
-            status_ = tran(&Unintitalized);
-            break;
-        }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::DEACTIVATE_ETHERNET_COMMAND_INTE~}
-        case DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG: {
-            status_ = tran(&Inactive);
-            break;
-        }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::ETHERNET_TIMEOUT}
-        case ETHERNET_TIMEOUT_SIG: {
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&MongooseRunning);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::Unintitalized} .....
+//.${AOs::EthernetCommandI~::SM::Active::Unintitalized} ......................
 Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::Unintitalized::ETHERNET_INITIALIZED}
+        //.${AOs::EthernetCommandI~::SM::Active::Unintitalized::ETHERNET_INITIALIZED}
         case ETHERNET_INITIALIZED_SIG: {
             status_ = tran(&WaitingForIPAddress);
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::Unintitalized::ETHERNET_TIMEOUT}
+        //.${AOs::EthernetCommandI~::SM::Active::Unintitalized::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_beginEthernet(this, e);
+            FSP::EthernetCommandInterface_initializeEthernet(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -179,16 +143,16 @@ Q_STATE_DEF(EthernetCommandInterface, Unintitalized) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::IPAddressFound} ....
+//.${AOs::EthernetCommandI~::SM::Active::IPAddressFound} .....................
 Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::IPAddressFound::ETHERNET_SERVER_INITIALIZED}
+        //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_SERVER_INITIALIZED}
         case ETHERNET_SERVER_INITIALIZED_SIG: {
             status_ = tran(&PollingForNewCommand);
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::IPAddressFound::ETHERNET_TIMEOUT}
+        //.${AOs::EthernetCommandI~::SM::Active::IPAddressFound::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
             FSP::EthernetCommandInterface_beginServer(this, e);
             status_ = Q_RET_HANDLED;
@@ -201,22 +165,22 @@ Q_STATE_DEF(EthernetCommandInterface, IPAddressFound) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::PollingForNewCommand} 
+//.${AOs::EthernetCommandI~::SM::Active::PollingForNewCommand} ...............
 Q_STATE_DEF(EthernetCommandInterface, PollingForNewCommand) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::PollingForNewCom~::ETHERNET_TIMEOUT}
+        //.${AOs::EthernetCommandI~::SM::Active::PollingForNewCom~::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
             FSP::EthernetCommandInterface_pollEthernetCommand(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::PollingForNewCom~::SERIAL_COMMAND_AVAILABLE}
+        //.${AOs::EthernetCommandI~::SM::Active::PollingForNewCom~::SERIAL_COMMAND_AVAILABLE}
         case SERIAL_COMMAND_AVAILABLE_SIG: {
             status_ = tran(&Waiting);
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::PollingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
+        //.${AOs::EthernetCommandI~::SM::Active::PollingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
         case ETHERNET_COMMAND_AVAILABLE_SIG: {
             FSP::EthernetCommandInterface_readEthernetBinaryCommand(this, e);
             status_ = tran(&ProcessingCommand);
@@ -229,17 +193,17 @@ Q_STATE_DEF(EthernetCommandInterface, PollingForNewCommand) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::WaitingForIPAddress} 
+//.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddress} ................
 Q_STATE_DEF(EthernetCommandInterface, WaitingForIPAddress) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::WaitingForIPAddr~::ETHERNET_TIMEOUT}
+        //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
             FSP::EthernetCommandInterface_checkForIPAddress(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::WaitingForIPAddr~::ETHERNET_IP_ADDRESS_FOUND}
+        //.${AOs::EthernetCommandI~::SM::Active::WaitingForIPAddr~::ETHERNET_IP_ADDRESS_FOUND}
         case ETHERNET_IP_ADDRESS_FOUND_SIG: {
             status_ = tran(&IPAddressFound);
             break;
@@ -251,11 +215,11 @@ Q_STATE_DEF(EthernetCommandInterface, WaitingForIPAddress) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::Waiting} ...........
+//.${AOs::EthernetCommandI~::SM::Active::Waiting} ............................
 Q_STATE_DEF(EthernetCommandInterface, Waiting) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::Waiting::COMMAND_PROCESSED}
+        //.${AOs::EthernetCommandI~::SM::Active::Waiting::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             status_ = tran(&PollingForNewCommand);
             break;
@@ -267,11 +231,11 @@ Q_STATE_DEF(EthernetCommandInterface, Waiting) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::ProcessingCommand} .
+//.${AOs::EthernetCommandI~::SM::Active::ProcessingCommand} ..................
 Q_STATE_DEF(EthernetCommandInterface, ProcessingCommand) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::MongooseRunning::Active::ProcessingComman~::COMMAND_PROCESSED}
+        //.${AOs::EthernetCommandI~::SM::Active::ProcessingComman~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             status_ = tran(&PollingForNewCommand);
             break;

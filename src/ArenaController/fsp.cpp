@@ -112,13 +112,13 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
   // AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
-  // AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_FSP_ID);
+  AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
   // AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
-  // AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_FSP_ID);
+  AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
@@ -278,23 +278,6 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
   QS_SIG_DICTIONARY(ETHERNET_SERVER_INITIALIZED_SIG, ao);
 }
 
-void FSP::EthernetCommandInterface_armMongooseTimer(QActive * const ao, QEvt const * e)
-{
-  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  eci->mongoose_time_evt_.armX(constants::ticks_per_second/2, constants::ticks_per_second/50);
-}
-
-void FSP::EthernetCommandInterface_disarmMongooseTimer(QActive * const ao, QEvt const * e)
-{
-  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  eci->mongoose_time_evt_.disarm();
-}
-
-void FSP::EthernetCommandInterface_pollMongoose(QActive * const ao, QEvt const * e)
-{
-  BSP::pollMongoose();
-}
-
 void FSP::EthernetCommandInterface_armEthernetTimer(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
@@ -307,10 +290,10 @@ void FSP::EthernetCommandInterface_disarmEthernetTimer(QActive * const ao, QEvt 
   eci->ethernet_time_evt_.disarm();
 }
 
-void FSP::EthernetCommandInterface_beginEthernet(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_initializeEthernet(QActive * const ao, QEvt const * e)
 {
-  bool ethernet_begun = BSP::beginEthernet();
-  if (ethernet_begun)
+  bool ethernet_initialized = BSP::initializeEthernet();
+  if (ethernet_initialized)
   {
     AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_FSP_ID);
   }
@@ -318,11 +301,11 @@ void FSP::EthernetCommandInterface_beginEthernet(QActive * const ao, QEvt const 
 
 void FSP::EthernetCommandInterface_checkForIPAddress(QActive * const ao, QEvt const * e)
 {
-  bool ip_address_found = BSP::checkForEthernetIPAddress();
-  if (ip_address_found)
-  {
-    AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_FSP_ID);
-  }
+  // bool ip_address_found = BSP::checkForEthernetIPAddress();
+  // if (ip_address_found)
+  // {
+  //   AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_FSP_ID);
+  // }
 }
 
 void FSP::EthernetCommandInterface_beginServer(QActive * const ao, QEvt const * e)

@@ -209,9 +209,6 @@ void BSP::init()
   pinMode(LED_BUILTIN, OUTPUT);
   ledOff();
 
-  ethernet_init();
-  mongoose_init();
-
   for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
   {
     pinMode(AC::constants::region_cipo_pins[region_index], INPUT);
@@ -335,13 +332,17 @@ void BSP::writeSerialStringResponse(char * response)
 //   // }
 // }
 
-bool BSP::pollMongoose()
+void log_fn(char ch, void *param)
 {
-  // mongoose_poll();
+  Serial.print('P');
 }
 
-bool BSP::beginEthernet()
+bool BSP::initializeEthernet()
 {
+  mg_log_set_fn(log_fn, 0);
+  ethernet_init();
+  mongoose_init();
+  return true;
   // return Ethernet.begin(static_ip, subnet_mask, gateway);
 }
 
@@ -602,7 +603,6 @@ void QP::QS::onFlush()
 //............................................................................
 void QP::QS::onReset()
 {
-  WDT_timings_t config;
-  config.timeout = 0.1;
-  wdt.begin(config);
+  SCB_AIRCR = 0x05FA0004;
+  while(true);
 }

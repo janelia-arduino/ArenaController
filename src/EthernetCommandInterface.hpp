@@ -33,14 +33,12 @@ public:
     static EthernetCommandInterface instance;
     QP::QTimeEvt ethernet_time_evt_;
     std::uint8_t binary_command_[constants::byte_count_per_command_max];
-    QP::QTimeEvt mongoose_time_evt_;
 
 public:
     EthernetCommandInterface();
 
 protected:
     Q_STATE_DECL(initial);
-    Q_STATE_DECL(MongooseRunning);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
     Q_STATE_DECL(Unintitalized);

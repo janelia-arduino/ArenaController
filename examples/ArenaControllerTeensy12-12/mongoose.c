@@ -7151,7 +7151,7 @@ char *mg_mprintf(const char *fmt, ...) {
 }
 
 void mg_pfn_stdout(char c, void *param) {
-  /* putchar(c); */
+  putchar(c);
   (void) param;
 }
 

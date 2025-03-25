@@ -23,8 +23,7 @@ struct BSP {
   static void readSerialStringCommand(char * command_str, char first_char);
   static void writeSerialStringResponse(char * response);
 
-  static bool pollMongoose();
-  static bool beginEthernet();
+  static bool initializeEthernet();
   static bool checkForEthernetIPAddress();
   static void getServerIpAddressString(char * ip_address_str);
   static void getEthernetHardwareStatusString(char * hardware_status_str);
