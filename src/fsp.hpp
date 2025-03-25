@@ -6,6 +6,7 @@
 #include "constants.hpp"
 #include "bsp.hpp"
 #include "signals.hpp"
+#include "records.hpp"
 
 #include "ArenaController.hpp"
 #include "Arena.hpp"

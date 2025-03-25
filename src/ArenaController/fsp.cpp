@@ -60,8 +60,8 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(AC::COMMAND_PROCESSED_SIG, nullptr);
 
   // setup the QS filters...
-  QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
-  QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
+  // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
+  // QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
 
   // init publish-subscribe

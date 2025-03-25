@@ -5,7 +5,11 @@
 #include <EventResponder.h>
 
 #include "bsp.hpp"
+#include "signals.hpp"
+#include "records.hpp"
+
 #include "ArenaController.hpp"
+
 
 extern "C" {
 #include "mongoose_glue.h"
@@ -178,6 +182,10 @@ static uint8_t transfer_panel_complete_count;
 static HardwareSerial & serial_communication_interface_stream = Serial1;
 static usb_serial_class & qs_serial_stream = Serial;
 
+// Log
+static char log_str[AC::constants::string_log_length_max];
+static uint16_t log_str_pos = 0;
+
 // usb_serial_class & serial_communication_interface_stream = Serial;
 // HardwareSerial & qs_serial_stream = Serial1;
 
@@ -334,7 +342,19 @@ void BSP::writeSerialStringResponse(char * response)
 
 void log_fn(char ch, void *param)
 {
-  Serial.print('P');
+  if ((ch == '\n') || (log_str_pos == (AC::constants::string_log_length_max - 1)))
+  {
+    log_str[log_str_pos] = 0;
+    QS_BEGIN_ID(AC::LOG_LINE, AC::AO_EthernetCommandInterface->m_prio)
+      QS_STR(log_str);
+    QS_END()
+    log_str[0] = 0;
+    log_str_pos = 0;
+  }
+  else if (ch != '\r')
+  {
+    log_str[log_str_pos++] = ch;
+  }
 }
 
 bool BSP::initializeEthernet()

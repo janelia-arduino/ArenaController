@@ -33,6 +33,9 @@ constexpr char command_termination_character = '\n';
 // Response
 constexpr uint16_t string_response_length_max = 512;
 
+// Log
+constexpr uint16_t string_log_length_max = 512;
+
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;
 constexpr uint8_t spi_data_mode = SPI_MODE0;

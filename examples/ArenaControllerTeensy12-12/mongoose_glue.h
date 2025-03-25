@@ -5,8 +5,6 @@
 #ifndef MONGOOSE_GLUE_H
 #define MONGOOSE_GLUE_H
 
-#include <Arduino.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

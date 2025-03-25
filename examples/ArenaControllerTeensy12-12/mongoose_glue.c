@@ -4,7 +4,11 @@
 
 // Default mock implementation of the API callbacks
 
+#include <Arduino.h>
+
 #include "mongoose_glue.h"
+
+
 static struct leds s_leds = {false};
 void glue_get_leds(struct leds *data) {
   data->led1 = digitalRead(LED_BUILTIN);
