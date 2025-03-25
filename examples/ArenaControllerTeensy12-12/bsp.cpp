@@ -115,7 +115,7 @@ void ethernet_init(void) {
 }
 
 using namespace QP;
-// using namespace qindesign::network;
+using namespace AC;
 
 namespace AC
 {
@@ -168,7 +168,7 @@ static QP::QSpyId const l_BSP_ID = {1U}; // QSpy source ID
 
 //----------------------------------------------------------------------------
 // Static global variables
-static QEvt const panelSetTransferredEvt = {AC::PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
+static QEvt const panelSetTransferredEvt = {PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
 
 static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
@@ -179,13 +179,13 @@ static HardwareSerial & serial_communication_interface_stream = Serial1;
 static usb_serial_class & qs_serial_stream = Serial;
 
 // Log
-static char log_str[AC::constants::string_log_length_max];
+static char log_str[constants::string_log_length_max];
 static uint16_t log_str_pos = 0;
 
 // usb_serial_class & serial_communication_interface_stream = Serial;
 // HardwareSerial & qs_serial_stream = Serial1;
 
-// static EthernetServer ethernet_server{AC::constants::ethernet_server_port};
+// static EthernetServer ethernet_server{constants::ethernet_server_port};
 // static IPAddress static_ip{192, 168, 10, 62};
 // static IPAddress subnet_mask{255, 255, 255, 0};
 // static IPAddress gateway{192, 168, 10, 1};
@@ -213,10 +213,10 @@ void BSP::init()
   pinMode(LED_BUILTIN, OUTPUT);
   ledOff();
 
-  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    pinMode(AC::constants::region_cipo_pins[region_index], INPUT);
-    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
+    pinMode(constants::region_cipo_pins[region_index], INPUT);
+    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->begin();
   }
   QS_OBJ_DICTIONARY(&l_BSP_ID);
@@ -235,8 +235,8 @@ void BSP::ledOn()
 void BSP::initializeWatchdog()
 {
   WDT_timings_t config;
-  config.trigger = AC::constants::watchdog_trigger_seconds;
-  config.timeout = AC::constants::watchdog_timeout_seconds;
+  config.trigger = constants::watchdog_trigger_seconds;
+  config.timeout = constants::watchdog_timeout_seconds;
   config.callback = watchdogCallback;
   wdt.begin(config);
 }
@@ -248,14 +248,14 @@ void BSP::feedWatchdog()
 
 void BSP::initializeArena()
 {
-  pinMode(AC::constants::reset_pin, OUTPUT);
-  digitalWriteFast(AC::constants::reset_pin, LOW);
+  pinMode(constants::reset_pin, OUTPUT);
+  digitalWriteFast(constants::reset_pin, LOW);
 }
 
 void transferPanelCompleteCallback(EventResponderRef event_responder)
 {
   ++transfer_panel_complete_count;
-  if (transfer_panel_complete_count == AC::constants::region_count_per_frame)
+  if (transfer_panel_complete_count == constants::region_count_per_frame)
   {
     QF::PUBLISH(&panelSetTransferredEvt, &l_BSP_ID);
   }
@@ -264,11 +264,11 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
 void BSP::initializeFrame()
 {
   transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);
-  for (uint8_t panel_set_col_index = 0; panel_set_col_index<AC::constants::region_col_panel_count_max; ++panel_set_col_index)
+  for (uint8_t panel_set_col_index = 0; panel_set_col_index<constants::region_col_panel_count_max; ++panel_set_col_index)
   {
-    for (uint8_t panel_set_row_index = 0; panel_set_row_index<AC::constants::region_row_panel_count_max; ++panel_set_row_index)
+    for (uint8_t panel_set_row_index = 0; panel_set_row_index<constants::region_row_panel_count_max; ++panel_set_row_index)
     {
-      const uint8_t & pss_pin = AC::constants::panel_set_select_pins[panel_set_row_index][panel_set_col_index];
+      const uint8_t & pss_pin = constants::panel_set_select_pins[panel_set_row_index][panel_set_col_index];
       pinMode(pss_pin, OUTPUT);
       digitalWriteFast(pss_pin, HIGH);
     }
@@ -277,8 +277,8 @@ void BSP::initializeFrame()
 
 bool BSP::beginSerial()
 {
-  serial_communication_interface_stream.begin(AC::constants::serial_baud_rate);
-  serial_communication_interface_stream.setTimeout(AC::constants::serial_timeout);
+  serial_communication_interface_stream.begin(constants::serial_baud_rate);
+  serial_communication_interface_stream.setTimeout(constants::serial_timeout);
   return true;
 }
 
@@ -294,9 +294,9 @@ uint8_t BSP::readSerialByte()
 
 void BSP::readSerialStringCommand(char * command_str, char first_char)
 {
-  char command_tail[AC::constants::string_command_length_max];
-  size_t chars_read = serial_communication_interface_stream.readBytesUntil(AC::constants::command_termination_character,
-    command_tail, AC::constants::string_command_length_max - 1);
+  char command_tail[constants::string_command_length_max];
+  size_t chars_read = serial_communication_interface_stream.readBytesUntil(constants::command_termination_character,
+    command_tail, constants::string_command_length_max - 1);
   command_tail[chars_read] = '\0';
   command_str[0] = first_char;
   command_str[1] = '\0';
@@ -338,10 +338,10 @@ void BSP::writeSerialStringResponse(char * response)
 
 void log_fn(char ch, void *param)
 {
-  if ((ch == '\n') || (log_str_pos == (AC::constants::string_log_length_max - 1)))
+  if ((ch == '\n') || (log_str_pos == (constants::string_log_length_max - 1)))
   {
     log_str[log_str_pos] = 0;
-    QS_BEGIN_ID(AC::MONGOOSE_LOG, AC::AO_EthernetCommandInterface->m_prio)
+    QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
       QS_STR(log_str);
     QS_END()
     log_str[0] = 0;
@@ -362,7 +362,7 @@ bool BSP::initializeEthernet()
   // return Ethernet.begin(static_ip, subnet_mask, gateway);
 }
 
-void BSP::pollMongoose()
+void BSP::pollEthernet()
 {
   mongoose_poll();
 }
@@ -458,22 +458,22 @@ void BSP::displayFrame()
 
 uint8_t BSP::getRegionRowPanelCountMax()
 {
-  return AC::constants::region_row_panel_count_max;
+  return constants::region_row_panel_count_max;
 }
 
 uint8_t BSP::getRegionColPanelCountMax()
 {
-  return AC::constants::region_col_panel_count_max;
+  return constants::region_col_panel_count_max;
 }
 
 void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
 {
-  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
-    spi_ptr->beginTransaction(SPISettings(AC::constants::spi_clock_speed, AC::constants::spi_bit_order, AC::constants::spi_data_mode));
+    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
+    spi_ptr->beginTransaction(SPISettings(constants::spi_clock_speed, constants::spi_bit_order, constants::spi_data_mode));
   }
-  const uint8_t & pss_pin = AC::constants::panel_set_select_pins[row_index][col_index];
+  const uint8_t & pss_pin = constants::panel_set_select_pins[row_index][col_index];
   digitalWriteFast(pss_pin, LOW);
   // Serial.print("setting ");
   // Serial.print(pss_pin);
@@ -482,11 +482,11 @@ void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
 
 void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
 {
-  const uint8_t & pss_pin = AC::constants::panel_set_select_pins[row_index][col_index];
+  const uint8_t & pss_pin = constants::panel_set_select_pins[row_index][col_index];
   digitalWriteFast(pss_pin, HIGH);
-  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
+    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->endTransaction();
   }
   // Serial.print("setting ");
@@ -497,9 +497,9 @@ void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
 void BSP::transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count)
 {
   transfer_panel_complete_count = 0;
-  for (uint8_t region_index = 0; region_index<AC::constants::region_count_per_frame; ++region_index)
+  for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    SPIClass * spi_ptr = AC::constants::region_spi_ptrs[region_index];
+    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->transfer(panel_buffer, NULL, panel_buffer_byte_count, transfer_panel_complete_event);
   }
 }
@@ -527,7 +527,7 @@ void TIMER_HANDLER()
 void QF::onStartup()
 {
   // configure the timer-counter channel........
-  Timer1.initialize(TIMER1_CLCK_HZ / AC::constants::ticks_per_second);
+  Timer1.initialize(TIMER1_CLCK_HZ / constants::ticks_per_second);
   Timer1.attachInterrupt(TIMER_HANDLER);
   // ...
 }

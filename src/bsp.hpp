@@ -24,7 +24,7 @@ struct BSP {
   static void writeSerialStringResponse(char * response);
 
   static bool initializeEthernet();
-  static void pollMongoose();
+  static void pollEthernet();
   static bool checkForEthernetIPAddress();
   static void getServerIpAddressString(char * ip_address_str);
   static void getEthernetHardwareStatusString(char * hardware_status_str);

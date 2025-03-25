@@ -327,7 +327,7 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <tran trig="ETHERNET_TIMEOUT">
-      <action brief="pollMongoose()">FSP::EthernetCommandInterface_pollMongoose(this, e);</action>
+      <action brief="pollMongoose()">FSP::EthernetCommandInterface_pollEthernet(this, e);</action>
       <tran_glyph conn="15,37,3,-1,29">
        <action box="0,-2,34,3"/>
       </tran_glyph>

@@ -111,7 +111,7 @@ Q_STATE_DEF(EthernetCommandInterface, Active) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::ETHERNET_TIMEOUT}
         case ETHERNET_TIMEOUT_SIG: {
-            FSP::EthernetCommandInterface_pollMongoose(this, e);
+            FSP::EthernetCommandInterface_pollEthernet(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

@@ -39,29 +39,29 @@ void FSP::ArenaController_setup()
   BSP::init(); // initialize the BSP
 
   // object dictionaries for AOs...
-  QS_OBJ_DICTIONARY(AC::AO_Arena);
-  QS_OBJ_DICTIONARY(AC::AO_SerialCommandInterface);
-  QS_OBJ_DICTIONARY(AC::AO_EthernetCommandInterface);
-  QS_OBJ_DICTIONARY(AC::AO_Display);
-  QS_OBJ_DICTIONARY(AC::AO_Frame);
-  QS_OBJ_DICTIONARY(AC::AO_Watchdog);
+  QS_OBJ_DICTIONARY(AO_Arena);
+  QS_OBJ_DICTIONARY(AO_SerialCommandInterface);
+  QS_OBJ_DICTIONARY(AO_EthernetCommandInterface);
+  QS_OBJ_DICTIONARY(AO_Display);
+  QS_OBJ_DICTIONARY(AO_Frame);
+  QS_OBJ_DICTIONARY(AO_Watchdog);
 
   QS_OBJ_DICTIONARY(&l_FSP_ID);
 
   // signal dictionaries for globally published events...
-  QS_SIG_DICTIONARY(AC::RESET_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::ALL_ON_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::ALL_OFF_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::DEACTIVATE_DISPLAY_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::DISPLAY_FRAMES_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::TRANSFER_FRAME_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
-  QS_SIG_DICTIONARY(AC::COMMAND_PROCESSED_SIG, nullptr);
+  QS_SIG_DICTIONARY(RESET_SIG, nullptr);
+  QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
+  QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
+  QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
+  QS_SIG_DICTIONARY(DISPLAY_FRAMES_SIG, nullptr);
+  QS_SIG_DICTIONARY(TRANSFER_FRAME_SIG, nullptr);
+  QS_SIG_DICTIONARY(SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
+  QS_SIG_DICTIONARY(ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
+  QS_SIG_DICTIONARY(COMMAND_PROCESSED_SIG, nullptr);
 
   // user record dictionaries
-  QS_USR_DICTIONARY(AC::MONGOOSE_LOG);
-  QS_USR_DICTIONARY(AC::USER_COMMENT);
+  QS_USR_DICTIONARY(ETHERNET_LOG);
+  QS_USR_DICTIONARY(USER_COMMENT);
 
   // setup the QS filters...
   // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
@@ -219,7 +219,7 @@ void FSP::SerialCommandInterface_beginSerial(QActive * const ao, QEvt const * e)
   bool serial_ready = BSP::beginSerial();
   if (serial_ready)
   {
-    AC::AO_SerialCommandInterface->POST(&serialReadyEvt, &l_FSP_ID);
+    AO_SerialCommandInterface->POST(&serialReadyEvt, &l_FSP_ID);
   }
 }
 
@@ -299,18 +299,13 @@ void FSP::EthernetCommandInterface_initializeEthernet(QActive * const ao, QEvt c
   bool ethernet_initialized = BSP::initializeEthernet();
   if (ethernet_initialized)
   {
-    AC::AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_FSP_ID);
+    AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, &l_FSP_ID);
   }
 }
 
-void FSP::EthernetCommandInterface_pollMongoose(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_pollEthernet(QActive * const ao, QEvt const * e)
 {
-  BSP::pollMongoose();
-  // bool ip_address_found = BSP::checkForEthernetIPAddress();
-  // if (ip_address_found)
-  // {
-  //   AO_EthernetCommandInterface->POST(&ethernetIPAddressFoundEvt, &l_FSP_ID);
-  // }
+  BSP::pollEthernet();
 }
 
 void FSP::EthernetCommandInterface_checkForIPAddress(QActive * const ao, QEvt const * e)
