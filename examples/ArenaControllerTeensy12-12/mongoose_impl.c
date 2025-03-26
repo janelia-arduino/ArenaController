@@ -800,7 +800,8 @@ static void dns_fn(struct mg_connection *c, int ev, void *ev_data) {
 
 void mongoose_init(void) {
   mg_mgr_init(&g_mgr);      // Initialise event manager
-  mg_log_set(MG_LL_DEBUG);  // Set log level to debug
+  /* mg_log_set(MG_LL_DEBUG);  // Set log level to debug */
+  mg_log_set(MG_LL_INFO);  // Set log level to info
 
 #if WIZARD_ENABLE_HTTP
   MG_INFO(("Starting HTTP listener"));

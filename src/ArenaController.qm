@@ -327,13 +327,13 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <tran trig="ETHERNET_TIMEOUT">
-      <action brief="pollMongoose()">FSP::EthernetCommandInterface_pollEthernet(this, e);</action>
+      <action brief="pollEthernet()">FSP::EthernetCommandInterface_pollEthernet(this, e);</action>
       <tran_glyph conn="15,37,3,-1,29">
        <action box="0,-2,34,3"/>
       </tran_glyph>
      </tran>
      <state name="Unintitalized">
-      <tran trig="ETHERNET_INITIALIZED" target="../../6">
+      <tran trig="ETHERNET_INITIALIZED" target="../../5">
        <tran_glyph conn="49,43,1,3,23">
         <action box="2,-3,19,2"/>
        </tran_glyph>
@@ -346,50 +346,36 @@ This structure of the code is recommended for applications with only one active 
       </tran>
       <state_glyph node="21,39,28,10"/>
      </state>
-     <state name="IPAddressFound">
-      <tran trig="ETHERNET_SERVER_INITIALIZED" target="../../5">
-       <tran_glyph conn="44,56,1,0,2,8">
-        <action box="3,-1,27,2"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="ETHERNET_TIMEOUT">
-       <action brief="beginServer()">FSP::EthernetCommandInterface_beginServer(this, e);</action>
-       <tran_glyph conn="21,58,3,-1,18">
-        <action box="0,-2,18,4"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="21,51,23,11"/>
-     </state>
-     <state name="PollingForNewCommand">
-      <tran trig="ETHERNET_TIMEOUT">
-       <action brief="pollEthernetCommand()">FSP::EthernetCommandInterface_pollEthernetCommand(this, e);</action>
-       <tran_glyph conn="21,71,3,-1,20">
-        <action box="0,-2,21,5"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="SERIAL_COMMAND_AVAILABLE" target="../../7">
+     <state name="WaitingForNewCommand">
+      <tran trig="SERIAL_COMMAND_AVAILABLE" target="../../6">
        <tran_glyph conn="50,73,1,3,36">
         <action box="3,-2,32,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../8">
-       <action brief="readEthernetBinaryCommand()">FSP::EthernetCommandInterface_readEthernetBinaryCommand(this, e);</action>
+      <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../7">
+       <action brief="readEthernetBinaryCommand()">//FSP::EthernetCommandInterface_readEthernetBinaryCommand(this, e);</action>
        <tran_glyph conn="24,76,2,3,14,33">
         <action box="4,14,29,5"/>
        </tran_glyph>
       </tran>
       <state_glyph node="21,64,29,12"/>
      </state>
-     <state name="WaitingForIPAddress">
-      <tran trig="ETHERNET_IP_ADDRESS_FOUND" target="../../4">
-       <tran_glyph conn="72,48,3,1,-8,5,-20">
-        <action box="-7,1,28,3"/>
+     <state name="CreatingServerConnection">
+      <tran trig="ETHERNET_SERVER_CONNECTED" target="../../8">
+       <tran_glyph conn="83,49,2,1,7,-17">
+        <action box="-7,8,28,2"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="ETHERNET_TIMEOUT">
+       <action brief="createServerConnection()">FSP::EthernetCommandInterface_createServerConnection(this, e);</action>
+       <tran_glyph conn="72,45,3,-1,19">
+        <action box="0,-2,19,4"/>
        </tran_glyph>
       </tran>
       <state_glyph node="72,39,25,10"/>
      </state>
      <state name="Waiting">
-      <tran trig="COMMAND_PROCESSED" target="../../5">
+      <tran trig="COMMAND_PROCESSED" target="../../4">
        <tran_glyph conn="86,68,3,1,-36">
         <action box="-29,-2,21,2"/>
        </tran_glyph>
@@ -397,13 +383,16 @@ This structure of the code is recommended for applications with only one active 
       <state_glyph node="86,64,18,12"/>
      </state>
      <state name="ProcessingCommand">
-      <tran trig="COMMAND_PROCESSED" target="../../5">
+      <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeEthernetBinaryResponse()"/>
        <tran_glyph conn="57,86,3,2,-28,-10">
         <action box="-27,-2,21,4"/>
        </tran_glyph>
       </tran>
       <state_glyph node="57,82,25,10"/>
+     </state>
+     <state name="ServerConnected">
+      <state_glyph node="49,51,17,10"/>
      </state>
      <state_glyph node="15,28,99,71">
       <entry box="1,2,24,2"/>

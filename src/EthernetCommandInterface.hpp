@@ -42,11 +42,11 @@ protected:
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
     Q_STATE_DECL(Unintitalized);
-    Q_STATE_DECL(IPAddressFound);
-    Q_STATE_DECL(PollingForNewCommand);
-    Q_STATE_DECL(WaitingForIPAddress);
+    Q_STATE_DECL(WaitingForNewCommand);
+    Q_STATE_DECL(CreatingServerConnection);
     Q_STATE_DECL(Waiting);
     Q_STATE_DECL(ProcessingCommand);
+    Q_STATE_DECL(ServerConnected);
 };
 
 } // namespace AC

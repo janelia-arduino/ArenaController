@@ -177,18 +177,16 @@ static uint8_t transfer_panel_complete_count;
 // Serial Communication Interface
 static HardwareSerial & serial_communication_interface_stream = Serial1;
 static usb_serial_class & qs_serial_stream = Serial;
+// usb_serial_class & serial_communication_interface_stream = Serial;
+// HardwareSerial & qs_serial_stream = Serial1;
+
+// Ethernet Communication Interface
+// static const char * s_lsn = "tcp://192.168.10.62:62222";
+static const char * s_lsn = "tcp://192.168.10.62:6222";
 
 // Log
 static char log_str[constants::string_log_length_max];
 static uint16_t log_str_pos = 0;
-
-// usb_serial_class & serial_communication_interface_stream = Serial;
-// HardwareSerial & qs_serial_stream = Serial1;
-
-// static EthernetServer ethernet_server{constants::ethernet_server_port};
-// static IPAddress static_ip{192, 168, 10, 62};
-// static IPAddress subnet_mask{255, 255, 255, 0};
-// static IPAddress gateway{192, 168, 10, 1};
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -359,96 +357,65 @@ bool BSP::initializeEthernet()
   ethernet_init();
   mongoose_init();
   return true;
-  // return Ethernet.begin(static_ip, subnet_mask, gateway);
 }
 
 void BSP::pollEthernet()
 {
   mongoose_poll();
 }
-
-bool BSP::checkForEthernetIPAddress()
+void sfn(struct mg_connection *c, int ev, void *ev_data)
 {
-  // return Ethernet.localIP();
+  if (ev == MG_EV_OPEN && c->is_listening == 1)
+  {
+    MG_INFO(("SERVER is listening"));
+  }
+  else if (ev == MG_EV_ACCEPT)
+  {
+    MG_INFO(("SERVER accepted a connection"));
+  }
+  else if (ev == MG_EV_READ)
+  {
+    MG_INFO(("MG_EV_READ"));
+    // struct mg_iobuf *r = &c->recv;
+    // MG_INFO(("SERVER got data: %.*s", r->len, r->buf));
+    // mg_send(c, r->buf, r->len);  // echo it back
+    // r->len = 0;                  // Tell Mongoose we've consumed data
+  }
+  else if (ev == MG_EV_WRITE)
+  {
+    MG_INFO(("MG_EV_WRITE"));
+  }
+  else if (ev == MG_EV_CLOSE)
+  {
+    MG_INFO(("SERVER disconnected"));
+  }
+  else if (ev == MG_EV_ERROR)
+  {
+    MG_INFO(("SERVER error: %s", (char *) ev_data));
+  }
+  else if (ev == MG_EV_POLL)
+  {
+  }
+  else
+  {
+    MG_INFO(("event %lu", ev));
+  }
 }
 
-void BSP::getServerIpAddressString(char * ip_address_str)
+bool BSP::createEthernetServerConnection()
 {
-  // IPAddress ip_address = Ethernet.localIP();
-  // ipAddressToString(ip_address, ip_address_str);
+  struct mg_connection * c = mg_listen(&g_mgr, s_lsn, sfn, NULL);
+  if (c == NULL)
+  {
+    MG_INFO(("SERVER cannot open a connection"));
+    return false;
+  }
+  return true;
 }
 
-void BSP::getEthernetHardwareStatusString(char * hardware_status_str)
-{
-  // hardware_status_str[0] = '\0';
-  // EthernetHardwareStatus status = Ethernet.hardwareStatus();
-  // switch (status)
-  // {
-  //   case EthernetNoHardware:
-  //     strcpy(hardware_status_str, "NONE");
-  //     break;
-  //   case EthernetW5100:
-  //     strcpy(hardware_status_str, "W5100");
-  //     break;
-  //   case EthernetW5200:
-  //     strcpy(hardware_status_str, "W5200");
-  //     break;
-  //   case EthernetW5500:
-  //     strcpy(hardware_status_str, "W5500");
-  //     break;
-  //   case EthernetTeensy41:
-  //     strcpy(hardware_status_str, "TEENSY41");
-  //     break;
-  //   case EthernetOtherHardware:
-  //     strcpy(hardware_status_str, "OTHER");
-  //     break;
-  // }
-}
-
-void BSP::getEthernetLinkStatusString(char * link_status_str)
-{
-  // Serial.print("hasLinkState: ");
-  // Serial.println(Ethernet.driverCapabilities().hasLinkState);
-  // link_status_str[0] = '\0';
-  // EthernetLinkStatus status = Ethernet.linkStatus();
-  // switch (status)
-  // {
-  //   case Unknown:
-  //     strcpy(link_status_str, "UNKNOWN");
-  //     break;
-  //   case LinkON:
-  //     strcpy(link_status_str, "ON");
-  //     break;
-  //   case LinkOFF:
-  //     strcpy(link_status_str, "OFF");
-  //     break;
-  // }
-}
-
-bool BSP::beginEthernetServer()
-{
-  // ethernet_server.begin();
-  // return ethernet_server ? true : false;
-}
-
-bool BSP::pollEthernetCommand()
-{
-  // EthernetClient ethernet_client = ethernet_server.accept();
-  // if (ethernet_client)
-  // {
-  //   IPAddress ip = ethernet_client.remoteIP();
-  //   ethernet_client.close();
-  // }
-  // return false;
-}
-
-void BSP::readEthernetBinaryCommand()
-{
-  // EthernetClient ethernet_client = ethernet_server.accept();
-  // uint16_t available_bytes = ethernet_client.available();
-  // Serial.print("available_bytes: ");
-  // Serial.println(available_bytes);
-}
+// void BSP::readEthernetBinaryCommand()
+// {
+// }
 
 void BSP::displayFrame()
 {

@@ -25,15 +25,10 @@ struct BSP {
 
   static bool initializeEthernet();
   static void pollEthernet();
-  static bool checkForEthernetIPAddress();
-  static void getServerIpAddressString(char * ip_address_str);
-  static void getEthernetHardwareStatusString(char * hardware_status_str);
-  static void getEthernetLinkStatusString(char * link_status_str);
-  static bool beginEthernetServer();
-  static bool checkForEthernetClient();
-  static bool pollEthernetCommand();
-  static void readEthernetBinaryCommand();
-  static void writeEthernetBinaryResponse();
+  static bool createEthernetServerConnection();
+
+  // static void readEthernetBinaryCommand();
+  // static void writeEthernetBinaryResponse();
 
   static void displayFrame();
 
