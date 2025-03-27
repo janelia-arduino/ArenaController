@@ -57,7 +57,7 @@ public:
 class EthernetCommandEvt : public QP::QEvt {
 public:
     void * connection;
-    std::uint8_t const (*binary_command)[];
+    std::uint8_t const * binary_command;
     std::uint32_t binary_command_byte_count;
 };
 extern QP::QActive * const AO_Arena;

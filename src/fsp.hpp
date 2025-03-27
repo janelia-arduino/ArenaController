@@ -72,7 +72,7 @@ struct FSP
   //   size_t command_len,
   //   void * response_buf,
   //   size_t response_len);
-  static void processBinaryCommand(uint8_t const (*command)[],
+  static void processBinaryCommand(uint8_t const * command_buf,
     size_t command_len);
   static void processStringCommand(const char * command, char * response);
 };

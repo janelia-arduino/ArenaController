@@ -354,6 +354,7 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../7">
+       <action brief="processBinaryCommand()">FSP::EthernetCommandInterface_processBinaryCommand(this, e);</action>
        <tran_glyph conn="24,76,2,3,14,33">
         <action box="4,14,29,5"/>
        </tran_glyph>
@@ -383,16 +384,13 @@ This structure of the code is recommended for applications with only one active 
       <state_glyph node="86,64,18,12"/>
      </state>
      <state name="ProcessingCommand">
-      <entry brief="processBinaryCommand()">FSP::EthernetCommandInterface_processBinaryCommand(this, e);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeEthernetBinaryResponse()"/>
        <tran_glyph conn="57,86,3,2,-28,-10">
         <action box="-27,-2,21,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="57,82,25,10">
-       <entry box="1,2,23,2"/>
-      </state_glyph>
+      <state_glyph node="57,82,25,10"/>
      </state>
      <state_glyph node="15,28,99,71">
       <entry box="1,2,24,2"/>
@@ -567,7 +565,7 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
   </class>
   <class name="EthernetCommandEvt" superclass="qpcpp::QEvt">
    <attribute name="connection" type="void *" visibility="0x00" properties="0x00"/>
-   <attribute name="(*binary_command)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="binary_command" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">

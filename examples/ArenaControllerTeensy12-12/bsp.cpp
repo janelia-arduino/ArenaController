@@ -382,7 +382,7 @@ void sfn(struct mg_connection *c, int ev, void *ev_data)
 
     static EthernetCommandEvt ethernetCommandEvt = {ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
     ethernetCommandEvt.connection = c;
-    ethernetCommandEvt.binary_command = reinterpret_cast<uint8_t const (*)[]>(r->buf);
+    ethernetCommandEvt.binary_command = r->buf;
     ethernetCommandEvt.binary_command_byte_count = r->len;
     QF::PUBLISH(&ethernetCommandEvt, &l_BSP_ID);
 

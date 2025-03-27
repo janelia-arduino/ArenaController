@@ -154,6 +154,7 @@ Q_STATE_DEF(EthernetCommandInterface, WaitingForNewCommand) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
         case ETHERNET_COMMAND_AVAILABLE_SIG: {
+            FSP::EthernetCommandInterface_processBinaryCommand(this, e);
             status_ = tran(&ProcessingCommand);
             break;
         }
@@ -206,12 +207,6 @@ Q_STATE_DEF(EthernetCommandInterface, Waiting) {
 Q_STATE_DEF(EthernetCommandInterface, ProcessingCommand) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::ProcessingCommand}
-        case Q_ENTRY_SIG: {
-            FSP::EthernetCommandInterface_processBinaryCommand(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //.${AOs::EthernetCommandI~::SM::Active::ProcessingComman~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             status_ = tran(&WaitingForNewCommand);

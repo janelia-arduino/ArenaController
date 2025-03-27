@@ -409,10 +409,14 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
 //     size_t command_len,
 //     void * response_buf,
 //     size_t response_len)
-void FSP::processBinaryCommand(uint8_t const (*command)[],
+void FSP::processBinaryCommand(uint8_t const * command_buf,
   size_t command_len)
 {
-  uint8_t first_command_byte = (uint8_t)(*command);
+  if (command_len < 2)
+  {
+    return;
+  }
+  uint8_t first_command_byte = (uint8_t)(*command_buf);
   if (first_command_byte > 32)
   {
     QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
@@ -427,21 +431,16 @@ void FSP::processBinaryCommand(uint8_t const (*command)[],
     QS_END()
       return;
   }
-    QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR("regular command");
-    QS_END()
-  // uint8_t
-  // switch (command[1])
-  // {
-  //   case 0xFF: {
-  //     QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-  //       QS_STR("ALL ON!");
-  //     QS_END()
-  //       break;
-  //   }
-  //   default:
-  //     break;
-  // }
+  uint8_t second_command_byte = (uint8_t)(*(command_buf + 1));
+  switch (second_command_byte)
+  {
+    case 0xFF: {
+      QF::PUBLISH(&allOnEvt, &l_FSP_ID);
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 void FSP::processStringCommand(const char * command, char * response)
