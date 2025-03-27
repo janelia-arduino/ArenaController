@@ -1,8 +1,6 @@
 #ifndef ARENA_CONTROLLER_CONSTANTS_HPP
 #define ARENA_CONTROLLER_CONSTANTS_HPP
 
-#include <SPI.h>
-
 
 namespace AC
 {
@@ -32,13 +30,10 @@ constexpr char command_termination_character = '\n';
 
 // Response
 constexpr uint16_t string_response_length_max = 512;
+constexpr uint16_t byte_count_per_response_max = 32;
 
 // Log
 constexpr uint16_t string_log_length_max = 512;
-
-// SPI Settings
-constexpr uint8_t spi_bit_order = MSBFIRST;
-constexpr uint8_t spi_data_mode = SPI_MODE0;
 
 // Ethernet Settings
 constexpr uint8_t mac_address_size = 6;

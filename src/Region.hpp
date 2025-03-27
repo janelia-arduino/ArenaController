@@ -32,9 +32,6 @@ class Region : public QP::QHsm {
 public:
     static Region instances[constants::region_count_per_frame_max];
 
-private:
-    SPIClass * spi_ptr_;
-
 public:
     Region()
       : QHsm(&initial)

@@ -63,7 +63,6 @@ Q_STATE_DEF(EthernetCommandInterface, initial) {
     QS_FUN_DICTIONARY(&EthernetCommandInterface::CreatingServerConnection);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingCommand);
-    QS_FUN_DICTIONARY(&EthernetCommandInterface::ServerConnected);
 
     return tran(&Inactive);
 }
@@ -155,7 +154,6 @@ Q_STATE_DEF(EthernetCommandInterface, WaitingForNewCommand) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
         case ETHERNET_COMMAND_AVAILABLE_SIG: {
-            //FSP::EthernetCommandInterface_readEthernetBinaryCommand(this, e);
             status_ = tran(&ProcessingCommand);
             break;
         }
@@ -172,7 +170,7 @@ Q_STATE_DEF(EthernetCommandInterface, CreatingServerConnection) {
     switch (e->sig) {
         //.${AOs::EthernetCommandI~::SM::Active::CreatingServerCo~::ETHERNET_SERVER_CONNECTED}
         case ETHERNET_SERVER_CONNECTED_SIG: {
-            status_ = tran(&ServerConnected);
+            status_ = tran(&WaitingForNewCommand);
             break;
         }
         //.${AOs::EthernetCommandI~::SM::Active::CreatingServerCo~::ETHERNET_TIMEOUT}
@@ -208,22 +206,17 @@ Q_STATE_DEF(EthernetCommandInterface, Waiting) {
 Q_STATE_DEF(EthernetCommandInterface, ProcessingCommand) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::EthernetCommandI~::SM::Active::ProcessingCommand}
+        case Q_ENTRY_SIG: {
+            FSP::EthernetCommandInterface_processBinaryCommand(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //.${AOs::EthernetCommandI~::SM::Active::ProcessingComman~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             status_ = tran(&WaitingForNewCommand);
             break;
         }
-        default: {
-            status_ = super(&Active);
-            break;
-        }
-    }
-    return status_;
-}
-//.${AOs::EthernetCommandI~::SM::Active::ServerConnected} ....................
-Q_STATE_DEF(EthernetCommandInterface, ServerConnected) {
-    QP::QState status_;
-    switch (e->sig) {
         default: {
             status_ = super(&Active);
             break;

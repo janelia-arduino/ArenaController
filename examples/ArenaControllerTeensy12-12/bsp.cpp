@@ -122,6 +122,8 @@ namespace AC
 namespace constants
 {
 // SPI Settings
+constexpr uint8_t spi_bit_order = MSBFIRST;
+constexpr uint8_t spi_data_mode = SPI_MODE0;
 constexpr uint32_t spi_clock_speed = 5000000;
 
 constexpr uint8_t reset_pin = 34;
@@ -137,7 +139,7 @@ constexpr uint16_t byte_count_per_frame_grayscale_max = \
 
 // region
 constexpr uint8_t region_count_per_frame = 2;
-constexpr SPIClass * region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
+constexpr SPIClass *region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
 constexpr uint8_t region_cipo_pins[region_count_per_frame] = {12, 1};
 
 constexpr uint8_t region_row_panel_count_max = panel_count_per_frame_row_max;
@@ -181,8 +183,8 @@ static usb_serial_class & qs_serial_stream = Serial;
 // HardwareSerial & qs_serial_stream = Serial1;
 
 // Ethernet Communication Interface
-// static const char * s_lsn = "tcp://192.168.10.62:62222";
-static const char * s_lsn = "tcp://192.168.10.62:6222";
+// static const char *s_lsn = "tcp://192.168.10.62:62222";
+static const char *s_lsn = "tcp://192.168.10.62:62222";
 
 // Log
 static char log_str[constants::string_log_length_max];
@@ -194,7 +196,7 @@ void watchdogCallback ()
 {
 }
 
-// void ipAddressToString(IPAddress ip_address, char * ip_address_str)
+// void ipAddressToString(IPAddress ip_address, char *ip_address_str)
 // {
 //   sprintf(ip_address_str,"%u.%u.%u.%u", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 // }
@@ -214,7 +216,7 @@ void BSP::init()
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
     pinMode(constants::region_cipo_pins[region_index], INPUT);
-    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
+    SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->begin();
   }
   QS_OBJ_DICTIONARY(&l_BSP_ID);
@@ -290,7 +292,7 @@ uint8_t BSP::readSerialByte()
   return serial_communication_interface_stream.read();
 }
 
-void BSP::readSerialStringCommand(char * command_str, char first_char)
+void BSP::readSerialStringCommand(char *command_str, char first_char)
 {
   char command_tail[constants::string_command_length_max];
   size_t chars_read = serial_communication_interface_stream.readBytesUntil(constants::command_termination_character,
@@ -301,7 +303,7 @@ void BSP::readSerialStringCommand(char * command_str, char first_char)
   strcat(command_str, command_tail);
 }
 
-void BSP::writeSerialStringResponse(char * response)
+void BSP::writeSerialStringResponse(char *response)
 {
   serial_communication_interface_stream.println(response);
 }
@@ -375,9 +377,15 @@ void sfn(struct mg_connection *c, int ev, void *ev_data)
   }
   else if (ev == MG_EV_READ)
   {
-    MG_INFO(("MG_EV_READ"));
-    // struct mg_iobuf *r = &c->recv;
-    // MG_INFO(("SERVER got data: %.*s", r->len, r->buf));
+    struct mg_iobuf *r = &c->recv;
+    MG_INFO(("SERVER got data: %lu bytes", r->len));
+
+    static EthernetCommandEvt ethernetCommandEvt = {ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
+    ethernetCommandEvt.connection = c;
+    ethernetCommandEvt.binary_command = reinterpret_cast<uint8_t const (*)[]>(r->buf);
+    ethernetCommandEvt.binary_command_byte_count = r->len;
+    QF::PUBLISH(&ethernetCommandEvt, &l_BSP_ID);
+
     // mg_send(c, r->buf, r->len);  // echo it back
     // r->len = 0;                  // Tell Mongoose we've consumed data
   }
@@ -404,7 +412,7 @@ void sfn(struct mg_connection *c, int ev, void *ev_data)
 
 bool BSP::createEthernetServerConnection()
 {
-  struct mg_connection * c = mg_listen(&g_mgr, s_lsn, sfn, NULL);
+  struct mg_connection *c = mg_listen(&g_mgr, s_lsn, sfn, NULL);
   if (c == NULL)
   {
     MG_INFO(("SERVER cannot open a connection"));
@@ -437,7 +445,7 @@ void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
 {
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
+    SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->beginTransaction(SPISettings(constants::spi_clock_speed, constants::spi_bit_order, constants::spi_data_mode));
   }
   const uint8_t & pss_pin = constants::panel_set_select_pins[row_index][col_index];
@@ -453,7 +461,7 @@ void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
   digitalWriteFast(pss_pin, HIGH);
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
+    SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->endTransaction();
   }
   // Serial.print("setting ");
@@ -466,7 +474,7 @@ void BSP::transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer
   transfer_panel_complete_count = 0;
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
-    SPIClass * spi_ptr = constants::region_spi_ptrs[region_index];
+    SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->transfer(panel_buffer, NULL, panel_buffer_byte_count, transfer_panel_complete_event);
   }
 }
@@ -533,7 +541,7 @@ void QV::onIdle()
 #endif
 }
 //............................................................................
-extern "C" Q_NORETURN Q_onAssert(char const * const module, int location)
+extern "C" Q_NORETURN Q_onAssert(char const *const module, int location)
 {
   //
   // NOTE: add here your application-specific error handling
@@ -551,7 +559,7 @@ extern "C" Q_NORETURN Q_onAssert(char const * const module, int location)
 //----------------------------------------------------------------------------
 // QS callbacks...
 //............................................................................
-bool QP::QS::onStartup(void const * arg)
+bool QP::QS::onStartup(void const *arg)
 {
   static uint8_t qsTxBuf[2048]; // buffer for QS transmit channel (QS-TX)
   static uint8_t qsRxBuf[1024];  // buffer for QS receive channel (QS-RX)

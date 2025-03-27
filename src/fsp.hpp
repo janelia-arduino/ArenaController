@@ -53,8 +53,7 @@ struct FSP
   static void EthernetCommandInterface_initializeEthernet(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_pollEthernet(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_createServerConnection(QP::QActive * const ao, QP::QEvt const * e);
-
-  // static void EthernetCommandInterface_readEthernetBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
   // static void EthernetCommandInterface_writeEthernetBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
@@ -69,6 +68,12 @@ struct FSP
   static void Watchdog_disarmWatchdogTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Watchdog_feedWatchdog(QP::QActive * const ao, QP::QEvt const * e);
 
+  // static void processBinaryCommand(const void * command_buf,
+  //   size_t command_len,
+  //   void * response_buf,
+  //   size_t response_len);
+  static void processBinaryCommand(uint8_t const (*command)[],
+    size_t command_len);
   static void processStringCommand(const char * command, char * response);
 };
 

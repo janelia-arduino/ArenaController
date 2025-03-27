@@ -131,7 +131,7 @@ void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_displayAllOnFrames(QActive * const ao, QEvt const * e)
 {
-  static DisplayFramesEvt displayFramesEvt = { DISPLAY_FRAMES_SIG, 0U, 0U};
+  static DisplayFramesEvt displayFramesEvt = {DISPLAY_FRAMES_SIG, 0U, 0U};
   displayFramesEvt.panel_buffer = &constants::all_on_grayscale_pattern;
   displayFramesEvt.panel_buffer_byte_count = constants::byte_count_per_panel_grayscale;
   QF::PUBLISH(&displayFramesEvt, ao);
@@ -179,7 +179,7 @@ void FSP::Display_disarmDisplayFrameTimer(QActive * const ao, QEvt const * e)
 void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  static TransferFrameEvt transferFrameEvt = { TRANSFER_FRAME_SIG, 0U, 0U};
+  static TransferFrameEvt transferFrameEvt = {TRANSFER_FRAME_SIG, 0U, 0U};
   transferFrameEvt.panel_buffer = display->panel_buffer_;
   transferFrameEvt.panel_buffer_byte_count = display->panel_buffer_byte_count_;
   transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
@@ -315,12 +315,12 @@ void FSP::EthernetCommandInterface_createServerConnection(QActive * const ao, QE
   }
 }
 
-// void FSP::EthernetCommandInterface_readEthernetBinaryCommand(QActive * const ao, QEvt const * e)
-// {
-//   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-//   BSP::readEthernetBinaryCommand();
-//   // eci->binary_command_ = BSP::readEthernetBinaryCommand(sci->first_command_byte_);
-// }
+void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
+  FSP::processBinaryCommand(ece->binary_command, ece->binary_command_byte_count);
+}
 
 // void FSP::EthernetCommandInterface_writeEthernetBinaryResponse(QActive * const ao, QEvt const * e)
 // {
@@ -403,6 +403,45 @@ void FSP::Watchdog_disarmWatchdogTimer(QActive * const ao, QEvt const * e)
 void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
 {
   BSP::feedWatchdog();
+}
+
+// void FSP::processBinaryCommand(const void * command_buf,
+//     size_t command_len,
+//     void * response_buf,
+//     size_t response_len)
+void FSP::processBinaryCommand(uint8_t const (*command)[],
+  size_t command_len)
+{
+  uint8_t first_command_byte = (uint8_t)(*command);
+  if (first_command_byte > 32)
+  {
+    QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
+      QS_STR("string?");
+    QS_END()
+      return;
+  }
+  else if (first_command_byte == 32)
+  {
+    QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
+      QS_STR("stream frame");
+    QS_END()
+      return;
+  }
+    QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
+      QS_STR("regular command");
+    QS_END()
+  // uint8_t
+  // switch (command[1])
+  // {
+  //   case 0xFF: {
+  //     QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
+  //       QS_STR("ALL ON!");
+  //     QS_END()
+  //       break;
+  //   }
+  //   default:
+  //     break;
+  // }
 }
 
 void FSP::processStringCommand(const char * command, char * response)

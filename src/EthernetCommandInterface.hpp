@@ -32,7 +32,8 @@ class EthernetCommandInterface : public QP::QActive {
 public:
     static EthernetCommandInterface instance;
     QP::QTimeEvt ethernet_time_evt_;
-    std::uint8_t binary_command_[constants::byte_count_per_command_max];
+    std::uint8_t binary_response_[constants::byte_count_per_response_max];
+    std::uint8_t binary_response_byte_count_;
 
 public:
     EthernetCommandInterface();
@@ -46,7 +47,6 @@ protected:
     Q_STATE_DECL(CreatingServerConnection);
     Q_STATE_DECL(Waiting);
     Q_STATE_DECL(ProcessingCommand);
-    Q_STATE_DECL(ServerConnected);
 };
 
 } // namespace AC
