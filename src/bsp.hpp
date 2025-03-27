@@ -26,9 +26,7 @@ struct BSP {
   static bool initializeEthernet();
   static void pollEthernet();
   static bool createEthernetServerConnection();
-
-  // static void readEthernetBinaryCommand();
-  // static void writeEthernetBinaryResponse();
+  static void writeEthernetBinaryResponse(void * connection, uint8_t response[AC::constants::byte_count_per_response_max], uint8_t response_byte_count);
 
   static void displayFrame();
 

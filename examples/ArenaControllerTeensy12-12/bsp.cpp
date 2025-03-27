@@ -385,9 +385,6 @@ void sfn(struct mg_connection *c, int ev, void *ev_data)
     ethernetCommandEvt.binary_command = r->buf;
     ethernetCommandEvt.binary_command_byte_count = r->len;
     QF::PUBLISH(&ethernetCommandEvt, &l_BSP_ID);
-
-    // mg_send(c, r->buf, r->len);  // echo it back
-    // r->len = 0;                  // Tell Mongoose we've consumed data
   }
   else if (ev == MG_EV_WRITE)
   {
@@ -421,9 +418,13 @@ bool BSP::createEthernetServerConnection()
   return true;
 }
 
-// void BSP::readEthernetBinaryCommand()
-// {
-// }
+void BSP::writeEthernetBinaryResponse(void * connection, uint8_t response[constants::byte_count_per_response_max], uint8_t response_byte_count)
+{
+  struct mg_connection * c = (struct mg_connection *)connection;
+  struct mg_iobuf *r = &c->recv;
+  mg_send(c, response, response_byte_count);
+  r->len = 0;
+}
 
 void BSP::displayFrame()
 {

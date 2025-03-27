@@ -295,6 +295,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="ethernet_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="binary_response_[constants::byte_count_per_response_max]" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="binary_response_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="connection_" type="void *" visibility="0x00" properties="0x00"/>
    <operation name="EthernetCommandInterface" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;EthernetCommandInterface::initial)),
     ethernet_time_evt_(this, ETHERNET_TIMEOUT_SIG, 0U)</code>
@@ -383,14 +384,16 @@ This structure of the code is recommended for applications with only one active 
       </tran>
       <state_glyph node="86,64,18,12"/>
      </state>
-     <state name="ProcessingCommand">
+     <state name="WritingResponse">
+      <entry brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeEthernetBinaryResponse(this, e);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
-       <action brief="writeEthernetBinaryResponse()"/>
        <tran_glyph conn="57,86,3,2,-28,-10">
         <action box="-27,-2,21,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="57,82,25,10"/>
+      <state_glyph node="57,82,25,10">
+       <entry box="1,2,21,2"/>
+      </state_glyph>
      </state>
      <state_glyph node="15,28,99,71">
       <entry box="1,2,24,2"/>

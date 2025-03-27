@@ -34,6 +34,7 @@ public:
     QP::QTimeEvt ethernet_time_evt_;
     std::uint8_t binary_response_[constants::byte_count_per_response_max];
     std::uint8_t binary_response_byte_count_;
+    void * connection_;
 
 public:
     EthernetCommandInterface();
@@ -46,7 +47,7 @@ protected:
     Q_STATE_DECL(WaitingForNewCommand);
     Q_STATE_DECL(CreatingServerConnection);
     Q_STATE_DECL(Waiting);
-    Q_STATE_DECL(ProcessingCommand);
+    Q_STATE_DECL(WritingResponse);
 };
 
 } // namespace AC

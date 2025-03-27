@@ -319,14 +319,18 @@ void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
-  FSP::processBinaryCommand(ece->binary_command, ece->binary_command_byte_count);
+  eci->connection_ = ece->connection;
+  eci->binary_response_byte_count_ = FSP::processBinaryCommand(ece->binary_command,
+    ece->binary_command_byte_count,
+    eci->binary_response_);
 }
 
-// void FSP::EthernetCommandInterface_writeEthernetBinaryResponse(QActive * const ao, QEvt const * e)
-// {
-//   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-//   // eci->string_command_ = BSP::readSerialStringCommand(sci->first_command_byte_);
-// }
+void FSP::EthernetCommandInterface_writeEthernetBinaryResponse(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  BSP::writeEthernetBinaryResponse(eci->connection_, eci->binary_response_, eci->binary_response_byte_count_);
+  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
+}
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
@@ -405,24 +409,22 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
   BSP::feedWatchdog();
 }
 
-// void FSP::processBinaryCommand(const void * command_buf,
-//     size_t command_len,
-//     void * response_buf,
-//     size_t response_len)
-void FSP::processBinaryCommand(uint8_t const * command_buf,
-  size_t command_len)
+uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
+    size_t command_byte_count,
+    uint8_t response[constants::byte_count_per_response_max])
 {
-  if (command_len < 2)
+  uint8_t response_byte_count = 0;
+  if (command_byte_count < 2)
   {
-    return;
+    return response_byte_count;
   }
-  uint8_t first_command_byte = (uint8_t)(*command_buf);
+  uint8_t first_command_byte = (uint8_t)(*command_buffer);
   if (first_command_byte > 32)
   {
     QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
       QS_STR("string?");
     QS_END()
-      return;
+    return response_byte_count;
   }
   else if (first_command_byte == 32)
   {
@@ -431,16 +433,37 @@ void FSP::processBinaryCommand(uint8_t const * command_buf,
     QS_END()
       return;
   }
-  uint8_t second_command_byte = (uint8_t)(*(command_buf + 1));
+  uint8_t second_command_byte = (uint8_t)(*(command_buffer + 1));
   switch (second_command_byte)
   {
-    case 0xFF: {
+    case 0x01:
+    {
+      response[response_byte_count++] = 2;
+      response[response_byte_count++] = 0;
+      response[response_byte_count++] = second_command_byte;
+      QF::PUBLISH(&resetEvt, &l_FSP_ID);
+      break;
+    }
+    case 0x30:
+    {
+      response[response_byte_count++] = 2;
+      response[response_byte_count++] = 0;
+      response[response_byte_count++] = second_command_byte;
+      QF::PUBLISH(&allOffEvt, &l_FSP_ID);
+      break;
+    }
+    case 0xFF:
+    {
+      response[response_byte_count++] = 2;
+      response[response_byte_count++] = 0;
+      response[response_byte_count++] = second_command_byte;
       QF::PUBLISH(&allOnEvt, &l_FSP_ID);
       break;
     }
     default:
       break;
   }
+  return response_byte_count;
 }
 
 void FSP::processStringCommand(const char * command, char * response)
