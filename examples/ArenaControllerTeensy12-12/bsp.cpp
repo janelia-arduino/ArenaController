@@ -135,7 +135,7 @@ constexpr uint8_t panel_count_per_frame_max = \
   panel_count_per_frame_row_max * panel_count_per_frame_col_max; // 60
 constexpr uint16_t byte_count_per_frame_grayscale_max = \
   panel_count_per_frame_max * \
-  byte_count_per_panel_grayscale; // 7920
+  byte_count_per_panel_grayscale; // 60*132=7920
 
 // region
 constexpr uint8_t region_count_per_frame = 2;
@@ -190,16 +190,54 @@ static const char *s_lsn = "tcp://192.168.10.62:62222";
 static char log_str[constants::string_log_length_max];
 static uint16_t log_str_pos = 0;
 
+struct QuarterPanel
+{
+  uint8_t stretch;
+  uint8_t data[constants::pixel_count_per_quarter_panel_row][constants::byte_count_per_quarter_panel_row_grayscale];
+};
+
+struct Panel
+{
+  QuarterPanel quarter_panels[constants::quarter_panel_count_per_panel_row][constants::quarter_panel_count_per_panel_col];
+};
+
+struct PanelArray
+{
+  Panel panels[constants::panel_count_per_frame_row_max][constants::panel_count_per_frame_col_max];
+};
+
+static uint8_t all_on_frame_buffer[constants::byte_count_per_frame_grayscale_max];
+
 //----------------------------------------------------------------------------
 // Local functions
 void watchdogCallback ()
 {
 }
 
-// void ipAddressToString(IPAddress ip_address, char *ip_address_str)
-// {
-//   sprintf(ip_address_str,"%u.%u.%u.%u", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-// }
+void fillAllOnFrameBuffer()
+{
+  uint16_t buffer_position = 0;
+  for (uint8_t panel_row_index = 0; panel_row_index<constants::panel_count_per_frame_row_max; ++panel_row_index)
+  {
+    for (uint8_t panel_col_index = 0; panel_col_index<constants::panel_count_per_frame_col_max; ++panel_col_index)
+    {
+      for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
+      {
+        for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
+        {
+          all_on_frame_buffer[buffer_position++] = 1;
+          for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
+          {
+            for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
+            {
+              all_on_frame_buffer[buffer_position++] = 255;
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 //----------------------------------------------------------------------------
 // BSP functions
@@ -212,6 +250,8 @@ void BSP::init()
   // setup pins
   pinMode(LED_BUILTIN, OUTPUT);
   ledOff();
+
+  fillAllOnFrameBuffer();
 
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
@@ -426,12 +466,10 @@ void BSP::writeEthernetBinaryResponse(void * connection, uint8_t response[consta
   r->len = 0;
 }
 
-void BSP::displayFrame()
+uint8_t *BSP::getAllOnFrameBuffer()
 {
-  delay(2);
-  // QF::PUBLISH(&frameDisplayedEvt, &l_BSP_ID);
+  return all_on_frame_buffer;
 }
-
 uint8_t BSP::getRegionRowPanelCountMax()
 {
   return constants::region_row_panel_count_max;

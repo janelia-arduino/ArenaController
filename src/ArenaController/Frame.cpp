@@ -68,10 +68,7 @@ Q_STATE_DEF(Frame, Inactive) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Inactive::TRANSFER_FRAME}
         case TRANSFER_FRAME_SIG: {
-            panel_buffer_ = Q_EVT_CAST(TransferFrameEvt)->panel_buffer;
-            panel_buffer_byte_count_ = Q_EVT_CAST(TransferFrameEvt)->panel_buffer_byte_count;
-            region_row_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_row_panel_count;
-            region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_col_panel_count;
+            FSP::Frame_transferFrame(this, e);
             status_ = tran(&TransferringFrame);
             break;
         }

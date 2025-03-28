@@ -138,7 +138,7 @@ void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
 void FSP::Arena_displayAllOnFrames(QActive * const ao, QEvt const * e)
 {
   static DisplayFramesEvt displayFramesEvt = {DISPLAY_FRAMES_SIG, 0U, 0U};
-  displayFramesEvt.panel_buffer = &constants::all_on_grayscale_pattern;
+  displayFramesEvt.frame_buffer = BSP::getAllOnFrameBuffer();
   displayFramesEvt.panel_buffer_byte_count = constants::byte_count_per_panel_grayscale;
   QF::PUBLISH(&displayFramesEvt, ao);
 }
@@ -165,7 +165,7 @@ void FSP::Display_setDisplayFrequency(QActive * const ao, QEvt const * e)
 void FSP::Display_displayFrames(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  display->panel_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer;
+  display->frame_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->frame_buffer;
   display->panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer_byte_count;
 }
 
@@ -186,7 +186,7 @@ void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
   static TransferFrameEvt transferFrameEvt = {TRANSFER_FRAME_SIG, 0U, 0U};
-  transferFrameEvt.panel_buffer = display->panel_buffer_;
+  transferFrameEvt.frame_buffer = display->frame_buffer_;
   transferFrameEvt.panel_buffer_byte_count = display->panel_buffer_byte_count_;
   transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
   transferFrameEvt.region_col_panel_count = BSP::getRegionColPanelCountMax();
@@ -410,6 +410,15 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(FRAME_TRANSFERRED_SIG);
 }
 
+void FSP::Frame_transferFrame(QActive * const ao, QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  frame->frame_buffer_ = Q_EVT_CAST(TransferFrameEvt)->frame_buffer;
+  frame->panel_buffer_byte_count_ = Q_EVT_CAST(TransferFrameEvt)->panel_buffer_byte_count;
+  frame->region_row_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_row_panel_count;
+  frame->region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_col_panel_count;
+}
+
 void FSP::Frame_resetIndicies(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
@@ -421,7 +430,7 @@ void FSP::Frame_beginTransferPanelSet(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::enablePanelSetSelectPin(frame->panel_set_row_index_, frame->panel_set_col_index_);
-  BSP::transferPanelSet(frame->panel_buffer_, frame->panel_buffer_byte_count_);
+  BSP::transferPanelSet(frame->frame_buffer_, frame->panel_buffer_byte_count_);
 }
 
 void FSP::Frame_endTransferPanelSet(QActive * const ao, QEvt const * e)

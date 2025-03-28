@@ -203,7 +203,7 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
-   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="(*frame_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="display_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
@@ -454,7 +454,7 @@ This structure of the code is recommended for applications with only one active 
    </attribute>
    <attribute name="panel_set_row_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="panel_set_col_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="(*panel_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="(*frame_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="region_row_panel_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="region_col_panel_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
@@ -471,10 +471,7 @@ This structure of the code is recommended for applications with only one active 
     </initial>
     <state name="Inactive">
      <tran trig="TRANSFER_FRAME" target="../../2/0">
-      <action>panel_buffer_ = Q_EVT_CAST(TransferFrameEvt)-&gt;panel_buffer;
-panel_buffer_byte_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;panel_buffer_byte_count;
-region_row_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_row_panel_count;
-region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_count;</action>
+      <action brief="transferFrame()">FSP::Frame_transferFrame(this, e);</action>
       <tran_glyph conn="36,17,2,0,10">
        <action box="0,1,32,2"/>
       </tran_glyph>
@@ -599,11 +596,11 @@ region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)-&gt;region_col_panel_coun
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
   <class name="DisplayFramesEvt" superclass="qpcpp::QEvt">
-   <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="(*frame_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="TransferFrameEvt" superclass="qpcpp::QEvt">
-   <attribute name="(*panel_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="(*frame_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="region_row_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="region_col_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>

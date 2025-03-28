@@ -37,13 +37,13 @@ class CommandEvt : public QP::QEvt {};
 //.${Shared::DisplayFramesEvt} ...............................................
 class DisplayFramesEvt : public QP::QEvt {
 public:
-    std::uint8_t const (*panel_buffer)[];
+    std::uint8_t const (*frame_buffer)[];
     std::uint8_t panel_buffer_byte_count;
 };
 //.${Shared::TransferFrameEvt} ...............................................
 class TransferFrameEvt : public QP::QEvt {
 public:
-    std::uint8_t const (*panel_buffer)[];
+    std::uint8_t const (*frame_buffer)[];
     std::uint8_t panel_buffer_byte_count;
     std::uint8_t region_row_panel_count;
     std::uint8_t region_col_panel_count;

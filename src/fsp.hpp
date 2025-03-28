@@ -61,6 +61,7 @@ struct FSP
   static void EthernetCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_transferFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_resetIndicies(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_beginTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_endTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);

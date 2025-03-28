@@ -15,8 +15,6 @@ struct BSP {
   static void initializeArena();
   static void initializeFrame();
 
-  static String processStringCommand(String command);
-
   static bool beginSerial();
   static bool pollSerialCommand();
   static uint8_t readSerialByte();
@@ -28,8 +26,7 @@ struct BSP {
   static bool createEthernetServerConnection();
   static void writeEthernetBinaryResponse(void * connection, uint8_t response[AC::constants::byte_count_per_response_max], uint8_t response_byte_count);
 
-  static void displayFrame();
-
+  static uint8_t *getAllOnFrameBuffer();
   static uint8_t getRegionRowPanelCountMax();
   static uint8_t getRegionColPanelCountMax();
 
