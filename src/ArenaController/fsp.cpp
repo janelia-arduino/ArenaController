@@ -24,6 +24,9 @@ static QEvt const ethernetServerConnectedEvt = {ETHERNET_SERVER_CONNECTED_SIG, 0
 
 static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
 static QEvt const frameTransferredEvt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
+static QEvt const processBinaryCommandEvt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U};
+static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
+static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
 static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
 
 //----------------------------------------------------------------------------
@@ -56,6 +59,9 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(TRANSFER_FRAME_SIG, nullptr);
   QS_SIG_DICTIONARY(SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
+  QS_SIG_DICTIONARY(PROCESS_BINARY_COMMAND_SIG, nullptr);
+  QS_SIG_DICTIONARY(PROCESS_STRING_COMMAND_SIG, nullptr);
+  QS_SIG_DICTIONARY(PROCESS_STREAM_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(COMMAND_PROCESSED_SIG, nullptr);
 
   // user record dictionaries
@@ -253,6 +259,7 @@ void FSP::SerialCommandInterface_processStringCommand(QActive * const ao, QEvt c
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   FSP::processStringCommand(sci->string_command_, sci->string_response_);
+  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
 }
 
 void FSP::SerialCommandInterface_writeSerialStringResponse(QActive * const ao, QEvt const * e)
@@ -269,6 +276,9 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
 {
   ao->subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
   ao->subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(PROCESS_BINARY_COMMAND_SIG);
+  ao->subscribe(PROCESS_STRING_COMMAND_SIG);
+  ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
 
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
@@ -315,21 +325,51 @@ void FSP::EthernetCommandInterface_createServerConnection(QActive * const ao, QE
   }
 }
 
-void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
   eci->connection_ = ece->connection;
-  eci->binary_response_byte_count_ = FSP::processBinaryCommand(ece->binary_command,
-    ece->binary_command_byte_count,
+  eci->binary_command_ = ece->binary_command;
+  eci->binary_command_byte_count_ = ece->binary_command_byte_count;
+
+  uint8_t first_command_byte = (uint8_t)(*(eci->binary_command_));
+  if (first_command_byte > 32)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR("string command");
+    QS_END()
+    QF::PUBLISH(&processStringCommandEvt, &l_FSP_ID);
+  }
+  else if (first_command_byte == 32)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR("stream command");
+    QS_END()
+    QF::PUBLISH(&processStreamCommandEvt, &l_FSP_ID);
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR("binary command");
+    QS_END()
+    QF::PUBLISH(&processBinaryCommandEvt, &l_FSP_ID);
+  }
+}
+
+void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  eci->binary_response_byte_count_ = FSP::processBinaryCommand(eci->binary_command_,
+    eci->binary_command_byte_count_,
     eci->binary_response_);
+  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
 }
 
 void FSP::EthernetCommandInterface_writeEthernetBinaryResponse(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   BSP::writeEthernetBinaryResponse(eci->connection_, eci->binary_response_, eci->binary_response_byte_count_);
-  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
 }
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -414,49 +454,24 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     uint8_t response[constants::byte_count_per_response_max])
 {
   uint8_t response_byte_count = 0;
-  if (command_byte_count < 2)
-  {
-    return response_byte_count;
-  }
-  uint8_t first_command_byte = (uint8_t)(*command_buffer);
-  if (first_command_byte > 32)
-  {
-    QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR("string?");
-    QS_END()
-    return response_byte_count;
-  }
-  else if (first_command_byte == 32)
-  {
-    QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR("stream frame");
-    QS_END()
-      return;
-  }
   uint8_t second_command_byte = (uint8_t)(*(command_buffer + 1));
+  response[response_byte_count++] = 2;
+  response[response_byte_count++] = 0;
+  response[response_byte_count++] = second_command_byte;
   switch (second_command_byte)
   {
     case 0x01:
     {
-      response[response_byte_count++] = 2;
-      response[response_byte_count++] = 0;
-      response[response_byte_count++] = second_command_byte;
       QF::PUBLISH(&resetEvt, &l_FSP_ID);
       break;
     }
     case 0x30:
     {
-      response[response_byte_count++] = 2;
-      response[response_byte_count++] = 0;
-      response[response_byte_count++] = second_command_byte;
       QF::PUBLISH(&allOffEvt, &l_FSP_ID);
       break;
     }
     case 0xFF:
     {
-      response[response_byte_count++] = 2;
-      response[response_byte_count++] = 0;
-      response[response_byte_count++] = second_command_byte;
       QF::PUBLISH(&allOnEvt, &l_FSP_ID);
       break;
     }
@@ -508,5 +523,4 @@ void FSP::processStringCommand(const char * command, char * response)
     //uint32_t frequency_hz = command.toInt();
     //BSP::setDisplayFrequency(frequency_hz);
   }
-  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
 }

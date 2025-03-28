@@ -53,6 +53,7 @@ struct FSP
   static void EthernetCommandInterface_initializeEthernet(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_pollEthernet(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_createServerConnection(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_analyzeCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_writeEthernetBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 

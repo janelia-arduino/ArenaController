@@ -296,6 +296,8 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="binary_response_[constants::byte_count_per_response_max]" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="binary_response_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="connection_" type="void *" visibility="0x00" properties="0x00"/>
+   <attribute name="binary_command_" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
+   <attribute name="binary_command_byte_count_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <operation name="EthernetCommandInterface" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;EthernetCommandInterface::initial)),
     ethernet_time_evt_(this, ETHERNET_TIMEOUT_SIG, 0U)</code>
@@ -324,13 +326,13 @@ This structure of the code is recommended for applications with only one active 
       </initial_glyph>
      </initial>
      <tran trig="DEACTIVATE_ETHERNET_COMMAND_INTERFACE" target="../../1">
-      <tran_glyph conn="15,41,3,3,-5,-22,45">
+      <tran_glyph conn="18,41,3,3,-12,-22,49">
        <action box="-1,-24,39,2"/>
       </tran_glyph>
      </tran>
      <tran trig="ETHERNET_TIMEOUT">
       <action brief="pollEthernet()">FSP::EthernetCommandInterface_pollEthernet(this, e);</action>
-      <tran_glyph conn="15,37,3,-1,29">
+      <tran_glyph conn="18,37,3,-1,28">
        <action box="0,-2,34,3"/>
       </tran_glyph>
      </tran>
@@ -354,10 +356,10 @@ This structure of the code is recommended for applications with only one active 
         <action box="3,-2,32,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../7">
-       <action brief="processBinaryCommand()">FSP::EthernetCommandInterface_processBinaryCommand(this, e);</action>
-       <tran_glyph conn="24,76,2,3,14,33">
-        <action box="4,14,29,5"/>
+      <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../8">
+       <action brief="analyzeCommand()">FSP::EthernetCommandInterface_analyzeCommand(this, e);</action>
+       <tran_glyph conn="24,76,2,0,20">
+        <action box="1,15,29,5"/>
        </tran_glyph>
       </tran>
       <state_glyph node="21,64,29,12"/>
@@ -384,18 +386,27 @@ This structure of the code is recommended for applications with only one active 
       </tran>
       <state_glyph node="86,64,18,12"/>
      </state>
-     <state name="WritingResponse">
-      <entry brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeEthernetBinaryResponse(this, e);</entry>
+     <state name="ProcessingBinaryCommand">
+      <entry brief="processBinaryCommand()">FSP::EthernetCommandInterface_processBinaryCommand(this, e);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
-       <tran_glyph conn="57,86,3,2,-28,-10">
-        <action box="-27,-2,21,4"/>
+       <action brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeEthernetBinaryResponse(this, e);</action>
+       <tran_glyph conn="53,89,3,2,-27,-13">
+        <action box="-26,-5,21,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="57,82,25,10">
-       <entry box="1,2,21,2"/>
+      <state_glyph node="53,87,23,11">
+       <entry box="1,2,21,3"/>
       </state_glyph>
      </state>
-     <state_glyph node="15,28,99,71">
+     <state name="ChoosingCommandProcessor">
+      <tran trig="PROCESS_BINARY_COMMAND" target="../../7">
+       <tran_glyph conn="44,101,1,2,14,-3">
+        <action box="0,0,25,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="20,96,24,14"/>
+     </state>
+     <state_glyph node="18,28,96,85">
       <entry box="1,2,24,2"/>
       <exit box="1,4,24,2"/>
      </state_glyph>

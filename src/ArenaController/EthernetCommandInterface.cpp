@@ -62,7 +62,8 @@ Q_STATE_DEF(EthernetCommandInterface, initial) {
     QS_FUN_DICTIONARY(&EthernetCommandInterface::WaitingForNewCommand);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::CreatingServerConnection);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
-    QS_FUN_DICTIONARY(&EthernetCommandInterface::WritingResponse);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingBinaryCommand);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::ChoosingCommandProcessor);
 
     return tran(&Inactive);
 }
@@ -154,8 +155,8 @@ Q_STATE_DEF(EthernetCommandInterface, WaitingForNewCommand) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
         case ETHERNET_COMMAND_AVAILABLE_SIG: {
-            FSP::EthernetCommandInterface_processBinaryCommand(this, e);
-            status_ = tran(&WritingResponse);
+            FSP::EthernetCommandInterface_analyzeCommand(this, e);
+            status_ = tran(&ChoosingCommandProcessor);
             break;
         }
         default: {
@@ -203,19 +204,36 @@ Q_STATE_DEF(EthernetCommandInterface, Waiting) {
     }
     return status_;
 }
-//.${AOs::EthernetCommandI~::SM::Active::WritingResponse} ....................
-Q_STATE_DEF(EthernetCommandInterface, WritingResponse) {
+//.${AOs::EthernetCommandI~::SM::Active::ProcessingBinaryCommand} ............
+Q_STATE_DEF(EthernetCommandInterface, ProcessingBinaryCommand) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::EthernetCommandI~::SM::Active::WritingResponse}
+        //.${AOs::EthernetCommandI~::SM::Active::ProcessingBinaryCommand}
         case Q_ENTRY_SIG: {
-            FSP::EthernetCommandInterface_writeEthernetBinaryResponse(this, e);
+            FSP::EthernetCommandInterface_processBinaryCommand(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::EthernetCommandI~::SM::Active::WritingResponse::COMMAND_PROCESSED}
+        //.${AOs::EthernetCommandI~::SM::Active::ProcessingBinary~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
+            FSP::EthernetCommandInterface_writeEthernetBinaryResponse(this, e);
             status_ = tran(&WaitingForNewCommand);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::EthernetCommandI~::SM::Active::ChoosingCommandProcessor} ...........
+Q_STATE_DEF(EthernetCommandInterface, ChoosingCommandProcessor) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::EthernetCommandI~::SM::Active::ChoosingCommandP~::PROCESS_BINARY_COMMAND}
+        case PROCESS_BINARY_COMMAND_SIG: {
+            status_ = tran(&ProcessingBinaryCommand);
             break;
         }
         default: {

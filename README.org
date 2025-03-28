@@ -17,6 +17,7 @@
 - References:
   - https://reiserlab.github.io/Modular-LED-Display/
   - https://github.com/floesche/LED-Display_G4_Hardware_Arena
+  - https://github.com/leburnett/G4_Display_Tools
   - https://www.pjrc.com/store/teensy41.html
   - https://www.pjrc.com/store/ethernet_kit.html
   - https://github.com/QuantumLeaps/qp-arduino
