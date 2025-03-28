@@ -24,9 +24,10 @@ constexpr uint32_t display_frequency_hz_default = 200;
 
 // Commands
 constexpr uint16_t string_command_length_max = 512;
-constexpr byte first_command_byte_max_value_binary = 32;
-constexpr byte byte_count_per_command_max = 16;
+constexpr uint8_t first_command_byte_max_value_binary = 0x32;
+constexpr uint8_t byte_count_per_command_max = 16;
 constexpr char command_termination_character = '\n';
+constexpr uint8_t stream_header_byte_count = 7;
 
 // Response
 constexpr uint16_t string_response_length_max = 512;

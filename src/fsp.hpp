@@ -54,8 +54,11 @@ struct FSP
   static void EthernetCommandInterface_pollEthernet(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_createServerConnection(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_analyzeCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_updateStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static bool EthernetCommandInterface_ifStreamCommandComplete(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void EthernetCommandInterface_writeEthernetBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_resetIndicies(QP::QActive * const ao, QP::QEvt const * e);
@@ -72,6 +75,7 @@ struct FSP
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,
     uint8_t response[AC::constants::byte_count_per_response_max]);
+  static void processStreamCommand(uint8_t const * command_buffer, uint32_t command_byte_count);
   static void processStringCommand(const char * command, char * response);
 };
 

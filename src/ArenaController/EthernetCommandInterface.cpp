@@ -64,6 +64,7 @@ Q_STATE_DEF(EthernetCommandInterface, initial) {
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingBinaryCommand);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ChoosingCommandProcessor);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingStreamCommand);
 
     return tran(&Inactive);
 }
@@ -216,7 +217,7 @@ Q_STATE_DEF(EthernetCommandInterface, ProcessingBinaryCommand) {
         }
         //.${AOs::EthernetCommandI~::SM::Active::ProcessingBinary~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
-            FSP::EthernetCommandInterface_writeEthernetBinaryResponse(this, e);
+            FSP::EthernetCommandInterface_writeBinaryResponse(this, e);
             status_ = tran(&WaitingForNewCommand);
             break;
         }
@@ -234,6 +235,42 @@ Q_STATE_DEF(EthernetCommandInterface, ChoosingCommandProcessor) {
         //.${AOs::EthernetCommandI~::SM::Active::ChoosingCommandP~::PROCESS_BINARY_COMMAND}
         case PROCESS_BINARY_COMMAND_SIG: {
             status_ = tran(&ProcessingBinaryCommand);
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::ChoosingCommandP~::PROCESS_STREAM_COMMAND}
+        case PROCESS_STREAM_COMMAND_SIG: {
+            status_ = tran(&ProcessingStreamCommand);
+            break;
+        }
+        default: {
+            status_ = super(&Active);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::EthernetCommandI~::SM::Active::ProcessingStreamCommand} ............
+Q_STATE_DEF(EthernetCommandInterface, ProcessingStreamCommand) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::COMMAND_PROCESSED}
+        case COMMAND_PROCESSED_SIG: {
+            FSP::EthernetCommandInterface_writeBinaryResponse(this, e);
+            status_ = tran(&WaitingForNewCommand);
+            break;
+        }
+        //.${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_COMMAND_AVAILABLE}
+        case ETHERNET_COMMAND_AVAILABLE_SIG: {
+            FSP::EthernetCommandInterface_updateStreamCommand(this, e);
+            //.${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_COMMAND~::[ifStreamCommandComplete()]}
+            if (FSP::EthernetCommandInterface_ifStreamCommandComplete(this, e)) {
+                FSP::EthernetCommandInterface_processStreamCommand(this, e);
+                status_ = Q_RET_HANDLED;
+            }
+            //.${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_COMMAND~::[else]}
+            else {
+                status_ = Q_RET_HANDLED;
+            }
             break;
         }
         default: {
