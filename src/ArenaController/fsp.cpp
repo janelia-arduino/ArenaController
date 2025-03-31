@@ -78,15 +78,15 @@ void FSP::ArenaController_setup()
   QS_USR_DICTIONARY(USER_COMMENT);
 
   // setup the QS filters...
-  // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records ON
-  // QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records ON
-  QS_GLB_FILTER(QP::QS_QEP_STATE_ENTRY);
-  QS_GLB_FILTER(QP::QS_QEP_STATE_EXIT);
-  QS_GLB_FILTER(QP::QS_QEP_TRAN);
+  QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records ON
+  QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records ON
+  // QS_GLB_FILTER(QP::QS_QEP_STATE_ENTRY);
+  // QS_GLB_FILTER(QP::QS_QEP_STATE_EXIT);
+  // QS_GLB_FILTER(QP::QS_QEP_TRAN);
   // QS_GLB_FILTER(QP::QS_QEP_INTERN_TRAN);
-  // QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
-  QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
-  QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
+  QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
+  // QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
+  // QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
 
   // init publish-subscribe
   static QSubscrList subscrSto[MAX_PUB_SIG];
@@ -126,7 +126,7 @@ void FSP::ArenaController_setup()
   QS_LOC_FILTER(-AO_Watchdog->m_prio);
   QS_LOC_FILTER(-AO_Display->m_prio);
   QS_LOC_FILTER(-AO_Frame->m_prio);
-  // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
+  QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
   QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio);
 }
 
