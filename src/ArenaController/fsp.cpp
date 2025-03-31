@@ -10,6 +10,7 @@ static QSpyId const l_FSP_ID = {0U}; // QSpy source ID
 static CommandEvt const resetEvt = {RESET_SIG, 0U, 0U};
 static CommandEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
 static CommandEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
+static CommandEvt const streamFrameEvt = {STREAM_FRAME_SIG, 0U, 0U};
 
 static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
 static QEvt const frameFilledEvt = {FRAME_FILLED_SIG, 0U, 0U};
@@ -344,7 +345,7 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
   eci->binary_command_ = ece->binary_command;
   eci->binary_command_byte_count_ = ece->binary_command_byte_count;
 
-  uint8_t first_command_byte = (uint8_t)(*(eci->binary_command_));
+  uint8_t first_command_byte = (uint8_t)(eci->binary_command_[0]);
   if (first_command_byte > constants::first_command_byte_max_value_binary)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -376,6 +377,7 @@ void FSP::EthernetCommandInterface_updateStreamCommand(QActive * const ao, QEvt 
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
+  eci->binary_command_ = ece->binary_command;
   eci->binary_command_byte_count_ = ece->binary_command_byte_count;
 }
 
@@ -440,12 +442,19 @@ void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 
 void FSP::Frame_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
 {
-  // Frame * const frame = static_cast<Frame * const>(ao);
-  // BSP::fillFrameBufferWithAllOn(frame->buffer_,
-  //   frame->buffer_byte_count_,
-  //   frame->panel_byte_count_,
-  //   frame->region_row_panel_count_,
-  //   frame->region_col_panel_count_);
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("begin fill");
+  QS_END()
+  Frame * const frame = static_cast<Frame * const>(ao);
+  BSP::fillFrameBufferWithStream(frame->buffer_,
+    frame->buffer_byte_count_,
+    frame->panel_byte_count_,
+    frame->region_row_panel_count_,
+    frame->region_col_panel_count_);
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("end fill");
+    QS_U32(8, frame->buffer_byte_count_);
+  QS_END()
   QF::PUBLISH(&frameFilledEvt, ao);
 }
 
@@ -553,6 +562,16 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 
 void FSP::processStreamCommand(uint8_t const * command_buffer, uint32_t command_byte_count)
 {
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("begin decode");
+    QS_U32(8, command_byte_count);
+  QS_END()
+  uint16_t bytes_decoded = BSP::decodeStreamedFrame(command_buffer, command_byte_count);
+  QF::PUBLISH(&streamFrameEvt, &l_FSP_ID);
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("end decode");
+    QS_U32(8, bytes_decoded);
+  QS_END()
 }
 
 void FSP::processStringCommand(const char * command, char * response)

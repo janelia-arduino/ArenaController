@@ -502,6 +502,12 @@ This structure of the code is recommended for applications with only one active 
        <action box="0,-2,30,4"/>
       </tran_glyph>
      </tran>
+     <tran trig="FILL_FRAME_BUFFER_WITH_STREAM">
+      <action brief="fillFrameBufferWithStream()">FSP::Frame_fillFrameBufferWithStream(this, e);</action>
+      <tran_glyph conn="11,22,3,-1,32">
+       <action box="0,-2,30,4"/>
+      </tran_glyph>
+     </tran>
      <state_glyph node="11,8,38,29"/>
     </state>
     <state name="Active">

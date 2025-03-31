@@ -77,6 +77,12 @@ Q_STATE_DEF(Frame, Inactive) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //.${AOs::Frame::SM::Inactive::FILL_FRAME_BUFFER_WITH_STREAM}
+        case FILL_FRAME_BUFFER_WITH_STREAM_SIG: {
+            FSP::Frame_fillFrameBufferWithStream(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;
