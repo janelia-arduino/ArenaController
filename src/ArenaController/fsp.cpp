@@ -354,8 +354,8 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
   }
   else if (first_command_byte == constants::first_command_byte_max_value_binary)
   {
-    uint32_t low_byte = (uint8_t)(*(eci->binary_command_ + 1));
-    uint32_t high_byte = (uint8_t)(*(eci->binary_command_ + 2));
+    uint32_t low_byte = (uint8_t)(eci->binary_command_[1]);
+    uint32_t high_byte = (uint8_t)(eci->binary_command_[2]);
     eci->binary_command_byte_count_claim_ = (high_byte << constants::bit_count_per_byte) | low_byte;
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("stream command");
@@ -524,7 +524,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     uint8_t response[constants::byte_count_per_response_max])
 {
   uint8_t response_byte_count = 0;
-  uint8_t second_command_byte = (uint8_t)(*(command_buffer + 1));
+  uint8_t second_command_byte = (uint8_t)(command_buffer[1]);
   response[response_byte_count++] = 2;
   response[response_byte_count++] = 0;
   response[response_byte_count++] = second_command_byte;
