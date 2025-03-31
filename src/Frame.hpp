@@ -33,11 +33,12 @@ public:
     static Frame instance;
     std::uint8_t panel_set_row_index_;
     std::uint8_t panel_set_col_index_;
-    std::uint8_t const (*frame_buffer_)[];
+    std::uint8_t * buffer_;
     std::uint8_t region_row_panel_count_;
     std::uint8_t region_col_panel_count_;
-    std::uint8_t panel_buffer_byte_count_;
-    QP::QHsm * regions_[constants::region_count_per_frame_max];
+    std::uint8_t panel_byte_count_;
+    std::uint16_t buffer_byte_count_;
+    std::uint16_t buffer_position_;
 
 public:
     Frame();

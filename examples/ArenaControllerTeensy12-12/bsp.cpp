@@ -206,37 +206,14 @@ struct PanelArray
   Panel panels[constants::panel_count_per_frame_row_max][constants::panel_count_per_frame_col_max];
 };
 
-static uint8_t all_on_frame_buffer[constants::byte_count_per_frame_grayscale_max];
+// managed by Frame active object
+// do not manipulate directly
+static uint8_t frame_buffer[constants::byte_count_per_frame_grayscale_max];
 
 //----------------------------------------------------------------------------
 // Local functions
 void watchdogCallback ()
 {
-}
-
-void fillAllOnFrameBuffer()
-{
-  uint16_t buffer_position = 0;
-  for (uint8_t panel_row_index = 0; panel_row_index<constants::panel_count_per_frame_row_max; ++panel_row_index)
-  {
-    for (uint8_t panel_col_index = 0; panel_col_index<constants::panel_count_per_frame_col_max; ++panel_col_index)
-    {
-      for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
-      {
-        for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
-        {
-          all_on_frame_buffer[buffer_position++] = 1;
-          for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
-          {
-            for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
-            {
-              all_on_frame_buffer[buffer_position++] = 255;
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 //----------------------------------------------------------------------------
@@ -250,8 +227,6 @@ void BSP::init()
   // setup pins
   pinMode(LED_BUILTIN, OUTPUT);
   ledOff();
-
-  fillAllOnFrameBuffer();
 
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
@@ -292,29 +267,6 @@ void BSP::initializeArena()
   digitalWriteFast(constants::reset_pin, LOW);
 }
 
-void transferPanelCompleteCallback(EventResponderRef event_responder)
-{
-  ++transfer_panel_complete_count;
-  if (transfer_panel_complete_count == constants::region_count_per_frame)
-  {
-    QF::PUBLISH(&panelSetTransferredEvt, &l_BSP_ID);
-  }
-}
-
-void BSP::initializeFrame()
-{
-  transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);
-  for (uint8_t panel_set_col_index = 0; panel_set_col_index<constants::region_col_panel_count_max; ++panel_set_col_index)
-  {
-    for (uint8_t panel_set_row_index = 0; panel_set_row_index<constants::region_row_panel_count_max; ++panel_set_row_index)
-    {
-      const uint8_t & pss_pin = constants::panel_set_select_pins[panel_set_row_index][panel_set_col_index];
-      pinMode(pss_pin, OUTPUT);
-      digitalWriteFast(pss_pin, HIGH);
-    }
-  }
-}
-
 bool BSP::beginSerial()
 {
   serial_communication_interface_stream.begin(constants::serial_baud_rate);
@@ -348,34 +300,6 @@ void BSP::writeSerialStringResponse(char *response)
   serial_communication_interface_stream.println(response);
 }
 
-// void BSP::readSerialStringCommand(uint8_t first_byte)
-// {
-//     String command_tail = serial_communication_interface_stream.readStringUntil('\n');
-//     String command_string = String(String((char)first_byte) + command_tail);
-//     // size_t bytes_available = serial_communication_interface_stream.available();
-//     // byte command_byte_array[bytes_available];
-//     // Serial.readBytes(command_byte_array, bytes_available);
-
-//     // char command_str[bytes_available + 2];
-//     // command_str[0] = first_byte;
-//     // // memcpy(command_str + 1, command_byte_array, bytes_available);
-//     // // memcpy(command_str, command_byte_array, bytes_available);
-//     // command_str[bytes_available] = 0;
-//     // String command_string = String(command_str);
-//     String response = processCommandString(command_string);
-//     Serial.println(response);
-//     QF::PUBLISH(&commandProcessedEvt, &l_BSP_ID);
-//    return;
-
-//   // size_t bytes_available = serial_communication_interface_stream.available();
-//   // if (bytes_available)
-//   // {
-
-//     // byte command_byte_array[bytes_available];
-//     // Serial.readBytes(command_byte_array, bytes_available);
-//   // }
-// }
-
 void log_fn(char ch, void *param)
 {
   if ((ch == '\n') || (log_str_pos == (constants::string_log_length_max - 1)))
@@ -405,6 +329,7 @@ void BSP::pollEthernet()
 {
   mongoose_poll();
 }
+
 void sfn(struct mg_connection *c, int ev, void *ev_data)
 {
   if (ev == MG_EV_OPEN && c->is_listening == 1)
@@ -466,18 +391,65 @@ void BSP::writeEthernetBinaryResponse(void * connection, uint8_t response[consta
   r->len = 0;
 }
 
-uint8_t *BSP::getAllOnFrameBuffer()
+void transferPanelCompleteCallback(EventResponderRef event_responder)
 {
-  return all_on_frame_buffer;
-}
-uint8_t BSP::getRegionRowPanelCountMax()
-{
-  return constants::region_row_panel_count_max;
+  ++transfer_panel_complete_count;
+  if (transfer_panel_complete_count == constants::region_count_per_frame)
+  {
+    QF::PUBLISH(&panelSetTransferredEvt, &l_BSP_ID);
+  }
 }
 
-uint8_t BSP::getRegionColPanelCountMax()
+void BSP::initializeFrame()
 {
-  return constants::region_col_panel_count_max;
+  transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);
+  for (uint8_t panel_set_col_index = 0; panel_set_col_index<constants::region_col_panel_count_max; ++panel_set_col_index)
+  {
+    for (uint8_t panel_set_row_index = 0; panel_set_row_index<constants::region_row_panel_count_max; ++panel_set_row_index)
+    {
+      const uint8_t & pss_pin = constants::panel_set_select_pins[panel_set_row_index][panel_set_col_index];
+      pinMode(pss_pin, OUTPUT);
+      digitalWriteFast(pss_pin, HIGH);
+    }
+  }
+}
+
+uint8_t * BSP::getFrameBuffer()
+{
+  return frame_buffer;
+}
+
+void BSP::fillFrameBufferAllOn(uint8_t * buffer,
+  uint16_t & buffer_byte_count,
+  uint8_t & panel_byte_count,
+  uint8_t & region_row_panel_count,
+  uint8_t & region_col_panel_count)
+{
+  uint16_t buffer_position = 0;
+  for (uint8_t panel_row_index = 0; panel_row_index<constants::panel_count_per_frame_row_max; ++panel_row_index)
+  {
+    for (uint8_t panel_col_index = 0; panel_col_index<constants::panel_count_per_frame_col_max; ++panel_col_index)
+    {
+      for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
+      {
+        for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
+        {
+          buffer[buffer_position++] = 1;
+          for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
+          {
+            for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
+            {
+              buffer[buffer_position++] = 255;
+            }
+          }
+        }
+      }
+    }
+  }
+  buffer_byte_count = buffer_position;
+  panel_byte_count = constants::byte_count_per_panel_grayscale;
+  region_row_panel_count = constants::region_row_panel_count_max;
+  region_col_panel_count = constants::region_col_panel_count_max;
 }
 
 void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
@@ -489,9 +461,6 @@ void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
   }
   const uint8_t & pss_pin = constants::panel_set_select_pins[row_index][col_index];
   digitalWriteFast(pss_pin, LOW);
-  // Serial.print("setting ");
-  // Serial.print(pss_pin);
-  // Serial.println(" LOW");
 }
 
 void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
@@ -503,18 +472,16 @@ void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
     SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->endTransaction();
   }
-  // Serial.print("setting ");
-  // Serial.print(pss_pin);
-  // Serial.println(" HIGH");
 }
 
-void BSP::transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count)
+void BSP::transferPanelSet(const uint8_t * buffer, uint16_t & buffer_position, uint8_t panel_byte_count)
 {
   transfer_panel_complete_count = 0;
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
     SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
-    spi_ptr->transfer(panel_buffer, NULL, panel_buffer_byte_count, transfer_panel_complete_event);
+    spi_ptr->transfer((buffer + buffer_position), NULL, panel_byte_count, transfer_panel_complete_event);
+    buffer_position += panel_byte_count;
   }
 }
 

@@ -34,20 +34,6 @@ namespace AC {
 
 //.${Shared::CommandEvt} .....................................................
 class CommandEvt : public QP::QEvt {};
-//.${Shared::DisplayFramesEvt} ...............................................
-class DisplayFramesEvt : public QP::QEvt {
-public:
-    std::uint8_t const (*frame_buffer)[];
-    std::uint8_t panel_buffer_byte_count;
-};
-//.${Shared::TransferFrameEvt} ...............................................
-class TransferFrameEvt : public QP::QEvt {
-public:
-    std::uint8_t const (*frame_buffer)[];
-    std::uint8_t panel_buffer_byte_count;
-    std::uint8_t region_row_panel_count;
-    std::uint8_t region_col_panel_count;
-};
 //.${Shared::SetDisplayFrequencyEvt} .........................................
 class SetDisplayFrequencyEvt : public QP::QEvt {
 public:
@@ -66,8 +52,6 @@ extern QP::QActive * const AO_SerialCommandInterface;
 extern QP::QActive * const AO_EthernetCommandInterface;
 extern QP::QActive * const AO_Frame;
 extern QP::QActive * const AO_Watchdog;
-//.${Shared::getRegionInstance} ..............................................
-QP::QHsm * getRegionInstance(std::uint8_t id) ;
 
 } // namespace AC
 //.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

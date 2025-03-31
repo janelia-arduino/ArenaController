@@ -13,7 +13,6 @@ struct BSP {
   static void feedWatchdog();
 
   static void initializeArena();
-  static void initializeFrame();
 
   static bool beginSerial();
   static bool pollSerialCommand();
@@ -26,13 +25,16 @@ struct BSP {
   static bool createEthernetServerConnection();
   static void writeEthernetBinaryResponse(void * connection, uint8_t response[AC::constants::byte_count_per_response_max], uint8_t response_byte_count);
 
-  static uint8_t *getAllOnFrameBuffer();
-  static uint8_t getRegionRowPanelCountMax();
-  static uint8_t getRegionColPanelCountMax();
-
+  static void initializeFrame();
+  static uint8_t * getFrameBuffer();
+  static void fillFrameBufferAllOn(uint8_t * buffer,
+    uint16_t & buffer_byte_count,
+    uint8_t & panel_byte_count,
+    uint8_t & region_row_panel_count,
+    uint8_t & region_col_panel_count);
   static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
   static void disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
-  static void transferPanelSet(const uint8_t (*panel_buffer)[], uint8_t panel_buffer_byte_count);
+  static void transferPanelSet(const uint8_t * buffer, uint16_t & buffer_position, uint8_t panel_byte_count);
 
 };
 

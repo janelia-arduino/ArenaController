@@ -36,34 +36,40 @@ This structure of the code is recommended for applications with only one active 
     <state name="ArenaOn">
      <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
      <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
-     <initial target="../4">
+     <initial target="../5">
       <initial_glyph conn="39,21,4,0,3">
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
-     <tran trig="ALL_OFF" target="../4">
+     <tran trig="ALL_OFF" target="../5">
       <tran_glyph conn="10,27,3,3,11">
-       <action box="0,-2,10,2"/>
+       <action box="1,-2,10,2"/>
       </tran_glyph>
      </tran>
-     <tran trig="RESET" target="../4">
-      <tran_glyph conn="10,38,3,2,13,-3">
-       <action box="0,-2,10,2"/>
+     <tran trig="RESET" target="../5">
+      <tran_glyph conn="10,31,3,3,11">
+       <action box="1,-2,10,2"/>
+      </tran_glyph>
+     </tran>
+     <tran trig="ALL_ON" target="../4">
+      <tran_glyph conn="10,42,3,3,11">
+       <action box="1,-2,10,2"/>
       </tran_glyph>
      </tran>
      <state name="AllOn">
-      <entry brief="displayAllOnFrames()">FSP::Arena_displayAllOnFrames(this, e);</entry>
-      <state_glyph node="21,46,35,10">
-       <entry box="1,2,28,2"/>
+      <entry brief="fillFrameBufferAllOn()">FSP::Arena_fillFrameBufferAllOn(this, e);</entry>
+      <tran trig="FRAME_FILLED">
+       <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
+       <tran_glyph conn="21,45,3,-1,22">
+        <action box="0,-2,17,4"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="21,38,35,11">
+       <entry box="1,2,18,2"/>
       </state_glyph>
      </state>
      <state name="AllOff">
       <entry brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</entry>
-      <tran trig="ALL_ON" target="../../3">
-       <tran_glyph conn="33,35,2,0,11">
-        <action box="1,4,10,2"/>
-       </tran_glyph>
-      </tran>
       <state_glyph node="21,24,35,11">
        <entry box="1,2,27,2"/>
       </state_glyph>
@@ -203,9 +209,7 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
-   <attribute name="(*frame_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
    <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
-   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="display_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial)),
@@ -232,7 +236,6 @@ This structure of the code is recommended for applications with only one active 
      </tran>
      <state name="Inactive">
       <tran trig="DISPLAY_FRAMES" target="../../3/1">
-       <action brief="displayFrames()">FSP::Display_displayFrames(this, e);</action>
        <tran_glyph conn="41,20,2,0,10">
         <action box="1,1,34,2"/>
        </tran_glyph>
@@ -454,11 +457,12 @@ This structure of the code is recommended for applications with only one active 
    </attribute>
    <attribute name="panel_set_row_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="panel_set_col_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="(*frame_buffer_)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
+   <attribute name="buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <attribute name="region_row_panel_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="region_col_panel_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="panel_buffer_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="regions_[constants::region_count_per_frame_max]" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
+   <attribute name="panel_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="buffer_byte_count_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="buffer_position_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
@@ -471,24 +475,29 @@ This structure of the code is recommended for applications with only one active 
     </initial>
     <state name="Inactive">
      <tran trig="TRANSFER_FRAME" target="../../2/0">
-      <action brief="transferFrame()">FSP::Frame_transferFrame(this, e);</action>
-      <tran_glyph conn="36,17,2,0,10">
-       <action box="0,1,32,2"/>
+      <tran_glyph conn="36,37,2,0,14">
+       <action box="1,3,32,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="28,8,16,9"/>
+     <tran trig="FILL_FRAME_BUFFER_ALL_ON">
+      <action brief="fillFrameBufferAllOn()">FSP::Frame_fillFrameBufferAllOn(this, e);</action>
+      <tran_glyph conn="11,16,3,-1,26">
+       <action box="0,-2,24,5"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="11,8,33,29"/>
     </state>
     <state name="Active">
-     <entry brief="resetIndicies();">FSP::Frame_resetIndicies(this, e);</entry>
+     <entry brief="reset();">FSP::Frame_reset(this, e);</entry>
      <state name="TransferringFrame">
       <initial target="../2">
-       <initial_glyph conn="40,31,4,0,3">
+       <initial_glyph conn="40,55,4,0,3">
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
       <tran trig="FRAME_TRANSFERRED" target="../../../1">
-       <tran_glyph conn="81,34,1,1,8,-21,-45">
-        <action box="-25,-24,20,2"/>
+       <tran_glyph conn="81,58,1,1,8,-45,-45">
+        <action box="-22,-48,20,2"/>
        </tran_glyph>
       </tran>
       <state name="TransferringPanelSet">
@@ -497,33 +506,33 @@ This structure of the code is recommended for applications with only one active 
        <tran trig="PANEL_SET_TRANSFERRED">
         <choice target="../..">
          <guard brief="ifFrameNotTransferred()">FSP::Frame_ifFrameNotTransferred(this, e)</guard>
-         <choice_glyph conn="43,55,5,2,6,-5">
+         <choice_glyph conn="43,79,5,2,6,-5">
           <action box="1,0,26,2"/>
          </choice_glyph>
         </choice>
         <choice>
          <guard brief="else"/>
          <action brief="publishFrameTransferred()">FSP::Frame_publishFrameTransferred(this, e);</action>
-         <choice_glyph conn="43,55,4,-1,4,5">
+         <choice_glyph conn="43,79,4,-1,4,5">
           <action box="6,3,18,6"/>
          </choice_glyph>
         </choice>
-        <tran_glyph conn="38,50,2,-1,5,5">
+        <tran_glyph conn="38,74,2,-1,5,5">
          <action box="-23,2,22,5"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="22,34,50,16">
+       <state_glyph node="22,58,50,16">
         <entry box="1,2,49,2"/>
         <exit box="1,4,48,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="10,27,71,38"/>
+      <state_glyph node="10,51,71,38"/>
      </state>
-     <state_glyph node="7,21,80,49">
+     <state_glyph node="7,45,80,49">
       <entry box="1,2,25,2"/>
      </state_glyph>
     </state>
-    <state_diagram size="96,73"/>
+    <state_diagram size="97,104"/>
    </statechart>
   </class>
   <class name="Watchdog" superclass="qpcpp::QActive">
@@ -573,38 +582,9 @@ This structure of the code is recommended for applications with only one active 
     <state_diagram size="80,70"/>
    </statechart>
   </class>
-  <class name="Region" superclass="qpcpp::QHsm">
-   <attribute name="instances[constants::region_count_per_frame_max]" type="Region" visibility="0x00" properties="0x01">
-    <documentation>static instances (Singletons)</documentation>
-   </attribute>
-   <operation name="Region" type="" visibility="0x00" properties="0x02">
-    <code>  : QHsm(&amp;initial)</code>
-   </operation>
-   <statechart properties="0x02">
-    <initial target="../1">
-     <initial_glyph conn="36,10,4,0,5">
-      <action box="0,-2,10,2"/>
-     </initial_glyph>
-    </initial>
-    <state name="state1">
-     <state_glyph node="24,15,25,15"/>
-    </state>
-    <state_diagram size="80,50"/>
-   </statechart>
-  </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <class name="CommandEvt" superclass="qpcpp::QEvt"/>
-  <class name="DisplayFramesEvt" superclass="qpcpp::QEvt">
-   <attribute name="(*frame_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
-   <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-  </class>
-  <class name="TransferFrameEvt" superclass="qpcpp::QEvt">
-   <attribute name="(*frame_buffer)[]" type="std::uint8_t const" visibility="0x00" properties="0x00"/>
-   <attribute name="panel_buffer_byte_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="region_row_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="region_col_panel_count" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-  </class>
   <class name="SetDisplayFrequencyEvt" superclass="qpcpp::QEvt">
    <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
@@ -631,11 +611,6 @@ This structure of the code is recommended for applications with only one active 
   <attribute name="AO_Watchdog" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Watchdog::instance;</code>
   </attribute>
-  <operation name="getRegionInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
-   <parameter name="id" type="std::uint8_t"/>
-   <code>//Q_REQUIRE(id &lt; Q_DIM(Region::instances));
-return &amp;Region::instances[id];</code>
-  </operation>
  </package>
  <directory name=".">
   <file name="ArenaController.hpp">
@@ -731,19 +706,6 @@ $declare${AOs::Frame}
 //============================================================================
 // generate declaration of the active object
 $declare${AOs::Watchdog}
-
-#endif</text>
-  </file>
-  <file name="Region.hpp">
-   <text>#ifndef REGION_HPP
-#define REGION_HPP
-
-#include &quot;ArenaController.hpp&quot;
-
-
-//============================================================================
-// generate declaration of the active object
-$declare${AOs::Region}
 
 #endif</text>
   </file>
@@ -850,24 +812,6 @@ $define${Shared::AO_Watchdog}
 //============================================================================
 // generate definition of the AO
 $define${AOs::Watchdog}</text>
-  </file>
-  <file name="Region.cpp">
-   <text>#include &quot;Region.hpp&quot;
-
-
-using namespace QP;
-
-// helper function to provide the ID of this mine ............................
-static inline uint8_t REGION_ID(AC::Region const * const me) {
-    return static_cast&lt;uint8_t&gt;(me - &amp;AC::Region::instances[0]);
-}
-
-//============================================================================
-$define${Shared::getRegionInstance}
-
-//============================================================================
-// generate definition of the AO
-$define${AOs::Region}</text>
   </file>
  </directory>
 </model>

@@ -68,8 +68,13 @@ Q_STATE_DEF(Frame, Inactive) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Inactive::TRANSFER_FRAME}
         case TRANSFER_FRAME_SIG: {
-            FSP::Frame_transferFrame(this, e);
             status_ = tran(&TransferringFrame);
+            break;
+        }
+        //.${AOs::Frame::SM::Inactive::FILL_FRAME_BUFFER_ALL_ON}
+        case FILL_FRAME_BUFFER_ALL_ON_SIG: {
+            FSP::Frame_fillFrameBufferAllOn(this, e);
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {
@@ -85,7 +90,7 @@ Q_STATE_DEF(Frame, Active) {
     switch (e->sig) {
         //.${AOs::Frame::SM::Active}
         case Q_ENTRY_SIG: {
-            FSP::Frame_resetIndicies(this, e);
+            FSP::Frame_reset(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

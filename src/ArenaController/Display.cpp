@@ -93,7 +93,6 @@ Q_STATE_DEF(Display, Inactive) {
     switch (e->sig) {
         //.${AOs::Display::SM::Initialized::Inactive::DISPLAY_FRAMES}
         case DISPLAY_FRAMES_SIG: {
-            FSP::Display_displayFrames(this, e);
             status_ = tran(&DisplayingFrames);
             break;
         }

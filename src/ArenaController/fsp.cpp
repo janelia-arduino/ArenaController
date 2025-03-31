@@ -11,6 +11,16 @@ static CommandEvt const resetEvt = {RESET_SIG, 0U, 0U};
 static CommandEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
 static CommandEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
 
+static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
+static QEvt const frameFilledEvt = {FRAME_FILLED_SIG, 0U, 0U};
+static QEvt const displayFramesEvt = {DISPLAY_FRAMES_SIG, 0U, 0U};
+static QEvt const transferFrameEvt = {TRANSFER_FRAME_SIG, 0U, 0U};
+static QEvt const frameTransferredEvt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
+static QEvt const processBinaryCommandEvt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U};
+static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
+static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
+static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
+
 static QEvt const activateSerialCommandInterfaceEvt = {ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateSerialCommandInterfaceEvt = {DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const serialReadyEvt = {SERIAL_READY_SIG, 0U, 0U};
@@ -20,14 +30,8 @@ static QEvt const activateEthernetCommandInterfaceEvt = {ACTIVATE_ETHERNET_COMMA
 static QEvt const deactivateEthernetCommandInterfaceEvt = {DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const ethernetInitializedEvt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetServerConnectedEvt = {ETHERNET_SERVER_CONNECTED_SIG, 0U, 0U};
-// static QEvt const ethernetCommandAvailableEvt = {ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
 
-static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
-static QEvt const frameTransferredEvt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
-static QEvt const processBinaryCommandEvt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U};
-static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
-static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
-static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
+static QEvt const fillFrameBufferAllOnEvt = {FILL_FRAME_BUFFER_ALL_ON_SIG, 0U, 0U};
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -55,6 +59,7 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
   QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
+  QS_SIG_DICTIONARY(FRAME_FILLED_SIG, nullptr);
   QS_SIG_DICTIONARY(DISPLAY_FRAMES_SIG, nullptr);
   QS_SIG_DICTIONARY(TRANSFER_FRAME_SIG, nullptr);
   QS_SIG_DICTIONARY(SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
@@ -69,9 +74,13 @@ void FSP::ArenaController_setup()
   QS_USR_DICTIONARY(USER_COMMENT);
 
   // setup the QS filters...
-  // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records
-  // QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records
-  QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records
+  // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records ON
+  // QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records ON
+  // QS_GLB_FILTER(QP::QS_QEP_STATE_ENTRY);
+  // QS_GLB_FILTER(QP::QS_QEP_STATE_EXIT);
+  // QS_GLB_FILTER(QP::QS_QEP_TRAN);
+  // QS_GLB_FILTER(QP::QS_QEP_INTERN_TRAN);
+  QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
 
   // init publish-subscribe
   static QSubscrList subscrSto[MAX_PUB_SIG];
@@ -108,6 +117,9 @@ void FSP::ArenaController_setup()
     frame_queueSto, Q_DIM(frame_queueSto),
     (void *)0, 0U); // no stack
 
+  QS_LOC_FILTER(-AO_Watchdog->m_prio); /* turn AO_Watchdog OFF */
+  // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio); /* turn AO_EthernetCommandInterface OFF */
+  QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio); /* turn AO_SerialCommandInterface OFF */
 }
 
 void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -116,6 +128,7 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(RESET_SIG);
   ao->subscribe(ALL_ON_SIG);
   ao->subscribe(ALL_OFF_SIG);
+  ao->subscribe(FRAME_FILLED_SIG);
 }
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
@@ -135,12 +148,14 @@ void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
   QF::PUBLISH(&deactivateDisplayEvt, ao);
 }
 
-void FSP::Arena_displayAllOnFrames(QActive * const ao, QEvt const * e)
+void FSP::Arena_displayFrames(QActive * const ao, QEvt const * e)
 {
-  static DisplayFramesEvt displayFramesEvt = {DISPLAY_FRAMES_SIG, 0U, 0U};
-  displayFramesEvt.frame_buffer = BSP::getAllOnFrameBuffer();
-  displayFramesEvt.panel_buffer_byte_count = constants::byte_count_per_panel_grayscale;
   QF::PUBLISH(&displayFramesEvt, ao);
+}
+
+void FSP::Arena_fillFrameBufferAllOn(QActive * const ao, QEvt const * e)
+{
+  AO_Frame->POST(&fillFrameBufferAllOnEvt, &l_FSP_ID);
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -162,13 +177,6 @@ void FSP::Display_setDisplayFrequency(QActive * const ao, QEvt const * e)
   display->display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)->display_frequency_hz;
 }
 
-void FSP::Display_displayFrames(QActive * const ao, QEvt const * e)
-{
-  Display * const display = static_cast<Display * const>(ao);
-  display->frame_buffer_ = Q_EVT_CAST(DisplayFramesEvt)->frame_buffer;
-  display->panel_buffer_byte_count_ = Q_EVT_CAST(DisplayFramesEvt)->panel_buffer_byte_count;
-}
-
 void FSP::Display_armDisplayFrameTimer(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
@@ -184,12 +192,6 @@ void FSP::Display_disarmDisplayFrameTimer(QActive * const ao, QEvt const * e)
 
 void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
 {
-  Display * const display = static_cast<Display * const>(ao);
-  static TransferFrameEvt transferFrameEvt = {TRANSFER_FRAME_SIG, 0U, 0U};
-  transferFrameEvt.frame_buffer = display->frame_buffer_;
-  transferFrameEvt.panel_buffer_byte_count = display->panel_buffer_byte_count_;
-  transferFrameEvt.region_row_panel_count = BSP::getRegionRowPanelCountMax();
-  transferFrameEvt.region_col_panel_count = BSP::getRegionColPanelCountMax();
   QF::PUBLISH(&transferFrameEvt, ao);
 }
 
@@ -404,33 +406,41 @@ void FSP::EthernetCommandInterface_writeBinaryResponse(QActive * const ao, QEvt 
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
+  Frame * const frame = static_cast<Frame * const>(ao);
   BSP::initializeFrame();
+  frame->buffer_ = BSP::getFrameBuffer();
+  frame->buffer_byte_count_ = 0;
   ao->subscribe(TRANSFER_FRAME_SIG);
   ao->subscribe(PANEL_SET_TRANSFERRED_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
+
+  QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_ALL_ON_SIG, ao);
 }
 
-void FSP::Frame_transferFrame(QActive * const ao, QEvt const * e)
+void FSP::Frame_fillFrameBufferAllOn(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  frame->frame_buffer_ = Q_EVT_CAST(TransferFrameEvt)->frame_buffer;
-  frame->panel_buffer_byte_count_ = Q_EVT_CAST(TransferFrameEvt)->panel_buffer_byte_count;
-  frame->region_row_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_row_panel_count;
-  frame->region_col_panel_count_ = Q_EVT_CAST(TransferFrameEvt)->region_col_panel_count;
+  BSP::fillFrameBufferAllOn(frame->buffer_,
+    frame->buffer_byte_count_,
+    frame->panel_byte_count_,
+    frame->region_row_panel_count_,
+    frame->region_col_panel_count_);
+  QF::PUBLISH(&frameFilledEvt, ao);
 }
 
-void FSP::Frame_resetIndicies(QActive * const ao, QEvt const * e)
+void FSP::Frame_reset(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   frame->panel_set_row_index_ = 0;
   frame->panel_set_col_index_ = 0;
+  frame->buffer_position_ = 0;
 }
 
 void FSP::Frame_beginTransferPanelSet(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::enablePanelSetSelectPin(frame->panel_set_row_index_, frame->panel_set_col_index_);
-  BSP::transferPanelSet(frame->frame_buffer_, frame->panel_buffer_byte_count_);
+  BSP::transferPanelSet(frame->buffer_, frame->buffer_position_, frame->panel_byte_count_);
 }
 
 void FSP::Frame_endTransferPanelSet(QActive * const ao, QEvt const * e)

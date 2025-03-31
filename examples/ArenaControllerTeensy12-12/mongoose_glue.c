@@ -9,12 +9,8 @@
 
 static struct leds s_leds = {false};
 void glue_get_leds(struct leds *data) {
-  /* data->led1 = digitalRead(LED_BUILTIN); */
+  *data = s_leds;  // Sync with your device
 }
 void glue_set_leds(struct leds *data) {
-  /* digitalWrite(LED_BUILTIN, data->led1); */
-  /* QS_BEGIN_ID(AC::MONGOOSE_LOG, AC::AO_EthernetCommandInterface->m_prio) */
-  /*   QS_STR("toggle led!"); */
-  /* QS_END() */
-
+  s_leds = *data; // Sync with your device
 }
