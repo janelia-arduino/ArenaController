@@ -31,7 +31,8 @@ static QEvt const deactivateEthernetCommandInterfaceEvt = {DEACTIVATE_ETHERNET_C
 static QEvt const ethernetInitializedEvt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetServerConnectedEvt = {ETHERNET_SERVER_CONNECTED_SIG, 0U, 0U};
 
-static QEvt const fillFrameBufferAllOnEvt = {FILL_FRAME_BUFFER_ALL_ON_SIG, 0U, 0U};
+static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
+static QEvt const fillFrameBufferWithStreamEvt = {FILL_FRAME_BUFFER_WITH_STREAM_SIG, 0U, 0U};
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -58,6 +59,8 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(RESET_SIG, nullptr);
   QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
+  QS_SIG_DICTIONARY(STREAM_FRAME_SIG, nullptr);
+
   QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, nullptr);
   QS_SIG_DICTIONARY(DISPLAY_FRAMES_SIG, nullptr);
@@ -128,6 +131,7 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(RESET_SIG);
   ao->subscribe(ALL_ON_SIG);
   ao->subscribe(ALL_OFF_SIG);
+  ao->subscribe(STREAM_FRAME_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
 }
 
@@ -153,9 +157,14 @@ void FSP::Arena_displayFrames(QActive * const ao, QEvt const * e)
   QF::PUBLISH(&displayFramesEvt, ao);
 }
 
-void FSP::Arena_fillFrameBufferAllOn(QActive * const ao, QEvt const * e)
+void FSP::Arena_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 {
-  AO_Frame->POST(&fillFrameBufferAllOnEvt, &l_FSP_ID);
+  AO_Frame->POST(&fillFrameBufferWithAllOnEvt, &l_FSP_ID);
+}
+
+void FSP::Arena_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
+{
+  AO_Frame->POST(&fillFrameBufferWithStreamEvt, &l_FSP_ID);
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -414,17 +423,29 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(PANEL_SET_TRANSFERRED_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
 
-  QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_ALL_ON_SIG, ao);
+  QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, ao);
+  QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_STREAM_SIG, ao);
 }
 
-void FSP::Frame_fillFrameBufferAllOn(QActive * const ao, QEvt const * e)
+void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  BSP::fillFrameBufferAllOn(frame->buffer_,
+  BSP::fillFrameBufferWithAllOn(frame->buffer_,
     frame->buffer_byte_count_,
     frame->panel_byte_count_,
     frame->region_row_panel_count_,
     frame->region_col_panel_count_);
+  QF::PUBLISH(&frameFilledEvt, ao);
+}
+
+void FSP::Frame_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
+{
+  // Frame * const frame = static_cast<Frame * const>(ao);
+  // BSP::fillFrameBufferWithAllOn(frame->buffer_,
+  //   frame->buffer_byte_count_,
+  //   frame->panel_byte_count_,
+  //   frame->region_row_panel_count_,
+  //   frame->region_col_panel_count_);
   QF::PUBLISH(&frameFilledEvt, ao);
 }
 

@@ -36,28 +36,33 @@ This structure of the code is recommended for applications with only one active 
     <state name="ArenaOn">
      <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
      <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
-     <initial target="../5">
+     <initial target="../6">
       <initial_glyph conn="39,21,4,0,3">
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
-     <tran trig="ALL_OFF" target="../5">
+     <tran trig="ALL_OFF" target="../6">
       <tran_glyph conn="10,27,3,3,11">
        <action box="1,-2,10,2"/>
       </tran_glyph>
      </tran>
-     <tran trig="RESET" target="../5">
+     <tran trig="RESET" target="../6">
       <tran_glyph conn="10,31,3,3,11">
        <action box="1,-2,10,2"/>
       </tran_glyph>
      </tran>
-     <tran trig="ALL_ON" target="../4">
+     <tran trig="ALL_ON" target="../5">
       <tran_glyph conn="10,42,3,3,11">
        <action box="1,-2,10,2"/>
       </tran_glyph>
      </tran>
+     <tran trig="STREAM_FRAME" target="../7">
+      <tran_glyph conn="10,58,3,3,15">
+       <action box="0,-2,14,2"/>
+      </tran_glyph>
+     </tran>
      <state name="AllOn">
-      <entry brief="fillFrameBufferAllOn()">FSP::Arena_fillFrameBufferAllOn(this, e);</entry>
+      <entry brief="fillFrameBufferWithAllOn()">FSP::Arena_fillFrameBufferWithAllOn(this, e);</entry>
       <tran trig="FRAME_FILLED">
        <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
        <tran_glyph conn="21,45,3,-1,22">
@@ -65,12 +70,24 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <state_glyph node="21,38,35,11">
-       <entry box="1,2,18,2"/>
+       <entry box="1,2,23,2"/>
       </state_glyph>
      </state>
      <state name="AllOff">
       <entry brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</entry>
       <state_glyph node="21,24,35,11">
+       <entry box="1,2,27,2"/>
+      </state_glyph>
+     </state>
+     <state name="StreamingFrame">
+      <entry brief="fillFrameBufferWithStream()">FSP::Arena_fillFrameBufferWithStream(this, e);</entry>
+      <tran trig="FRAME_FILLED">
+       <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
+       <tran_glyph conn="25,61,3,-1,21">
+        <action box="0,-2,15,4"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="25,53,37,15">
        <entry box="1,2,27,2"/>
       </state_glyph>
      </state>
@@ -479,13 +496,13 @@ This structure of the code is recommended for applications with only one active 
        <action box="1,3,32,2"/>
       </tran_glyph>
      </tran>
-     <tran trig="FILL_FRAME_BUFFER_ALL_ON">
-      <action brief="fillFrameBufferAllOn()">FSP::Frame_fillFrameBufferAllOn(this, e);</action>
-      <tran_glyph conn="11,16,3,-1,26">
-       <action box="0,-2,24,5"/>
+     <tran trig="FILL_FRAME_BUFFER_WITH_ALL_ON">
+      <action brief="fillFrameBufferWithAllOn()">FSP::Frame_fillFrameBufferWithAllOn(this, e);</action>
+      <tran_glyph conn="11,16,3,-1,32">
+       <action box="0,-2,30,4"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="11,8,33,29"/>
+     <state_glyph node="11,8,38,29"/>
     </state>
     <state name="Active">
      <entry brief="reset();">FSP::Frame_reset(this, e);</entry>
@@ -496,7 +513,7 @@ This structure of the code is recommended for applications with only one active 
        </initial_glyph>
       </initial>
       <tran trig="FRAME_TRANSFERRED" target="../../../1">
-       <tran_glyph conn="81,58,1,1,8,-45,-45">
+       <tran_glyph conn="81,58,1,1,8,-45,-40">
         <action box="-22,-48,20,2"/>
        </tran_glyph>
       </tran>

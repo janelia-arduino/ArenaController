@@ -40,6 +40,7 @@ protected:
     Q_STATE_DECL(ArenaOn);
     Q_STATE_DECL(AllOn);
     Q_STATE_DECL(AllOff);
+    Q_STATE_DECL(StreamingFrame);
 };
 
 } // namespace AC

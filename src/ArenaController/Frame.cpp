@@ -71,9 +71,9 @@ Q_STATE_DEF(Frame, Inactive) {
             status_ = tran(&TransferringFrame);
             break;
         }
-        //.${AOs::Frame::SM::Inactive::FILL_FRAME_BUFFER_ALL_ON}
-        case FILL_FRAME_BUFFER_ALL_ON_SIG: {
-            FSP::Frame_fillFrameBufferAllOn(this, e);
+        //.${AOs::Frame::SM::Inactive::FILL_FRAME_BUFFER_WITH_ALL_ON}
+        case FILL_FRAME_BUFFER_WITH_ALL_ON_SIG: {
+            FSP::Frame_fillFrameBufferWithAllOn(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

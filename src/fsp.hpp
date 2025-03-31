@@ -27,7 +27,8 @@ struct FSP
   static void Arena_deactivateCommandInterfaces(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_deactivateDisplay(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_displayFrames(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_fillFrameBufferAllOn(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_fillFrameBufferWithStream(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_setDisplayFrequency(QP::QActive * const ao, QP::QEvt const * e);
@@ -61,7 +62,8 @@ struct FSP
   static void EthernetCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
-  static void Frame_fillFrameBufferAllOn(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_fillFrameBufferWithStream(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_reset(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_beginTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_endTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);

@@ -419,7 +419,7 @@ uint8_t * BSP::getFrameBuffer()
   return frame_buffer;
 }
 
-void BSP::fillFrameBufferAllOn(uint8_t * buffer,
+void BSP::fillFrameBufferWithAllOn(uint8_t * buffer,
   uint16_t & buffer_byte_count,
   uint8_t & panel_byte_count,
   uint8_t & region_row_panel_count,

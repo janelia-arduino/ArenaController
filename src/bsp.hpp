@@ -27,7 +27,7 @@ struct BSP {
 
   static void initializeFrame();
   static uint8_t * getFrameBuffer();
-  static void fillFrameBufferAllOn(uint8_t * buffer,
+  static void fillFrameBufferWithAllOn(uint8_t * buffer,
     uint16_t & buffer_byte_count,
     uint8_t & panel_byte_count,
     uint8_t & region_row_panel_count,
