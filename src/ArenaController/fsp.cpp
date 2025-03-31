@@ -80,11 +80,13 @@ void FSP::ArenaController_setup()
   // setup the QS filters...
   // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records ON
   // QS_GLB_FILTER(QP::QS_AO_RECORDS); // active object records ON
-  // QS_GLB_FILTER(QP::QS_QEP_STATE_ENTRY);
-  // QS_GLB_FILTER(QP::QS_QEP_STATE_EXIT);
-  // QS_GLB_FILTER(QP::QS_QEP_TRAN);
+  QS_GLB_FILTER(QP::QS_QEP_STATE_ENTRY);
+  QS_GLB_FILTER(QP::QS_QEP_STATE_EXIT);
+  QS_GLB_FILTER(QP::QS_QEP_TRAN);
   // QS_GLB_FILTER(QP::QS_QEP_INTERN_TRAN);
-  QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
+  // QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
+  QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
+  QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
 
   // init publish-subscribe
   static QSubscrList subscrSto[MAX_PUB_SIG];
@@ -121,9 +123,11 @@ void FSP::ArenaController_setup()
     frame_queueSto, Q_DIM(frame_queueSto),
     (void *)0, 0U); // no stack
 
-  QS_LOC_FILTER(-AO_Watchdog->m_prio); /* turn AO_Watchdog OFF */
-  // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio); /* turn AO_EthernetCommandInterface OFF */
-  QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio); /* turn AO_SerialCommandInterface OFF */
+  QS_LOC_FILTER(-AO_Watchdog->m_prio);
+  QS_LOC_FILTER(-AO_Display->m_prio);
+  QS_LOC_FILTER(-AO_Frame->m_prio);
+  // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
+  QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio);
 }
 
 void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -150,6 +154,9 @@ void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
 {
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("deactivating display");
+  QS_END()
   QF::PUBLISH(&deactivateDisplayEvt, ao);
 }
 
@@ -431,19 +438,26 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
 void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 {
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("begin all on fill");
+  QS_END()
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithAllOn(frame->buffer_,
     frame->buffer_byte_count_,
     frame->panel_byte_count_,
     frame->region_row_panel_count_,
     frame->region_col_panel_count_);
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("end all on fill");
+    QS_U32(8, frame->buffer_byte_count_);
+  QS_END()
   QF::PUBLISH(&frameFilledEvt, ao);
 }
 
 void FSP::Frame_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
 {
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("begin fill");
+    QS_STR("begin stream fill");
   QS_END()
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithStream(frame->buffer_,
@@ -452,7 +466,7 @@ void FSP::Frame_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
     frame->region_row_panel_count_,
     frame->region_col_panel_count_);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("end fill");
+    QS_STR("end stream fill");
     QS_U32(8, frame->buffer_byte_count_);
   QS_END()
   QF::PUBLISH(&frameFilledEvt, ao);
@@ -563,13 +577,13 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 void FSP::processStreamCommand(uint8_t const * command_buffer, uint32_t command_byte_count)
 {
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("begin decode");
+    QS_STR("begin stream decode");
     QS_U32(8, command_byte_count);
   QS_END()
   uint16_t bytes_decoded = BSP::decodeStreamedFrame(command_buffer, command_byte_count);
   QF::PUBLISH(&streamFrameEvt, &l_FSP_ID);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("end decode");
+    QS_STR("end stream decode");
     QS_U32(8, bytes_decoded);
   QS_END()
 }

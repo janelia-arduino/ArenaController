@@ -10,7 +10,7 @@ namespace AC
 enum ArenaControllerRecords
 {
   ETHERNET_LOG = QP::QS_USER,
-  USER_COMMENT,
+  USER_COMMENT = QP::QS_USER+5,
 };
 
 } // namespace AC
