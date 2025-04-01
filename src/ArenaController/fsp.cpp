@@ -595,7 +595,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
   {
     case 0x01:
     {
-      QF::PUBLISH(&resetEvt, &l_FSP_ID);
+      AO_Arena->POST(&resetEvt, &l_FSP_ID);
       appendMessage(response, response_byte_count, "Reset Command Sent to FPGA");
       break;
     }
@@ -607,7 +607,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case 0x00:
     {
-      QF::PUBLISH(&allOffEvt, &l_FSP_ID);
+      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
       appendMessage(response, response_byte_count, "All-Off Received");
       break;
     }
@@ -642,7 +642,7 @@ void FSP::processStringCommand(const char * command, char * response)
   strcpy(response, command);
   if (strcmp(command, "RESET") == 0)
   {
-    QF::PUBLISH(&resetEvt, &l_FSP_ID);
+    AO_Arena->POST(&resetEvt, &l_FSP_ID);
   }
   if (strcmp(command, "LED_ON") == 0)
   {
