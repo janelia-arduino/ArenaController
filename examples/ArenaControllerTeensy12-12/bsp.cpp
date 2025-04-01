@@ -467,15 +467,39 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * buffer,
   region_col_panel_count = constants::panel_count_per_region_col_max;
 }
 
+uint8_t reverseBits(uint8_t b)
+{
+  uint8_t r = 0;
+  for (int i = 0; i<8; ++i)
+  {
+    if (b & 1)
+    {
+      r |= 1 << (7 - i);
+    }
+    b >>= 1;
+  }
+  return r;
+}
+
+uint8_t flipBits(uint8_t b)
+{
+  uint8_t left_shifted = b << 4;
+  uint8_t right_shifted = b >> 4;
+  uint8_t f = left_shifted | right_shifted;
+  return f;
+}
+
 uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t command_byte_count)
 {
   uint16_t command_buffer_position = 0;
   // uint8_t row_signifier_check = 1;
   for (int8_t frame_panel_row_index = (constants::panel_count_per_frame_row_stream - 1); frame_panel_row_index>=0; --frame_panel_row_index)
   {
-    for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
+    // for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
+    for (int8_t quarter_panel_col_index = (constants::quarter_panel_count_per_panel_col - 1); quarter_panel_col_index>=0; --quarter_panel_col_index)
     {
-      for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
+      // for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
+      for (int8_t quarter_panel_row_index = (constants::quarter_panel_count_per_panel_row - 1); quarter_panel_row_index>=0; --quarter_panel_row_index)
       {
         // uint8_t row_signifier = command_buffer[command_buffer_position++];
         ++command_buffer_position;
@@ -491,6 +515,10 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
         {
           region_index = frame_panel_col_index / constants::panel_count_per_region_col_max;
           region_panel_col_index = frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
+        // QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+        //   QS_U8(0, region_index);
+        //   QS_U8(0, region_panel_col_index);
+        // QS_END()
           QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
           stretch = command_buffer[command_buffer_position++];
           quarter_panel.stretch = stretch;
@@ -499,15 +527,19 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
           // QS_END()
         }
         for (int8_t pixel_row_index = (constants::pixel_count_per_quarter_panel_row - 1); pixel_row_index>=0; --pixel_row_index)
+        // for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
         {
-          for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
+          // for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
+          for (int8_t byte_index = (constants::byte_count_per_quarter_panel_row_grayscale - 1); byte_index>=0; --byte_index)
           {
             for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
+            // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
             {
               region_index = frame_panel_col_index / constants::panel_count_per_region_col_max;
               region_panel_col_index = frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
               QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
-              quarter_panel.data[pixel_row_index][byte_index] = command_buffer[command_buffer_position++];
+              // quarter_panel.data[pixel_row_index][byte_index] = reverseBits(command_buffer[command_buffer_position++]);
+              quarter_panel.data[pixel_row_index][byte_index] = flipBits(command_buffer[command_buffer_position++]);
             }
           }
         }
