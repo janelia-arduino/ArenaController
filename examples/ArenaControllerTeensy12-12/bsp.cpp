@@ -206,14 +206,14 @@ struct Panel
   QuarterPanel quarter_panels[constants::quarter_panel_count_per_panel_row][constants::quarter_panel_count_per_panel_col];
 };
 
-// struct StreamedFrame
-// {
-//   Panel panels[constants::panel_count_per_frame_row_stream][constants::panel_count_per_frame_col_stream];
-// };
+struct Region
+{
+  Panel panels[constants::panel_count_per_region_row_stream][constants::panel_count_per_region_col_stream];
+};
 
 struct StreamedFrame
 {
-  Panel panels[constants::panel_count_per_frame_row_stream][constants::panel_count_per_frame_col_stream];
+  Region regions[constants::region_count_per_frame];
 };
 
 // managed by Frame active object
@@ -471,7 +471,7 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
 {
   uint16_t command_buffer_position = 0;
   // uint8_t row_signifier_check = 1;
-  for (int8_t panel_row_index = (constants::panel_count_per_frame_row_stream - 1); panel_row_index>=0; --panel_row_index)
+  for (int8_t frame_panel_row_index = (constants::panel_count_per_frame_row_stream - 1); frame_panel_row_index>=0; --frame_panel_row_index)
   {
     for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
     {
@@ -483,10 +483,15 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
         //   QS_U8(0, row_signifier_check);
         //   QS_U8(0, row_signifier);
         // QS_END()
+        uint8_t region_index;
+        uint8_t region_panel_col_index;
+        uint8_t region_panel_row_index = frame_panel_row_index;
         uint8_t stretch;
-        for (uint8_t panel_col_index = 0; panel_col_index<constants::panel_count_per_frame_col_stream; ++panel_col_index)
+        for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
         {
-          QuarterPanel & quarter_panel = streamed_frame.panels[panel_row_index][panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+          region_index = frame_panel_col_index / constants::panel_count_per_region_col_max;
+          region_panel_col_index = frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
+          QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
           stretch = command_buffer[command_buffer_position++];
           quarter_panel.stretch = stretch;
           // QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -497,9 +502,11 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
         {
           for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
           {
-            for (uint8_t panel_col_index = 0; panel_col_index<constants::panel_count_per_frame_col_stream; ++panel_col_index)
+            for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
             {
-              QuarterPanel & quarter_panel = streamed_frame.panels[panel_row_index][panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+              region_index = frame_panel_col_index / constants::panel_count_per_region_col_max;
+              region_panel_col_index = frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
+              QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
               quarter_panel.data[pixel_row_index][byte_index] = command_buffer[command_buffer_position++];
             }
           }
@@ -518,21 +525,24 @@ void BSP::fillFrameBufferWithStream(uint8_t * buffer,
   uint8_t & region_col_panel_count)
 {
   uint16_t buffer_position = 0;
-  for (uint8_t panel_col_index = 0; panel_col_index<constants::panel_count_per_frame_col_stream; ++panel_col_index)
+  for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col_stream; ++region_panel_col_index)
   {
-    for (uint8_t panel_row_index = 0; panel_row_index<constants::panel_count_per_frame_row_stream; ++panel_row_index)
+    for (uint8_t region_panel_row_index = 0; region_panel_row_index<constants::panel_count_per_region_row_stream; ++region_panel_row_index)
     {
-      for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
+      for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
       {
-        for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
+        for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
         {
-          QuarterPanel & quarter_panel = streamed_frame.panels[panel_row_index][panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
-          buffer[buffer_position++] = quarter_panel.stretch;
-          for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
+          for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
           {
-            for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
+            QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+            buffer[buffer_position++] = quarter_panel.stretch;
+            for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
             {
-              buffer[buffer_position++] = quarter_panel.data[pixel_row_index][byte_index];
+              for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
+              {
+                buffer[buffer_position++] = quarter_panel.data[pixel_row_index][byte_index];
+              }
             }
           }
         }
