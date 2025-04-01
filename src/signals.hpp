@@ -11,9 +11,6 @@ enum ArenaControllerSignals
 {
   // commands from serial or ethernet interface
   RESET_SIG = QP::Q_USER_SIG,
-  ALL_ON_SIG,
-  ALL_OFF_SIG,
-  STREAM_FRAME_SIG,
 
   DEACTIVATE_DISPLAY_SIG,
   FRAME_FILLED_SIG,
@@ -30,6 +27,11 @@ enum ArenaControllerSignals
   COMMAND_PROCESSED_SIG,
 
   MAX_PUB_SIG, // the last published signal
+
+  // POST to Arena
+  ALL_ON_SIG,
+  ALL_OFF_SIG,
+  STREAM_FRAME_SIG,
 
   // POST to SerialCommandInterface
   SERIAL_TIMEOUT_SIG,

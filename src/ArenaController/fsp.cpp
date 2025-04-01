@@ -7,20 +7,22 @@ using namespace AC;
 
 static QSpyId const l_FSP_ID = {0U}; // QSpy source ID
 
-static CommandEvt const resetEvt = {RESET_SIG, 0U, 0U};
-static CommandEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
-static CommandEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
-static CommandEvt const streamFrameEvt = {STREAM_FRAME_SIG, 0U, 0U};
+static QEvt const resetEvt = {RESET_SIG, 0U, 0U};
 
 static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
 static QEvt const frameFilledEvt = {FRAME_FILLED_SIG, 0U, 0U};
 static QEvt const displayFramesEvt = {DISPLAY_FRAMES_SIG, 0U, 0U};
 static QEvt const transferFrameEvt = {TRANSFER_FRAME_SIG, 0U, 0U};
 static QEvt const frameTransferredEvt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
+
 static QEvt const processBinaryCommandEvt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U};
 static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
 static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
 static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
+
+static QEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
+static QEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
+static QEvt const streamFrameEvt = {STREAM_FRAME_SIG, 0U, 0U};
 
 static QEvt const activateSerialCommandInterfaceEvt = {ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateSerialCommandInterfaceEvt = {DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
@@ -58,9 +60,6 @@ void FSP::ArenaController_setup()
 
   // signal dictionaries for globally published events...
   QS_SIG_DICTIONARY(RESET_SIG, nullptr);
-  QS_SIG_DICTIONARY(ALL_ON_SIG, nullptr);
-  QS_SIG_DICTIONARY(ALL_OFF_SIG, nullptr);
-  QS_SIG_DICTIONARY(STREAM_FRAME_SIG, nullptr);
 
   QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, nullptr);
@@ -133,11 +132,13 @@ void FSP::ArenaController_setup()
 void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   BSP::initializeArena();
+
   ao->subscribe(RESET_SIG);
-  ao->subscribe(ALL_ON_SIG);
-  ao->subscribe(ALL_OFF_SIG);
-  ao->subscribe(STREAM_FRAME_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
+
+  QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
+  QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
+  QS_SIG_DICTIONARY(STREAM_FRAME_SIG, ao);
 }
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
@@ -428,6 +429,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   BSP::initializeFrame();
   frame->buffer_ = BSP::getFrameBuffer();
   frame->buffer_byte_count_ = 0;
+  ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(TRANSFER_FRAME_SIG);
   ao->subscribe(PANEL_SET_TRANSFERRED_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
@@ -560,12 +562,12 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case 0x30:
     {
-      QF::PUBLISH(&allOffEvt, &l_FSP_ID);
+      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
       break;
     }
     case 0xFF:
     {
-      QF::PUBLISH(&allOnEvt, &l_FSP_ID);
+      AO_Arena->POST(&allOnEvt, &l_FSP_ID);
       break;
     }
     default:
@@ -581,7 +583,7 @@ void FSP::processStreamCommand(uint8_t const * command_buffer, uint32_t command_
     QS_U32(8, command_byte_count);
   QS_END()
   uint16_t bytes_decoded = BSP::decodeStreamedFrame(command_buffer, command_byte_count);
-  QF::PUBLISH(&streamFrameEvt, &l_FSP_ID);
+  AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
     QS_STR("end stream decode");
     QS_U32(8, bytes_decoded);
@@ -605,11 +607,11 @@ void FSP::processStringCommand(const char * command, char * response)
   }
   else if (strcmp(command, "ALL_ON") == 0)
   {
-    QF::PUBLISH(&allOnEvt, &l_FSP_ID);
+    AO_Arena->POST(&allOnEvt, &l_FSP_ID);
   }
   else if (strcmp(command, "ALL_OFF") == 0)
   {
-    QF::PUBLISH(&allOffEvt, &l_FSP_ID);
+    AO_Arena->POST(&allOffEvt, &l_FSP_ID);
   }
   else if (strcmp(command, "EHS") == 0)
   {

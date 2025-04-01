@@ -100,6 +100,11 @@ Q_STATE_DEF(Frame, Active) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //.${AOs::Frame::SM::Active::DEACTIVATE_DISPLAY}
+        case DEACTIVATE_DISPLAY_SIG: {
+            status_ = tran(&Inactive);
+            break;
+        }
         default: {
             status_ = super(&top);
             break;

@@ -95,13 +95,13 @@ Q_STATE_DEF(Arena, ArenaOn) {
         }
         //.${AOs::Arena::SM::ArenaOn::STREAM_FRAME}
         case STREAM_FRAME_SIG: {
-            FSP::Arena_fillFrameBufferWithStream(this, e);
+            FSP::Arena_deactivateDisplay(this, e);
             status_ = tran(&StreamingFrame);
             break;
         }
         //.${AOs::Arena::SM::ArenaOn::ALL_ON}
         case ALL_ON_SIG: {
-            FSP::Arena_fillFrameBufferWithAllOn(this, e);
+            FSP::Arena_deactivateDisplay(this, e);
             status_ = tran(&AllOn);
             break;
         }
@@ -116,6 +116,12 @@ Q_STATE_DEF(Arena, ArenaOn) {
 Q_STATE_DEF(Arena, AllOn) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::Arena::SM::ArenaOn::AllOn}
+        case Q_ENTRY_SIG: {
+            FSP::Arena_fillFrameBufferWithAllOn(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_FILLED}
         case FRAME_FILLED_SIG: {
             FSP::Arena_displayFrames(this, e);
@@ -150,6 +156,12 @@ Q_STATE_DEF(Arena, AllOff) {
 Q_STATE_DEF(Arena, StreamingFrame) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::Arena::SM::ArenaOn::StreamingFrame}
+        case Q_ENTRY_SIG: {
+            FSP::Arena_fillFrameBufferWithStream(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //.${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_FILLED}
         case FRAME_FILLED_SIG: {
             FSP::Arena_displayFrames(this, e);

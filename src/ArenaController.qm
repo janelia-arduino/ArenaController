@@ -52,25 +52,28 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <tran trig="STREAM_FRAME" target="../7">
-      <action brief="fillFrameBufferWithStream()">FSP::Arena_fillFrameBufferWithStream(this, e);</action>
+      <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,63,3,3,23">
        <action box="0,-2,17,5"/>
       </tran_glyph>
      </tran>
      <tran trig="ALL_ON" target="../5">
-      <action brief="fillFrameBufferWithAllOn()">FSP::Arena_fillFrameBufferWithAllOn(this, e);</action>
+      <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,43,3,3,23">
-       <action box="1,-2,22,8"/>
+       <action box="1,-2,16,5"/>
       </tran_glyph>
      </tran>
      <state name="AllOn">
+      <entry brief="fillFrameBufferWithAllOn()">FSP::Arena_fillFrameBufferWithAllOn(this, e);</entry>
       <tran trig="FRAME_FILLED">
        <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
        <tran_glyph conn="33,49,3,-1,25">
         <action box="0,-2,17,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="33,38,35,17"/>
+      <state_glyph node="33,38,35,17">
+       <entry box="1,2,26,3"/>
+      </state_glyph>
      </state>
      <state name="AllOff">
       <entry brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</entry>
@@ -79,13 +82,16 @@ This structure of the code is recommended for applications with only one active 
       </state_glyph>
      </state>
      <state name="StreamingFrame">
+      <entry brief="fillFrameBufferWithStream()">FSP::Arena_fillFrameBufferWithStream(this, e);</entry>
       <tran trig="FRAME_FILLED">
        <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
        <tran_glyph conn="33,69,3,-1,21">
         <action box="0,-2,15,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="33,58,35,15"/>
+      <state_glyph node="33,58,35,15">
+       <entry box="1,2,24,2"/>
+      </state_glyph>
      </state>
      <state_glyph node="10,15,91,70">
       <entry box="1,2,24,2"/>
@@ -487,7 +493,7 @@ This structure of the code is recommended for applications with only one active 
      </initial_glyph>
     </initial>
     <state name="Inactive">
-     <tran trig="TRANSFER_FRAME" target="../../2/0">
+     <tran trig="TRANSFER_FRAME" target="../../2/1">
       <tran_glyph conn="36,37,2,0,14">
        <action box="1,3,32,2"/>
       </tran_glyph>
@@ -508,6 +514,11 @@ This structure of the code is recommended for applications with only one active 
     </state>
     <state name="Active">
      <entry brief="reset();">FSP::Frame_reset(this, e);</entry>
+     <tran trig="DEACTIVATE_DISPLAY" target="../../1">
+      <tran_glyph conn="60,45,0,1,-23,-11">
+       <action box="1,-15,21,2"/>
+      </tran_glyph>
+     </tran>
      <state name="TransferringFrame">
       <initial target="../2">
        <initial_glyph conn="40,55,4,0,3">
@@ -603,7 +614,6 @@ This structure of the code is recommended for applications with only one active 
   </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
-  <class name="CommandEvt" superclass="qpcpp::QEvt"/>
   <class name="SetDisplayFrequencyEvt" superclass="qpcpp::QEvt">
    <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>

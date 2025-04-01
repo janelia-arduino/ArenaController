@@ -32,8 +32,6 @@ void loop();
 //.$declare${Shared} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
-//.${Shared::CommandEvt} .....................................................
-class CommandEvt : public QP::QEvt {};
 //.${Shared::SetDisplayFrequencyEvt} .........................................
 class SetDisplayFrequencyEvt : public QP::QEvt {
 public:
