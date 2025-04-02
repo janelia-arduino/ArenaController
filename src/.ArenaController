@@ -11,12 +11,12 @@
  <group name="windows">
   <item id="AOs::EthernetCommandInterface::SM">0,0,872,924</item>
   <item id="AOs::SerialCommandInterface::SM">-62,33,934,924</item>
-  <item id="AOs::Watchdog::SM">0,0,934,924</item>
+  <item id="AOs::Watchdog::SM">0,0,872,924,*</item>
   <item id="AOs::Display::SM">0,477,640,480</item>
   <item id="AOs::Arena::SM">232,0,640,480</item>
-  <item id="AOs::Frame::SM">0,0,872,924,*</item>
-  <item id=".::ArenaController.hpp">276,657,596,300</item>
-  <item id=".::Frame.hpp">0,0,596,300</item>
+  <item id="AOs::Frame::SM">0,33,872,924</item>
+  <item id=".::ArenaController.hpp">0,0,596,300</item>
+  <item id=".::Frame.hpp">276,657,596,300</item>
   <item id=".::SerialCommandInterface.hpp">0,300,596,300</item>
   <item id=".::EthernetCommandInterface.hpp">276,480,596,300</item>
   <item id=".::Display.hpp">276,0,596,300</item>

@@ -489,6 +489,15 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * buffer,
 //   return f;
 // }
 
+uint8_t remapColumnIndex(uint8_t column_index)
+{
+  if (column_index == 0)
+  {
+    return column_index;
+  }
+  return constants::panel_count_per_frame_col_stream - column_index;
+}
+
 uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t command_byte_count)
 {
   uint16_t command_buffer_position = 0;
@@ -510,12 +519,14 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
         uint8_t region_index;
         uint8_t region_panel_col_index;
         uint8_t region_panel_row_index = frame_panel_row_index;
+        uint8_t remapped_frame_panel_col_index;
         uint8_t stretch;
-        for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
-        // for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
+        for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
+        // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
         {
-          region_index = frame_panel_col_index / constants::panel_count_per_region_col_max;
-          region_panel_col_index = frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
+          remapped_frame_panel_col_index = remapColumnIndex(frame_panel_col_index);
+          region_index = remapped_frame_panel_col_index / constants::panel_count_per_region_col_max;
+          region_panel_col_index = remapped_frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
         // QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
         //   QS_U8(0, region_index);
         //   QS_U8(0, region_panel_col_index);
@@ -533,11 +544,12 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
           for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
           // for (int8_t byte_index = (constants::byte_count_per_quarter_panel_row_grayscale - 1); byte_index>=0; --byte_index)
           {
-            // for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
-            for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
+            for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
+            // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
             {
-              region_index = frame_panel_col_index / constants::panel_count_per_region_col_max;
-              region_panel_col_index = frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
+              remapped_frame_panel_col_index = remapColumnIndex(frame_panel_col_index);
+              region_index = remapped_frame_panel_col_index / constants::panel_count_per_region_col_max;
+              region_panel_col_index = remapped_frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
               QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
               quarter_panel.data[pixel_row_index][byte_index] = command_buffer[command_buffer_position++];
               // quarter_panel.data[pixel_row_index][byte_index] = reverseBits(command_buffer[command_buffer_position++]);

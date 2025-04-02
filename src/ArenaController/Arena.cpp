@@ -88,11 +88,6 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = tran(&AllOff);
             break;
         }
-        //.${AOs::Arena::SM::ArenaOn::RESET}
-        case RESET_SIG: {
-            status_ = tran(&AllOff);
-            break;
-        }
         //.${AOs::Arena::SM::ArenaOn::STREAM_FRAME}
         case STREAM_FRAME_SIG: {
             FSP::Arena_deactivateDisplay(this, e);
