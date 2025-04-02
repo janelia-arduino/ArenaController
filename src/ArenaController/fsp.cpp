@@ -544,6 +544,44 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
   BSP::feedWatchdog();
 }
 
+
+/**
+  @brief Helper function: Appends a text message to a response buffer and updates the length byte
+
+  Copy the `message` to the end of `response` and increase the overall count of the response 
+  accordingly. Change the first byte of the message to the buffer length, but excluding that
+  byte itself from the count. This should mirror the behavior of the G4 Host.
+
+  @param[out] response The response buffer to append the message to
+  @param[in,out] response_byte_count Current position in the buffer, updated after append
+  @param[in] message Null-terminated string to append to the response
+**/
+static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message) {
+  size_t msg_len = strlen(message);
+  memcpy(&response[response_byte_count], message, msg_len);
+  response_byte_count += msg_len;
+  response[0] = response_byte_count - 1;
+}
+
+/**
+  @brief Processes a binary command and generates an appropriate response
+
+  Interprets the binary command from the command_buffer, performs the requested
+  action by publishing the corresponding event, and generates a response message.
+  The response format consists of:
+
+  - Byte 0: Length of response (excluding length byte)
+  - Byte 1: Status code (0 = success)
+  - Byte 2: Echo of the command byte
+  - Remaining bytes: Text message describing the action taken, using the
+        responses from G4 Host.
+
+  @param[in] command_buffer Buffer containing the binary command to process
+  @param[in] command_byte_count Number of bytes in the command buffer
+  @param[out] response Buffer to store the generated response
+  
+  @return Total number of bytes written to the response buffer
+**/
 uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,
     uint8_t response[constants::byte_count_per_response_max])
@@ -557,17 +595,26 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
   {
     case 0x01:
     {
-      QF::PUBLISH(&resetEvt, &l_FSP_ID);
+      AO_Arena->POST(&resetEvt, &l_FSP_ID);
+      appendMessage(response, response_byte_count, "Reset Command Sent to FPGA");
       break;
     }
     case 0x30:
     {
       AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+      appendMessage(response, response_byte_count, "Display has been stopped");
+      break;
+    }
+    case 0x00:
+    {
+      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+      appendMessage(response, response_byte_count, "All-Off Received");
       break;
     }
     case 0xFF:
     {
       AO_Arena->POST(&allOnEvt, &l_FSP_ID);
+      appendMessage(response, response_byte_count, "All-On Received");
       break;
     }
     default:
@@ -595,7 +642,7 @@ void FSP::processStringCommand(const char * command, char * response)
   strcpy(response, command);
   if (strcmp(command, "RESET") == 0)
   {
-    QF::PUBLISH(&resetEvt, &l_FSP_ID);
+    AO_Arena->POST(&resetEvt, &l_FSP_ID);
   }
   if (strcmp(command, "LED_ON") == 0)
   {
