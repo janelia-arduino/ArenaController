@@ -10,9 +10,7 @@ namespace AC
 enum ArenaControllerSignals
 {
   // commands from serial or ethernet interface
-  RESET_SIG = QP::Q_USER_SIG,
-
-  DEACTIVATE_DISPLAY_SIG,
+  DEACTIVATE_DISPLAY_SIG = QP::Q_USER_SIG,
   FRAME_FILLED_SIG,
   DISPLAY_FRAMES_SIG,
   TRANSFER_FRAME_SIG,
@@ -56,6 +54,7 @@ enum ArenaControllerSignals
 
   // POST to Watchdog
   WATCHDOG_TIMEOUT_SIG,
+  RESET_SIG,
 
   MAX_SIG // the last signal
 };

@@ -36,28 +36,23 @@ This structure of the code is recommended for applications with only one active 
     <state name="ArenaOn">
      <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
      <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
-     <initial target="../6">
+     <initial target="../5">
       <initial_glyph conn="51,21,4,0,3">
        <action box="1,-1,18,3"/>
       </initial_glyph>
      </initial>
-     <tran trig="ALL_OFF" target="../6">
+     <tran trig="ALL_OFF" target="../5">
       <tran_glyph conn="10,27,3,3,23">
        <action box="1,-2,14,4"/>
       </tran_glyph>
      </tran>
-     <tran trig="RESET" target="../6">
-      <tran_glyph conn="10,31,3,3,23">
-       <action box="1,-2,14,4"/>
-      </tran_glyph>
-     </tran>
-     <tran trig="STREAM_FRAME" target="../7">
+     <tran trig="STREAM_FRAME" target="../6">
       <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,63,3,3,23">
        <action box="0,-2,17,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="ALL_ON" target="../5">
+     <tran trig="ALL_ON" target="../4">
       <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,43,3,3,23">
        <action box="1,-2,16,5"/>

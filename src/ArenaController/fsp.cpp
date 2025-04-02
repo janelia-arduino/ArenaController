@@ -59,8 +59,6 @@ void FSP::ArenaController_setup()
   QS_OBJ_DICTIONARY(&l_FSP_ID);
 
   // signal dictionaries for globally published events...
-  QS_SIG_DICTIONARY(RESET_SIG, nullptr);
-
   QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, nullptr);
   QS_SIG_DICTIONARY(DISPLAY_FRAMES_SIG, nullptr);
@@ -133,7 +131,6 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   BSP::initializeArena();
 
-  ao->subscribe(RESET_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
@@ -519,12 +516,12 @@ void FSP::Frame_publishFrameTransferred(QActive * const ao, QEvt const * e)
 
 void FSP::Watchdog_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
-  ao->subscribe(RESET_SIG);
   BSP::initializeWatchdog();
 
   Watchdog * const watchdog = static_cast<Watchdog * const>(ao);
   QS_OBJ_DICTIONARY(&(watchdog->watchdog_time_evt_));
   QS_SIG_DICTIONARY(WATCHDOG_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(RESET_SIG, ao);
 }
 
 void FSP::Watchdog_armWatchdogTimer(QActive * const ao, QEvt const * e)
@@ -579,7 +576,7 @@ static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const
   @param[in] command_buffer Buffer containing the binary command to process
   @param[in] command_byte_count Number of bytes in the command buffer
   @param[out] response Buffer to store the generated response
-  
+
   @return Total number of bytes written to the response buffer
 **/
 uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
@@ -595,7 +592,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
   {
     case 0x01:
     {
-      AO_Arena->POST(&resetEvt, &l_FSP_ID);
+      AO_Watchdog->POST(&resetEvt, &l_FSP_ID);
       appendMessage(response, response_byte_count, "Reset Command Sent to FPGA");
       break;
     }
@@ -642,7 +639,7 @@ void FSP::processStringCommand(const char * command, char * response)
   strcpy(response, command);
   if (strcmp(command, "RESET") == 0)
   {
-    AO_Arena->POST(&resetEvt, &l_FSP_ID);
+    AO_Watchdog->POST(&resetEvt, &l_FSP_ID);
   }
   if (strcmp(command, "LED_ON") == 0)
   {
