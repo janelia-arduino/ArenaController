@@ -609,8 +609,8 @@ This structure of the code is recommended for applications with only one active 
   </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
-  <class name="SetDisplayFrequencyEvt" superclass="qpcpp::QEvt">
-   <attribute name="display_frequency_hz" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+  <class name="SetParameterEvt" superclass="qpcpp::QEvt">
+   <attribute name="value" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="EthernetCommandEvt" superclass="qpcpp::QEvt">
    <attribute name="connection" type="void *" visibility="0x00" properties="0x00"/>

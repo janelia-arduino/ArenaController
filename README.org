@@ -133,6 +133,8 @@ Panel update order for each panel in an display:
 
 #+html: <img src="./images/SM_of_Display.png" width="1200px">
 
+** Command Set
+
 
 * Development
 

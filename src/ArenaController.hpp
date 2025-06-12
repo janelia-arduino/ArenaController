@@ -32,10 +32,10 @@ void loop();
 //.$declare${Shared} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
-//.${Shared::SetDisplayFrequencyEvt} .........................................
-class SetDisplayFrequencyEvt : public QP::QEvt {
+//.${Shared::SetParameterEvt} ................................................
+class SetParameterEvt : public QP::QEvt {
 public:
-    std::uint32_t display_frequency_hz;
+    std::uint32_t value;
 };
 //.${Shared::EthernetCommandEvt} .............................................
 class EthernetCommandEvt : public QP::QEvt {

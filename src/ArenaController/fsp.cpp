@@ -1,4 +1,5 @@
 #include "fsp.hpp"
+#include "commands.hpp"
 
 
 using namespace QP;
@@ -42,11 +43,18 @@ static QEvt const fillFrameBufferWithStreamEvt = {FILL_FRAME_BUFFER_WITH_STREAM_
 
 void FSP::ArenaController_setup()
 {
+  static QF_MPOOL_EL(QP::QEvt) smlPoolSto[constants::pool_event_count];
+  static QF_MPOOL_EL(SetParameterEvt) medPoolSto[constants::pool_event_count];
+
   QF::init(); // initialize the framework
 
   QS_INIT(nullptr);
 
   BSP::init(); // initialize the BSP
+
+  // initialize the event pools...
+  QP::QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
+  QP::QF::poolInit(medPoolSto, sizeof(medPoolSto), sizeof(medPoolSto[0]));
 
   // object dictionaries for AOs...
   QS_OBJ_DICTIONARY(AO_Arena);
@@ -189,7 +197,12 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 void FSP::Display_setDisplayFrequency(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  display->display_frequency_hz_ = Q_EVT_CAST(SetDisplayFrequencyEvt)->display_frequency_hz;
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  display->display_frequency_hz_ = spev->value;
+  QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
+    QS_STR("set display frequency");
+    QS_U16(5, display->display_frequency_hz_);
+  QS_END()
 }
 
 void FSP::Display_armDisplayFrameTimer(QActive * const ao, QEvt const * e)
@@ -358,7 +371,7 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
     QS_END()
     QF::PUBLISH(&processStringCommandEvt, &l_FSP_ID);
   }
-  else if (first_command_byte == constants::first_command_byte_max_value_binary)
+  else if (first_command_byte == STREAM_FRAME_CMD)
   {
     uint32_t low_byte = (uint8_t)(eci->binary_command_[1]);
     uint32_t high_byte = (uint8_t)(eci->binary_command_[2]);
@@ -407,7 +420,7 @@ void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt
   eci->binary_response_byte_count_ = 3;
   eci->binary_response_[0] = 2;
   eci->binary_response_[1] = 0;
-  eci->binary_response_[2] = constants::first_command_byte_max_value_binary;
+  eci->binary_response_[2] = STREAM_FRAME_CMD;
   uint8_t const * command_buffer = eci->binary_command_ + constants::stream_header_byte_count;
   uint32_t command_byte_count = eci->binary_command_byte_count_ - constants::stream_header_byte_count;
   FSP::processStreamCommand(command_buffer, command_byte_count);
@@ -545,7 +558,7 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
 /**
   @brief Helper function: Appends a text message to a response buffer and updates the length byte
 
-  Copy the `message` to the end of `response` and increase the overall count of the response 
+  Copy the `message` to the end of `response` and increase the overall count of the response
   accordingly. Change the first byte of the message to the buffer length, but excluding that
   byte itself from the count. This should mirror the behavior of the G4 Host.
 
@@ -584,34 +597,89 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     uint8_t response[constants::byte_count_per_response_max])
 {
   uint8_t response_byte_count = 0;
-  uint8_t second_command_byte = (uint8_t)(command_buffer[1]);
+
+  uint8_t command_buffer_position = 0;
+  uint8_t command_byte_count_claim = command_buffer[command_buffer_position++];
+
+  if ((command_byte_count - 1) != command_byte_count_claim)
+  {
+    appendMessage(response, response_byte_count, "Invalid-Command");
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("invalid command");
+    QS_END()
+    return response_byte_count;
+  }
+
+  uint8_t command_byte = command_buffer[command_buffer_position++];
   response[response_byte_count++] = 2;
   response[response_byte_count++] = 0;
-  response[response_byte_count++] = second_command_byte;
-  switch (second_command_byte)
+  response[response_byte_count++] = command_byte;
+  switch (command_byte)
   {
-    case 0x01:
-    {
-      AO_Watchdog->POST(&resetEvt, &l_FSP_ID);
-      appendMessage(response, response_byte_count, "Reset Command Sent to FPGA");
-      break;
-    }
-    case 0x30:
-    {
-      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
-      appendMessage(response, response_byte_count, "Display has been stopped");
-      break;
-    }
-    case 0x00:
+    case ALL_OFF_CMD:
     {
       AO_Arena->POST(&allOffEvt, &l_FSP_ID);
       appendMessage(response, response_byte_count, "All-Off Received");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("all-off command");
+      QS_END()
       break;
     }
-    case 0xFF:
+    case DISPLAY_RESET_CMD:
+    {
+      AO_Watchdog->POST(&resetEvt, &l_FSP_ID);
+      appendMessage(response, response_byte_count, "Reset Command Sent to FPGA");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("display-reset command");
+      QS_END()
+      break;
+    }
+    case SWITCH_GRAYSCALE_CMD:
+    {
+      appendMessage(response, response_byte_count, "");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("switch-grayscale command");
+      QS_END()
+      break;
+    }
+    case TRIAL_PARAMS_CMD:
+    {
+      appendMessage(response, response_byte_count, "");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("trial-params command");
+      QS_END()
+      break;
+    }
+    case SET_FRAME_RATE_CMD:
+    {
+      uint16_t frame_rate;
+      memcpy(&frame_rate, command_buffer + command_buffer_position, sizeof(frame_rate));
+
+      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_DISPLAY_FREQUENCY_SIG);
+      spev->value = frame_rate;
+      AO_Display->POST(spev, &l_FSP_ID);
+      appendMessage(response, response_byte_count, "");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("set-frame-rate command");
+      QS_END()
+      break;
+    }
+    case STOP_DISPLAY_CMD:
+    {
+      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+      appendMessage(response, response_byte_count, "Display has been stopped");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("stop-display command");
+      QS_END()
+      break;
+    }
+    case ALL_ON_CMD:
     {
       AO_Arena->POST(&allOnEvt, &l_FSP_ID);
       appendMessage(response, response_byte_count, "All-On Received");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("all-on command");
+      QS_END()
       break;
     }
     default:

@@ -1,0 +1,22 @@
+#ifndef COMMANDS_HPP
+#define COMMANDS_HPP
+
+
+namespace AC
+{
+
+enum ArenaCommands
+{
+  ALL_OFF_CMD = 0x00,
+  DISPLAY_RESET_CMD = 0x01,
+  SWITCH_GRAYSCALE_CMD = 0x06,
+  TRIAL_PARAMS_CMD = 0x08,
+  SET_FRAME_RATE_CMD = 0x12,
+  STOP_DISPLAY_CMD = 0x30,
+  STREAM_FRAME_CMD = 0x32,
+  ALL_ON_CMD = 0xFF,
+};
+
+} // namespace AC
+
+#endif // COMMANDS_HPP
