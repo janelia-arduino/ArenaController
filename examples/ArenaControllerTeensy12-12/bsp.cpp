@@ -411,6 +411,11 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
   }
 }
 
+void BSP::initializeDisplayTimer()
+{
+
+}
+
 void BSP::initializeFrame()
 {
   transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);

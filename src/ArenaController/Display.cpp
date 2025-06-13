@@ -47,8 +47,7 @@ namespace AC {
 Display Display::instance;
 //.${AOs::Display::Display} ..................................................
 Display::Display()
-: QActive(Q_STATE_CAST(&Display::initial)),
-    display_time_evt_(this, DISPLAY_TIMEOUT_SIG, 0U)
+: QActive(Q_STATE_CAST(&Display::initial))
 {}
 
 //.${AOs::Display::SM} .......................................................
@@ -77,6 +76,9 @@ Q_STATE_DEF(Display, Initialized) {
         //.${AOs::Display::SM::Initialized::SET_DISPLAY_FREQUENCY}
         case SET_DISPLAY_FREQUENCY_SIG: {
             FSP::Display_setDisplayFrequency(this, e);
+                  QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
+                    QS_STR("Display_setDisplayFrequency");
+                  QS_END()
             status_ = Q_RET_HANDLED;
             break;
         }

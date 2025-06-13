@@ -224,10 +224,8 @@ This structure of the code is recommended for applications with only one active 
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
    <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
-   <attribute name="display_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
-    <code>: QActive(Q_STATE_CAST(&amp;Display::initial)),
-    display_time_evt_(this, DISPLAY_TIMEOUT_SIG, 0U)</code>
+    <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
    </operation>
    <statechart properties="0x02">
     <initial target="../1">
@@ -243,7 +241,10 @@ This structure of the code is recommended for applications with only one active 
       </initial_glyph>
      </initial>
      <tran trig="SET_DISPLAY_FREQUENCY">
-      <action brief="setDisplayFrequency()">FSP::Display_setDisplayFrequency(this, e);</action>
+      <action brief="setDisplayFrequency()">FSP::Display_setDisplayFrequency(this, e);
+      QS_BEGIN_ID(USER_COMMENT, AO_Display-&gt;m_prio)
+        QS_STR(&quot;Display_setDisplayFrequency&quot;);
+      QS_END()</action>
       <tran_glyph conn="2,10,3,-1,24">
        <action box="0,-2,23,4"/>
       </tran_glyph>

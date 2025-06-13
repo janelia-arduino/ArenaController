@@ -32,7 +32,6 @@ class Display : public QP::QActive {
 public:
     static Display instance;
     std::uint32_t display_frequency_hz_;
-    QP::QTimeEvt display_time_evt_;
 
 public:
     Display();
