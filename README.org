@@ -25,6 +25,8 @@
 
 * Modular LED Display
 
+#+html: <img src="./images/arena.png" width="1200px">
+
 ** System Components
 
 *** Quarter Panel
@@ -121,17 +123,22 @@ Panel update order for each panel in an display:
 
 #+html: <img src="./images/SM_of_Arena.png" width="1200px">
 
-**** SerialCommandInterface
+**** Display
 
-#+html: <img src="./images/SM_of_SerialCommandInterface.png" width="1200px">
+#+html: <img src="./images/SM_of_Display.png" width="1200px">
+
+**** Frame
+
+#+html: <img src="./images/SM_of_Frame.png" width="1200px">
+
+**** Watchdog
+
+#+html: <img src="./images/SM_of_Watchdog.png" width="1200px">
 
 **** EthernetCommandInterface
 
 #+html: <img src="./images/SM_of_EthernetCommandInterface.png" width="1200px">
 
-**** Display
-
-#+html: <img src="./images/SM_of_Display.png" width="1200px">
 
 ** Command Set
 
