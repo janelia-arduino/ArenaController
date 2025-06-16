@@ -27,6 +27,32 @@
 
 #+html: <img src="./images/arena.png" width="1200px">
 
+Abstract from https://doi.org/10.1101/2022.08.02.502550 :
+
+"Visual stimulation of animals in the laboratory is a powerful technique for
+studying sensory control of complex behaviors.
+
+Since commercial displays are optimized for human vision, we established a novel
+display system based on custom-built modular LED panels that provides
+millisecond refresh, precise synchronization, customizable color combinations,
+and varied display configurations.
+
+This system simplifies challenging experiments.
+
+With variants of this display, we probed the speed limits of motion vision and
+examined the role of color vision in behavioral experiments with tethered flying
+Drosophila.
+
+Using 2-photon calcium imaging, we comprehensively mapped the tuning of visual
+projection neurons across the fly’s field of view.
+
+Finally, using real-time behavior analysis, we developed low-latency interactive
+virtual environments and found that flying flies can independently control their
+navigation along two dimensions.
+
+This display system uniquely addresses most technical challenges of small animal
+vision experiments and is thoroughly documented for replicability."
+
 ** System Components
 
 *** Quarter Panel
