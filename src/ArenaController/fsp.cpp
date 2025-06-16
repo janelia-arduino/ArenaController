@@ -470,6 +470,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   BSP::initializeFrame();
   frame->buffer_ = BSP::getFrameBuffer();
   frame->buffer_byte_count_ = 0;
+  frame->panel_byte_count_ = constants::byte_count_per_panel_grayscale;
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(TRANSFER_FRAME_SIG);
   ao->subscribe(PANEL_SET_TRANSFERRED_SIG);

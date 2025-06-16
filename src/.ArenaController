@@ -9,18 +9,18 @@
   <item name="backups">0</item>
  </group>
  <group name="windows">
-  <item id="AOs::Watchdog::SM">212,0,872,924</item>
+  <item id="AOs::Watchdog::SM">0,0,872,924</item>
   <item id="AOs::Display::SM">0,0,1084,1164,*</item>
-  <item id="AOs::Arena::SM">0,0,640,480</item>
-  <item id="AOs::Frame::SM">212,273,872,924</item>
-  <item id=".::ArenaController.hpp">488,0,596,300</item>
+  <item id="AOs::Arena::SM">444,717,640,480</item>
+  <item id="AOs::Frame::SM">212,0,872,924</item>
+  <item id=".::ArenaController.hpp">0,897,596,300</item>
   <item id=".::Frame.hpp">488,897,596,300</item>
-  <item id=".::SerialCommandInterface.hpp">0,897,596,300</item>
-  <item id=".::EthernetCommandInterface.hpp">0,0,596,300</item>
-  <item id=".::Display.hpp">0,480,596,300</item>
+  <item id=".::SerialCommandInterface.hpp">0,0,596,300</item>
+  <item id=".::EthernetCommandInterface.hpp">0,897,596,300</item>
+  <item id=".::Display.hpp">0,300,596,300</item>
   <item id=".::Arena.hpp">488,0,596,300</item>
-  <item id=".::Watchdog.hpp">0,300,596,300</item>
-  <item id="AOs::EthernetCommandInterface::SM">0,240,872,924</item>
+  <item id=".::Watchdog.hpp">0,600,596,300</item>
+  <item id="AOs::EthernetCommandInterface::SM">212,273,872,924</item>
  </group>
  <group name="search">
   <item name="options">2032128</item>

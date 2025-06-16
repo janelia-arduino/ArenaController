@@ -88,6 +88,8 @@ constexpr uint8_t byte_count_per_panel_grayscale = \
 constexpr uint8_t byte_count_per_panel_binary = \
   byte_count_per_quarter_panel_binary * \
   quarter_panel_count_per_panel; // 36
+constexpr uint8_t switch_grayscale_command_value_grayscale = 1;
+constexpr uint8_t switch_grayscale_command_value_binary = 0;
 
 // region
 constexpr uint8_t region_count_per_frame_max = 2;

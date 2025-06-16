@@ -32,13 +32,13 @@ struct BSP {
   static uint8_t * getFrameBuffer();
   static void fillFrameBufferWithAllOn(uint8_t * buffer,
     uint16_t & buffer_byte_count,
-    uint8_t & panel_byte_count,
+    uint8_t panel_byte_count,
     uint8_t & region_row_panel_count,
     uint8_t & region_col_panel_count);
   static uint16_t decodeStreamedFrame(uint8_t const * command_buffer, uint32_t command_byte_count);
   static void fillFrameBufferWithStream(uint8_t * buffer,
     uint16_t & buffer_byte_count,
-    uint8_t & panel_byte_count,
+    uint8_t panel_byte_count,
     uint8_t & region_row_panel_count,
     uint8_t & region_col_panel_count);
   static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
