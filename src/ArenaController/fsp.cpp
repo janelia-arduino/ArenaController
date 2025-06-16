@@ -470,7 +470,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   BSP::initializeFrame();
   frame->buffer_ = BSP::getFrameBuffer();
   frame->buffer_byte_count_ = 0;
-  frame->panel_byte_count_ = constants::byte_count_per_panel_grayscale;
+  frame->grayscale_ = true;
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(TRANSFER_FRAME_SIG);
   ao->subscribe(PANEL_SET_TRANSFERRED_SIG);
@@ -488,7 +488,7 @@ void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithAllOn(frame->buffer_,
     frame->buffer_byte_count_,
-    frame->panel_byte_count_,
+    frame->grayscale_,
     frame->region_row_panel_count_,
     frame->region_col_panel_count_);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -506,7 +506,7 @@ void FSP::Frame_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithStream(frame->buffer_,
     frame->buffer_byte_count_,
-    frame->panel_byte_count_,
+    frame->grayscale_,
     frame->region_row_panel_count_,
     frame->region_col_panel_count_);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -528,7 +528,16 @@ void FSP::Frame_beginTransferPanelSet(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::enablePanelSetSelectPin(frame->panel_set_row_index_, frame->panel_set_col_index_);
-  BSP::transferPanelSet(frame->buffer_, frame->buffer_position_, frame->panel_byte_count_);
+  uint8_t panel_byte_count;
+  if (frame->grayscale_)
+  {
+    panel_byte_count = constants::byte_count_per_panel_grayscale;
+  }
+  else
+  {
+    panel_byte_count = constants::byte_count_per_panel_binary;
+  }
+  BSP::transferPanelSet(frame->buffer_, frame->buffer_position_, panel_byte_count);
 }
 
 void FSP::Frame_endTransferPanelSet(QActive * const ao, QEvt const * e)

@@ -65,6 +65,8 @@ constexpr uint8_t byte_count_per_quarter_panel_row_grayscale = \
 constexpr uint8_t bit_count_per_pixel_binary = 1;
 constexpr uint8_t pixel_count_per_byte_binary = \
   bit_count_per_byte / bit_count_per_pixel_binary; // 8
+constexpr uint8_t byte_count_per_quarter_panel_row_binary = \
+  pixel_count_per_quarter_panel_row / pixel_count_per_byte_binary; // 1
 
 // quarter panel message bytes
 constexpr uint8_t byte_count_per_quarter_panel_control = 1;

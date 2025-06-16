@@ -446,10 +446,19 @@ uint8_t * BSP::getFrameBuffer()
 
 void BSP::fillFrameBufferWithAllOn(uint8_t * buffer,
   uint16_t & buffer_byte_count,
-  uint8_t panel_byte_count,
+  bool grayscale,
   uint8_t & region_row_panel_count,
   uint8_t & region_col_panel_count)
 {
+  uint8_t byte_count_per_quarter_panel_row;
+  if (grayscale)
+  {
+    byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_grayscale;
+  }
+  else
+  {
+    byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_binary;
+  }
   uint16_t buffer_position = 0;
   for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col_max; ++region_panel_col_index)
   {
@@ -464,7 +473,7 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * buffer,
             buffer[buffer_position++] = 1;
             for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
             {
-              for (uint8_t byte_index = 0; byte_index<(panel_byte_count / 4); ++byte_index) // byte_count_per_quarter_panel
+              for (uint8_t byte_index = 0; byte_index<byte_count_per_quarter_panel_row; ++byte_index)
               {
                 buffer[buffer_position++] = 255;
                 // uint8_t panel_col_index = region_panel_col_index + region_index * constants::panel_count_per_region_col_max;
@@ -511,10 +520,21 @@ uint8_t remapColumnIndex(uint8_t column_index)
   return constants::panel_count_per_frame_col_stream - column_index;
 }
 
-uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t command_byte_count)
+uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t command_byte_count, bool grayscale)
 {
+  uint8_t byte_count_per_quarter_panel_row;
+  if (grayscale)
+  {
+    byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_grayscale;
+  }
+  else
+  {
+    byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_binary;
+  }
   uint16_t command_buffer_position = 0;
   // uint8_t row_signifier_check = 1;
+  uint8_t byte_count_per_quarter_panel_row;
+
   for (int8_t frame_panel_row_index = (constants::panel_count_per_frame_row_stream - 1); frame_panel_row_index>=0; --frame_panel_row_index)
   {
     for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
@@ -554,8 +574,8 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
         for (int8_t pixel_row_index = (constants::pixel_count_per_quarter_panel_row - 1); pixel_row_index>=0; --pixel_row_index)
         // for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
         {
-          for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
-          // for (int8_t byte_index = (constants::byte_count_per_quarter_panel_row_grayscale - 1); byte_index>=0; --byte_index)
+          for (uint8_t byte_index = 0; byte_index<byte_count_per_quarter_panel_row; ++byte_index)
+          // for (int8_t byte_index = (byte_count_per_quarter_panel_row - 1); byte_index>=0; --byte_index)
           {
             for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
             // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
@@ -579,10 +599,19 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
 
 void BSP::fillFrameBufferWithStream(uint8_t * buffer,
   uint16_t & buffer_byte_count,
-  uint8_t panel_byte_count,
+  bool grayscale,
   uint8_t & region_row_panel_count,
   uint8_t & region_col_panel_count)
 {
+  uint8_t byte_count_per_quarter_panel_row;
+  if (grayscale)
+  {
+    byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_grayscale;
+  }
+  else
+  {
+    byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_binary;
+  }
   uint16_t buffer_position = 0;
   for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col_stream; ++region_panel_col_index)
   {
@@ -598,7 +627,7 @@ void BSP::fillFrameBufferWithStream(uint8_t * buffer,
             buffer[buffer_position++] = quarter_panel.stretch;
             for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
             {
-              for (uint8_t byte_index = 0; byte_index<constants::byte_count_per_quarter_panel_row_grayscale; ++byte_index)
+              for (uint8_t byte_index = 0; byte_index<byte_count_per_quarter_panel_row; ++byte_index)
               {
                 buffer[buffer_position++] = quarter_panel.data[pixel_row_index][byte_index];
               }

@@ -17,33 +17,43 @@ struct BSP {
   static bool beginSerial();
   static bool pollSerialCommand();
   static uint8_t readSerialByte();
-  static void readSerialStringCommand(char * command_str, char first_char);
+  static void readSerialStringCommand(char * command_str,
+    char first_char);
   static void writeSerialStringResponse(char * response);
 
   static bool initializeEthernet();
   static void pollEthernet();
   static bool createEthernetServerConnection();
-  static void writeEthernetBinaryResponse(void * connection, uint8_t response[AC::constants::byte_count_per_response_max], uint8_t response_byte_count);
+  static void writeEthernetBinaryResponse(void * connection,
+    uint8_t response[AC::constants::byte_count_per_response_max],
+    uint8_t response_byte_count);
 
-  static void armDisplayTimer(uint32_t frequency_hz, void (*isr)());
+  static void armDisplayTimer(uint32_t frequency_hz,
+    void (*isr)());
   static void disarmDisplayTimer();
 
   static void initializeFrame();
   static uint8_t * getFrameBuffer();
   static void fillFrameBufferWithAllOn(uint8_t * buffer,
     uint16_t & buffer_byte_count,
-    uint8_t panel_byte_count,
+    bool grayscale,
     uint8_t & region_row_panel_count,
     uint8_t & region_col_panel_count);
-  static uint16_t decodeStreamedFrame(uint8_t const * command_buffer, uint32_t command_byte_count);
+  static uint16_t decodeStreamedFrame(uint8_t const * command_buffer,
+    uint32_t command_byte_count,
+    bool grayscale);
   static void fillFrameBufferWithStream(uint8_t * buffer,
     uint16_t & buffer_byte_count,
-    uint8_t panel_byte_count,
+    bool grayscale,
     uint8_t & region_row_panel_count,
     uint8_t & region_col_panel_count);
-  static void enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
-  static void disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index);
-  static void transferPanelSet(const uint8_t * buffer, uint16_t & buffer_position, uint8_t panel_byte_count);
+  static void enablePanelSetSelectPin(uint8_t row_index,
+    uint8_t col_index);
+  static void disablePanelSetSelectPin(uint8_t row_index,
+    uint8_t col_index);
+  static void transferPanelSet(const uint8_t * buffer,
+    uint16_t & buffer_position,
+    uint8_t panel_byte_count);
 
 };
 
