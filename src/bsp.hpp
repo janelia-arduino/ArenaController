@@ -25,7 +25,8 @@ struct BSP {
   static bool createEthernetServerConnection();
   static void writeEthernetBinaryResponse(void * connection, uint8_t response[AC::constants::byte_count_per_response_max], uint8_t response_byte_count);
 
-  static void initializeDisplayTimer();
+  static void armDisplayTimer(uint32_t frequency_hz, void (*isr)());
+  static void disarmDisplayTimer();
 
   static void initializeFrame();
   static uint8_t * getFrameBuffer();

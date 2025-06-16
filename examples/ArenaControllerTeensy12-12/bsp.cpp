@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Watchdog_t4.h>
 #include <TimerOne.h>
+#include <TimerThree.h>
 #include <SPI.h>
 #include <EventResponder.h>
 
@@ -411,9 +412,17 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
   }
 }
 
-void BSP::initializeDisplayTimer()
+void BSP::armDisplayTimer(uint32_t frequency_hz, void (*isr)())
 {
+  uint32_t microseconds = constants::microseconds_per_second / frequency_hz;
+  Timer3.initialize(microseconds);
+  Timer3.attachInterrupt(isr);
+}
 
+void BSP::disarmDisplayTimer()
+{
+  Timer3.stop();
+  Timer3.detachInterrupt();
 }
 
 void BSP::initializeFrame()

@@ -35,6 +35,8 @@ struct FSP
   static void Display_armDisplayFrameTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_disarmDisplayFrameTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_transferFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_defer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_recall(QP::QActive * const ao, QP::QEvt const * e);
 
   static void SerialCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_armSerialTimer(QP::QActive * const ao, QP::QEvt const * e);

@@ -21,7 +21,9 @@ constexpr uint16_t serial_timeout = 100;
 // Ethernet Communication Interface
 constexpr uint16_t ethernet_server_port = 62222;
 
+// Display
 constexpr uint32_t display_frequency_hz_default = 200;
+constexpr uint32_t display_queue_size = 1;
 
 // Commands
 constexpr uint16_t string_command_length_max = 512;

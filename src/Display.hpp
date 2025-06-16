@@ -32,6 +32,7 @@ class Display : public QP::QActive {
 public:
     static Display instance;
     std::uint32_t display_frequency_hz_;
+    QP::QEQueue display_queue_;
 
 public:
     Display();

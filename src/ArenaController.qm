@@ -224,6 +224,7 @@ This structure of the code is recommended for applications with only one active 
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
    <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="display_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
    </operation>
@@ -267,7 +268,7 @@ This structure of the code is recommended for applications with only one active 
        <entry brief="armDisplayFrameTimer()">FSP::Display_armDisplayFrameTimer(this, e);</entry>
        <exit brief="disarmDisplayFrameTimer()">FSP::Display_disarmDisplayFrameTimer(this, e);</exit>
        <initial target="../2">
-        <initial_glyph conn="42,37,4,0,3">
+        <initial_glyph conn="44,37,4,0,3">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
@@ -278,30 +279,39 @@ This structure of the code is recommended for applications with only one active 
         </tran_glyph>
        </tran>
        <state name="WaitingToDisplayFrame">
+        <entry brief="recall()">FSP::Display_recall(this, e);</entry>
         <tran trig="DISPLAY_TIMEOUT" target="../../3">
-         <tran_glyph conn="42,47,2,3,4">
+         <tran_glyph conn="44,47,2,3,4,-2">
           <action box="1,1,22,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="33,40,20,7"/>
+        <state_glyph node="35,40,20,7">
+         <entry box="1,2,15,2"/>
+        </state_glyph>
        </state>
        <state name="DisplayingFrame">
         <entry brief="transferFrame()">FSP::Display_transferFrame(this, e);</entry>
         <tran trig="FRAME_TRANSFERRED" target="../../2">
-         <tran_glyph conn="35,54,3,1,-4,-10,2">
+         <tran_glyph conn="35,54,3,1,-4,-10,4">
           <action box="-19,1,18,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="35,51,17,6">
-         <entry box="1,2,13,2"/>
+        <tran trig="DISPLAY_TIMEOUT">
+         <action brief="defer()">FSP::Display_defer(this, e);</action>
+         <tran_glyph conn="35,58,3,-1,23">
+          <action box="0,-2,16,4"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="35,51,33,15">
+         <entry box="1,2,14,2"/>
         </state_glyph>
        </state>
-       <state_glyph node="10,30,65,29">
+       <state_glyph node="10,30,65,42">
         <entry box="1,2,25,2"/>
         <exit box="1,4,23,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="7,25,78,41"/>
+      <state_glyph node="7,25,78,49"/>
      </state>
      <state_glyph node="2,5,94,71"/>
     </state>

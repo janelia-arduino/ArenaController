@@ -159,6 +159,12 @@ Q_STATE_DEF(Display, DisplayingFrames) {
 Q_STATE_DEF(Display, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToDisplayFrame}
+        case Q_ENTRY_SIG: {
+            FSP::Display_recall(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToDisplay~::DISPLAY_TIMEOUT}
         case DISPLAY_TIMEOUT_SIG: {
             status_ = tran(&DisplayingFrame);
@@ -184,6 +190,12 @@ Q_STATE_DEF(Display, DisplayingFrame) {
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             status_ = tran(&WaitingToDisplayFrame);
+            break;
+        }
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame::DISPLAY_TIMEOUT}
+        case DISPLAY_TIMEOUT_SIG: {
+            FSP::Display_defer(this, e);
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {

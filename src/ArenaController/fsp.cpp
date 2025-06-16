@@ -92,7 +92,7 @@ void FSP::ArenaController_setup()
   // QS_GLB_FILTER(QP::QS_QEP_TRAN);
   // QS_GLB_FILTER(QP::QS_QEP_INTERN_TRAN);
   // QS_GLB_FILTER(QP::QS_QF_NEW);QS_QF_EQUEUE_POST
-  QS_GLB_FILTER(QP::QS_QF_EQUEUE_POST);
+  // QS_GLB_FILTER(QP::QS_QF_EQUEUE_POST);
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
   // QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
   // QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
@@ -185,11 +185,6 @@ void FSP::Arena_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
   AO_Frame->POST(&fillFrameBufferWithStreamEvt, &l_FSP_ID);
 }
 
-void postDisplayTimeout()
-{
-  AO_Display->POST(&displayTimeoutEvt, &l_FSP_ID);
-}
-
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
@@ -197,6 +192,9 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(DISPLAY_FRAMES_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
   display->display_frequency_hz_ = constants::display_frequency_hz_default;
+
+  static QEvt const * display_queue_store[constants::display_queue_size];
+  display->display_queue_.init(display_queue_store, Q_DIM(display_queue_store));
 
   QS_SIG_DICTIONARY(DISPLAY_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(SET_DISPLAY_FREQUENCY_SIG, ao);
@@ -213,21 +211,24 @@ void FSP::Display_setDisplayFrequency(QActive * const ao, QEvt const * e)
   QS_END()
 }
 
+void postDisplayTimeout()
+{
+  AO_Display->POST(&displayTimeoutEvt, &l_FSP_ID);
+}
+
 void FSP::Display_armDisplayFrameTimer(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  display->display_time_evt_.armX(constants::ticks_per_second/display->display_frequency_hz_,
-    constants::ticks_per_second/display->display_frequency_hz_);
+  BSP::armDisplayTimer(display->display_frequency_hz_, postDisplayTimeout);
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
     QS_STR("armDisplayFrameTimer");
-    QS_U16(5, constants::ticks_per_second/display->display_frequency_hz_);
+    QS_U16(5, display->display_frequency_hz_);
   QS_END()
 }
 
 void FSP::Display_disarmDisplayFrameTimer(QActive * const ao, QEvt const * e)
 {
-  Display * const display = static_cast<Display * const>(ao);
-  display->display_time_evt_.disarm();
+  BSP::disarmDisplayTimer();
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
     QS_STR("disarmDisplayFrameTimer");
   QS_END()
@@ -236,6 +237,21 @@ void FSP::Display_disarmDisplayFrameTimer(QActive * const ao, QEvt const * e)
 void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
 {
   QF::PUBLISH(&transferFrameEvt, ao);
+}
+
+void FSP::Display_defer(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Display * const display = static_cast<Display * const>(ao);
+  if (display->display_queue_.getNFree() > 0)
+  {
+    display->defer(&display->display_queue_, e);
+  }
+}
+
+void FSP::Display_recall(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Display * const display = static_cast<Display * const>(ao);
+  display->recall(&display->display_queue_);
 }
 
 void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
