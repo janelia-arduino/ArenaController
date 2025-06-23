@@ -685,9 +685,39 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case TRIAL_PARAMS_CMD:
     {
+      uint8_t control_mode;
+      memcpy(&control_mode, command_buffer + command_buffer_position, sizeof(control_mode));
+      command_buffer_position += sizeof(control_mode);
+
+      uint16_t pattern_id;
+      memcpy(&pattern_id, command_buffer + command_buffer_position, sizeof(pattern_id));
+      command_buffer_position += sizeof(pattern_id);
+
+      uint16_t frame_rate;
+      memcpy(&frame_rate, command_buffer + command_buffer_position, sizeof(frame_rate));
+      command_buffer_position += sizeof(frame_rate);
+
+      uint16_t init_pos;
+      memcpy(&init_pos, command_buffer + command_buffer_position, sizeof(init_pos));
+      command_buffer_position += sizeof(init_pos);
+
+      uint16_t gain;
+      memcpy(&gain, command_buffer + command_buffer_position, sizeof(gain));
+      command_buffer_position += sizeof(gain);
+
+      uint16_t runtime_duration;
+      memcpy(&runtime_duration, command_buffer + command_buffer_position, sizeof(runtime_duration));
+      command_buffer_position += sizeof(runtime_duration);
+
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("trial-params command");
+        QS_U8(0, control_mode);
+        QS_U16(5, pattern_id);
+        QS_U16(5, frame_rate);
+        QS_U16(5, init_pos);
+        QS_U16(5, gain);
+        QS_U16(5, runtime_duration);
       QS_END()
       break;
     }
