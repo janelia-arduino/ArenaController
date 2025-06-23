@@ -533,7 +533,6 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
   }
   uint16_t command_buffer_position = 0;
   // uint8_t row_signifier_check = 1;
-  uint8_t byte_count_per_quarter_panel_row;
 
   for (int8_t frame_panel_row_index = (constants::panel_count_per_frame_row_stream - 1); frame_panel_row_index>=0; --frame_panel_row_index)
   {

@@ -735,7 +735,9 @@ void FSP::processStreamCommand(uint8_t const * command_buffer, uint32_t command_
     QS_STR("begin stream decode");
     QS_U32(8, command_byte_count);
   QS_END()
-  uint16_t bytes_decoded = BSP::decodeStreamedFrame(command_buffer, command_byte_count);
+
+  Frame * const frame = static_cast<Frame * const>(AO_Frame);
+  uint16_t bytes_decoded = BSP::decodeStreamedFrame(command_buffer, command_byte_count, frame->grayscale_);
   AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
     QS_STR("end stream decode");
