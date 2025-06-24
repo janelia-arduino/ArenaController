@@ -36,26 +36,32 @@ This structure of the code is recommended for applications with only one active 
     <state name="ArenaOn">
      <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
      <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
-     <initial target="../5">
+     <initial target="../6">
       <initial_glyph conn="51,21,4,0,3">
        <action box="1,-1,18,3"/>
       </initial_glyph>
      </initial>
-     <tran trig="ALL_OFF" target="../5">
+     <tran trig="ALL_OFF" target="../6">
       <tran_glyph conn="10,27,3,3,23">
        <action box="1,-2,14,4"/>
       </tran_glyph>
      </tran>
-     <tran trig="STREAM_FRAME" target="../6">
+     <tran trig="STREAM_FRAME" target="../7">
       <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,63,3,3,23">
        <action box="0,-2,17,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="ALL_ON" target="../4">
+     <tran trig="ALL_ON" target="../5">
       <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,43,3,3,23">
        <action box="1,-2,16,5"/>
+      </tran_glyph>
+     </tran>
+     <tran trig="DISPLAY_PATTERN" target="../8">
+      <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
+      <tran_glyph conn="10,91,3,3,23">
+       <action box="0,-2,19,4"/>
       </tran_glyph>
      </tran>
      <state name="AllOn">
@@ -100,7 +106,15 @@ This structure of the code is recommended for applications with only one active 
        <entry box="1,2,24,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="10,15,91,91">
+     <state name="DisplayingPattern">
+      <entry brief="beginDisplayingPattern()">FSP::Arena_beginDisplayingPattern(this, e);</entry>
+      <exit brief="endDisplayingPattern()">FSP::Arena_endDisplayingPattern(this, e);</exit>
+      <state_glyph node="33,83,35,20">
+       <entry box="1,2,24,2"/>
+       <exit box="1,4,24,2"/>
+      </state_glyph>
+     </state>
+     <state_glyph node="10,15,91,109">
       <entry box="1,2,24,2"/>
       <exit box="1,4,26,2"/>
      </state_glyph>

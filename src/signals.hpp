@@ -30,6 +30,7 @@ enum ArenaControllerSignals
   ALL_ON_SIG,
   ALL_OFF_SIG,
   STREAM_FRAME_SIG,
+  DISPLAY_PATTERN_SIG,
 
   // POST to SerialCommandInterface
   SERIAL_TIMEOUT_SIG,

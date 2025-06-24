@@ -192,6 +192,14 @@ void FSP::Arena_postNextFrameReady(QActive * const ao, QEvt const * e)
   AO_Display->POST(&nextFrameReadyEvt, &l_FSP_ID);
 }
 
+void FSP::Arena_beginDisplayingPattern(QActive * const ao, QEvt const * e)
+{
+}
+
+void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
+{
+}
+
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);

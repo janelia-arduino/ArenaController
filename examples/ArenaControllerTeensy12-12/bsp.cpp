@@ -162,8 +162,6 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
 };
 
 // files
-constexpr char base_dir_str[] = "patterns";
-constexpr uint8_t filename_length_max = 15;
 constexpr uint16_t frame_count_y_max = 1;
 constexpr uint16_t frame_count_x_max = 20;
 } // namespace constants
@@ -797,3 +795,4 @@ void QP::QS::onReset()
   SCB_AIRCR = 0x05FA0004;
   while(true);
 }
+ 
