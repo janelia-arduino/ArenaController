@@ -123,6 +123,12 @@ Q_STATE_DEF(Arena, AllOn) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_TRANSFERRED}
+        case FRAME_TRANSFERRED_SIG: {
+            FSP::Arena_postNextFrameReady(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&ArenaOn);
             break;
@@ -160,6 +166,12 @@ Q_STATE_DEF(Arena, StreamingFrame) {
         //.${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_FILLED}
         case FRAME_FILLED_SIG: {
             FSP::Arena_displayFrames(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_TRANSFERRED}
+        case FRAME_TRANSFERRED_SIG: {
+            FSP::Arena_postNextFrameReady(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

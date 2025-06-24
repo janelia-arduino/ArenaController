@@ -36,6 +36,7 @@ static QEvt const ethernetInitializedEvt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetServerConnectedEvt = {ETHERNET_SERVER_CONNECTED_SIG, 0U, 0U};
 
 static QEvt const displayTimeoutEvt = {DISPLAY_TIMEOUT_SIG, 0U, 0U};
+static QEvt const nextFrameReadyEvt = {NEXT_FRAME_READY_SIG, 0U, 0U};
 
 static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
 static QEvt const fillFrameBufferWithStreamEvt = {FILL_FRAME_BUFFER_WITH_STREAM_SIG, 0U, 0U};
@@ -144,6 +145,7 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   BSP::initializeArena();
 
   ao->subscribe(FRAME_FILLED_SIG);
+  ao->subscribe(FRAME_TRANSFERRED_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
@@ -183,6 +185,11 @@ void FSP::Arena_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 void FSP::Arena_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
 {
   AO_Frame->POST(&fillFrameBufferWithStreamEvt, &l_FSP_ID);
+}
+
+void FSP::Arena_postNextFrameReady(QActive * const ao, QEvt const * e)
+{
+  AO_Display->POST(&nextFrameReadyEvt, &l_FSP_ID);
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -712,12 +719,12 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("trial-params command");
-        QS_U8(0, control_mode);
-        QS_U16(5, pattern_id);
-        QS_U16(5, frame_rate);
-        QS_U16(5, init_pos);
-        QS_U16(5, gain);
-        QS_U16(5, runtime_duration);
+        // QS_U8(0, control_mode);
+        // QS_U16(5, pattern_id);
+        // QS_U16(5, frame_rate);
+        // QS_U16(5, init_pos);
+        // QS_U16(5, gain);
+        // QS_U16(5, runtime_duration);
       QS_END()
       break;
     }

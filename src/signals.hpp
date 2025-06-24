@@ -47,6 +47,7 @@ enum ArenaControllerSignals
   // POST to Display
   DISPLAY_TIMEOUT_SIG,
   SET_DISPLAY_FREQUENCY_SIG,
+  NEXT_FRAME_READY_SIG,
 
   // POST to Frame
   FILL_FRAME_BUFFER_WITH_ALL_ON_SIG,

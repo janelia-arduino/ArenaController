@@ -45,6 +45,7 @@ protected:
     Q_STATE_DECL(DisplayingFrames);
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayingFrame);
+    Q_STATE_DECL(WaitingForNextFrameReady);
 };
 
 } // namespace AC

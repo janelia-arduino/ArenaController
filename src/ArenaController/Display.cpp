@@ -61,6 +61,7 @@ Q_STATE_DEF(Display, initial) {
     QS_FUN_DICTIONARY(&Display::DisplayingFrames);
     QS_FUN_DICTIONARY(&Display::WaitingToDisplayFrame);
     QS_FUN_DICTIONARY(&Display::DisplayingFrame);
+    QS_FUN_DICTIONARY(&Display::WaitingForNextFrameReady);
 
     return tran(&Initialized);
 }
@@ -189,13 +190,29 @@ Q_STATE_DEF(Display, DisplayingFrame) {
         }
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
-            status_ = tran(&WaitingToDisplayFrame);
+            status_ = tran(&WaitingForNextFrameReady);
             break;
         }
         //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::DisplayingFrame::DISPLAY_TIMEOUT}
         case DISPLAY_TIMEOUT_SIG: {
             FSP::Display_defer(this, e);
             status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&DisplayingFrames);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingForNextFrameReady} 
+Q_STATE_DEF(Display, WaitingForNextFrameReady) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingForNextFr~::NEXT_FRAME_READY}
+        case NEXT_FRAME_READY_SIG: {
+            status_ = tran(&WaitingToDisplayFrame);
             break;
         }
         default: {
