@@ -59,6 +59,7 @@ Q_STATE_DEF(Arena, initial) {
     QS_FUN_DICTIONARY(&Arena::AllOn);
     QS_FUN_DICTIONARY(&Arena::AllOff);
     QS_FUN_DICTIONARY(&Arena::StreamingFrame);
+    QS_FUN_DICTIONARY(&Arena::DisplayingPattern);
 
     return tran(&ArenaOn);
 }
@@ -98,6 +99,28 @@ Q_STATE_DEF(Arena, ArenaOn) {
         case ALL_ON_SIG: {
             FSP::Arena_deactivateDisplay(this, e);
             status_ = tran(&AllOn);
+            break;
+        }
+        //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN}
+        case DISPLAY_PATTERN_SIG: {
+            FSP::Arena_initializeDisplayingPattern(this, e);
+            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifCardInitialized()]}
+            if (FSP::Arena_ifCardInitialized(this, e)) {
+                //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifCardInitializ~::[ifVolumeInitialized()]}
+                if (FSP::Arena_ifVolumeInitialized(this, e)) {
+                    status_ = tran(&DisplayingPattern);
+                }
+                //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifCardInitializ~::[else]}
+                else {
+                    FSP::Arena_postAllOff(this, e);
+                    status_ = Q_RET_HANDLED;
+                }
+            }
+            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[else]}
+            else {
+                FSP::Arena_postAllOff(this, e);
+                status_ = Q_RET_HANDLED;
+            }
             break;
         }
         default: {
@@ -172,6 +195,29 @@ Q_STATE_DEF(Arena, StreamingFrame) {
         //.${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             FSP::Arena_postNextFrameReady(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&ArenaOn);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Arena::SM::ArenaOn::DisplayingPattern} .............................
+Q_STATE_DEF(Arena, DisplayingPattern) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Arena::SM::ArenaOn::DisplayingPattern}
+        case Q_ENTRY_SIG: {
+            FSP::Arena_beginDisplayingPattern(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Arena::SM::ArenaOn::DisplayingPattern}
+        case Q_EXIT_SIG: {
+            FSP::Arena_endDisplayingPattern(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

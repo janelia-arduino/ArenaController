@@ -3,15 +3,47 @@
 
 using namespace AC;
 
-void Pattern::setup()
+static const char * sd1_str = "SD1";
+static const char * sd2_str = "SD2";
+static const char * sdhc_str = "SDHC";
+static const char * unknown_str = "Unknown";
+
+bool Pattern::initializeCard()
 {
-  sd_.begin(SD_CONFIG);
-
-  pat_dir_.open(constants::base_dir_str);
-  // tpa_dir_.open("patterns/tpa", O_CREAT);
-
-  sd_.chdir(constants::base_dir_str);
+  return card_.init(SPI_HALF_SPEED, BUILTIN_SDCARD);
 }
+
+bool Pattern::initializeVolume()
+{
+  return volume_.init(card_);
+}
+
+void Pattern::readCardType(char * card_type_str)
+{
+  switch(card_.type())
+  {
+    case SD_CARD_TYPE_SD1:
+      strcpy(card_type_str, sd1_str);
+      break;
+    case SD_CARD_TYPE_SD2:
+      strcpy(card_type_str, sd2_str);
+      break;
+    case SD_CARD_TYPE_SDHC:
+      strcpy(card_type_str, sdhc_str);
+      break;
+    default:
+      strcpy(card_type_str, unknown_str);
+  }
+}
+
+// void Pattern::setup()
+// {
+//   sd_.begin(SD_CONFIG);
+
+//   pat_dir_.open(constants::base_dir_str);
+
+//   sd_.chdir(constants::base_dir_str);
+// }
 
 // void Pattern::listFiles()
 // {
@@ -250,10 +282,11 @@ bool Pattern::openPatternFileForReading(uint16_t pattern_id)
 {
   char filename_str[constants::filename_str_len];
   sprintf(filename_str, "pat%0*d.pat", constants::pattern_id_str_len, pattern_id);
+  return false;
 
   // char pattern_id_str[pattern_id_str];
   // char filename;
-  return file_.open(&pat_dir_, filename, O_RDONLY);
+  // return file_.open(&pat_dir_, filename_str, O_RDONLY);
   // if (success)
   // {
   //   char import_filename[constants::filename_length_max] = "";

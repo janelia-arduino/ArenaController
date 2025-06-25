@@ -98,8 +98,10 @@ constexpr uint8_t region_count_per_frame_max = 2;
 
 // pattern
 constexpr char base_dir_str[] = "/";
-constexpr uint8_t filename_str_len = 12;
+constexpr uint8_t filename_str_len = 16;
 constexpr uint8_t pattern_id_str_len = 4;
+constexpr uint8_t pattern_header_size = 7;
+constexpr uint8_t card_type_str_len = 16;
 
 }
 }

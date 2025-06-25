@@ -6,6 +6,8 @@ using namespace QP;
 
 using namespace AC;
 
+//----------------------------------------------------------------------------
+// Static global variables
 static QSpyId const l_FSP_ID = {0U}; // QSpy source ID
 
 static QEvt const resetEvt = {RESET_SIG, 0U, 0U};
@@ -40,6 +42,9 @@ static QEvt const nextFrameReadyEvt = {NEXT_FRAME_READY_SIG, 0U, 0U};
 
 static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
 static QEvt const fillFrameBufferWithStreamEvt = {FILL_FRAME_BUFFER_WITH_STREAM_SIG, 0U, 0U};
+
+static Pattern pattern;
+static PatternHeader pattern_header;
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -192,8 +197,77 @@ void FSP::Arena_postNextFrameReady(QActive * const ao, QEvt const * e)
   AO_Display->POST(&nextFrameReadyEvt, &l_FSP_ID);
 }
 
+void FSP::Arena_initializeDisplayingPattern(QActive * const ao, QEvt const * e)
+{
+  Arena * const arena = static_cast<Arena * const>(ao);
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  arena->pattern_id_ = spev->value;
+
+	Arena_deactivateDisplay(ao, e);
+}
+
+bool FSP::Arena_ifCardInitialized(QActive * const ao, QEvt const * e)
+{
+  bool card_initialized = pattern.initializeCard();
+
+  if (card_initialized)
+  {
+    char card_type_str[constants::card_type_str_len];
+    pattern.readCardType(card_type_str);
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("card initialized");
+      QS_STR(card_type_str);
+    QS_END()
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("card not found");
+    QS_END()
+  }
+  return card_initialized;
+}
+
+bool FSP::Arena_ifVolumeInitialized(QActive * const ao, QEvt const * e)
+{
+  bool volume_initialized = pattern.initializeVolume();
+
+  if (volume_initialized)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("volume initialized");
+    QS_END()
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("volume not found");
+    QS_END()
+  }
+  return volume_initialized;
+}
+
+void FSP::Arena_postAllOff(QActive * const ao, QEvt const * e)
+{
+  AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+}
+
 void FSP::Arena_beginDisplayingPattern(QActive * const ao, QEvt const * e)
 {
+  Arena * const arena = static_cast<Arena * const>(ao);
+
+  // memcpy(&control_mode, command_buffer + command_buffer_position, sizeof(control_mode));
+  // command_buffer_position += sizeof(control_mode);
+
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("beginDisplayingPattern");
+    QS_U8(0, constants::pattern_header_size);
+    QS_U16(5, arena->pattern_id_);
+  // QS_U16(5, frame_rate);
+  // QS_U16(5, init_pos);
+  // QS_U16(5, gain);
+  // QS_U16(5, runtime_duration);
+  QS_END()
 }
 
 void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
@@ -723,6 +797,10 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       uint16_t runtime_duration;
       memcpy(&runtime_duration, command_buffer + command_buffer_position, sizeof(runtime_duration));
       command_buffer_position += sizeof(runtime_duration);
+
+      SetParameterEvt *spev = Q_NEW(SetParameterEvt, DISPLAY_PATTERN_SIG);
+      spev->value = pattern_id;
+      AO_Arena->POST(spev, &l_FSP_ID);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)

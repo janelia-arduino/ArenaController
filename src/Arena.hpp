@@ -31,6 +31,7 @@ namespace AC {
 class Arena : public QP::QActive {
 public:
     static Arena instance;
+    std::uint16_t pattern_id_;
 
 public:
     Arena();
@@ -41,6 +42,7 @@ protected:
     Q_STATE_DECL(AllOn);
     Q_STATE_DECL(AllOff);
     Q_STATE_DECL(StreamingFrame);
+    Q_STATE_DECL(DisplayingPattern);
 };
 
 } // namespace AC

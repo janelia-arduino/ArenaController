@@ -7,6 +7,7 @@
 #include "bsp.hpp"
 #include "signals.hpp"
 #include "records.hpp"
+#include "pattern.hpp"
 
 #include "ArenaController.hpp"
 #include "Arena.hpp"
@@ -30,6 +31,10 @@ struct FSP
   static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithStream(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_postNextFrameReady(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_initializeDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
+  static bool Arena_ifCardInitialized(QP::QActive * const ao, QP::QEvt const * e);
+  static bool Arena_ifVolumeInitialized(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_endDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
 
