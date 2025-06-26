@@ -103,18 +103,10 @@ Q_STATE_DEF(Arena, ArenaOn) {
         }
         //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
-            FSP::Arena_initializeDisplayingPattern(this, e);
-            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifCardInitialized()]}
-            if (FSP::Arena_ifCardInitialized(this, e)) {
-                //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifCardInitializ~::[ifVolumeInitialized()]}
-                if (FSP::Arena_ifVolumeInitialized(this, e)) {
-                    status_ = tran(&DisplayingPattern);
-                }
-                //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifCardInitializ~::[else]}
-                else {
-                    FSP::Arena_postAllOff(this, e);
-                    status_ = Q_RET_HANDLED;
-                }
+            FSP::Arena_initializePattern(this, e);
+            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifPatternInitialized()]}
+            if (FSP::Arena_ifPatternInitialized(this, e)) {
+                status_ = tran(&DisplayingPattern);
             }
             //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[else]}
             else {

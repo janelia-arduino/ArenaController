@@ -23,7 +23,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="instance" type="Arena" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <attribute name="pattern_id_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="pattern_initialized_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <operation name="Arena" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Arena::initial))</code>
    </operation>
@@ -60,34 +60,21 @@ This structure of the code is recommended for applications with only one active 
       </tran_glyph>
      </tran>
      <tran trig="DISPLAY_PATTERN">
-      <action brief="initializeDisplayingPattern()">FSP::Arena_initializeDisplayingPattern(this, e);</action>
-      <choice>
-       <guard brief="ifCardInitialized()">FSP::Arena_ifCardInitialized(this, e)</guard>
-       <choice target="../../../8">
-        <guard brief="ifVolumeInitialized()">FSP::Arena_ifVolumeInitialized(this, e)</guard>
-        <choice_glyph conn="51,91,5,3,35">
-         <action box="1,0,16,3"/>
-        </choice_glyph>
-       </choice>
-       <choice>
-        <guard brief="else"/>
-        <action brief="postAllOff()">FSP::Arena_postAllOff(this, e);</action>
-        <choice_glyph conn="51,91,4,-1,7,10">
-         <action box="0,7,9,4"/>
-        </choice_glyph>
-       </choice>
-       <choice_glyph conn="34,91,5,-1,17">
+      <action brief="initializePattern()">FSP::Arena_initializePattern(this, e);</action>
+      <choice target="../../8">
+       <guard brief="ifPatternInitialized()">FSP::Arena_ifPatternInitialized(this, e)</guard>
+       <choice_glyph conn="29,91,5,3,18">
         <action box="1,0,15,3"/>
        </choice_glyph>
       </choice>
       <choice>
        <guard brief="else"/>
        <action brief="postAllOff()">FSP::Arena_postAllOff(this, e);</action>
-       <choice_glyph conn="34,91,4,-1,7,9">
+       <choice_glyph conn="29,91,4,-1,7,9">
         <action box="0,7,10,6"/>
        </choice_glyph>
       </choice>
-      <tran_glyph conn="10,91,3,-1,24">
+      <tran_glyph conn="10,91,3,-1,19">
        <action box="0,-2,21,4"/>
       </tran_glyph>
      </tran>
@@ -136,7 +123,7 @@ This structure of the code is recommended for applications with only one active 
      <state name="DisplayingPattern">
       <entry brief="beginDisplayingPattern()">FSP::Arena_beginDisplayingPattern(this, e);</entry>
       <exit brief="endDisplayingPattern()">FSP::Arena_endDisplayingPattern(this, e);</exit>
-      <state_glyph node="86,87,29,20">
+      <state_glyph node="47,87,29,20">
        <entry box="1,2,24,2"/>
        <exit box="1,4,24,2"/>
       </state_glyph>

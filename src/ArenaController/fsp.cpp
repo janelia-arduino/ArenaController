@@ -44,7 +44,6 @@ static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_S
 static QEvt const fillFrameBufferWithStreamEvt = {FILL_FRAME_BUFFER_WITH_STREAM_SIG, 0U, 0U};
 
 static Pattern pattern;
-static PatternHeader pattern_header;
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -197,26 +196,20 @@ void FSP::Arena_postNextFrameReady(QActive * const ao, QEvt const * e)
   AO_Display->POST(&nextFrameReadyEvt, &l_FSP_ID);
 }
 
-void FSP::Arena_initializeDisplayingPattern(QActive * const ao, QEvt const * e)
+void FSP::Arena_initializePattern(QActive * const ao, QEvt const * e)
 {
   Arena * const arena = static_cast<Arena * const>(ao);
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  arena->pattern_id_ = spev->value;
+  uint16_t pattern_id = spev->value;
+
+  arena->pattern_initialized_ = false;
 
 	Arena_deactivateDisplay(ao, e);
-}
 
-bool FSP::Arena_ifCardInitialized(QActive * const ao, QEvt const * e)
-{
-  bool card_initialized = pattern.initializeCard();
-
-  if (card_initialized)
+  if (pattern.initializeCard())
   {
-    char card_type_str[constants::card_type_str_len];
-    pattern.readCardType(card_type_str);
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-      QS_STR("card initialized");
-      QS_STR(card_type_str);
+      QS_STR("card found");
     QS_END()
   }
   else
@@ -224,27 +217,46 @@ bool FSP::Arena_ifCardInitialized(QActive * const ao, QEvt const * e)
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
       QS_STR("card not found");
     QS_END()
+    return;
   }
-  return card_initialized;
-}
 
-bool FSP::Arena_ifVolumeInitialized(QActive * const ao, QEvt const * e)
-{
-  bool volume_initialized = pattern.initializeVolume();
-
-  if (volume_initialized)
+  uint64_t file_size = pattern.openFileForReading(pattern_id);
+  if (file_size)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-      QS_STR("volume initialized");
+      QS_STR("file found");
+      QS_U32(8, file_size);
     QS_END()
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-      QS_STR("volume not found");
+      QS_STR("file not found");
     QS_END()
+    return;
   }
-  return volume_initialized;
+
+  PatternHeader & pattern_header = pattern.rewindFileReadHeader();
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("frame_count_x");
+    QS_U16(5, pattern_header.frame_count_x);
+    QS_STR("frame_count_y");
+    QS_U16(5, pattern_header.frame_count_y);
+    QS_STR("grayscale_value");
+    QS_U8(0, pattern_header.grayscale_value);
+    QS_STR("panel_count_per_frame_row");
+    QS_U8(0, pattern_header.panel_count_per_frame_row);
+    QS_STR("panel_count_per_frame_col");
+    QS_U8(0, pattern_header.panel_count_per_frame_col);
+  QS_END()
+
+  arena->pattern_initialized_ = true;
+}
+
+bool FSP::Arena_ifPatternInitialized(QActive * const ao, QEvt const * e)
+{
+  Arena * const arena = static_cast<Arena * const>(ao);
+  return arena->pattern_initialized_;
 }
 
 void FSP::Arena_postAllOff(QActive * const ao, QEvt const * e)
@@ -272,6 +284,7 @@ void FSP::Arena_beginDisplayingPattern(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
 {
+  pattern.closeFile();
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
