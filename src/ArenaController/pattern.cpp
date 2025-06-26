@@ -30,29 +30,9 @@ void Pattern::closeFile()
   file_.close();
 }
 
-// void Pattern::writePanelToFile(const uint8_t * panel_buffer, size_t panel_byte_count)
-// {
-//   file_.write(panel_buffer, panel_byte_count);
-//   file_.sync();
-// }
-
 // void Pattern::readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count)
 // {
 //   file_.read(panel_buffer, panel_byte_count);
 //   file_position_ = file_position_ + panel_byte_count;
 //   file_.seekSet(file_position_);
-// }
-
-// const char * Pattern::getFilenameSuffix(const char * filename)
-// {
-//   const char * dot = strrchr(filename, '.');
-//   if(!dot || dot == filename) return "";
-//   return dot + 1;
-// }
-
-// void Pattern::getFilenameStem(char * stem, const char * filename)
-// {
-//   const char * dot = strrchr(filename, '.');
-//   if(!dot || dot == filename) return "";
-//   strncpy(stem, filename, (strlen(filename) - strlen(dot)));
 // }

@@ -268,17 +268,8 @@ void FSP::Arena_beginDisplayingPattern(QActive * const ao, QEvt const * e)
 {
   Arena * const arena = static_cast<Arena * const>(ao);
 
-  // memcpy(&control_mode, command_buffer + command_buffer_position, sizeof(control_mode));
-  // command_buffer_position += sizeof(control_mode);
-
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("beginDisplayingPattern");
-    QS_U8(0, constants::pattern_header_size);
-    QS_U16(5, arena->pattern_id_);
-  // QS_U16(5, frame_rate);
-  // QS_U16(5, init_pos);
-  // QS_U16(5, gain);
-  // QS_U16(5, runtime_duration);
   QS_END()
 }
 
