@@ -174,7 +174,7 @@ Q_STATE_DEF(Arena, StreamingFrame) {
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::StreamingFrame}
         case Q_ENTRY_SIG: {
-            FSP::Arena_fillFrameBufferWithStream(this, e);
+            FSP::Arena_fillFrameBufferWithDecodedFrame(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

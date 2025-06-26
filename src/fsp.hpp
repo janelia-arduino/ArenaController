@@ -29,7 +29,7 @@ struct FSP
   static void Arena_deactivateDisplay(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_displayFrames(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_fillFrameBufferWithStream(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_postNextFrameReady(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_initializePattern(QP::QActive * const ao, QP::QEvt const * e);
   static bool Arena_ifPatternInitialized(QP::QActive * const ao, QP::QEvt const * e);
@@ -72,7 +72,7 @@ struct FSP
 
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
-  static void Frame_fillFrameBufferWithStream(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_reset(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_beginTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_endTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);

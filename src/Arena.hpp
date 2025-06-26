@@ -31,7 +31,6 @@ namespace AC {
 class Arena : public QP::QActive {
 public:
     static Arena instance;
-    std::uint16_t pattern_id_;
     std::uint8_t pattern_initialized_;
 
 public:

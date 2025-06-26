@@ -17,14 +17,14 @@ struct BSP {
   static bool beginSerial();
   static bool pollSerialCommand();
   static uint8_t readSerialByte();
-  static void readSerialStringCommand(char * command_str,
+  static void readSerialStringCommand(char * const command_str,
     char first_char);
-  static void writeSerialStringResponse(char * response);
+  static void writeSerialStringResponse(char * const response);
 
   static bool initializeEthernet();
   static void pollEthernet();
   static bool createEthernetServerConnection();
-  static void writeEthernetBinaryResponse(void * connection,
+  static void writeEthernetBinaryResponse(void * const connection,
     uint8_t response[AC::constants::byte_count_per_response_max],
     uint8_t response_byte_count);
 
@@ -33,16 +33,16 @@ struct BSP {
   static void disarmDisplayTimer();
 
   static void initializeFrame();
-  static uint8_t * getFrameBuffer();
-  static void fillFrameBufferWithAllOn(uint8_t * buffer,
+  static uint8_t * const getFrameBuffer();
+  static void fillFrameBufferWithAllOn(uint8_t * const buffer,
     uint16_t & buffer_byte_count,
     bool grayscale,
     uint8_t & region_row_panel_count,
     uint8_t & region_col_panel_count);
-  static uint16_t decodeStreamedFrame(uint8_t const * command_buffer,
-    uint32_t command_byte_count,
+  static uint16_t decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffer,
+    uint32_t pattern_frame_byte_count,
     bool grayscale);
-  static void fillFrameBufferWithStream(uint8_t * buffer,
+  static void fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
     uint16_t & buffer_byte_count,
     bool grayscale,
     uint8_t & region_row_panel_count,
@@ -51,10 +51,11 @@ struct BSP {
     uint8_t col_index);
   static void disablePanelSetSelectPin(uint8_t row_index,
     uint8_t col_index);
-  static void transferPanelSet(const uint8_t * buffer,
+  static void transferPanelSet(const uint8_t * const buffer,
     uint16_t & buffer_position,
     uint8_t panel_byte_count);
 
+  static uint8_t * const getPatternFrameBuffer();
 };
 
 #endif // BSP_HPP

@@ -77,9 +77,9 @@ Q_STATE_DEF(Frame, Inactive) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Frame::SM::Inactive::FILL_FRAME_BUFFER_WITH_STREAM}
-        case FILL_FRAME_BUFFER_WITH_STREAM_SIG: {
-            FSP::Frame_fillFrameBufferWithStream(this, e);
+        //.${AOs::Frame::SM::Inactive::FILL_FRAME_BUFFER_WITH_DECODED_F~}
+        case FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG: {
+            FSP::Frame_fillFrameBufferWithDecodedFrame(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

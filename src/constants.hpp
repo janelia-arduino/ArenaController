@@ -93,10 +93,9 @@ constexpr uint8_t byte_count_per_panel_binary = \
 constexpr uint8_t switch_grayscale_command_value_grayscale = 1;
 constexpr uint8_t switch_grayscale_command_value_binary = 0;
 
-// region
-constexpr uint8_t region_count_per_frame_max = 2;
-
 // pattern
+constexpr uint8_t pattern_grayscale_value = 16;
+constexpr uint8_t pattern_binary_value = 2;
 constexpr char base_dir_str[] = "/";
 constexpr uint8_t filename_str_len = 16;
 constexpr uint8_t pattern_id_str_len = 4;

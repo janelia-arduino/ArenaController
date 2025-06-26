@@ -28,6 +28,10 @@ public:
   uint64_t openFileForReading(uint16_t pattern_id);
   PatternHeader & rewindFileReadHeader();
   void closeFile();
+  void readFrameIntoBufferFromFile(uint8_t * buffer,
+    uint8_t panel_count_per_frame_row,
+    uint8_t panel_count_per_frame_col,
+    bool grayscale);
   // void readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count);
 private:
   FsFile file_;

@@ -41,7 +41,7 @@ static QEvt const displayTimeoutEvt = {DISPLAY_TIMEOUT_SIG, 0U, 0U};
 static QEvt const nextFrameReadyEvt = {NEXT_FRAME_READY_SIG, 0U, 0U};
 
 static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
-static QEvt const fillFrameBufferWithStreamEvt = {FILL_FRAME_BUFFER_WITH_STREAM_SIG, 0U, 0U};
+static QEvt const fillFrameBufferWithDecodedFrameEvt = {FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, 0U, 0U};
 
 static Pattern pattern;
 
@@ -186,9 +186,9 @@ void FSP::Arena_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
   AO_Frame->POST(&fillFrameBufferWithAllOnEvt, &l_FSP_ID);
 }
 
-void FSP::Arena_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
+void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const * e)
 {
-  AO_Frame->POST(&fillFrameBufferWithStreamEvt, &l_FSP_ID);
+  AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, &l_FSP_ID);
 }
 
 void FSP::Arena_postNextFrameReady(QActive * const ao, QEvt const * e)
@@ -570,7 +570,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(FRAME_TRANSFERRED_SIG);
 
   QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, ao);
-  QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_STREAM_SIG, ao);
+  QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, ao);
 }
 
 void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
@@ -591,19 +591,19 @@ void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
   QF::PUBLISH(&frameFilledEvt, ao);
 }
 
-void FSP::Frame_fillFrameBufferWithStream(QActive * const ao, QEvt const * e)
+void FSP::Frame_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const * e)
 {
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("begin stream fill");
+    QS_STR("begin decoded fill");
   QS_END()
   Frame * const frame = static_cast<Frame * const>(ao);
-  BSP::fillFrameBufferWithStream(frame->buffer_,
+  BSP::fillFrameBufferWithDecodedFrame(frame->buffer_,
     frame->buffer_byte_count_,
     frame->grayscale_,
     frame->region_row_panel_count_,
     frame->region_col_panel_count_);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("end stream fill");
+    QS_STR("end decoded fill");
     QS_U32(8, frame->buffer_byte_count_);
   QS_END()
   QF::PUBLISH(&frameFilledEvt, ao);
@@ -864,7 +864,7 @@ void FSP::processStreamCommand(uint8_t const * command_buffer, uint32_t command_
   QS_END()
 
   Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  uint16_t bytes_decoded = BSP::decodeStreamedFrame(command_buffer, command_byte_count, frame->grayscale_);
+  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(command_buffer, command_byte_count, frame->grayscale_);
   AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
     QS_STR("end stream decode");

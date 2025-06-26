@@ -132,25 +132,26 @@ constexpr uint8_t reset_pin = 34;
 // frame
 constexpr uint8_t panel_count_per_frame_row_max = 5;
 constexpr uint8_t panel_count_per_frame_col_max = 12;
+constexpr uint8_t pattern_row_signifier_byte_count_per_row = quarter_panel_count_per_panel;
 constexpr uint8_t panel_count_per_frame_max = \
   panel_count_per_frame_row_max * panel_count_per_frame_col_max; // 60
-constexpr uint16_t byte_count_per_frame_grayscale_max = \
+constexpr uint16_t byte_count_per_frame_max = \
   panel_count_per_frame_max * \
   byte_count_per_panel_grayscale; // 60*132=7920
-constexpr uint8_t panel_count_per_frame_row_stream = 2;
-constexpr uint8_t panel_count_per_frame_col_stream = 12;
+constexpr uint8_t panel_count_per_frame_row = 2;
+constexpr uint8_t panel_count_per_frame_col = 12;
 
 // region
 constexpr uint8_t region_count_per_frame = 2;
 constexpr SPIClass *region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
 constexpr uint8_t region_cipo_pins[region_count_per_frame] = {12, 1};
 
-constexpr uint8_t panel_count_per_region_row_max = panel_count_per_frame_row_max;
+constexpr uint8_t panel_count_per_region_row_max = constants::panel_count_per_frame_row_max;
 constexpr uint8_t panel_count_per_region_col_max = \
-  panel_count_per_frame_col_max/region_count_per_frame; // 6
-constexpr uint8_t panel_count_per_region_row_stream = panel_count_per_frame_row_stream;
-constexpr uint8_t panel_count_per_region_col_stream = \
-  panel_count_per_frame_col_stream/region_count_per_frame; // 6
+  constants::panel_count_per_frame_col_max/region_count_per_frame; // 6
+constexpr uint8_t panel_count_per_region_row = panel_count_per_frame_row;
+constexpr uint8_t panel_count_per_region_col = \
+  panel_count_per_frame_col/region_count_per_frame; // 6
 
 constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_count_per_region_col_max] =
 {
@@ -160,6 +161,9 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
   {4, 9, 29, 22, 41, 36},
   {5, 10, 30, 21, 40, 35}
 };
+
+// pattern
+constexpr uint16_t byte_count_per_pattern_frame_max = byte_count_per_frame_max + pattern_row_signifier_byte_count_per_row * panel_count_per_frame_row_max; // 7920 + 4*5 = 7940
 
 // files
 constexpr uint16_t frame_count_y_max = 1;
@@ -207,18 +211,22 @@ struct Panel
 
 struct Region
 {
-  Panel panels[constants::panel_count_per_region_row_stream][constants::panel_count_per_region_col_stream];
+  Panel panels[constants::panel_count_per_region_row][constants::panel_count_per_region_col];
 };
 
-struct StreamedFrame
+struct DecodedFrame
 {
   Region regions[constants::region_count_per_frame];
 };
+static DecodedFrame decoded_frame;
 
 // managed by Frame active object
 // do not manipulate directly
-static uint8_t frame_buffer[constants::byte_count_per_frame_grayscale_max];
-static StreamedFrame streamed_frame;
+static uint8_t frame_buffer[constants::byte_count_per_frame_max];
+
+// managed by Pattern object
+// do not manipulate directly
+static uint8_t pattern_frame_buffer[constants::byte_count_per_pattern_frame_max];
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -294,7 +302,8 @@ uint8_t BSP::readSerialByte()
   return serial_communication_interface_stream.read();
 }
 
-void BSP::readSerialStringCommand(char *command_str, char first_char)
+void BSP::readSerialStringCommand(char * const command_str,
+  char first_char)
 {
   char command_tail[constants::string_command_length_max];
   size_t chars_read = serial_communication_interface_stream.readBytesUntil(constants::command_termination_character,
@@ -305,7 +314,7 @@ void BSP::readSerialStringCommand(char *command_str, char first_char)
   strcat(command_str, command_tail);
 }
 
-void BSP::writeSerialStringResponse(char *response)
+void BSP::writeSerialStringResponse(char * const response)
 {
   serial_communication_interface_stream.println(response);
 }
@@ -393,7 +402,9 @@ bool BSP::createEthernetServerConnection()
   return true;
 }
 
-void BSP::writeEthernetBinaryResponse(void * connection, uint8_t response[constants::byte_count_per_response_max], uint8_t response_byte_count)
+void BSP::writeEthernetBinaryResponse(void * const connection,
+  uint8_t response[constants::byte_count_per_response_max],
+  uint8_t response_byte_count)
 {
   struct mg_connection * c = (struct mg_connection *)connection;
   struct mg_iobuf *r = &c->recv;
@@ -410,7 +421,8 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
   }
 }
 
-void BSP::armDisplayTimer(uint32_t frequency_hz, void (*isr)())
+void BSP::armDisplayTimer(uint32_t frequency_hz,
+  void (*isr)())
 {
   uint32_t microseconds = constants::microseconds_per_second / frequency_hz;
   Timer3.initialize(microseconds);
@@ -437,12 +449,12 @@ void BSP::initializeFrame()
   }
 }
 
-uint8_t * BSP::getFrameBuffer()
+uint8_t * const BSP::getFrameBuffer()
 {
   return frame_buffer;
 }
 
-void BSP::fillFrameBufferWithAllOn(uint8_t * buffer,
+void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
   uint16_t & buffer_byte_count,
   bool grayscale,
   uint8_t & region_row_panel_count,
@@ -515,10 +527,12 @@ uint8_t remapColumnIndex(uint8_t column_index)
   {
     return column_index;
   }
-  return constants::panel_count_per_frame_col_stream - column_index;
+  return constants::panel_count_per_frame_col - column_index;
 }
 
-uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t command_byte_count, bool grayscale)
+uint16_t BSP::decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffer,
+  uint32_t pattern_frame_byte_count,
+  bool grayscale)
 {
   uint8_t byte_count_per_quarter_panel_row;
   if (grayscale)
@@ -529,10 +543,10 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
   {
     byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_binary;
   }
-  uint16_t command_buffer_position = 0;
+  uint16_t pattern_frame_buffer_position = 0;
   // uint8_t row_signifier_check = 1;
 
-  for (int8_t frame_panel_row_index = (constants::panel_count_per_frame_row_stream - 1); frame_panel_row_index>=0; --frame_panel_row_index)
+  for (int8_t frame_panel_row_index = (constants::panel_count_per_frame_row - 1); frame_panel_row_index>=0; --frame_panel_row_index)
   {
     for (uint8_t quarter_panel_col_index = 0; quarter_panel_col_index<constants::quarter_panel_count_per_panel_col; ++quarter_panel_col_index)
     // for (int8_t quarter_panel_col_index = (constants::quarter_panel_count_per_panel_col - 1); quarter_panel_col_index>=0; --quarter_panel_col_index)
@@ -540,8 +554,8 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
       // for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
       for (int8_t quarter_panel_row_index = (constants::quarter_panel_count_per_panel_row - 1); quarter_panel_row_index>=0; --quarter_panel_row_index)
       {
-        // uint8_t row_signifier = command_buffer[command_buffer_position++];
-        ++command_buffer_position;
+        // uint8_t row_signifier = pattern_frame_buffer[pattern_frame_buffer_position++];
+        ++pattern_frame_buffer_position; // skip row signifier
         // QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
         //   QS_U8(0, row_signifier_check);
         //   QS_U8(0, row_signifier);
@@ -551,8 +565,8 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
         uint8_t region_panel_row_index = frame_panel_row_index;
         uint8_t remapped_frame_panel_col_index;
         uint8_t stretch;
-        for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
-        // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
+        for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col; ++frame_panel_col_index)
+        // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col - 1); frame_panel_col_index>=0; --frame_panel_col_index)
         {
           remapped_frame_panel_col_index = remapColumnIndex(frame_panel_col_index);
           region_index = remapped_frame_panel_col_index / constants::panel_count_per_region_col_max;
@@ -561,8 +575,8 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
         //   QS_U8(0, region_index);
         //   QS_U8(0, region_panel_col_index);
         // QS_END()
-          QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
-          stretch = command_buffer[command_buffer_position++];
+          QuarterPanel & quarter_panel = decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+          stretch = pattern_frame_buffer[pattern_frame_buffer_position++];
           quarter_panel.stretch = stretch;
           // QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
           //   QS_U8(0, stretch);
@@ -574,16 +588,16 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
           for (uint8_t byte_index = 0; byte_index<byte_count_per_quarter_panel_row; ++byte_index)
           // for (int8_t byte_index = (byte_count_per_quarter_panel_row - 1); byte_index>=0; --byte_index)
           {
-            for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col_stream; ++frame_panel_col_index)
-            // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col_stream - 1); frame_panel_col_index>=0; --frame_panel_col_index)
+            for (uint8_t frame_panel_col_index = 0; frame_panel_col_index<constants::panel_count_per_frame_col; ++frame_panel_col_index)
+            // for (int8_t frame_panel_col_index = (constants::panel_count_per_frame_col - 1); frame_panel_col_index>=0; --frame_panel_col_index)
             {
               remapped_frame_panel_col_index = remapColumnIndex(frame_panel_col_index);
               region_index = remapped_frame_panel_col_index / constants::panel_count_per_region_col_max;
               region_panel_col_index = remapped_frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
-              QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
-              quarter_panel.data[pixel_row_index][byte_index] = command_buffer[command_buffer_position++];
-              // quarter_panel.data[pixel_row_index][byte_index] = reverseBits(command_buffer[command_buffer_position++]);
-              // quarter_panel.data[pixel_row_index][byte_index] = flipBits(command_buffer[command_buffer_position++]);
+              QuarterPanel & quarter_panel = decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+              quarter_panel.data[pixel_row_index][byte_index] = pattern_frame_buffer[pattern_frame_buffer_position++];
+              // quarter_panel.data[pixel_row_index][byte_index] = reverseBits(pattern_frame_buffer[pattern_frame_buffer_position++]);
+              // quarter_panel.data[pixel_row_index][byte_index] = flipBits(pattern_frame_buffer[pattern_frame_buffer_position++]);
             }
           }
         }
@@ -591,10 +605,10 @@ uint16_t BSP::decodeStreamedFrame(uint8_t const * command_buffer, uint32_t comma
     }
     // ++row_signifier_check;
   }
-  return command_buffer_position;
+  return pattern_frame_buffer_position;
 }
 
-void BSP::fillFrameBufferWithStream(uint8_t * buffer,
+void BSP::fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
   uint16_t & buffer_byte_count,
   bool grayscale,
   uint8_t & region_row_panel_count,
@@ -610,9 +624,9 @@ void BSP::fillFrameBufferWithStream(uint8_t * buffer,
     byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_binary;
   }
   uint16_t buffer_position = 0;
-  for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col_stream; ++region_panel_col_index)
+  for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col; ++region_panel_col_index)
   {
-    for (uint8_t region_panel_row_index = 0; region_panel_row_index<constants::panel_count_per_region_row_stream; ++region_panel_row_index)
+    for (uint8_t region_panel_row_index = 0; region_panel_row_index<constants::panel_count_per_region_row; ++region_panel_row_index)
     {
       for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
       {
@@ -620,7 +634,7 @@ void BSP::fillFrameBufferWithStream(uint8_t * buffer,
         {
           for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
           {
-            QuarterPanel & quarter_panel = streamed_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+            QuarterPanel & quarter_panel = decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
             buffer[buffer_position++] = quarter_panel.stretch;
             for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
             {
@@ -635,11 +649,12 @@ void BSP::fillFrameBufferWithStream(uint8_t * buffer,
     }
   }
   buffer_byte_count = buffer_position;
-  region_row_panel_count = constants::panel_count_per_region_row_stream;
-  region_col_panel_count = constants::panel_count_per_region_col_stream;
+  region_row_panel_count = constants::panel_count_per_region_row;
+  region_col_panel_count = constants::panel_count_per_region_col;
 }
 
-void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
+void BSP::enablePanelSetSelectPin(uint8_t row_index,
+  uint8_t col_index)
 {
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
@@ -650,7 +665,8 @@ void BSP::enablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
   digitalWriteFast(pss_pin, LOW);
 }
 
-void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
+void BSP::disablePanelSetSelectPin(uint8_t row_index,
+  uint8_t col_index)
 {
   const uint8_t & pss_pin = constants::panel_set_select_pins[row_index][col_index];
   digitalWriteFast(pss_pin, HIGH);
@@ -661,7 +677,9 @@ void BSP::disablePanelSetSelectPin(uint8_t row_index, uint8_t col_index)
   }
 }
 
-void BSP::transferPanelSet(const uint8_t * buffer, uint16_t & buffer_position, uint8_t panel_byte_count)
+void BSP::transferPanelSet(const uint8_t * const buffer,
+  uint16_t & buffer_position,
+  uint8_t panel_byte_count)
 {
   transfer_panel_complete_count = 0;
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
@@ -670,6 +688,11 @@ void BSP::transferPanelSet(const uint8_t * buffer, uint16_t & buffer_position, u
     spi_ptr->transfer((buffer + buffer_position), NULL, panel_byte_count, transfer_panel_complete_event);
     buffer_position += panel_byte_count;
   }
+}
+
+uint8_t * const BSP::getPatternFrameBuffer()
+{
+  return pattern_frame_buffer;
 }
 
 //----------------------------------------------------------------------------
@@ -795,4 +818,3 @@ void QP::QS::onReset()
   SCB_AIRCR = 0x05FA0004;
   while(true);
 }
- 
