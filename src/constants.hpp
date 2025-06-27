@@ -96,6 +96,7 @@ constexpr uint8_t switch_grayscale_command_value_binary = 0;
 // pattern
 constexpr uint8_t pattern_grayscale_value = 16;
 constexpr uint8_t pattern_binary_value = 2;
+constexpr uint8_t pattern_row_signifier_byte_count_per_row = quarter_panel_count_per_panel;
 constexpr char base_dir_str[] = "/";
 constexpr uint8_t filename_str_len = 16;
 constexpr uint8_t pattern_id_str_len = 4;

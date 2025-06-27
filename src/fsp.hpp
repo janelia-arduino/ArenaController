@@ -32,7 +32,7 @@ struct FSP
   static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_postNextFrameReady(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_initializePattern(QP::QActive * const ao, QP::QEvt const * e);
-  static bool Arena_ifPatternInitialized(QP::QActive * const ao, QP::QEvt const * e);
+  static bool Arena_ifPatternValid(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_endDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);

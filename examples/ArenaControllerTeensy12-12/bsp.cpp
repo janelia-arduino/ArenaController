@@ -125,14 +125,13 @@ namespace constants
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;
 constexpr uint8_t spi_data_mode = SPI_MODE0;
-constexpr uint32_t spi_clock_speed = 5000000;
+constexpr uint32_t spi_clock_speed = 4000000;
 
 constexpr uint8_t reset_pin = 34;
 
 // frame
 constexpr uint8_t panel_count_per_frame_row_max = 5;
 constexpr uint8_t panel_count_per_frame_col_max = 12;
-constexpr uint8_t pattern_row_signifier_byte_count_per_row = quarter_panel_count_per_panel;
 constexpr uint8_t panel_count_per_frame_max = \
   panel_count_per_frame_row_max * panel_count_per_frame_col_max; // 60
 constexpr uint16_t byte_count_per_frame_max = \

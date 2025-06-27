@@ -24,17 +24,22 @@ union PatternHeader
 class Pattern
 {
 public:
+  Pattern();
   bool initializeCard();
   uint64_t openFileForReading(uint16_t pattern_id);
+  void setValid();
+  bool isValid();
   PatternHeader & rewindFileReadHeader();
+  void setByteCountPerFrame(uint16_t byte_count_per_frame);
   void closeFile();
-  void readFrameIntoBufferFromFile(uint8_t * buffer,
-    uint16_t byte_count_per_frame);
+  void readFrameIntoBufferFromFile(uint8_t * buffer);
 private:
+  bool valid_;
   FsFile file_;
   uint64_t file_size_;
   uint64_t position_;
   PatternHeader header_;
+  uint16_t byte_count_per_frame_;
 };
 }
 #endif

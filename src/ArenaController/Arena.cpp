@@ -104,8 +104,8 @@ Q_STATE_DEF(Arena, ArenaOn) {
         //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
             FSP::Arena_initializePattern(this, e);
-            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifPatternInitialized()]}
-            if (FSP::Arena_ifPatternInitialized(this, e)) {
+            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifPatternValid()]}
+            if (FSP::Arena_ifPatternValid(this, e)) {
                 status_ = tran(&DisplayingPattern);
             }
             //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[else]}
