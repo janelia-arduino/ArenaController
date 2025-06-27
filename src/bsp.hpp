@@ -36,15 +36,14 @@ struct BSP {
   static uint8_t * const getFrameBuffer();
   static uint8_t getPanelCountPerRegionRow();
   static uint8_t getPanelCountPerRegionCol();
+  static uint8_t getRegionCountPerFrame();
 
   static void fillFrameBufferWithAllOn(uint8_t * const buffer,
-    uint16_t & buffer_byte_count,
     bool grayscale);
   static uint16_t decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffer,
     uint32_t pattern_frame_byte_count,
     bool grayscale);
   static void fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
-    uint16_t & buffer_byte_count,
     bool grayscale);
   static void enablePanelSetSelectPin(uint8_t row_index,
     uint8_t col_index);

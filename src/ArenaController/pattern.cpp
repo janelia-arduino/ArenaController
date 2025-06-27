@@ -13,7 +13,8 @@ uint64_t Pattern::openFileForReading(uint16_t pattern_id)
   char filename_str[constants::filename_str_len];
   sprintf(filename_str, "pat%0*d.pat", constants::pattern_id_str_len, pattern_id);
   file_ = SD.sdfs.open(filename_str, O_RDONLY);
-  return file_.fileSize();
+  file_size_ = file_.fileSize();
+  return file_size_;
 }
 
 PatternHeader & Pattern::rewindFileReadHeader()
@@ -31,16 +32,9 @@ void Pattern::closeFile()
 }
 
 void Pattern::readFrameIntoBufferFromFile(uint8_t * buffer,
-  uint8_t panel_count_per_frame_row,
-  uint8_t panel_count_per_frame_col,
-  bool grayscale)
+  uint16_t byte_count_per_frame)
 {
-
-}
-
-// void Pattern::readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count)
-// {
 //   file_.read(panel_buffer, panel_byte_count);
 //   file_position_ = file_position_ + panel_byte_count;
 //   file_.seekSet(file_position_);
-// }
+}

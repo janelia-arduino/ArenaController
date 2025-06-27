@@ -29,12 +29,10 @@ public:
   PatternHeader & rewindFileReadHeader();
   void closeFile();
   void readFrameIntoBufferFromFile(uint8_t * buffer,
-    uint8_t panel_count_per_frame_row,
-    uint8_t panel_count_per_frame_col,
-    bool grayscale);
-  // void readPanelFromFile(uint8_t * panel_buffer, size_t panel_byte_count);
+    uint16_t byte_count_per_frame);
 private:
   FsFile file_;
+  uint64_t file_size_;
   uint64_t position_;
   PatternHeader header_;
 };

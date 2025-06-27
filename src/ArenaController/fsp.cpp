@@ -562,9 +562,6 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::initializeFrame();
   frame->buffer_ = BSP::getFrameBuffer();
-  frame->buffer_byte_count_ = 0;
-  frame->panel_count_per_region_row_ = BSP::getPanelCountPerRegionRow();
-  frame->panel_count_per_region_col_ = BSP::getPanelCountPerRegionCol();
   frame->grayscale_ = true;
 
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
@@ -578,32 +575,22 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
 void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 {
-  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("begin all on fill");
-  QS_END()
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithAllOn(frame->buffer_,
-    frame->buffer_byte_count_,
     frame->grayscale_);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("end all on fill");
-    QS_U32(8, frame->buffer_byte_count_);
+    QS_STR("filled frame buffer with all on");
   QS_END()
   QF::PUBLISH(&frameFilledEvt, ao);
 }
 
 void FSP::Frame_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const * e)
 {
-  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("begin decoded fill");
-  QS_END()
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithDecodedFrame(frame->buffer_,
-    frame->buffer_byte_count_,
     frame->grayscale_);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("end decoded fill");
-    QS_U32(8, frame->buffer_byte_count_);
+    QS_STR("filled frame buffer with decoded frame");
   QS_END()
   QF::PUBLISH(&frameFilledEvt, ao);
 }
@@ -637,12 +624,12 @@ void FSP::Frame_endTransferPanelSet(QActive * const ao, QEvt const * e)
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::disablePanelSetSelectPin(frame->panel_set_row_index_, frame->panel_set_col_index_);
   ++frame->panel_set_row_index_;
-  if (frame->panel_set_row_index_ == frame->panel_count_per_region_row_)
+  if (frame->panel_set_row_index_ == BSP::getPanelCountPerRegionRow())
   {
     frame->panel_set_row_index_ = 0;
     ++frame->panel_set_col_index_;
   }
-  if (frame->panel_set_col_index_ == frame->panel_count_per_region_col_)
+  if (frame->panel_set_col_index_ == BSP::getPanelCountPerRegionCol())
   {
     frame->panel_set_col_index_ = 0;
   }
@@ -651,8 +638,8 @@ void FSP::Frame_endTransferPanelSet(QActive * const ao, QEvt const * e)
 bool FSP::Frame_ifFrameNotTransferred(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  return (frame->panel_set_row_index_ != (frame->panel_count_per_region_row_-1)) ||
-    (frame->panel_set_col_index_ != (frame->panel_count_per_region_col_-1));
+  return (frame->panel_set_row_index_ != (BSP::getPanelCountPerRegionRow()-1)) ||
+    (frame->panel_set_col_index_ != (BSP::getPanelCountPerRegionCol()-1));
 }
 
 void FSP::Frame_publishFrameTransferred(QActive * const ao, QEvt const * e)

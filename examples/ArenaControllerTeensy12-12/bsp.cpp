@@ -464,8 +464,12 @@ uint8_t BSP::getPanelCountPerRegionCol()
   return constants::panel_count_per_region_col;
 }
 
+uint8_t BSP::getRegionCountPerFrame()
+{
+  return constants::region_count_per_frame;
+}
+
 void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
-  uint16_t & buffer_byte_count,
   bool grayscale)
 {
   uint8_t byte_count_per_quarter_panel_row;
@@ -502,7 +506,6 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
       }
     }
   }
-  buffer_byte_count = buffer_position;
 }
 
 // uint8_t reverseBits(uint8_t b)
@@ -615,7 +618,6 @@ uint16_t BSP::decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffe
 }
 
 void BSP::fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
-  uint16_t & buffer_byte_count,
   bool grayscale)
 {
   uint8_t byte_count_per_quarter_panel_row;
@@ -652,7 +654,6 @@ void BSP::fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
       }
     }
   }
-  buffer_byte_count = buffer_position;
 }
 
 void BSP::enablePanelSetSelectPin(uint8_t row_index,
