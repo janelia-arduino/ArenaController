@@ -10,7 +10,8 @@ Pattern::Pattern()
 
 bool Pattern::initializeCard()
 {
-  return SD.sdfs.begin(SdioConfig(DMA_SDIO));
+  // return SD.sdfs.begin(SdioConfig(DMA_SDIO));
+  return SD.sdfs.begin(SdioConfig(FIFO_SDIO));
 }
 
 uint64_t Pattern::openFileForReading(uint16_t pattern_id)
@@ -37,8 +38,8 @@ PatternHeader & Pattern::rewindFileReadHeader()
 {
   file_.rewind();
   file_.read(&header_, constants::pattern_header_size);
-  position_ = constants::pattern_header_size;
-  file_.seekSet(position_);
+  file_position_ = constants::pattern_header_size;
+  file_.seekSet(file_position_);
   return header_;
 }
 
@@ -52,9 +53,27 @@ void Pattern::closeFile()
   file_.close();
 }
 
-void Pattern::readFrameIntoBufferFromFile(uint8_t * buffer)
+void Pattern::readNextFrameIntoBufferFromFile(uint8_t * buffer)
 {
-//   file_.read(panel_buffer, panel_byte_count);
-//   file_position_ = file_position_ + panel_byte_count;
-//   file_.seekSet(file_position_);
+  file_.read(buffer, byte_count_per_frame_);
+  file_position_ = file_position_ + byte_count_per_frame_;
+  if (file_position_ > (file_size_ - byte_count_per_frame_))
+  {
+    rewindFileReadHeader();
+  }
+  else
+  {
+    file_.seekSet(file_position_);
+  }
 }
+
+uint64_t Pattern::fileSize()
+{
+  return file_size_;
+}
+
+uint64_t Pattern::filePosition()
+{
+  return file_position_;
+}
+

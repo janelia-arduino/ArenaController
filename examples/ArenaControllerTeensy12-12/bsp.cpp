@@ -539,7 +539,6 @@ uint8_t remapColumnIndex(uint8_t column_index)
 }
 
 uint16_t BSP::decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffer,
-  uint32_t pattern_frame_byte_count,
   bool grayscale)
 {
   uint8_t byte_count_per_quarter_panel_row;

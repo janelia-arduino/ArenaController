@@ -122,6 +122,18 @@ This structure of the code is recommended for applications with only one active 
      <state name="DisplayingPattern">
       <entry brief="beginDisplayingPattern()">FSP::Arena_beginDisplayingPattern(this, e);</entry>
       <exit brief="endDisplayingPattern()">FSP::Arena_endDisplayingPattern(this, e);</exit>
+      <tran trig="FRAME_FILLED">
+       <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
+       <tran_glyph conn="47,95,3,-1,25">
+        <action box="0,-2,15,4"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="FRAME_TRANSFERRED">
+       <action brief="setupNextPatternFrame()">FSP::Arena_setupNextPatternFrame(this, e);</action>
+       <tran_glyph conn="47,100,3,-1,25">
+        <action box="0,-2,20,4"/>
+       </tran_glyph>
+      </tran>
       <state_glyph node="47,87,29,20">
        <entry box="1,2,24,2"/>
        <exit box="1,4,24,2"/>
@@ -533,6 +545,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="panel_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="buffer_position_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="grayscale_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="pattern_buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>

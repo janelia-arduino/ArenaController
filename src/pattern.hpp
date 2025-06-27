@@ -32,12 +32,14 @@ public:
   PatternHeader & rewindFileReadHeader();
   void setByteCountPerFrame(uint16_t byte_count_per_frame);
   void closeFile();
-  void readFrameIntoBufferFromFile(uint8_t * buffer);
+  void readNextFrameIntoBufferFromFile(uint8_t * buffer);
+  uint64_t fileSize();
+  uint64_t filePosition();
 private:
   bool valid_;
   FsFile file_;
   uint64_t file_size_;
-  uint64_t position_;
+  uint64_t file_position_;
   PatternHeader header_;
   uint16_t byte_count_per_frame_;
 };

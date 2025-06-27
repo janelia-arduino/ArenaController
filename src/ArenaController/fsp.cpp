@@ -204,6 +204,9 @@ void FSP::Arena_initializePattern(QActive * const ao, QEvt const * e)
 
 	Arena_deactivateDisplay(ao, e);
 
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("initializing card may cause reboot if card not found...");
+  QS_END()
   if (pattern.initializeCard())
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -217,13 +220,11 @@ void FSP::Arena_initializePattern(QActive * const ao, QEvt const * e)
     QS_END()
     return;
   }
-
-  uint64_t file_size = pattern.openFileForReading(pattern_id);
-  if (file_size)
+  if (pattern.openFileForReading(pattern_id))
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
       QS_STR("file found");
-      QS_U32(8, file_size);
+      QS_U32(8, pattern.fileSize());
     QS_END()
   }
   else
@@ -297,6 +298,14 @@ void FSP::Arena_initializePattern(QActive * const ao, QEvt const * e)
     QS_U16(5, byte_count_per_pattern_frame);
   QS_END()
 
+  if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_pattern_frame + constants::pattern_header_size) != pattern.fileSize())
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("pattern frame has incorrect file size");
+    QS_END()
+    return;
+  }
+
   pattern.setValid();
 }
 
@@ -312,16 +321,38 @@ void FSP::Arena_postAllOff(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_beginDisplayingPattern(QActive * const ao, QEvt const * e)
 {
-  // Arena * const arena = static_cast<Arena * const>(ao);
+  Frame * const frame = static_cast<Frame * const>(AO_Frame);
+  pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
+  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
+  AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, &l_FSP_ID);
 
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("beginDisplayingPattern");
+    QS_U32(8, bytes_decoded);
+    QS_U32(8, pattern.fileSize());
+    QS_U32(8, pattern.filePosition());
   QS_END()
 }
 
 void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
 {
   pattern.closeFile();
+}
+
+void FSP::Arena_setupNextPatternFrame(QActive * const ao, QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(AO_Frame);
+  pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
+  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
+  AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, &l_FSP_ID);
+  AO_Display->POST(&nextFrameReadyEvt, &l_FSP_ID);
+
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("setupNextPatternFrame");
+  //   QS_U32(8, bytes_decoded);
+  //   QS_U32(8, pattern.fileSize());
+  //   QS_U32(8, pattern.filePosition());
+  // QS_END()
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -591,9 +622,8 @@ void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt
   eci->binary_response_[0] = 2;
   eci->binary_response_[1] = 0;
   eci->binary_response_[2] = STREAM_FRAME_CMD;
-  uint8_t const * command_buffer = eci->binary_command_ + constants::stream_header_byte_count;
-  uint32_t command_byte_count = eci->binary_command_byte_count_ - constants::stream_header_byte_count;
-  FSP::processStreamCommand(command_buffer, command_byte_count);
+  uint8_t const * buffer = eci->binary_command_ + constants::stream_header_byte_count;
+  FSP::processStreamCommand(buffer);
   QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
 }
 
@@ -608,6 +638,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::initializeFrame();
   frame->buffer_ = BSP::getFrameBuffer();
+  frame->pattern_buffer_ = BSP::getPatternFrameBuffer();
   frame->grayscale_ = true;
 
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
@@ -635,9 +666,6 @@ void FSP::Frame_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithDecodedFrame(frame->buffer_,
     frame->grayscale_);
-  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("filled frame buffer with decoded frame");
-  QS_END()
   QF::PUBLISH(&frameFilledEvt, ao);
 }
 
@@ -888,18 +916,13 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
   return response_byte_count;
 }
 
-void FSP::processStreamCommand(uint8_t const * command_buffer, uint32_t command_byte_count)
+void FSP::processStreamCommand(uint8_t const * buffer)
 {
-  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("begin stream decode");
-    QS_U32(8, command_byte_count);
-  QS_END()
-
   Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(command_buffer, command_byte_count, frame->grayscale_);
+  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(buffer, frame->grayscale_);
   AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("end stream decode");
+    QS_STR("processed stream command");
     QS_U32(8, bytes_decoded);
   QS_END()
 }
