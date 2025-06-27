@@ -146,9 +146,9 @@ constexpr uint8_t region_count_per_frame = 2;
 constexpr SPIClass *region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
 constexpr uint8_t region_cipo_pins[region_count_per_frame] = {12, 1};
 
-constexpr uint8_t panel_count_per_region_row_max = constants::panel_count_per_frame_row_max;
+constexpr uint8_t panel_count_per_region_row_max = panel_count_per_frame_row_max;
 constexpr uint8_t panel_count_per_region_col_max = \
-  constants::panel_count_per_frame_col_max/region_count_per_frame; // 6
+  panel_count_per_frame_col_max/region_count_per_frame; // 6
 constexpr uint8_t panel_count_per_region_row = panel_count_per_frame_row;
 constexpr uint8_t panel_count_per_region_col = \
   panel_count_per_frame_col/region_count_per_frame; // 6
@@ -454,11 +454,19 @@ uint8_t * const BSP::getFrameBuffer()
   return frame_buffer;
 }
 
+uint8_t BSP::getPanelCountPerRegionRow()
+{
+  return constants::panel_count_per_region_row;
+}
+
+uint8_t BSP::getPanelCountPerRegionCol()
+{
+  return constants::panel_count_per_region_col;
+}
+
 void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
   uint16_t & buffer_byte_count,
-  bool grayscale,
-  uint8_t & region_row_panel_count,
-  uint8_t & region_col_panel_count)
+  bool grayscale)
 {
   uint8_t byte_count_per_quarter_panel_row;
   if (grayscale)
@@ -470,9 +478,9 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
     byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_binary;
   }
   uint16_t buffer_position = 0;
-  for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col_max; ++region_panel_col_index)
+  for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col; ++region_panel_col_index)
   {
-    for (uint8_t region_panel_row_index = 0; region_panel_row_index<constants::panel_count_per_region_row_max; ++region_panel_row_index)
+    for (uint8_t region_panel_row_index = 0; region_panel_row_index<constants::panel_count_per_region_row; ++region_panel_row_index)
     {
       for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
       {
@@ -495,8 +503,6 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
     }
   }
   buffer_byte_count = buffer_position;
-  region_row_panel_count = constants::panel_count_per_region_row_max;
-  region_col_panel_count = constants::panel_count_per_region_col_max;
 }
 
 // uint8_t reverseBits(uint8_t b)
@@ -610,9 +616,7 @@ uint16_t BSP::decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffe
 
 void BSP::fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
   uint16_t & buffer_byte_count,
-  bool grayscale,
-  uint8_t & region_row_panel_count,
-  uint8_t & region_col_panel_count)
+  bool grayscale)
 {
   uint8_t byte_count_per_quarter_panel_row;
   if (grayscale)
@@ -649,8 +653,6 @@ void BSP::fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
     }
   }
   buffer_byte_count = buffer_position;
-  region_row_panel_count = constants::panel_count_per_region_row;
-  region_col_panel_count = constants::panel_count_per_region_col;
 }
 
 void BSP::enablePanelSetSelectPin(uint8_t row_index,

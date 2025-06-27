@@ -34,8 +34,8 @@ public:
     std::uint8_t panel_set_row_index_;
     std::uint8_t panel_set_col_index_;
     std::uint8_t * buffer_;
-    std::uint8_t region_row_panel_count_;
-    std::uint8_t region_col_panel_count_;
+    std::uint8_t panel_count_per_region_row_;
+    std::uint8_t panel_count_per_region_col_;
     std::uint8_t panel_byte_count_;
     std::uint16_t buffer_byte_count_;
     std::uint16_t buffer_position_;

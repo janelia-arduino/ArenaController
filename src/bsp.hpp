@@ -34,19 +34,18 @@ struct BSP {
 
   static void initializeFrame();
   static uint8_t * const getFrameBuffer();
+  static uint8_t getPanelCountPerRegionRow();
+  static uint8_t getPanelCountPerRegionCol();
+
   static void fillFrameBufferWithAllOn(uint8_t * const buffer,
     uint16_t & buffer_byte_count,
-    bool grayscale,
-    uint8_t & region_row_panel_count,
-    uint8_t & region_col_panel_count);
+    bool grayscale);
   static uint16_t decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffer,
     uint32_t pattern_frame_byte_count,
     bool grayscale);
   static void fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
     uint16_t & buffer_byte_count,
-    bool grayscale,
-    uint8_t & region_row_panel_count,
-    uint8_t & region_col_panel_count);
+    bool grayscale);
   static void enablePanelSetSelectPin(uint8_t row_index,
     uint8_t col_index);
   static void disablePanelSetSelectPin(uint8_t row_index,
