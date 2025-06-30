@@ -420,7 +420,7 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
   }
 }
 
-void BSP::armDisplayTimer(uint32_t frequency_hz,
+void BSP::armRefreshTimer(uint32_t frequency_hz,
   void (*isr)())
 {
   uint32_t microseconds = constants::microseconds_per_second / frequency_hz;
@@ -428,7 +428,7 @@ void BSP::armDisplayTimer(uint32_t frequency_hz,
   Timer3.attachInterrupt(isr);
 }
 
-void BSP::disarmDisplayTimer()
+void BSP::disarmRefreshTimer()
 {
   Timer3.stop();
   Timer3.detachInterrupt();

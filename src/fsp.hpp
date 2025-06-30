@@ -30,7 +30,6 @@ struct FSP
   static void Arena_displayFrames(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_postNextFrameReady(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_initializePattern(QP::QActive * const ao, QP::QEvt const * e);
   static bool Arena_ifPatternValid(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
@@ -39,9 +38,9 @@ struct FSP
   static void Arena_setupNextPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
-  static void Display_setDisplayFrequency(QP::QActive * const ao, QP::QEvt const * e);
-  static void Display_armDisplayFrameTimer(QP::QActive * const ao, QP::QEvt const * e);
-  static void Display_disarmDisplayFrameTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_setRefreshRate(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_armRefreshTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Display_disarmRefreshTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_transferFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_defer(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_recall(QP::QActive * const ao, QP::QEvt const * e);

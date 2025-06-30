@@ -56,10 +56,10 @@ Q_STATE_DEF(Arena, initial) {
     FSP::Arena_initializeAndSubscribe(this, e);
 
     QS_FUN_DICTIONARY(&Arena::ArenaOn);
-    QS_FUN_DICTIONARY(&Arena::AllOn);
     QS_FUN_DICTIONARY(&Arena::AllOff);
     QS_FUN_DICTIONARY(&Arena::StreamingFrame);
     QS_FUN_DICTIONARY(&Arena::DisplayingPattern);
+    QS_FUN_DICTIONARY(&Arena::AllOn);
 
     return tran(&ArenaOn);
 }
@@ -122,35 +122,6 @@ Q_STATE_DEF(Arena, ArenaOn) {
     }
     return status_;
 }
-//.${AOs::Arena::SM::ArenaOn::AllOn} .........................................
-Q_STATE_DEF(Arena, AllOn) {
-    QP::QState status_;
-    switch (e->sig) {
-        //.${AOs::Arena::SM::ArenaOn::AllOn}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_fillFrameBufferWithAllOn(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_FILLED}
-        case FRAME_FILLED_SIG: {
-            FSP::Arena_displayFrames(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_TRANSFERRED}
-        case FRAME_TRANSFERRED_SIG: {
-            FSP::Arena_postNextFrameReady(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
-    }
-    return status_;
-}
 //.${AOs::Arena::SM::ArenaOn::AllOff} ........................................
 Q_STATE_DEF(Arena, AllOff) {
     QP::QState status_;
@@ -181,12 +152,6 @@ Q_STATE_DEF(Arena, StreamingFrame) {
         //.${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_FILLED}
         case FRAME_FILLED_SIG: {
             FSP::Arena_displayFrames(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_TRANSFERRED}
-        case FRAME_TRANSFERRED_SIG: {
-            FSP::Arena_postNextFrameReady(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -222,6 +187,29 @@ Q_STATE_DEF(Arena, DisplayingPattern) {
         //.${AOs::Arena::SM::ArenaOn::DisplayingPatter~::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             FSP::Arena_setupNextPatternFrame(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&ArenaOn);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Arena::SM::ArenaOn::AllOn} .........................................
+Q_STATE_DEF(Arena, AllOn) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Arena::SM::ArenaOn::AllOn}
+        case Q_ENTRY_SIG: {
+            FSP::Arena_fillFrameBufferWithAllOn(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Arena::SM::ArenaOn::AllOn::FRAME_FILLED}
+        case FRAME_FILLED_SIG: {
+            FSP::Arena_displayFrames(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

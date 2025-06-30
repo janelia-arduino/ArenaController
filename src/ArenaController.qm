@@ -36,23 +36,23 @@ This structure of the code is recommended for applications with only one active 
     <state name="ArenaOn">
      <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
      <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
-     <initial target="../6">
+     <initial target="../5">
       <initial_glyph conn="51,21,4,0,3">
        <action box="1,-1,18,3"/>
       </initial_glyph>
      </initial>
-     <tran trig="ALL_OFF" target="../6">
+     <tran trig="ALL_OFF" target="../5">
       <tran_glyph conn="10,27,3,3,23">
        <action box="1,-2,14,4"/>
       </tran_glyph>
      </tran>
-     <tran trig="STREAM_FRAME" target="../7">
+     <tran trig="STREAM_FRAME" target="../6">
       <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,63,3,3,23">
        <action box="0,-2,17,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="ALL_ON" target="../5">
+     <tran trig="ALL_ON" target="../8">
       <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
       <tran_glyph conn="10,43,3,3,23">
        <action box="1,-2,16,5"/>
@@ -60,7 +60,7 @@ This structure of the code is recommended for applications with only one active 
      </tran>
      <tran trig="DISPLAY_PATTERN">
       <action brief="initializePattern()">FSP::Arena_initializePattern(this, e);</action>
-      <choice target="../../8">
+      <choice target="../../7">
        <guard brief="ifPatternValid()">FSP::Arena_ifPatternValid(this, e)</guard>
        <choice_glyph conn="29,91,5,3,18">
         <action box="1,0,15,3"/>
@@ -77,24 +77,6 @@ This structure of the code is recommended for applications with only one active 
        <action box="0,-2,21,4"/>
       </tran_glyph>
      </tran>
-     <state name="AllOn">
-      <entry brief="fillFrameBufferWithAllOn()">FSP::Arena_fillFrameBufferWithAllOn(this, e);</entry>
-      <tran trig="FRAME_FILLED">
-       <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
-       <tran_glyph conn="33,46,3,-1,25">
-        <action box="0,-2,17,4"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="FRAME_TRANSFERRED">
-       <action brief="postNextFrameReady()">FSP::Arena_postNextFrameReady(this, e);</action>
-       <tran_glyph conn="33,51,3,-1,25">
-        <action box="0,-2,20,4"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="33,38,35,17">
-       <entry box="1,2,26,3"/>
-      </state_glyph>
-     </state>
      <state name="AllOff">
       <entry brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</entry>
       <state_glyph node="33,24,35,11">
@@ -107,12 +89,6 @@ This structure of the code is recommended for applications with only one active 
        <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
        <tran_glyph conn="33,66,3,-1,25">
         <action box="0,-2,15,4"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="FRAME_TRANSFERRED">
-       <action brief="postNextFrameReady()">FSP::Arena_postNextFrameReady(this, e);</action>
-       <tran_glyph conn="33,71,3,-1,25">
-        <action box="0,-2,20,4"/>
        </tran_glyph>
       </tran>
       <state_glyph node="33,58,35,18">
@@ -137,6 +113,18 @@ This structure of the code is recommended for applications with only one active 
       <state_glyph node="47,87,29,20">
        <entry box="1,2,24,2"/>
        <exit box="1,4,24,2"/>
+      </state_glyph>
+     </state>
+     <state name="AllOn">
+      <entry brief="fillFrameBufferWithAllOn()">FSP::Arena_fillFrameBufferWithAllOn(this, e);</entry>
+      <tran trig="FRAME_FILLED">
+       <action brief="displayFrames()">FSP::Arena_displayFrames(this, e);</action>
+       <tran_glyph conn="33,46,3,-1,25">
+        <action box="0,-2,17,4"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="33,38,35,17">
+       <entry box="1,2,26,3"/>
       </state_glyph>
      </state>
      <state_glyph node="10,15,108,109">
@@ -274,7 +262,7 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
-   <attribute name="display_frequency_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="refresh_rate_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="display_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
@@ -292,11 +280,8 @@ This structure of the code is recommended for applications with only one active 
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
-     <tran trig="SET_DISPLAY_FREQUENCY">
-      <action brief="setDisplayFrequency()">FSP::Display_setDisplayFrequency(this, e);
-      QS_BEGIN_ID(USER_COMMENT, AO_Display-&gt;m_prio)
-        QS_STR(&quot;Display_setDisplayFrequency&quot;);
-      QS_END()</action>
+     <tran trig="SET_REFRESH_RATE">
+      <action brief="setRefreshRate()">FSP::Display_setRefreshRate(this, e);</action>
       <tran_glyph conn="2,10,3,-1,24">
        <action box="0,-2,23,4"/>
       </tran_glyph>
@@ -316,63 +301,55 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <state name="DisplayingFrames">
-       <entry brief="armDisplayFrameTimer()">FSP::Display_armDisplayFrameTimer(this, e);</entry>
-       <exit brief="disarmDisplayFrameTimer()">FSP::Display_disarmDisplayFrameTimer(this, e);</exit>
+       <entry brief="armRefreshTimer()">FSP::Display_armRefreshTimer(this, e);</entry>
+       <exit brief="disarmRefreshTimer()">FSP::Display_disarmRefreshTimer(this, e);</exit>
        <initial target="../2">
-        <initial_glyph conn="54,37,4,0,3">
+        <initial_glyph conn="45,38,4,0,2">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
-       <tran trig="SET_DISPLAY_FREQUENCY" target="..">
-        <action brief="setDisplayFrequency()">FSP::Display_setDisplayFrequency(this, e);</action>
+       <tran trig="SET_REFRESH_RATE" target="..">
+        <action brief="setRefreshRate()">FSP::Display_setRefreshRate(this, e);</action>
         <tran_glyph conn="75,49,1,1,2,-12,-2">
-         <action box="3,-9,22,4"/>
+         <action box="3,-9,18,4"/>
         </tran_glyph>
        </tran>
-       <state name="WaitingToDisplayFrame">
+       <state name="WaitingToTransferFrame">
         <entry brief="recall()">FSP::Display_recall(this, e);</entry>
-        <tran trig="DISPLAY_TIMEOUT" target="../../3">
-         <tran_glyph conn="52,47,2,0,6">
+        <tran trig="REFRESH_TIMEOUT" target="../../3">
+         <tran_glyph conn="42,47,2,0,6">
           <action box="1,2,22,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="43,40,20,7">
+        <state_glyph node="34,40,20,7">
          <entry box="1,2,15,2"/>
         </state_glyph>
        </state>
-       <state name="DisplayingFrame">
+       <state name="TransferringFrame">
         <entry brief="transferFrame()">FSP::Display_transferFrame(this, e);</entry>
-        <tran trig="FRAME_TRANSFERRED" target="../../4">
-         <tran_glyph conn="35,56,3,2,-14,-3">
+        <tran trig="FRAME_TRANSFERRED" target="../../2">
+         <tran_glyph conn="34,56,3,3,-5,-12,5">
           <action box="-19,1,18,2"/>
          </tran_glyph>
         </tran>
-        <tran trig="DISPLAY_TIMEOUT">
+        <tran trig="REFRESH_TIMEOUT">
          <action brief="defer()">FSP::Display_defer(this, e);</action>
-         <tran_glyph conn="35,60,3,-1,23">
+         <tran_glyph conn="34,60,3,-1,23">
           <action box="0,-2,16,4"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="35,53,33,15">
+        <state_glyph node="34,53,33,15">
          <entry box="1,2,14,2"/>
         </state_glyph>
-       </state>
-       <state name="WaitingForNextFrameReady">
-        <tran trig="NEXT_FRAME_READY" target="../../2">
-         <tran_glyph conn="21,46,0,3,-3,22">
-          <action box="1,-6,19,2"/>
-         </tran_glyph>
-        </tran>
-        <state_glyph node="11,46,23,7"/>
        </state>
        <state_glyph node="10,30,65,42">
         <entry box="1,2,25,2"/>
         <exit box="1,4,23,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="7,25,95,49"/>
+      <state_glyph node="7,25,89,49"/>
      </state>
-     <state_glyph node="2,5,111,71"/>
+     <state_glyph node="2,5,97,71"/>
     </state>
     <state_diagram size="123,82"/>
    </statechart>

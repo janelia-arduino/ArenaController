@@ -37,8 +37,7 @@ static QEvt const deactivateEthernetCommandInterfaceEvt = {DEACTIVATE_ETHERNET_C
 static QEvt const ethernetInitializedEvt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
 static QEvt const ethernetServerConnectedEvt = {ETHERNET_SERVER_CONNECTED_SIG, 0U, 0U};
 
-static QEvt const displayTimeoutEvt = {DISPLAY_TIMEOUT_SIG, 0U, 0U};
-static QEvt const nextFrameReadyEvt = {NEXT_FRAME_READY_SIG, 0U, 0U};
+static QEvt const refreshTimeoutEvt = {REFRESH_TIMEOUT_SIG, 0U, 0U};
 
 static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
 static QEvt const fillFrameBufferWithDecodedFrameEvt = {FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, 0U, 0U};
@@ -191,11 +190,6 @@ void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, &l_FSP_ID);
 }
 
-void FSP::Arena_postNextFrameReady(QActive * const ao, QEvt const * e)
-{
-  AO_Display->POST(&nextFrameReadyEvt, &l_FSP_ID);
-}
-
 void FSP::Arena_initializePattern(QActive * const ao, QEvt const * e)
 {
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
@@ -345,7 +339,6 @@ void FSP::Arena_setupNextPatternFrame(QActive * const ao, QEvt const * e)
   pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, &l_FSP_ID);
-  AO_Display->POST(&nextFrameReadyEvt, &l_FSP_ID);
 
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
   //   QS_STR("setupNextPatternFrame");
@@ -361,46 +354,46 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(DISPLAY_FRAMES_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
-  display->display_frequency_hz_ = constants::display_frequency_hz_default;
+  display->refresh_rate_hz_ = constants::refresh_rate_hz_default;
 
   static QEvt const * display_queue_store[constants::display_queue_size];
   display->display_queue_.init(display_queue_store, Q_DIM(display_queue_store));
 
-  QS_SIG_DICTIONARY(DISPLAY_TIMEOUT_SIG, ao);
-  QS_SIG_DICTIONARY(SET_DISPLAY_FREQUENCY_SIG, ao);
+  QS_SIG_DICTIONARY(REFRESH_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(SET_REFRESH_RATE_SIG, ao);
 }
 
-void FSP::Display_setDisplayFrequency(QActive * const ao, QEvt const * e)
+void FSP::Display_setRefreshRate(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  display->display_frequency_hz_ = spev->value;
+  display->refresh_rate_hz_ = spev->value;
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
-    QS_STR("set display frequency");
-    QS_U16(5, display->display_frequency_hz_);
+    QS_STR("set refresh rate");
+    QS_U16(5, display->refresh_rate_hz_);
   QS_END()
 }
 
-void postDisplayTimeout()
+void postRefreshTimeout()
 {
-  AO_Display->POST(&displayTimeoutEvt, &l_FSP_ID);
+  AO_Display->POST(&refreshTimeoutEvt, &l_FSP_ID);
 }
 
-void FSP::Display_armDisplayFrameTimer(QActive * const ao, QEvt const * e)
+void FSP::Display_armRefreshTimer(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  BSP::armDisplayTimer(display->display_frequency_hz_, postDisplayTimeout);
+  BSP::armRefreshTimer(display->refresh_rate_hz_, postRefreshTimeout);
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
-    QS_STR("armDisplayFrameTimer");
-    QS_U16(5, display->display_frequency_hz_);
+    QS_STR("armRefreshTimer");
+    QS_U16(5, display->refresh_rate_hz_);
   QS_END()
 }
 
-void FSP::Display_disarmDisplayFrameTimer(QActive * const ao, QEvt const * e)
+void FSP::Display_disarmRefreshTimer(QActive * const ao, QEvt const * e)
 {
-  BSP::disarmDisplayTimer();
+  BSP::disarmRefreshTimer();
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
-    QS_STR("disarmDisplayFrameTimer");
+    QS_STR("disarmRefreshTimer");
   QS_END()
 }
 
@@ -878,17 +871,17 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       QS_END()
       break;
     }
-    case SET_FRAME_RATE_CMD:
+    case SET_REFRESH_RATE_CMD:
     {
-      uint16_t frame_rate;
-      memcpy(&frame_rate, command_buffer + command_buffer_position, sizeof(frame_rate));
+      uint16_t refresh_rate;
+      memcpy(&refresh_rate, command_buffer + command_buffer_position, sizeof(refresh_rate));
 
-      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_DISPLAY_FREQUENCY_SIG);
-      spev->value = frame_rate;
+      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_REFRESH_RATE_SIG);
+      spev->value = refresh_rate;
       AO_Display->POST(spev, &l_FSP_ID);
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-        QS_STR("set-frame-rate command");
+        QS_STR("set-refresh-rate command");
       QS_END()
       break;
     }
@@ -962,11 +955,11 @@ void FSP::processStringCommand(const char * command, char * response)
   {
     // BSP::getServerIpAddressString(response);
   }
-  else if (strcmp(command, "SET_DISPLAY_FREQUENCY") == 0)
+  else if (strcmp(command, "SET_REFRESH_RATE") == 0)
   {
-    //command.replace("SET_DISPLAY_FREQUENCY", "") == 0;
+    //command.replace("SET_REFRESH_RATE", "") == 0;
     //command.trim();
     //uint32_t frequency_hz = command.toInt();
-    //BSP::setDisplayFrequency(frequency_hz);
+    //BSP::setRefreshRate(frequency_hz);
   }
 }
