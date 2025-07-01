@@ -103,16 +103,8 @@ Q_STATE_DEF(Arena, ArenaOn) {
         }
         //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
-            FSP::Arena_initializePattern(this, e);
-            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[ifPatternValid()]}
-            if (FSP::Arena_ifPatternValid(this, e)) {
-                status_ = tran(&DisplayingPattern);
-            }
-            //.${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN::[else]}
-            else {
-                FSP::Arena_postAllOff(this, e);
-                status_ = Q_RET_HANDLED;
-            }
+            FSP::Arena_deactivateDisplay(this, e);
+            status_ = tran(&DisplayingPattern);
             break;
         }
         default: {
@@ -190,14 +182,8 @@ Q_STATE_DEF(Arena, DisplayingPattern) {
     QP::QState status_;
     switch (e->sig) {
         //.${AOs::Arena::SM::ArenaOn::DisplayingPattern}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_beginDisplayingPattern(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::DisplayingPattern}
         case Q_EXIT_SIG: {
-            FSP::Arena_endDisplayingPattern(this, e);
+            FSP::Arena_stopDisplayingPattern(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

@@ -54,15 +54,38 @@ Pattern::Pattern()
 //.${AOs::Pattern::SM} .......................................................
 Q_STATE_DEF(Pattern, initial) {
     //.${AOs::Pattern::SM::initial}
+    FSP::Pattern_initializeAndSubscribe(this, e);
 
-    QS_FUN_DICTIONARY(&Pattern::state1);
+    QS_FUN_DICTIONARY(&Pattern::Inactive);
+    QS_FUN_DICTIONARY(&Pattern::DisplayingPattern);
 
-    return tran(&state1);
+    return tran(&Inactive);
 }
-//.${AOs::Pattern::SM::state1} ...............................................
-Q_STATE_DEF(Pattern, state1) {
+//.${AOs::Pattern::SM::Inactive} .............................................
+Q_STATE_DEF(Pattern, Inactive) {
     QP::QState status_;
     switch (e->sig) {
+        //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN}
+        case DISPLAY_PATTERN_SIG: {
+            status_ = tran(&DisplayingPattern);
+            break;
+        }
+        default: {
+            status_ = super(&top);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Pattern::SM::DisplayingPattern} ....................................
+Q_STATE_DEF(Pattern, DisplayingPattern) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Pattern::SM::DisplayingPatter~::STOP_DISPLAYING_PATTERN}
+        case STOP_DISPLAYING_PATTERN_SIG: {
+            status_ = tran(&Inactive);
+            break;
+        }
         default: {
             status_ = super(&top);
             break;

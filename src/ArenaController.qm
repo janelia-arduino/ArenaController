@@ -58,22 +58,9 @@ This structure of the code is recommended for applications with only one active 
        <action box="1,-2,16,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="DISPLAY_PATTERN">
-      <action brief="initializePattern()">FSP::Arena_initializePattern(this, e);</action>
-      <choice target="../../8">
-       <guard brief="ifPatternValid()">FSP::Arena_ifPatternValid(this, e)</guard>
-       <choice_glyph conn="29,91,5,3,18">
-        <action box="1,0,15,3"/>
-       </choice_glyph>
-      </choice>
-      <choice>
-       <guard brief="else"/>
-       <action brief="postAllOff()">FSP::Arena_postAllOff(this, e);</action>
-       <choice_glyph conn="29,91,4,-1,7,9">
-        <action box="0,7,10,6"/>
-       </choice_glyph>
-      </choice>
-      <tran_glyph conn="10,91,3,-1,19">
+     <tran trig="DISPLAY_PATTERN" target="../8">
+      <action brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</action>
+      <tran_glyph conn="10,84,3,3,23">
        <action box="0,-2,21,4"/>
       </tran_glyph>
      </tran>
@@ -108,31 +95,29 @@ This structure of the code is recommended for applications with only one active 
       </state_glyph>
      </state>
      <state name="DisplayingPattern">
-      <entry brief="beginDisplayingPattern()">FSP::Arena_beginDisplayingPattern(this, e);</entry>
-      <exit brief="endDisplayingPattern()">FSP::Arena_endDisplayingPattern(this, e);</exit>
+      <exit brief="stopDisplayingPattern()">FSP::Arena_stopDisplayingPattern(this, e);</exit>
       <tran trig="FRAME_FILLED">
        <action brief="displayFrame()">FSP::Arena_displayFrame(this, e);</action>
-       <tran_glyph conn="47,95,3,-1,25">
+       <tran_glyph conn="33,87,3,-1,25">
         <action box="0,-2,15,4"/>
        </tran_glyph>
       </tran>
       <tran trig="FRAME_TRANSFERRED">
        <action brief="setupNextPatternFrame()">FSP::Arena_setupNextPatternFrame(this, e);</action>
-       <tran_glyph conn="47,100,3,-1,25">
+       <tran_glyph conn="33,92,3,-1,25">
         <action box="0,-2,20,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="47,87,29,20">
-       <entry box="1,2,24,2"/>
-       <exit box="1,4,24,2"/>
+      <state_glyph node="33,79,35,20">
+       <exit box="1,2,24,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="10,15,108,109">
+     <state_glyph node="10,15,69,89">
       <entry box="1,2,24,2"/>
       <exit box="1,4,26,2"/>
      </state_glyph>
     </state>
-    <state_diagram size="124,144"/>
+    <state_diagram size="88,109"/>
    </statechart>
   </class>
   <class name="SerialCommandInterface" superclass="qpcpp::QActive">
@@ -662,14 +647,28 @@ This structure of the code is recommended for applications with only one active 
    </operation>
    <statechart properties="0x02">
     <initial target="../1">
+     <action brief="initializeAndSubscribe()">FSP::Pattern_initializeAndSubscribe(this, e);</action>
      <initial_glyph conn="28,6,4,0,5">
-      <action box="0,-2,10,2"/>
+      <action box="1,1,23,2"/>
      </initial_glyph>
     </initial>
-    <state name="state1">
-     <state_glyph node="21,11,26,22"/>
+    <state name="Inactive">
+     <tran trig="DISPLAY_PATTERN" target="../../2">
+      <tran_glyph conn="24,19,2,0,10">
+       <action box="-15,3,15,2"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="21,11,26,8"/>
     </state>
-    <state_diagram size="80,50"/>
+    <state name="DisplayingPattern">
+     <tran trig="STOP_DISPLAYING_PATTERN" target="../../1">
+      <tran_glyph conn="30,29,0,2,-10">
+       <action box="1,-7,24,2"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="11,29,56,44"/>
+    </state>
+    <state_diagram size="80,95"/>
    </statechart>
   </class>
  </package>

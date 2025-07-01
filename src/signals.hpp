@@ -12,6 +12,7 @@ enum ArenaControllerSignals
   // commands from serial or ethernet interface
   DEACTIVATE_DISPLAY_SIG = QP::Q_USER_SIG,
   FRAME_TRANSFERRED_SIG,
+  DISPLAY_PATTERN_SIG,
 
   SERIAL_COMMAND_AVAILABLE_SIG,
   ETHERNET_COMMAND_AVAILABLE_SIG,
@@ -26,7 +27,6 @@ enum ArenaControllerSignals
   ALL_ON_SIG,
   ALL_OFF_SIG,
   STREAM_FRAME_SIG,
-  DISPLAY_PATTERN_SIG,
   FRAME_FILLED_SIG,
 
   // POST to SerialCommandInterface
@@ -59,6 +59,7 @@ enum ArenaControllerSignals
 
   // POST to Pattern
   PATTERN_TIMEOUT_SIG,
+  STOP_DISPLAYING_PATTERN_SIG,
 
   MAX_SIG // the last signal
 };

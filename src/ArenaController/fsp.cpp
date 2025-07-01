@@ -42,6 +42,8 @@ static QEvt const refreshTimeoutEvt = {REFRESH_TIMEOUT_SIG, 0U, 0U};
 static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
 static QEvt const fillFrameBufferWithDecodedFrameEvt = {FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, 0U, 0U};
 
+static QEvt const stopDisplayingPatternEvt = {STOP_DISPLAYING_PATTERN_SIG, 0U, 0U};
+
 //----------------------------------------------------------------------------
 // Local functions
 
@@ -74,6 +76,7 @@ void FSP::ArenaController_setup()
   // signal dictionaries for globally published events...
   QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_TRANSFERRED_SIG, nullptr);
+  QS_SIG_DICTIONARY(DISPLAY_PATTERN_SIG, nullptr);
   QS_SIG_DICTIONARY(SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(PROCESS_BINARY_COMMAND_SIG, nullptr);
@@ -150,11 +153,11 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   BSP::initializeArena();
 
   ao->subscribe(FRAME_TRANSFERRED_SIG);
+  ao->subscribe(DISPLAY_PATTERN_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
   QS_SIG_DICTIONARY(STREAM_FRAME_SIG, ao);
-  QS_SIG_DICTIONARY(DISPLAY_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, ao);
 }
 
@@ -193,146 +196,12 @@ void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
 }
 
-void FSP::Arena_initializePattern(QActive * const ao, QEvt const * e)
-{
-  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  uint16_t pattern_id = spev->value;
-  Frame * const frame = static_cast<Frame * const>(AO_Frame);
-
-	Arena_deactivateDisplay(ao, e);
-
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("initializing card may cause reboot if card not found...");
-  // QS_END()
-  // if (pattern.initializeCard())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("card found");
-  //   QS_END()
-  // }
-  // else
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("card not found");
-  //   QS_END()
-  //   return;
-  // }
-  // if (pattern.openFileForReading(pattern_id))
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("file found");
-  //     QS_U32(8, pattern.fileSize());
-  //   QS_END()
-  // }
-  // else
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("file not found");
-  //   QS_END()
-  //   return;
-  // }
-
-  // PatternHeader & pattern_header = pattern.rewindFileReadHeader();
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("frame_count_x");
-  //   QS_U16(5, pattern_header.frame_count_x);
-  //   QS_STR("frame_count_y");
-  //   QS_U16(5, pattern_header.frame_count_y);
-  //   QS_STR("grayscale_value");
-  //   QS_U8(0, pattern_header.grayscale_value);
-  //   QS_STR("panel_count_per_frame_row");
-  //   QS_U8(0, pattern_header.panel_count_per_frame_row);
-  //   QS_STR("panel_count_per_frame_col");
-  //   QS_U8(0, pattern_header.panel_count_per_frame_col);
-  // QS_END()
-
-  // if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerRegionRow())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("pattern frame has incorrect number of rows");
-  //   QS_END()
-  //   return;
-  // }
-  // if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("pattern frame has incorrect number of cols");
-  //   QS_END()
-  //   return;
-  // }
-  // uint16_t byte_count_per_pattern_frame;
-  // switch (pattern_header.grayscale_value)
-  // {
-  //   case constants::pattern_grayscale_value:
-  //   {
-  //     frame->grayscale_ = true;
-  //     byte_count_per_pattern_frame = constants::byte_count_per_panel_grayscale * \
-  //       pattern_header.panel_count_per_frame_row * \
-  //       pattern_header.panel_count_per_frame_col + \
-  //       constants::pattern_row_signifier_byte_count_per_row * \
-  //       pattern_header.panel_count_per_frame_row;
-  //     break;
-  //   }
-  //   case constants::pattern_binary_value:
-  //   {
-  //     frame->grayscale_ = false;
-  //     byte_count_per_pattern_frame = constants::byte_count_per_panel_binary * \
-  //       pattern_header.panel_count_per_frame_row * \
-  //       pattern_header.panel_count_per_frame_col + \
-  //       constants::pattern_row_signifier_byte_count_per_row * \
-  //       pattern_header.panel_count_per_frame_row;
-  //     break;
-  //   }
-  //   default:
-  //     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //       QS_STR("pattern has invalid grayscale value");
-  //     QS_END()
-  //     return;
-  // }
-  // pattern.setByteCountPerFrame(byte_count_per_pattern_frame);
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("byte_count_per_pattern_frame");
-  //   QS_U16(5, byte_count_per_pattern_frame);
-  // QS_END()
-
-  // if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_pattern_frame + constants::pattern_header_size) != pattern.fileSize())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("pattern frame has incorrect file size");
-  //   QS_END()
-  //   return;
-  // }
-
-  // pattern.setValid();
-}
-
-bool FSP::Arena_ifPatternValid(QActive * const ao, QEvt const * e)
-{
-  // return pattern.isValid();
-  return false;
-}
-
 void FSP::Arena_postAllOff(QActive * const ao, QEvt const * e)
 {
   AO_Arena->POST(&allOffEvt, ao);
 }
 
-void FSP::Arena_beginDisplayingPattern(QActive * const ao, QEvt const * e)
-{
-  // Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  // pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
-  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
-  // AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
-
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("beginDisplayingPattern");
-  //   QS_U32(8, bytes_decoded);
-  //   QS_U32(8, pattern.fileSize());
-  //   QS_U32(8, pattern.filePosition());
-  // QS_END()
-}
-
-void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
+void FSP::Arena_stopDisplayingPattern(QActive * const ao, QEvt const * e)
 {
   // pattern.closeFile();
 }
@@ -461,7 +330,7 @@ void FSP::SerialCommandInterface_pollSerialCommand(QActive * const ao, QEvt cons
   bool bytes_available = BSP::pollSerialCommand();
   if (bytes_available)
   {
-    QF::PUBLISH(&serialCommandAvailableEvt, &l_FSP_ID);
+    QF::PUBLISH(&serialCommandAvailableEvt, ao);
   }
 }
 
@@ -487,7 +356,7 @@ void FSP::SerialCommandInterface_processStringCommand(QActive * const ao, QEvt c
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   FSP::processStringCommand(sci->string_command_, sci->string_response_);
-  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
+  QF::PUBLISH(&commandProcessedEvt, ao);
 }
 
 void FSP::SerialCommandInterface_writeSerialStringResponse(QActive * const ao, QEvt const * e)
@@ -567,7 +436,7 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("string command");
     QS_END()
-    QF::PUBLISH(&processStringCommandEvt, &l_FSP_ID);
+    QF::PUBLISH(&processStringCommandEvt, ao);
   }
   else if (first_command_byte == STREAM_FRAME_CMD)
   {
@@ -578,14 +447,14 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
       QS_STR("stream command");
       QS_U32(8, eci->binary_command_byte_count_claim_);
     QS_END()
-    QF::PUBLISH(&processStreamCommandEvt, &l_FSP_ID);
+    QF::PUBLISH(&processStreamCommandEvt, ao);
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("binary command");
     QS_END()
-    QF::PUBLISH(&processBinaryCommandEvt, &l_FSP_ID);
+    QF::PUBLISH(&processBinaryCommandEvt, ao);
   }
 }
 
@@ -609,7 +478,7 @@ void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt
   eci->binary_response_byte_count_ = FSP::processBinaryCommand(eci->binary_command_,
     eci->binary_command_byte_count_,
     eci->binary_response_);
-  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
+  QF::PUBLISH(&commandProcessedEvt, ao);
 }
 
 void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt const * e)
@@ -621,7 +490,7 @@ void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt
   eci->binary_response_[2] = STREAM_FRAME_CMD;
   uint8_t const * buffer = eci->binary_command_ + constants::stream_header_byte_count;
   FSP::processStreamCommand(buffer);
-  QF::PUBLISH(&commandProcessedEvt, &l_FSP_ID);
+  QF::PUBLISH(&commandProcessedEvt, ao);
 }
 
 void FSP::EthernetCommandInterface_writeBinaryResponse(QActive * const ao, QEvt const * e)
@@ -745,6 +614,150 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
   BSP::feedWatchdog();
 }
 
+void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
+{
+  // Pattern * const pattern = static_cast<Pattern * const>(ao);
+  // BSP::initializeFrame();
+  // frame->buffer_ = BSP::getFrameBuffer();
+  // frame->pattern_buffer_ = BSP::getPatternFrameBuffer();
+  // frame->grayscale_ = true;
+
+  ao->subscribe(DISPLAY_PATTERN_SIG);
+
+  QS_SIG_DICTIONARY(STOP_DISPLAYING_PATTERN_SIG, ao);
+}
+
+void FSP::Pattern_initializePattern(QActive * const ao, QEvt const * e)
+{
+  // SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  // uint16_t pattern_id = spev->value;
+  // Frame * const frame = static_cast<Frame * const>(AO_Frame);
+
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("initializing card may cause reboot if card not found...");
+  // QS_END()
+  // if (pattern.initializeCard())
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("card found");
+  //   QS_END()
+  // }
+  // else
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("card not found");
+  //   QS_END()
+  //   return;
+  // }
+  // if (pattern.openFileForReading(pattern_id))
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("file found");
+  //     QS_U32(8, pattern.fileSize());
+  //   QS_END()
+  // }
+  // else
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("file not found");
+  //   QS_END()
+  //   return;
+  // }
+
+  // PatternHeader & pattern_header = pattern.rewindFileReadHeader();
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("frame_count_x");
+  //   QS_U16(5, pattern_header.frame_count_x);
+  //   QS_STR("frame_count_y");
+  //   QS_U16(5, pattern_header.frame_count_y);
+  //   QS_STR("grayscale_value");
+  //   QS_U8(0, pattern_header.grayscale_value);
+  //   QS_STR("panel_count_per_frame_row");
+  //   QS_U8(0, pattern_header.panel_count_per_frame_row);
+  //   QS_STR("panel_count_per_frame_col");
+  //   QS_U8(0, pattern_header.panel_count_per_frame_col);
+  // QS_END()
+
+  // if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerRegionRow())
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("pattern frame has incorrect number of rows");
+  //   QS_END()
+  //   return;
+  // }
+  // if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame())
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("pattern frame has incorrect number of cols");
+  //   QS_END()
+  //   return;
+  // }
+  // uint16_t byte_count_per_pattern_frame;
+  // switch (pattern_header.grayscale_value)
+  // {
+  //   case constants::pattern_grayscale_value:
+  //   {
+  //     frame->grayscale_ = true;
+  //     byte_count_per_pattern_frame = constants::byte_count_per_panel_grayscale * \
+  //       pattern_header.panel_count_per_frame_row * \
+  //       pattern_header.panel_count_per_frame_col + \
+  //       constants::pattern_row_signifier_byte_count_per_row * \
+  //       pattern_header.panel_count_per_frame_row;
+  //     break;
+  //   }
+  //   case constants::pattern_binary_value:
+  //   {
+  //     frame->grayscale_ = false;
+  //     byte_count_per_pattern_frame = constants::byte_count_per_panel_binary * \
+  //       pattern_header.panel_count_per_frame_row * \
+  //       pattern_header.panel_count_per_frame_col + \
+  //       constants::pattern_row_signifier_byte_count_per_row * \
+  //       pattern_header.panel_count_per_frame_row;
+  //     break;
+  //   }
+  //   default:
+  //     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //       QS_STR("pattern has invalid grayscale value");
+  //     QS_END()
+  //     return;
+  // }
+  // pattern.setByteCountPerFrame(byte_count_per_pattern_frame);
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("byte_count_per_pattern_frame");
+  //   QS_U16(5, byte_count_per_pattern_frame);
+  // QS_END()
+
+  // if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_pattern_frame + constants::pattern_header_size) != pattern.fileSize())
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("pattern frame has incorrect file size");
+  //   QS_END()
+  //   return;
+  // }
+
+  // pattern.setValid();
+}
+
+bool FSP::Pattern_ifPatternValid(QActive * const ao, QEvt const * e)
+{
+  // return pattern.isValid();
+  return false;
+}
+
+// void FSP::Pattern_beginDisplayingPattern(QActive * const ao, QEvt const * e)
+// {
+//   Frame * const frame = static_cast<Frame * const>(AO_Frame);
+//   pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
+//   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
+//   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
+
+//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//     QS_STR("beginDisplayingPattern");
+//     QS_U32(8, bytes_decoded);
+//     QS_U32(8, pattern.fileSize());
+//     QS_U32(8, pattern.filePosition());
+//   QS_END()
+// }
 
 /**
   @brief Helper function: Appends a text message to a response buffer and updates the length byte
@@ -861,7 +874,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 
       SetParameterEvt *spev = Q_NEW(SetParameterEvt, DISPLAY_PATTERN_SIG);
       spev->value = pattern_id;
-      AO_Arena->POST(spev, &l_FSP_ID);
+      QF::PUBLISH(spev, &l_FSP_ID);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)

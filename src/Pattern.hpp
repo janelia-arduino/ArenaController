@@ -38,7 +38,8 @@ public:
 
 protected:
     Q_STATE_DECL(initial);
-    Q_STATE_DECL(state1);
+    Q_STATE_DECL(Inactive);
+    Q_STATE_DECL(DisplayingPattern);
 };
 
 } // namespace AC
