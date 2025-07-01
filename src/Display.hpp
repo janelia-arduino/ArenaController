@@ -42,7 +42,7 @@ protected:
     Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(Active);
-    Q_STATE_DECL(DisplayingFrames);
+    Q_STATE_DECL(DisplayingFrame);
     Q_STATE_DECL(WaitingToTransferFrame);
     Q_STATE_DECL(TransferringFrame);
 };

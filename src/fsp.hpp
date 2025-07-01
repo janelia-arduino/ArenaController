@@ -7,7 +7,6 @@
 #include "bsp.hpp"
 #include "signals.hpp"
 #include "records.hpp"
-#include "pattern.hpp"
 
 #include "ArenaController.hpp"
 #include "Arena.hpp"
@@ -16,6 +15,7 @@
 #include "EthernetCommandInterface.hpp"
 #include "Frame.hpp"
 #include "Watchdog.hpp"
+#include "Pattern.hpp"
 
 
 
@@ -27,7 +27,7 @@ struct FSP
   static void Arena_activateCommandInterfaces(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_deactivateCommandInterfaces(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_deactivateDisplay(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_displayFrames(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_initializePattern(QP::QActive * const ao, QP::QEvt const * e);

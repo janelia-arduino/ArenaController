@@ -58,7 +58,7 @@ Q_STATE_DEF(Display, initial) {
     QS_FUN_DICTIONARY(&Display::Initialized);
     QS_FUN_DICTIONARY(&Display::Inactive);
     QS_FUN_DICTIONARY(&Display::Active);
-    QS_FUN_DICTIONARY(&Display::DisplayingFrames);
+    QS_FUN_DICTIONARY(&Display::DisplayingFrame);
     QS_FUN_DICTIONARY(&Display::WaitingToTransferFrame);
     QS_FUN_DICTIONARY(&Display::TransferringFrame);
 
@@ -90,9 +90,9 @@ Q_STATE_DEF(Display, Initialized) {
 Q_STATE_DEF(Display, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Initialized::Inactive::DISPLAY_FRAMES}
-        case DISPLAY_FRAMES_SIG: {
-            status_ = tran(&DisplayingFrames);
+        //.${AOs::Display::SM::Initialized::Inactive::DISPLAY_FRAME}
+        case DISPLAY_FRAME_SIG: {
+            status_ = tran(&DisplayingFrame);
             break;
         }
         default: {
@@ -118,31 +118,31 @@ Q_STATE_DEF(Display, Active) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Initialized::Active::DisplayingFrames} ................
-Q_STATE_DEF(Display, DisplayingFrames) {
+//.${AOs::Display::SM::Initialized::Active::DisplayingFrame} .................
+Q_STATE_DEF(Display, DisplayingFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame}
         case Q_ENTRY_SIG: {
             FSP::Display_armRefreshTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame}
         case Q_EXIT_SIG: {
             FSP::Display_disarmRefreshTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::initial}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame::initial}
         case Q_INIT_SIG: {
             status_ = tran(&WaitingToTransferFrame);
             break;
         }
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::SET_REFRESH_RATE}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame::SET_REFRESH_RATE}
         case SET_REFRESH_RATE_SIG: {
             FSP::Display_setRefreshRate(this, e);
-            status_ = tran(&DisplayingFrames);
+            status_ = tran(&DisplayingFrame);
             break;
         }
         default: {
@@ -152,51 +152,51 @@ Q_STATE_DEF(Display, DisplayingFrames) {
     }
     return status_;
 }
-//.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToTransferFrame} 
+//.${AOs::Display::SM::Initialized::Active::DisplayingFrame::WaitingToTransferFrame} 
 Q_STATE_DEF(Display, WaitingToTransferFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToTransferFrame}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame::WaitingToTransferFrame}
         case Q_ENTRY_SIG: {
             FSP::Display_recall(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::WaitingToTransfe~::REFRESH_TIMEOUT}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame::WaitingToTransfe~::REFRESH_TIMEOUT}
         case REFRESH_TIMEOUT_SIG: {
             status_ = tran(&TransferringFrame);
             break;
         }
         default: {
-            status_ = super(&DisplayingFrames);
+            status_ = super(&DisplayingFrame);
             break;
         }
     }
     return status_;
 }
-//.${AOs::Display::SM::Initialized::Active::DisplayingFrames::TransferringFrame} 
+//.${AOs::Display::SM::Initialized::Active::DisplayingFrame::TransferringFrame} 
 Q_STATE_DEF(Display, TransferringFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::TransferringFrame}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame::TransferringFrame}
         case Q_ENTRY_SIG: {
             FSP::Display_transferFrame(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::TransferringFram~::FRAME_TRANSFERRED}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame::TransferringFram~::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             status_ = tran(&WaitingToTransferFrame);
             break;
         }
-        //.${AOs::Display::SM::Initialized::Active::DisplayingFrames::TransferringFram~::REFRESH_TIMEOUT}
+        //.${AOs::Display::SM::Initialized::Active::DisplayingFrame::TransferringFram~::REFRESH_TIMEOUT}
         case REFRESH_TIMEOUT_SIG: {
             FSP::Display_defer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         default: {
-            status_ = super(&DisplayingFrames);
+            status_ = super(&DisplayingFrame);
             break;
         }
     }

@@ -4,6 +4,7 @@
 #include <TimerThree.h>
 #include <SPI.h>
 #include <EventResponder.h>
+#include <SD.h>
 
 #include "ArenaController.hpp"
 
@@ -219,6 +220,19 @@ struct DecodedFrame
 };
 static DecodedFrame decoded_frame;
 
+union PatternHeader
+{
+  struct
+  {
+    uint64_t frame_count_x : 16;
+    uint64_t frame_count_y : 16;
+    uint64_t grayscale_value : 8;
+    uint64_t panel_count_per_frame_row : 8;
+    uint64_t panel_count_per_frame_col : 8;
+  };
+  uint64_t bytes;
+};
+
 // managed by Frame active object
 // do not manipulate directly
 static uint8_t frame_buffer[constants::byte_count_per_frame_max];
@@ -416,7 +430,7 @@ void transferPanelCompleteCallback(EventResponderRef event_responder)
   ++transfer_panel_complete_count;
   if (transfer_panel_complete_count == constants::region_count_per_frame)
   {
-    QF::PUBLISH(&panelSetTransferredEvt, &l_BSP_ID);
+    AO_Frame->POST(&panelSetTransferredEvt, &l_BSP_ID);
   }
 }
 

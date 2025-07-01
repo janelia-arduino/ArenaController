@@ -50,6 +50,7 @@ extern QP::QActive * const AO_SerialCommandInterface;
 extern QP::QActive * const AO_EthernetCommandInterface;
 extern QP::QActive * const AO_Frame;
 extern QP::QActive * const AO_Watchdog;
+extern QP::QActive * const AO_Pattern;
 
 } // namespace AC
 //.$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
