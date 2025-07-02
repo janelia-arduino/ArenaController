@@ -44,6 +44,13 @@ public:
     std::uint8_t const * binary_command;
     std::uint32_t binary_command_byte_count;
 };
+//.${Shared::DisplayPatternEvt} ..............................................
+class DisplayPatternEvt : public QP::QEvt {
+public:
+    std::uint16_t pattern_id;
+    std::uint16_t frame_rate;
+    std::uint16_t runtime_duration;
+};
 extern QP::QActive * const AO_Arena;
 extern QP::QActive * const AO_Display;
 extern QP::QActive * const AO_SerialCommandInterface;

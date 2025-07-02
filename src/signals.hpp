@@ -58,7 +58,8 @@ enum ArenaControllerSignals
   RESET_SIG,
 
   // POST to Pattern
-  PATTERN_TIMEOUT_SIG,
+  FRAME_RATE_TIMEOUT_SIG,
+  RUNTIME_DURATION_TIMEOUT_SIG,
   STOP_DISPLAYING_PATTERN_SIG,
 
   MAX_SIG // the last signal

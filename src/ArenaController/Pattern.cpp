@@ -48,7 +48,8 @@ Pattern Pattern::instance;
 //.${AOs::Pattern::Pattern} ..................................................
 Pattern::Pattern()
 : QActive(Q_STATE_CAST(&Pattern::initial)),
-    pattern_time_evt_(this, PATTERN_TIMEOUT_SIG, 0U)
+    frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
+    runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U)
 {}
 
 //.${AOs::Pattern::SM} .......................................................

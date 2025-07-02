@@ -625,10 +625,15 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="Pattern" superclass="qpcpp::QActive">
    <attribute name="instance" type="Pattern" visibility="0x00" properties="0x01"/>
-   <attribute name="pattern_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_rate_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
+   <attribute name="pattern_id_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_rate_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
-    pattern_time_evt_(this, PATTERN_TIMEOUT_SIG, 0U)</code>
+    frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
+    runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U)</code>
    </operation>
    <statechart properties="0x02">
     <initial target="../1">
@@ -665,6 +670,11 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="connection" type="void *" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+  </class>
+  <class name="DisplayPatternEvt" superclass="qpcpp::QEvt">
+   <attribute name="pattern_id" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_rate" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>

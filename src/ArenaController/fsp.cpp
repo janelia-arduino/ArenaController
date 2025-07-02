@@ -50,7 +50,8 @@ static QEvt const stopDisplayingPatternEvt = {STOP_DISPLAYING_PATTERN_SIG, 0U, 0
 void FSP::ArenaController_setup()
 {
   static QF_MPOOL_EL(SetParameterEvt) smlPoolSto[constants::pool_event_count];
-  static QF_MPOOL_EL(EthernetCommandEvt) medPoolSto[constants::pool_event_count];
+  static QF_MPOOL_EL(DisplayPatternEvt) medPoolSto[constants::pool_event_count];
+  static QF_MPOOL_EL(EthernetCommandEvt) lrgPoolSto[constants::pool_event_count];
 
   QF::init(); // initialize the framework
 
@@ -61,6 +62,7 @@ void FSP::ArenaController_setup()
   // initialize the event pools...
   QP::QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
   QP::QF::poolInit(medPoolSto, sizeof(medPoolSto), sizeof(medPoolSto[0]));
+  QP::QF::poolInit(lrgPoolSto, sizeof(lrgPoolSto), sizeof(lrgPoolSto[0]));
 
   // object dictionaries for AOs...
   QS_OBJ_DICTIONARY(AO_Arena);
@@ -888,9 +890,9 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       memcpy(&runtime_duration, command_buffer + command_buffer_position, sizeof(runtime_duration));
       command_buffer_position += sizeof(runtime_duration);
 
-      SetParameterEvt *spev = Q_NEW(SetParameterEvt, DISPLAY_PATTERN_SIG);
-      spev->value = pattern_id;
-      QF::PUBLISH(spev, &l_FSP_ID);
+      DisplayPatternEvt *dpev = Q_NEW(DisplayPatternEvt, DISPLAY_PATTERN_SIG);
+      dpev->pattern_id = pattern_id;
+      QF::PUBLISH(dpev, &l_FSP_ID);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)

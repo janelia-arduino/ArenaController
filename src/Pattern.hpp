@@ -31,7 +31,11 @@ namespace AC {
 class Pattern : public QP::QActive {
 public:
     static Pattern instance;
-    QP::QTimeEvt pattern_time_evt_;
+    QP::QTimeEvt frame_rate_time_evt_;
+    std::uint16_t pattern_id_;
+    std::uint16_t frame_rate_;
+    std::uint16_t runtime_duration_;
+    QP::QTimeEvt runtime_duration_time_evt_;
 
 public:
     Pattern();
