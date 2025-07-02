@@ -81,8 +81,9 @@ struct FSP
   static void Watchdog_feedWatchdog(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_initializePattern(QP::QActive * const ao, QP::QEvt const * e);
-  static bool Pattern_ifPatternValid(QP::QActive * const ao, QP::QEvt const * e);
+  // static void Pattern_initializeCard(QP::QActive * const ao, QP::QEvt const * e);
+  // static void Pattern_initializePattern(QP::QActive * const ao, QP::QEvt const * e);
+  // static bool Pattern_ifPatternValid(QP::QActive * const ao, QP::QEvt const * e);
   // static void Pattern_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
   // static void Pattern_setupNextPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
 

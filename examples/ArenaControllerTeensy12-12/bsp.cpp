@@ -377,11 +377,11 @@ void sfn(struct mg_connection *c, int ev, void *ev_data)
     struct mg_iobuf *r = &c->recv;
     MG_INFO(("SERVER got data: %lu bytes", r->len));
 
-    static EthernetCommandEvt ethernetCommandEvt = {ETHERNET_COMMAND_AVAILABLE_SIG, 0U, 0U};
-    ethernetCommandEvt.connection = c;
-    ethernetCommandEvt.binary_command = r->buf;
-    ethernetCommandEvt.binary_command_byte_count = r->len;
-    QF::PUBLISH(&ethernetCommandEvt, &l_BSP_ID);
+    EthernetCommandEvt *ecev = Q_NEW(EthernetCommandEvt, ETHERNET_COMMAND_AVAILABLE_SIG);
+    ecev->connection = c;
+    ecev->binary_command = r->buf;
+    ecev->binary_command_byte_count = r->len;
+    QF::PUBLISH(ecev, &l_BSP_ID);
   }
   else if (ev == MG_EV_WRITE)
   {

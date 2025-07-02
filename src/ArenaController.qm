@@ -364,13 +364,13 @@ This structure of the code is recommended for applications with only one active 
       </initial_glyph>
      </initial>
      <tran trig="DEACTIVATE_ETHERNET_COMMAND_INTERFACE" target="../../1">
-      <tran_glyph conn="18,41,3,3,-12,-22,49">
+      <tran_glyph conn="15,41,3,3,-12,-22,52">
        <action box="-1,-24,39,2"/>
       </tran_glyph>
      </tran>
      <tran trig="ETHERNET_TIMEOUT">
       <action brief="pollEthernet()">FSP::EthernetCommandInterface_pollEthernet(this, e);</action>
-      <tran_glyph conn="18,37,3,-1,28">
+      <tran_glyph conn="15,37,3,-1,31">
        <action box="0,-2,34,3"/>
       </tran_glyph>
      </tran>
@@ -477,7 +477,7 @@ This structure of the code is recommended for applications with only one active 
       </tran>
       <state_glyph node="80,85,48,25"/>
      </state>
-     <state_glyph node="18,28,113,85">
+     <state_glyph node="15,28,116,85">
       <entry box="1,2,24,2"/>
       <exit box="1,4,24,2"/>
      </state_glyph>
@@ -639,19 +639,19 @@ This structure of the code is recommended for applications with only one active 
     </initial>
     <state name="Inactive">
      <tran trig="DISPLAY_PATTERN" target="../../2">
-      <tran_glyph conn="24,19,2,0,10">
-       <action box="-15,3,15,2"/>
+      <tran_glyph conn="44,19,2,0,26">
+       <action box="-15,2,15,2"/>
       </tran_glyph>
      </tran>
      <state_glyph node="21,11,26,8"/>
     </state>
     <state name="DisplayingPattern">
      <tran trig="STOP_DISPLAYING_PATTERN" target="../../1">
-      <tran_glyph conn="30,29,0,2,-10">
-       <action box="1,-7,24,2"/>
+      <tran_glyph conn="24,45,0,2,-26">
+       <action box="-23,-24,24,2"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="11,29,56,44"/>
+     <state_glyph node="11,45,56,44"/>
     </state>
     <state_diagram size="80,95"/>
    </statechart>

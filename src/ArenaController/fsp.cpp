@@ -49,8 +49,8 @@ static QEvt const stopDisplayingPatternEvt = {STOP_DISPLAYING_PATTERN_SIG, 0U, 0
 
 void FSP::ArenaController_setup()
 {
-  static QF_MPOOL_EL(QP::QEvt) smlPoolSto[constants::pool_event_count];
-  static QF_MPOOL_EL(SetParameterEvt) medPoolSto[constants::pool_event_count];
+  static QF_MPOOL_EL(SetParameterEvt) smlPoolSto[constants::pool_event_count];
+  static QF_MPOOL_EL(EthernetCommandEvt) medPoolSto[constants::pool_event_count];
 
   QF::init(); // initialize the framework
 
@@ -611,122 +611,138 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(STOP_DISPLAYING_PATTERN_SIG, ao);
 }
 
-void FSP::Pattern_initializePattern(QActive * const ao, QEvt const * e)
-{
-  // SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  // uint16_t pattern_id = spev->value;
-  // Frame * const frame = static_cast<Frame * const>(AO_Frame);
+// void FSP::Pattern_initializeCard(QActive * const ao, QEvt const * e)
+// {
+//   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+//   uint16_t pattern_id = spev->value;
+//   Frame * const frame = static_cast<Frame * const>(AO_Frame);
 
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("initializing card may cause reboot if card not found...");
-  // QS_END()
-  // if (pattern.initializeCard())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("card found");
-  //   QS_END()
-  // }
-  // else
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("card not found");
-  //   QS_END()
-  //   return;
-  // }
-  // if (pattern.openFileForReading(pattern_id))
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("file found");
-  //     QS_U32(8, pattern.fileSize());
-  //   QS_END()
-  // }
-  // else
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("file not found");
-  //   QS_END()
-  //   return;
-  // }
+//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//     QS_STR("initializing card may cause reboot if card not found...");
+//   QS_END()
+//   if (pattern.initializeCard())
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("card found");
+//     QS_END()
+//   }
+// }
 
-  // PatternHeader & pattern_header = pattern.rewindFileReadHeader();
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("frame_count_x");
-  //   QS_U16(5, pattern_header.frame_count_x);
-  //   QS_STR("frame_count_y");
-  //   QS_U16(5, pattern_header.frame_count_y);
-  //   QS_STR("grayscale_value");
-  //   QS_U8(0, pattern_header.grayscale_value);
-  //   QS_STR("panel_count_per_frame_row");
-  //   QS_U8(0, pattern_header.panel_count_per_frame_row);
-  //   QS_STR("panel_count_per_frame_col");
-  //   QS_U8(0, pattern_header.panel_count_per_frame_col);
-  // QS_END()
+// void FSP::Pattern_initializePattern(QActive * const ao, QEvt const * e)
+// {
+//   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+//   uint16_t pattern_id = spev->value;
+//   Frame * const frame = static_cast<Frame * const>(AO_Frame);
 
-  // if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerRegionRow())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("pattern frame has incorrect number of rows");
-  //   QS_END()
-  //   return;
-  // }
-  // if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("pattern frame has incorrect number of cols");
-  //   QS_END()
-  //   return;
-  // }
-  // uint16_t byte_count_per_pattern_frame;
-  // switch (pattern_header.grayscale_value)
-  // {
-  //   case constants::pattern_grayscale_value:
-  //   {
-  //     frame->grayscale_ = true;
-  //     byte_count_per_pattern_frame = constants::byte_count_per_panel_grayscale * \
-  //       pattern_header.panel_count_per_frame_row * \
-  //       pattern_header.panel_count_per_frame_col + \
-  //       constants::pattern_row_signifier_byte_count_per_row * \
-  //       pattern_header.panel_count_per_frame_row;
-  //     break;
-  //   }
-  //   case constants::pattern_binary_value:
-  //   {
-  //     frame->grayscale_ = false;
-  //     byte_count_per_pattern_frame = constants::byte_count_per_panel_binary * \
-  //       pattern_header.panel_count_per_frame_row * \
-  //       pattern_header.panel_count_per_frame_col + \
-  //       constants::pattern_row_signifier_byte_count_per_row * \
-  //       pattern_header.panel_count_per_frame_row;
-  //     break;
-  //   }
-  //   default:
-  //     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //       QS_STR("pattern has invalid grayscale value");
-  //     QS_END()
-  //     return;
-  // }
-  // pattern.setByteCountPerFrame(byte_count_per_pattern_frame);
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("byte_count_per_pattern_frame");
-  //   QS_U16(5, byte_count_per_pattern_frame);
-  // QS_END()
+//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//     QS_STR("initializing card may cause reboot if card not found...");
+//   QS_END()
+//   if (pattern.initializeCard())
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("card found");
+//     QS_END()
+//   }
+//   else
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("card not found");
+//     QS_END()
+//     return;
+//   }
+//   if (pattern.openFileForReading(pattern_id))
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("file found");
+//       QS_U32(8, pattern.fileSize());
+//     QS_END()
+//   }
+//   else
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("file not found");
+//     QS_END()
+//     return;
+//   }
 
-  // if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_pattern_frame + constants::pattern_header_size) != pattern.fileSize())
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("pattern frame has incorrect file size");
-  //   QS_END()
-  //   return;
-  // }
+//   PatternHeader & pattern_header = pattern.rewindFileReadHeader();
+//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//     QS_STR("frame_count_x");
+//     QS_U16(5, pattern_header.frame_count_x);
+//     QS_STR("frame_count_y");
+//     QS_U16(5, pattern_header.frame_count_y);
+//     QS_STR("grayscale_value");
+//     QS_U8(0, pattern_header.grayscale_value);
+//     QS_STR("panel_count_per_frame_row");
+//     QS_U8(0, pattern_header.panel_count_per_frame_row);
+//     QS_STR("panel_count_per_frame_col");
+//     QS_U8(0, pattern_header.panel_count_per_frame_col);
+//   QS_END()
 
-  // pattern.setValid();
-}
+//   if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerRegionRow())
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("pattern frame has incorrect number of rows");
+//     QS_END()
+//     return;
+//   }
+//   if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame())
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("pattern frame has incorrect number of cols");
+//     QS_END()
+//     return;
+//   }
+//   uint16_t byte_count_per_pattern_frame;
+//   switch (pattern_header.grayscale_value)
+//   {
+//     case constants::pattern_grayscale_value:
+//     {
+//       frame->grayscale_ = true;
+//       byte_count_per_pattern_frame = constants::byte_count_per_panel_grayscale * \
+//   //       pattern_header.panel_count_per_frame_row * \
+//   //       pattern_header.panel_count_per_frame_col + \
+//   //       constants::pattern_row_signifier_byte_count_per_row * \
+//   //       pattern_header.panel_count_per_frame_row;
+//       break;
+//     }
+//     case constants::pattern_binary_value:
+//     {
+//       frame->grayscale_ = false;
+//       byte_count_per_pattern_frame = constants::byte_count_per_panel_binary * \
+//   //       pattern_header.panel_count_per_frame_row * \
+//   //       pattern_header.panel_count_per_frame_col + \
+//   //       constants::pattern_row_signifier_byte_count_per_row * \
+//   //       pattern_header.panel_count_per_frame_row;
+//       break;
+//     }
+//     default:
+//       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//         QS_STR("pattern has invalid grayscale value");
+//       QS_END()
+//       return;
+//   }
+//   pattern.setByteCountPerFrame(byte_count_per_pattern_frame);
+//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//     QS_STR("byte_count_per_pattern_frame");
+//     QS_U16(5, byte_count_per_pattern_frame);
+//   QS_END()
 
-bool FSP::Pattern_ifPatternValid(QActive * const ao, QEvt const * e)
-{
-  // return pattern.isValid();
-  return false;
-}
+//   if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_pattern_frame + constants::pattern_header_size) != pattern.fileSize())
+//   {
+//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//       QS_STR("pattern frame has incorrect file size");
+//     QS_END()
+//     return;
+//   }
+
+//   pattern.setValid();
+// }
+
+// bool FSP::Pattern_ifPatternValid(QActive * const ao, QEvt const * e)
+// {
+//   return pattern.isValid();
+// }
 
 // void FSP::Pattern_beginDisplayingPattern(QActive * const ao, QEvt const * e)
 // {
