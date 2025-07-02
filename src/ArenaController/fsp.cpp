@@ -152,7 +152,6 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   BSP::initializeArena();
 
-  ao->subscribe(FRAME_TRANSFERRED_SIG);
   ao->subscribe(DISPLAY_PATTERN_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
