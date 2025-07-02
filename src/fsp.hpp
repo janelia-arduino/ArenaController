@@ -32,7 +32,6 @@ struct FSP
   static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_stopDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_setupNextPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_setRefreshRate(QP::QActive * const ao, QP::QEvt const * e);
@@ -84,7 +83,8 @@ struct FSP
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializePattern(QP::QActive * const ao, QP::QEvt const * e);
   static bool Pattern_ifPatternValid(QP::QActive * const ao, QP::QEvt const * e);
-  // static void Arena_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
+  // static void Pattern_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
+  // static void Pattern_setupNextPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
 
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,

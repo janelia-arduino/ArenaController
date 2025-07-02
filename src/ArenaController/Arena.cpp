@@ -187,18 +187,6 @@ Q_STATE_DEF(Arena, DisplayingPattern) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Arena::SM::ArenaOn::DisplayingPatter~::FRAME_FILLED}
-        case FRAME_FILLED_SIG: {
-            FSP::Arena_displayFrame(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //.${AOs::Arena::SM::ArenaOn::DisplayingPatter~::FRAME_TRANSFERRED}
-        case FRAME_TRANSFERRED_SIG: {
-            FSP::Arena_setupNextPatternFrame(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         default: {
             status_ = super(&ArenaOn);
             break;

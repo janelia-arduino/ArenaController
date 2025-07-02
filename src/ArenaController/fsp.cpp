@@ -203,22 +203,7 @@ void FSP::Arena_postAllOff(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_stopDisplayingPattern(QActive * const ao, QEvt const * e)
 {
-  // pattern.closeFile();
-}
-
-void FSP::Arena_setupNextPatternFrame(QActive * const ao, QEvt const * e)
-{
-  // Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  // pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
-  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
-  // AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
-
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("setupNextPatternFrame");
-  //   QS_U32(8, bytes_decoded);
-  //   QS_U32(8, pattern.fileSize());
-  //   QS_U32(8, pattern.filePosition());
-  // QS_END()
+  AO_Arena->POST(&stopDisplayingPatternEvt, ao);
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -753,6 +738,22 @@ bool FSP::Pattern_ifPatternValid(QActive * const ao, QEvt const * e)
 
 //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
 //     QS_STR("beginDisplayingPattern");
+//     QS_U32(8, bytes_decoded);
+//     QS_U32(8, pattern.fileSize());
+//     QS_U32(8, pattern.filePosition());
+//   QS_END()
+// }
+
+// void FSP::Pattern_setupNextPatternFrame(QActive * const ao, QEvt const * e)
+// {
+//   pattern.closeFile();
+//   Frame * const frame = static_cast<Frame * const>(AO_Frame);
+//   pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
+//   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
+//   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
+
+//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+//     QS_STR("setupNextPatternFrame");
 //     QS_U32(8, bytes_decoded);
 //     QS_U32(8, pattern.fileSize());
 //     QS_U32(8, pattern.filePosition());
