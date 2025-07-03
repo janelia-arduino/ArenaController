@@ -59,7 +59,8 @@ Q_STATE_DEF(Pattern, initial) {
 
     QS_FUN_DICTIONARY(&Pattern::Initialized);
     QS_FUN_DICTIONARY(&Pattern::Inactive);
-    QS_FUN_DICTIONARY(&Pattern::DisplayingPattern);
+    QS_FUN_DICTIONARY(&Pattern::PatternFileOpened);
+    QS_FUN_DICTIONARY(&Pattern::PatternFileValid);
 
     return tran(&Initialized);
 }
@@ -93,7 +94,7 @@ Q_STATE_DEF(Pattern, Inactive) {
         case BEGIN_DISPLAYING_PATTERN_SIG: {
             //.${AOs::Pattern::SM::Initialized::Inactive::BEGIN_DISPLAYING~::[ifCardFound()]}
             if (FSP::Pattern_ifCardFound(this, e)) {
-                status_ = tran(&DisplayingPattern);
+                status_ = tran(&PatternFileOpened);
             }
             //.${AOs::Pattern::SM::Initialized::Inactive::BEGIN_DISPLAYING~::[else]}
             else {
@@ -109,29 +110,51 @@ Q_STATE_DEF(Pattern, Inactive) {
     }
     return status_;
 }
-//.${AOs::Pattern::SM::Initialized::DisplayingPattern} .......................
-Q_STATE_DEF(Pattern, DisplayingPattern) {
+//.${AOs::Pattern::SM::Initialized::PatternFileOpened} .......................
+Q_STATE_DEF(Pattern, PatternFileOpened) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Pattern::SM::Initialized::DisplayingPattern}
+        //.${AOs::Pattern::SM::Initialized::PatternFileOpened}
         case Q_ENTRY_SIG: {
             FSP::Pattern_openPatternFile(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Pattern::SM::Initialized::DisplayingPattern}
+        //.${AOs::Pattern::SM::Initialized::PatternFileOpened}
         case Q_EXIT_SIG: {
             FSP::Pattern_closePatternFile(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Pattern::SM::Initialized::DisplayingPatter~::END_DISPLAYING_PATTERN}
+        //.${AOs::Pattern::SM::Initialized::PatternFileOpene~::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&PatternFileValid);
+            break;
+        }
+        //.${AOs::Pattern::SM::Initialized::PatternFileOpene~::END_DISPLAYING_PATTERN}
         case END_DISPLAYING_PATTERN_SIG: {
             status_ = tran(&Inactive);
             break;
         }
         default: {
             status_ = super(&Initialized);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Pattern::SM::Initialized::PatternFileOpene~::PatternFileValid} .....
+Q_STATE_DEF(Pattern, PatternFileValid) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Pattern::SM::Initialized::PatternFileOpene~::PatternFileValid}
+        case Q_ENTRY_SIG: {
+            FSP::Pattern_checkPatternFile(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&PatternFileOpened);
             break;
         }
     }

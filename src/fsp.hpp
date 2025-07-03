@@ -7,8 +7,8 @@
 #include "bsp.hpp"
 #include "signals.hpp"
 #include "records.hpp"
+#include "pattern_header.hpp"
 
-#include "ArenaController.hpp"
 #include "Arena.hpp"
 #include "Display.hpp"
 #include "SerialCommandInterface.hpp"
@@ -16,7 +16,6 @@
 #include "Frame.hpp"
 #include "Watchdog.hpp"
 #include "Pattern.hpp"
-
 
 
 struct FSP
@@ -86,7 +85,7 @@ struct FSP
   static void Pattern_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_openPatternFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_closePatternFile(QP::QActive * const ao, QP::QEvt const * e);
-  static bool Pattern_ifPatternValid(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_checkPatternFile(QP::QActive * const ao, QP::QEvt const * e);
   // static void Pattern_storeParametersAndInitializeCard(QP::QActive * const ao, QP::QEvt const * e);
   // static void Pattern_initializeCard(QP::QActive * const ao, QP::QEvt const * e);
   // static void Pattern_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);

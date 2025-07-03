@@ -604,7 +604,6 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   pattern->frame_buffer_ = BSP::getPatternFrameBuffer();
-  pattern->valid_ = false;
 
   ao->subscribe(DISPLAY_PATTERN_SIG);
 
@@ -677,26 +676,11 @@ void FSP::Pattern_closePatternFile(QActive * const ao, QEvt const * e)
   QS_END()
 }
 
-// void FSP::Pattern_initializePattern(QActive * const ao, QEvt const * e)
-// {
+void FSP::Pattern_checkPatternFile(QActive * const ao, QEvt const * e)
+{
 //   Pattern * const pattern = static_cast<Pattern * const>(ao);
-//   pattern->file_size_ = BSP::openPatternFileForReading(pattern->id_);
-//   if (pattern->file_size_)
-//   {
-//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//       QS_STR("pattern file found");
-//       QS_U32(8, pattern->file_size_);
-//     QS_END()
-//   }
-//   else
-//   {
-//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//       QS_STR("pattern file not found");
-//     QS_END()
-//     return;
-//   }
 
-//   PatternHeader & pattern_header = pattern.rewindFileReadHeader();
+//   PatternHeader & pattern_header = pattern.rewindPatternFileAndReadHeader();
 //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
 //     QS_STR("frame_count_x");
 //     QS_U16(5, pattern_header.frame_count_x);
@@ -731,20 +715,20 @@ void FSP::Pattern_closePatternFile(QActive * const ao, QEvt const * e)
 //     {
 //       frame->grayscale_ = true;
 //       byte_count_per_pattern_frame = constants::byte_count_per_panel_grayscale * \
-// // //   //       pattern_header.panel_count_per_frame_row * \
-// // //   //       pattern_header.panel_count_per_frame_col + \
-// // //   //       constants::pattern_row_signifier_byte_count_per_row * \
-// // //   //       pattern_header.panel_count_per_frame_row;
+// // // //   //       pattern_header.panel_count_per_frame_row * \
+// // // //   //       pattern_header.panel_count_per_frame_col + \
+// // // //   //       constants::pattern_row_signifier_byte_count_per_row * \
+// // // //   //       pattern_header.panel_count_per_frame_row;
 //       break;
 //     }
 //     case constants::pattern_binary_value:
 //     {
 //       frame->grayscale_ = false;
 //       byte_count_per_pattern_frame = constants::byte_count_per_panel_binary * \
-// // //   //       pattern_header.panel_count_per_frame_row * \
-// // //   //       pattern_header.panel_count_per_frame_col + \
-// // //   //       constants::pattern_row_signifier_byte_count_per_row * \
-// // //   //       pattern_header.panel_count_per_frame_row;
+// // // //   //       pattern_header.panel_count_per_frame_row * \
+// // // //   //       pattern_header.panel_count_per_frame_col + \
+// // // //   //       constants::pattern_row_signifier_byte_count_per_row * \
+// // // //   //       pattern_header.panel_count_per_frame_row;
 //       break;
 //     }
 //     default:
@@ -768,12 +752,6 @@ void FSP::Pattern_closePatternFile(QActive * const ao, QEvt const * e)
 //   }
 
 //   pattern.setValid();
-// }
-
-bool FSP::Pattern_ifPatternValid(QActive * const ao, QEvt const * e)
-{
-  Pattern * const pattern = static_cast<Pattern * const>(ao);
-  return pattern->valid_;
 }
 
 // void FSP::Pattern_storeParametersAndInitializeCard(QActive * const ao, QEvt const * e)

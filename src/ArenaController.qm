@@ -631,7 +631,6 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="frame_rate_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
-   <attribute name="valid_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <attribute name="file_size_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
@@ -679,20 +678,31 @@ This structure of the code is recommended for applications with only one active 
       </tran>
       <state_glyph node="25,13,40,8"/>
      </state>
-     <state name="DisplayingPattern">
+     <state name="PatternFileOpened">
       <entry brief="openPatternFile()">FSP::Pattern_openPatternFile(this, e);</entry>
       <exit brief="closePatternFile()">FSP::Pattern_closePatternFile(this, e);</exit>
+      <initial target="../2">
+       <initial_glyph conn="42,40,4,0,4">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="END_DISPLAYING_PATTERN" target="../../2">
        <tran_glyph conn="28,36,0,2,-15">
         <action box="-23,-14,24,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="14,36,56,44">
+      <state name="PatternFileValid">
+       <entry brief="checkPatternFile()">FSP::Pattern_checkPatternFile(this, e);</entry>
+       <state_glyph node="17,44,53,50">
+        <entry box="1,2,21,2"/>
+       </state_glyph>
+      </state>
+      <state_glyph node="14,36,61,61">
        <entry box="1,2,20,2"/>
        <exit box="1,4,20,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="3,7,77,84"/>
+     <state_glyph node="3,7,77,92"/>
     </state>
     <state_diagram size="88,101"/>
    </statechart>

@@ -5,6 +5,7 @@
 #include <SPI.h>
 #include <EventResponder.h>
 #include <SD.h>
+#include "pattern_header.hpp"
 
 #include "ArenaController.hpp"
 
@@ -220,18 +221,6 @@ struct DecodedFrame
 };
 static DecodedFrame decoded_frame;
 
-union PatternHeader
-{
-  struct
-  {
-    uint64_t frame_count_x : 16;
-    uint64_t frame_count_y : 16;
-    uint64_t grayscale_value : 8;
-    uint64_t panel_count_per_frame_row : 8;
-    uint64_t panel_count_per_frame_col : 8;
-  };
-  uint64_t bytes;
-};
 PatternHeader pattern_header;
 FsFile pattern_file;
 
@@ -731,14 +720,14 @@ void BSP::closePatternFile()
   pattern_file.close();
 }
 
-// uint64_t BSP::rewindPatternFileAndReadHeader()
-// {
-//   pattern_file_.rewind();
-//   file_.read(&pattern_header, constants::pattern_header_size);
-//   uint64_t file_position = constants::pattern_header_size;
-//   file_.seekSet(file_position);
-//   return file_position;
-// }
+uint64_t BSP::rewindPatternFileAndReadHeader()
+{
+  pattern_file.rewind();
+  pattern_file.read(&pattern_header, constants::pattern_header_size);
+  uint64_t file_position = constants::pattern_header_size;
+  pattern_file.seekSet(file_position);
+  return file_position;
+}
 
 //----------------------------------------------------------------------------
 // QF callbacks...
