@@ -66,18 +66,23 @@ Q_STATE_DEF(Pattern, initial) {
 Q_STATE_DEF(Pattern, Inactive) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN}
-        case DISPLAY_PATTERN_SIG: {
-            FSP::Pattern_initializePattern(this, e);
-            //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN::[ifPatternValid()]}
-            if (FSP::Pattern_ifPatternValid(this, e)) {
+        //.${AOs::Pattern::SM::Inactive::BEGIN_DISPLAYING_PATTERN}
+        case BEGIN_DISPLAYING_PATTERN_SIG: {
+            //.${AOs::Pattern::SM::Inactive::BEGIN_DISPLAYING~::[ifCardFound()]}
+            if (FSP::Pattern_ifCardFound(this, e)) {
                 status_ = tran(&DisplayingPattern);
             }
-            //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN::[else]}
+            //.${AOs::Pattern::SM::Inactive::BEGIN_DISPLAYING~::[else]}
             else {
                 FSP::Pattern_postAllOff(this, e);
                 status_ = tran(&Inactive);
             }
+            break;
+        }
+        //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN}
+        case DISPLAY_PATTERN_SIG: {
+            FSP::Pattern_storeParameters(this, e);
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {
@@ -91,8 +96,20 @@ Q_STATE_DEF(Pattern, Inactive) {
 Q_STATE_DEF(Pattern, DisplayingPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Pattern::SM::DisplayingPatter~::STOP_DISPLAYING_PATTERN}
-        case STOP_DISPLAYING_PATTERN_SIG: {
+        //.${AOs::Pattern::SM::DisplayingPattern}
+        case Q_ENTRY_SIG: {
+            FSP::Pattern_openPatternFile(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Pattern::SM::DisplayingPattern}
+        case Q_EXIT_SIG: {
+            FSP::Pattern_closePatternFile(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Pattern::SM::DisplayingPatter~::END_DISPLAYING_PATTERN}
+        case END_DISPLAYING_PATTERN_SIG: {
             status_ = tran(&Inactive);
             break;
         }

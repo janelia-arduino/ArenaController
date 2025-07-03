@@ -55,6 +55,8 @@ struct BSP {
   static uint8_t * const getPatternFrameBuffer();
   static bool initializePatternCard();
   static uint64_t openPatternFileForReading(uint16_t pattern_id);
+  static void closePatternFile();
+  // static uint64_t rewindPatternFileAndReadHeader();
 };
 
 #endif // BSP_HPP

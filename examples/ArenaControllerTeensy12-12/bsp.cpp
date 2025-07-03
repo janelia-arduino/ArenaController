@@ -232,7 +232,8 @@ union PatternHeader
   };
   uint64_t bytes;
 };
-FsFile pattern_file_;
+PatternHeader pattern_header;
+FsFile pattern_file;
 
 // managed by Frame active object
 // do not manipulate directly
@@ -721,9 +722,23 @@ uint64_t BSP::openPatternFileForReading(uint16_t pattern_id)
 {
   char filename_str[constants::filename_str_len];
   sprintf(filename_str, "pat%0*d.pat", constants::pattern_id_str_len, pattern_id);
-  pattern_file_ = SD.sdfs.open(filename_str, O_RDONLY);
-  return pattern_file_.fileSize();
+  pattern_file = SD.sdfs.open(filename_str, O_RDONLY);
+  return pattern_file.fileSize();
 }
+
+void BSP::closePatternFile()
+{
+  pattern_file.close();
+}
+
+// uint64_t BSP::rewindPatternFileAndReadHeader()
+// {
+//   pattern_file_.rewind();
+//   file_.read(&pattern_header, constants::pattern_header_size);
+//   uint64_t file_position = constants::pattern_header_size;
+//   file_.seekSet(file_position);
+//   return file_position;
+// }
 
 //----------------------------------------------------------------------------
 // QF callbacks...
