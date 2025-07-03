@@ -68,7 +68,16 @@ Q_STATE_DEF(Pattern, Inactive) {
     switch (e->sig) {
         //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
-            status_ = tran(&DisplayingPattern);
+            FSP::Pattern_initializePattern(this, e);
+            //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN::[ifPatternValid()]}
+            if (FSP::Pattern_ifPatternValid(this, e)) {
+                status_ = tran(&DisplayingPattern);
+            }
+            //.${AOs::Pattern::SM::Inactive::DISPLAY_PATTERN::[else]}
+            else {
+                FSP::Pattern_postAllOff(this, e);
+                status_ = tran(&Inactive);
+            }
             break;
         }
         default: {

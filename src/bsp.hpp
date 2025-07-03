@@ -53,6 +53,7 @@ struct BSP {
     uint8_t panel_byte_count);
 
   static uint8_t * const getPatternFrameBuffer();
+  static bool initializeCard();
 };
 
 #endif // BSP_HPP

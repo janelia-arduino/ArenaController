@@ -710,6 +710,12 @@ uint8_t * const BSP::getPatternFrameBuffer()
   return pattern_frame_buffer;
 }
 
+bool BSP::initializeCard()
+{
+  // return SD.sdfs.begin(SdioConfig(DMA_SDIO));
+  return SD.sdfs.begin(SdioConfig(FIFO_SDIO));
+}
+
 //----------------------------------------------------------------------------
 // QF callbacks...
 
