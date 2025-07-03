@@ -53,7 +53,8 @@ struct BSP {
     uint8_t panel_byte_count);
 
   static uint8_t * const getPatternFrameBuffer();
-  static bool initializeCard();
+  static bool initializePatternCard();
+  static uint64_t openPatternFileForReading(uint16_t pattern_id);
 };
 
 #endif // BSP_HPP

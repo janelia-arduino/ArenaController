@@ -598,7 +598,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   pattern->frame_buffer_ = BSP::getPatternFrameBuffer();
-  pattern->pattern_valid_ = false;
+  pattern->valid_ = false;
 
   ao->subscribe(DISPLAY_PATTERN_SIG);
 
@@ -609,42 +609,43 @@ void FSP::Pattern_initializePattern(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
-  pattern->pattern_id_ = dpev->pattern_id;
+  pattern->id_ = dpev->pattern_id;
   pattern->frame_rate_ = dpev->frame_rate;
   pattern->runtime_duration_ = dpev->runtime_duration;
-  pattern->pattern_valid_ = false;
+  pattern->valid_ = false;
 
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("initializing card may cause reboot if card not found...");
   QS_END()
-  if (BSP::initializeCard())
+  if (BSP::initializePatternCard())
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-      QS_STR("card found");
+      QS_STR("pattern card found");
     QS_END()
-      pattern->pattern_valid_ = true;
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-      QS_STR("card not found");
+      QS_STR("pattern card not found");
     QS_END()
     return;
   }
-//   if (pattern.openFileForReading(pattern_id))
-//   {
-//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//       QS_STR("file found");
-//       QS_U32(8, pattern.fileSize());
-//     QS_END()
-//   }
-//   else
-//   {
-//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//       QS_STR("file not found");
-//     QS_END()
-//     return;
-//   }
+
+  pattern->file_size_ = BSP::openPatternFileForReading(pattern->id_);
+  if (pattern->file_size_)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("pattern file found");
+      QS_U32(8, pattern->file_size_);
+    QS_END()
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("pattern file not found");
+    QS_END()
+    return;
+  }
 
 //   PatternHeader & pattern_header = pattern.rewindFileReadHeader();
 //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -723,7 +724,7 @@ void FSP::Pattern_initializePattern(QActive * const ao, QEvt const * e)
 bool FSP::Pattern_ifPatternValid(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  return pattern->pattern_valid_;
+  return pattern->valid_;
 }
 
 void FSP::Pattern_postAllOff(QActive * const ao, QEvt const * e)

@@ -625,12 +625,13 @@ This structure of the code is recommended for applications with only one active 
   <class name="Pattern" superclass="qpcpp::QActive">
    <attribute name="instance" type="Pattern" visibility="0x00" properties="0x01"/>
    <attribute name="frame_rate_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
-   <attribute name="pattern_id_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="id_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
-   <attribute name="pattern_valid_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="valid_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
+   <attribute name="file_size_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),

@@ -232,6 +232,7 @@ union PatternHeader
   };
   uint64_t bytes;
 };
+FsFile pattern_file_;
 
 // managed by Frame active object
 // do not manipulate directly
@@ -710,10 +711,18 @@ uint8_t * const BSP::getPatternFrameBuffer()
   return pattern_frame_buffer;
 }
 
-bool BSP::initializeCard()
+bool BSP::initializePatternCard()
 {
   // return SD.sdfs.begin(SdioConfig(DMA_SDIO));
   return SD.sdfs.begin(SdioConfig(FIFO_SDIO));
+}
+
+uint64_t BSP::openPatternFileForReading(uint16_t pattern_id)
+{
+  char filename_str[constants::filename_str_len];
+  sprintf(filename_str, "pat%0*d.pat", constants::pattern_id_str_len, pattern_id);
+  pattern_file_ = SD.sdfs.open(filename_str, O_RDONLY);
+  return pattern_file_.fileSize();
 }
 
 //----------------------------------------------------------------------------
