@@ -655,6 +655,7 @@ void FSP::Pattern_openPatternFile(QActive * const ao, QEvt const * e)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
       QS_STR("pattern file opened");
+      QS_U32(8, pattern->id_);
       QS_U32(8, pattern->file_size_);
     QS_END()
   }
@@ -662,6 +663,7 @@ void FSP::Pattern_openPatternFile(QActive * const ao, QEvt const * e)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
       QS_STR("pattern file not found");
+      QS_U32(8, pattern->id_);
     QS_END()
     Pattern_postAllOff(ao, e);
   }

@@ -45,6 +45,7 @@ public:
 
 protected:
     Q_STATE_DECL(initial);
+    Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(DisplayingPattern);
 };
