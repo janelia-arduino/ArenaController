@@ -612,6 +612,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   pattern->frame_buffer_ = BSP::getPatternFrameBuffer();
 
   ao->subscribe(DISPLAY_PATTERN_SIG);
+  ao->subscribe(FRAME_TRANSFERRED_SIG);
 
   QS_SIG_DICTIONARY(BEGIN_DISPLAYING_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(END_DISPLAYING_PATTERN_SIG, ao);
@@ -693,7 +694,8 @@ void FSP::Pattern_checkFile(QActive * const ao, QEvt const * e)
 
 void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
 {
-//   Pattern * const pattern = static_cast<Pattern * const>(ao);
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  Frame * const frame = static_cast<Frame * const>(AO_Frame);
 
   PatternHeader pattern_header = BSP::rewindPatternFileAndReadHeader();
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -734,53 +736,76 @@ void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
     return;
   }
 
-//   uint16_t byte_count_per_pattern_frame;
-//   switch (pattern_header.grayscale_value)
-//   {
-//     case constants::pattern_grayscale_value:
-//     {
-//       frame->grayscale_ = true;
-//       byte_count_per_pattern_frame = constants::byte_count_per_panel_grayscale * \
-// // // //   //       pattern_header.panel_count_per_frame_row * \
-// // // //   //       pattern_header.panel_count_per_frame_col + \
-// // // //   //       constants::pattern_row_signifier_byte_count_per_row * \
-// // // //   //       pattern_header.panel_count_per_frame_row;
-//       break;
-//     }
-//     case constants::pattern_binary_value:
-//     {
-//       frame->grayscale_ = false;
-//       byte_count_per_pattern_frame = constants::byte_count_per_panel_binary * \
-// // // //   //       pattern_header.panel_count_per_frame_row * \
-// // // //   //       pattern_header.panel_count_per_frame_col + \
-// // // //   //       constants::pattern_row_signifier_byte_count_per_row * \
-// // // //   //       pattern_header.panel_count_per_frame_row;
-//       break;
-//     }
-//     default:
-//       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//         QS_STR("pattern has invalid grayscale value");
-//       QS_END()
-//       return;
-//   }
-//   pattern.setByteCountPerFrame(byte_count_per_pattern_frame);
-//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//     QS_STR("byte_count_per_pattern_frame");
-//     QS_U16(5, byte_count_per_pattern_frame);
-//   QS_END()
+  uint64_t byte_count_per_frame;
+  switch (pattern_header.grayscale_value)
+  {
+    case constants::pattern_grayscale_value:
+    {
+      frame->grayscale_ = true;
+      byte_count_per_frame = constants::byte_count_per_panel_grayscale * \
+        pattern_header.panel_count_per_frame_row *                      \
+        pattern_header.panel_count_per_frame_col +                      \
+        constants::pattern_row_signifier_byte_count_per_row *           \
+        pattern_header.panel_count_per_frame_row;
+      break;
+    }
+    case constants::pattern_binary_value:
+    {
+      frame->grayscale_ = false;
+      byte_count_per_frame = constants::byte_count_per_panel_binary * \
+        pattern_header.panel_count_per_frame_row *                      \
+        pattern_header.panel_count_per_frame_col +                      \
+        constants::pattern_row_signifier_byte_count_per_row *           \
+        pattern_header.panel_count_per_frame_row;
+      break;
+    }
+    default:
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("pattern has invalid grayscale value");
+      QS_END()
+      AO_Pattern->POST(&patternNotValidEvt, ao);
+      return;
+  }
 
-//   if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_pattern_frame + constants::pattern_header_size) != pattern.fileSize())
-//   {
-//     QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//       QS_STR("pattern frame has incorrect file size");
-//     QS_END()
-//     return;
-//   }
+  if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_frame + constants::pattern_header_size) != pattern->file_size_)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("pattern frame has incorrect file size");
+    QS_END()
+    AO_Pattern->POST(&patternNotValidEvt, ao);
+    return;
+  }
+
+  pattern->byte_count_per_frame_ = byte_count_per_frame;
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("byte count per pattern frame");
+    QS_U16(5, byte_count_per_frame);
+  QS_END()
 
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("pattern valid");
   QS_END()
   AO_Pattern->POST(&patternValidEvt, ao);
+}
+
+void FSP::Pattern_armTimers(QActive * const ao, QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  pattern->frame_rate_time_evt_.armX(constants::ticks_per_second / pattern->frame_rate_, constants::ticks_per_second / pattern->frame_rate_);
+}
+
+void FSP::Pattern_disarmTimers(QActive * const ao, QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  pattern->frame_rate_time_evt_.disarm();
+}
+
+void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
+{
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("displaying pattern frame");
+  QS_END()
+  QF::PUBLISH(&frameTransferredEvt, ao);
 }
 
 // void FSP::Pattern_storeParametersAndInitializeCard(QActive * const ao, QEvt const * e)

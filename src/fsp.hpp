@@ -87,10 +87,9 @@ struct FSP
   static void Pattern_closeFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_checkFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_checkPattern(QP::QActive * const ao, QP::QEvt const * e);
-  // static void Pattern_storeParametersAndInitializeCard(QP::QActive * const ao, QP::QEvt const * e);
-  // static void Pattern_initializeCard(QP::QActive * const ao, QP::QEvt const * e);
-  // static void Pattern_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
-  // static void Pattern_setupNextPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_disarmTimers(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
 
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,

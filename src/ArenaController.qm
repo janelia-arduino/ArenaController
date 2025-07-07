@@ -633,6 +633,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="runtime_duration_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="frame_buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <attribute name="file_size_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
+   <attribute name="byte_count_per_frame_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
@@ -679,7 +680,36 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <state name="PatternValid">
-       <state_glyph node="17,67,53,45"/>
+       <entry brief="armTimers()">FSP::Pattern_armTimers(this, e);</entry>
+       <exit brief="disarmTimers()">FSP::Pattern_disarmTimers(this, e);</exit>
+       <initial target="../1">
+        <initial_glyph conn="43,78,4,0,3">
+         <action box="0,-2,10,2"/>
+        </initial_glyph>
+       </initial>
+       <state name="WaitingToDisplayFrame">
+        <tran trig="FRAME_RATE_TIMEOUT" target="../../2">
+         <tran_glyph conn="43,89,2,0,7">
+          <action box="1,2,20,4"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="38,81,21,8"/>
+       </state>
+       <state name="DisplayingFrame">
+        <entry brief="displayFrame()">FSP::Pattern_displayFrame(this, e);</entry>
+        <tran trig="FRAME_TRANSFERRED" target="../../1">
+         <tran_glyph conn="39,101,3,3,-3,-16,2">
+          <action box="-21,-10,20,2"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="39,96,22,10">
+         <entry box="1,2,16,2"/>
+        </state_glyph>
+       </state>
+       <state_glyph node="17,67,53,45">
+        <entry box="1,2,15,2"/>
+        <exit box="1,4,15,2"/>
+       </state_glyph>
       </state>
       <state name="CheckingFile">
        <entry brief="checkFile()">FSP::Pattern_checkFile(this, e);</entry>
