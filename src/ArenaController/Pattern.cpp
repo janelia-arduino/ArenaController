@@ -59,8 +59,11 @@ Q_STATE_DEF(Pattern, initial) {
 
     QS_FUN_DICTIONARY(&Pattern::Initialized);
     QS_FUN_DICTIONARY(&Pattern::Inactive);
-    QS_FUN_DICTIONARY(&Pattern::PatternFileOpened);
-    QS_FUN_DICTIONARY(&Pattern::PatternFileValid);
+    QS_FUN_DICTIONARY(&Pattern::FileOpened);
+    QS_FUN_DICTIONARY(&Pattern::PatternValid);
+    QS_FUN_DICTIONARY(&Pattern::CheckingFile);
+    QS_FUN_DICTIONARY(&Pattern::CheckingPattern);
+    QS_FUN_DICTIONARY(&Pattern::InitializingCard);
 
     return tran(&Initialized);
 }
@@ -92,15 +95,7 @@ Q_STATE_DEF(Pattern, Inactive) {
     switch (e->sig) {
         //.${AOs::Pattern::SM::Initialized::Inactive::BEGIN_DISPLAYING_PATTERN}
         case BEGIN_DISPLAYING_PATTERN_SIG: {
-            //.${AOs::Pattern::SM::Initialized::Inactive::BEGIN_DISPLAYING~::[ifCardFound()]}
-            if (FSP::Pattern_ifCardFound(this, e)) {
-                status_ = tran(&PatternFileOpened);
-            }
-            //.${AOs::Pattern::SM::Initialized::Inactive::BEGIN_DISPLAYING~::[else]}
-            else {
-                FSP::Pattern_postAllOff(this, e);
-                status_ = tran(&Inactive);
-            }
+            status_ = tran(&InitializingCard);
             break;
         }
         default: {
@@ -110,28 +105,28 @@ Q_STATE_DEF(Pattern, Inactive) {
     }
     return status_;
 }
-//.${AOs::Pattern::SM::Initialized::PatternFileOpened} .......................
-Q_STATE_DEF(Pattern, PatternFileOpened) {
+//.${AOs::Pattern::SM::Initialized::FileOpened} ..............................
+Q_STATE_DEF(Pattern, FileOpened) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Pattern::SM::Initialized::PatternFileOpened}
+        //.${AOs::Pattern::SM::Initialized::FileOpened}
         case Q_ENTRY_SIG: {
-            FSP::Pattern_openPatternFile(this, e);
+            FSP::Pattern_openFile(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Pattern::SM::Initialized::PatternFileOpened}
+        //.${AOs::Pattern::SM::Initialized::FileOpened}
         case Q_EXIT_SIG: {
-            FSP::Pattern_closePatternFile(this, e);
+            FSP::Pattern_closeFile(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //.${AOs::Pattern::SM::Initialized::PatternFileOpene~::initial}
+        //.${AOs::Pattern::SM::Initialized::FileOpened::initial}
         case Q_INIT_SIG: {
-            status_ = tran(&PatternFileValid);
+            status_ = tran(&CheckingFile);
             break;
         }
-        //.${AOs::Pattern::SM::Initialized::PatternFileOpene~::END_DISPLAYING_PATTERN}
+        //.${AOs::Pattern::SM::Initialized::FileOpened::END_DISPLAYING_PATTERN}
         case END_DISPLAYING_PATTERN_SIG: {
             status_ = tran(&Inactive);
             break;
@@ -143,18 +138,96 @@ Q_STATE_DEF(Pattern, PatternFileOpened) {
     }
     return status_;
 }
-//.${AOs::Pattern::SM::Initialized::PatternFileOpene~::PatternFileValid} .....
-Q_STATE_DEF(Pattern, PatternFileValid) {
+//.${AOs::Pattern::SM::Initialized::FileOpened::PatternValid} ................
+Q_STATE_DEF(Pattern, PatternValid) {
     QP::QState status_;
     switch (e->sig) {
-        //.${AOs::Pattern::SM::Initialized::PatternFileOpene~::PatternFileValid}
+        default: {
+            status_ = super(&FileOpened);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile} ................
+Q_STATE_DEF(Pattern, CheckingFile) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile}
         case Q_ENTRY_SIG: {
-            FSP::Pattern_checkPatternFile(this, e);
+            FSP::Pattern_checkFile(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile::FILE_VALID}
+        case FILE_VALID_SIG: {
+            status_ = tran(&CheckingPattern);
+            break;
+        }
+        //.${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile::FILE_NOT_VALID}
+        case FILE_NOT_VALID_SIG: {
+            FSP::Pattern_postAllOff(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         default: {
-            status_ = super(&PatternFileOpened);
+            status_ = super(&FileOpened);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern} .............
+Q_STATE_DEF(Pattern, CheckingPattern) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern}
+        case Q_ENTRY_SIG: {
+            FSP::Pattern_checkPattern(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern::PATTERN_VALID}
+        case PATTERN_VALID_SIG: {
+            status_ = tran(&PatternValid);
+            break;
+        }
+        //.${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern::PATTERN_NOT_VALID}
+        case PATTERN_NOT_VALID_SIG: {
+            FSP::Pattern_postAllOff(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&FileOpened);
+            break;
+        }
+    }
+    return status_;
+}
+//.${AOs::Pattern::SM::Initialized::InitializingCard} ........................
+Q_STATE_DEF(Pattern, InitializingCard) {
+    QP::QState status_;
+    switch (e->sig) {
+        //.${AOs::Pattern::SM::Initialized::InitializingCard}
+        case Q_ENTRY_SIG: {
+            FSP::Pattern_initializeCard(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //.${AOs::Pattern::SM::Initialized::InitializingCard::CARD_FOUND}
+        case CARD_FOUND_SIG: {
+            status_ = tran(&FileOpened);
+            break;
+        }
+        //.${AOs::Pattern::SM::Initialized::InitializingCard::CARD_NOT_FOUND}
+        case CARD_NOT_FOUND_SIG: {
+            FSP::Pattern_postAllOff(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&Initialized);
             break;
         }
     }

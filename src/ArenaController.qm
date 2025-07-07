@@ -641,70 +641,105 @@ This structure of the code is recommended for applications with only one active 
    <statechart properties="0x02">
     <initial target="../1">
      <action brief="initializeAndSubscribe()">FSP::Pattern_initializeAndSubscribe(this, e);</action>
-     <initial_glyph conn="28,2,4,0,5">
+     <initial_glyph conn="28,2,4,0,6">
       <action box="1,1,23,2"/>
      </initial_glyph>
     </initial>
     <state name="Initialized">
      <initial target="../2">
-      <initial_glyph conn="33,10,4,0,3">
+      <initial_glyph conn="33,11,4,0,3">
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
      <tran trig="DISPLAY_PATTERN">
       <action brief="storeParameters()">FSP::Pattern_storeParameters(this, e);</action>
-      <tran_glyph conn="3,15,3,-1,19">
+      <tran_glyph conn="3,16,3,-1,19">
        <action box="0,-2,18,4"/>
       </tran_glyph>
      </tran>
      <state name="Inactive">
-      <tran trig="BEGIN_DISPLAYING_PATTERN">
-       <choice target="../../../3">
-        <guard brief="ifCardFound()">FSP::Pattern_ifCardFound(this, e)</guard>
-        <choice_glyph conn="36,28,5,0,19,8">
-         <action box="20,1,13,2"/>
-        </choice_glyph>
-       </choice>
-       <choice target="../..">
-        <guard brief="else"/>
-        <action brief="postAllOff()">FSP::Pattern_postAllOff(this, e);</action>
-        <choice_glyph conn="36,28,4,2,4,-5,-11">
-         <action box="1,2,9,4"/>
-        </choice_glyph>
-       </choice>
-       <tran_glyph conn="36,21,2,-1,7">
+      <tran trig="BEGIN_DISPLAYING_PATTERN" target="../../4">
+       <tran_glyph conn="36,22,2,0,4">
         <action box="1,1,27,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="25,13,40,8"/>
+      <state_glyph node="25,14,40,8"/>
      </state>
-     <state name="PatternFileOpened">
-      <entry brief="openPatternFile()">FSP::Pattern_openPatternFile(this, e);</entry>
-      <exit brief="closePatternFile()">FSP::Pattern_closePatternFile(this, e);</exit>
-      <initial target="../2">
-       <initial_glyph conn="42,40,4,0,4">
+     <state name="FileOpened">
+      <entry brief="openFile()">FSP::Pattern_openFile(this, e);</entry>
+      <exit brief="closeFile()">FSP::Pattern_closeFile(this, e);</exit>
+      <initial target="../3">
+       <initial_glyph conn="23,44,4,0,3">
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
       <tran trig="END_DISPLAYING_PATTERN" target="../../2">
-       <tran_glyph conn="28,36,0,2,-15">
-        <action box="-23,-14,24,2"/>
+       <tran_glyph conn="28,36,0,2,-14">
+        <action box="-23,-13,24,2"/>
        </tran_glyph>
       </tran>
-      <state name="PatternFileValid">
-       <entry brief="checkPatternFile()">FSP::Pattern_checkPatternFile(this, e);</entry>
-       <state_glyph node="17,44,53,50">
-        <entry box="1,2,21,2"/>
+      <state name="PatternValid">
+       <state_glyph node="17,67,53,45"/>
+      </state>
+      <state name="CheckingFile">
+       <entry brief="checkFile()">FSP::Pattern_checkFile(this, e);</entry>
+       <tran trig="FILE_VALID" target="../../4">
+        <tran_glyph conn="23,53,2,0,4">
+         <action box="1,1,10,2"/>
+        </tran_glyph>
+       </tran>
+       <tran trig="FILE_NOT_VALID">
+        <action brief="postAllOff()">FSP::Pattern_postAllOff(this, e);</action>
+        <tran_glyph conn="44,50,1,-1,20">
+         <action box="2,-2,17,4"/>
+        </tran_glyph>
+       </tran>
+       <state_glyph node="17,47,27,6">
+        <entry box="1,2,11,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="14,36,61,61">
+      <state name="CheckingPattern">
+       <entry brief="checkPattern()">FSP::Pattern_checkPattern(this, e);</entry>
+       <tran trig="PATTERN_VALID" target="../../2">
+        <tran_glyph conn="23,63,2,0,4">
+         <action box="1,1,14,2"/>
+        </tran_glyph>
+       </tran>
+       <tran trig="PATTERN_NOT_VALID">
+        <action brief="postAllOff()">FSP::Pattern_postAllOff(this, e);</action>
+        <tran_glyph conn="44,61,1,-1,20">
+         <action box="2,-2,18,4"/>
+        </tran_glyph>
+       </tran>
+       <state_glyph node="17,57,27,6">
+        <entry box="1,2,14,2"/>
+       </state_glyph>
+      </state>
+      <state_glyph node="14,36,61,93">
        <entry box="1,2,20,2"/>
        <exit box="1,4,20,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="3,7,77,92"/>
+     <state name="InitializingCard">
+      <entry brief="initializeCard()">FSP::Pattern_initializeCard(this, e);</entry>
+      <tran trig="CARD_FOUND" target="../../3">
+       <tran_glyph conn="36,32,2,0,4">
+        <action box="1,1,12,2"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="CARD_NOT_FOUND">
+       <action brief="postAllOff()">FSP::Pattern_postAllOff(this, e);</action>
+       <tran_glyph conn="52,29,1,-1,19">
+        <action box="2,-2,17,4"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="33,26,19,6">
+       <entry box="1,2,15,2"/>
+      </state_glyph>
+     </state>
+     <state_glyph node="3,8,77,126"/>
     </state>
-    <state_diagram size="88,101"/>
+    <state_diagram size="109,144"/>
    </statechart>
   </class>
  </package>

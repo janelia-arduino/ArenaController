@@ -46,8 +46,11 @@ protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
-    Q_STATE_DECL(PatternFileOpened);
-    Q_STATE_DECL(PatternFileValid);
+    Q_STATE_DECL(FileOpened);
+    Q_STATE_DECL(PatternValid);
+    Q_STATE_DECL(CheckingFile);
+    Q_STATE_DECL(CheckingPattern);
+    Q_STATE_DECL(InitializingCard);
 };
 
 } // namespace AC

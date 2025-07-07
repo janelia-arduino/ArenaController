@@ -1,6 +1,7 @@
 #ifndef BSP_HPP
 #define BSP_HPP
 #include "constants.hpp"
+#include "pattern_header.hpp"
 
 
 struct BSP {
@@ -56,7 +57,8 @@ struct BSP {
   static bool initializePatternCard();
   static uint64_t openPatternFileForReading(uint16_t pattern_id);
   static void closePatternFile();
-  static uint64_t rewindPatternFileAndReadHeader();
+  static AC::PatternHeader rewindPatternFileAndReadHeader();
+  static uint64_t rewindPatternFile();
 };
 
 #endif // BSP_HPP

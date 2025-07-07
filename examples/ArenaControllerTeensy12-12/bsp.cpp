@@ -5,7 +5,6 @@
 #include <SPI.h>
 #include <EventResponder.h>
 #include <SD.h>
-#include "pattern_header.hpp"
 
 #include "ArenaController.hpp"
 
@@ -720,10 +719,18 @@ void BSP::closePatternFile()
   pattern_file.close();
 }
 
-uint64_t BSP::rewindPatternFileAndReadHeader()
+PatternHeader BSP::rewindPatternFileAndReadHeader()
 {
   pattern_file.rewind();
   pattern_file.read(&pattern_header, constants::pattern_header_size);
+  uint64_t file_position = constants::pattern_header_size;
+  pattern_file.seekSet(file_position);
+  return pattern_header;
+}
+
+uint64_t BSP::rewindPatternFile()
+{
+  pattern_file.rewind();
   uint64_t file_position = constants::pattern_header_size;
   pattern_file.seekSet(file_position);
   return file_position;
