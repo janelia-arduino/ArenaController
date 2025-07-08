@@ -59,6 +59,8 @@ struct BSP {
   static void closePatternFile();
   static AC::PatternHeader rewindPatternFileAndReadHeader();
   static uint64_t rewindPatternFile();
+  static void readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
+    uint64_t byte_count_per_pattern_frame);
 };
 
 #endif // BSP_HPP

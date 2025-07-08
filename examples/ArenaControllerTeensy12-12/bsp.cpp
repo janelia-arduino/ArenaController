@@ -221,7 +221,7 @@ struct DecodedFrame
 static DecodedFrame decoded_frame;
 
 PatternHeader pattern_header;
-FsFile pattern_file;
+File pattern_file;
 
 // managed by Frame active object
 // do not manipulate directly
@@ -710,8 +710,8 @@ uint64_t BSP::openPatternFileForReading(uint16_t pattern_id)
 {
   char filename_str[constants::filename_str_len];
   sprintf(filename_str, "pat%0*d.pat", constants::pattern_id_str_len, pattern_id);
-  pattern_file = SD.sdfs.open(filename_str, O_RDONLY);
-  return pattern_file.fileSize();
+  pattern_file = SD.open(filename_str, O_RDONLY);
+  return pattern_file.size();
 }
 
 void BSP::closePatternFile()
@@ -721,19 +721,40 @@ void BSP::closePatternFile()
 
 PatternHeader BSP::rewindPatternFileAndReadHeader()
 {
-  pattern_file.rewind();
+  pattern_file.seek(0);
   pattern_file.read(&pattern_header, constants::pattern_header_size);
-  uint64_t file_position = constants::pattern_header_size;
-  pattern_file.seekSet(file_position);
+  pattern_file.seek(constants::pattern_header_size);
   return pattern_header;
 }
 
 uint64_t BSP::rewindPatternFile()
 {
-  pattern_file.rewind();
   uint64_t file_position = constants::pattern_header_size;
-  pattern_file.seekSet(file_position);
+  pattern_file.seek(file_position);
   return file_position;
+}
+
+void BSP::readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
+    uint64_t byte_count_per_pattern_frame)
+{
+  if ((pattern_file.position() + byte_count_per_pattern_frame) >= pattern_file.size())
+  {
+    rewindPatternFile();
+  }
+  // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+  //   QS_STR("pattern file position");
+  //   QS_U16(5, pattern_file.position());
+  //   QS_STR("pattern file size");
+  //   QS_U16(5, pattern_file.size());
+  // QS_END()
+  pattern_file.read(buffer, byte_count_per_pattern_frame);
+  pattern_file.seek(pattern_file.position() + byte_count_per_pattern_frame);
+  // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+  //   QS_STR("pattern file position");
+  //   QS_U16(5, pattern_file.position());
+  //   QS_STR("pattern file size");
+  //   QS_U16(5, pattern_file.size());
+  // QS_END()
 }
 
 //----------------------------------------------------------------------------

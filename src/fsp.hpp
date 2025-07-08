@@ -89,6 +89,12 @@ struct FSP
   static void Pattern_checkPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_disarmTimers(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_deactivateDisplay(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_decodeFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_defer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_recall(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
 
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,

@@ -39,6 +39,7 @@ public:
     std::uint8_t * frame_buffer_;
     std::uint64_t file_size_;
     std::uint64_t byte_count_per_frame_;
+    QP::QEQueue frame_rate_queue_;
 
 public:
     Pattern();
@@ -48,11 +49,14 @@ protected:
     Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(FileOpened);
+    Q_STATE_DECL(CheckingFile);
+    Q_STATE_DECL(CheckingPattern);
     Q_STATE_DECL(PatternValid);
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayingFrame);
-    Q_STATE_DECL(CheckingFile);
-    Q_STATE_DECL(CheckingPattern);
+    Q_STATE_DECL(ReadingNextFrameFromFile);
+    Q_STATE_DECL(FillingFrameBufferWithDecodedFrame);
+    Q_STATE_DECL(DecodingFrame);
     Q_STATE_DECL(InitializingCard);
 };
 

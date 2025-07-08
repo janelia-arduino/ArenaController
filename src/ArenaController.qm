@@ -634,6 +634,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="frame_buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <attribute name="file_size_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <attribute name="byte_count_per_frame_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_rate_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
@@ -669,7 +670,7 @@ This structure of the code is recommended for applications with only one active 
      <state name="FileOpened">
       <entry brief="openFile()">FSP::Pattern_openFile(this, e);</entry>
       <exit brief="closeFile()">FSP::Pattern_closeFile(this, e);</exit>
-      <initial target="../3">
+      <initial target="../2">
        <initial_glyph conn="23,44,4,0,3">
         <action box="0,-2,10,2"/>
        </initial_glyph>
@@ -679,41 +680,9 @@ This structure of the code is recommended for applications with only one active 
         <action box="-23,-13,24,2"/>
        </tran_glyph>
       </tran>
-      <state name="PatternValid">
-       <entry brief="armTimers()">FSP::Pattern_armTimers(this, e);</entry>
-       <exit brief="disarmTimers()">FSP::Pattern_disarmTimers(this, e);</exit>
-       <initial target="../1">
-        <initial_glyph conn="43,78,4,0,3">
-         <action box="0,-2,10,2"/>
-        </initial_glyph>
-       </initial>
-       <state name="WaitingToDisplayFrame">
-        <tran trig="FRAME_RATE_TIMEOUT" target="../../2">
-         <tran_glyph conn="43,89,2,0,7">
-          <action box="1,2,20,4"/>
-         </tran_glyph>
-        </tran>
-        <state_glyph node="38,81,21,8"/>
-       </state>
-       <state name="DisplayingFrame">
-        <entry brief="displayFrame()">FSP::Pattern_displayFrame(this, e);</entry>
-        <tran trig="FRAME_TRANSFERRED" target="../../1">
-         <tran_glyph conn="39,101,3,3,-3,-16,2">
-          <action box="-21,-10,20,2"/>
-         </tran_glyph>
-        </tran>
-        <state_glyph node="39,96,22,10">
-         <entry box="1,2,16,2"/>
-        </state_glyph>
-       </state>
-       <state_glyph node="17,67,53,45">
-        <entry box="1,2,15,2"/>
-        <exit box="1,4,15,2"/>
-       </state_glyph>
-      </state>
       <state name="CheckingFile">
        <entry brief="checkFile()">FSP::Pattern_checkFile(this, e);</entry>
-       <tran trig="FILE_VALID" target="../../4">
+       <tran trig="FILE_VALID" target="../../3">
         <tran_glyph conn="23,53,2,0,4">
          <action box="1,1,10,2"/>
         </tran_glyph>
@@ -730,8 +699,8 @@ This structure of the code is recommended for applications with only one active 
       </state>
       <state name="CheckingPattern">
        <entry brief="checkPattern()">FSP::Pattern_checkPattern(this, e);</entry>
-       <tran trig="PATTERN_VALID" target="../../2">
-        <tran_glyph conn="23,63,2,0,4">
+       <tran trig="PATTERN_VALID" target="../../4">
+        <tran_glyph conn="23,63,2,0,5">
          <action box="1,1,14,2"/>
         </tran_glyph>
        </tran>
@@ -745,7 +714,82 @@ This structure of the code is recommended for applications with only one active 
         <entry box="1,2,14,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="14,36,61,93">
+      <state name="PatternValid">
+       <entry brief="armTimers()">FSP::Pattern_armTimers(this, e);</entry>
+       <exit brief="disarmTimers()">FSP::Pattern_disarmTimers(this, e);</exit>
+       <initial target="../4">
+        <initial_glyph conn="36,72,4,0,4">
+         <action box="0,-2,10,2"/>
+        </initial_glyph>
+       </initial>
+       <tran trig="FRAME_RATE_TIMEOUT">
+        <action brief="defer()">FSP::Pattern_defer(this, e);</action>
+        <tran_glyph conn="7,80,3,-1,19">
+         <action box="0,-2,19,4"/>
+        </tran_glyph>
+       </tran>
+       <state name="WaitingToDisplayFrame">
+        <entry brief="recall()">FSP::Display_recall(this, e);</entry>
+        <tran trig="FRAME_RATE_TIMEOUT" target="../../6">
+         <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
+         <tran_glyph conn="36,96,2,0,6">
+          <action box="1,1,20,4"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="32,90,37,6">
+         <entry box="1,2,10,2"/>
+        </state_glyph>
+       </state>
+       <state name="DisplayingFrame">
+        <entry brief="displayFrame()">FSP::Pattern_displayFrame(this, e);</entry>
+        <tran trig="FRAME_TRANSFERRED" target="../../4">
+         <tran_glyph conn="32,130,3,3,-3,-49,3">
+          <action box="-21,-23,20,2"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="32,125,36,10">
+         <entry box="1,2,16,2"/>
+        </state_glyph>
+       </state>
+       <state name="ReadingNextFrameFromFile">
+        <entry brief="readNextFrameFromFile()">FSP::Pattern_readNextFrameFromFile(this, e);</entry>
+        <tran trig="FRAME_READ_FROM_FILE" target="../../2">
+         <tran_glyph conn="36,85,2,0,5">
+          <action box="1,1,21,4"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="32,76,37,9">
+         <entry box="1,2,31,2"/>
+        </state_glyph>
+       </state>
+       <state name="FillingFrameBufferWithDecodedFrame">
+        <entry brief="fillFrameBufferWithDecodedFrame()">FSP::Pattern_fillFrameBufferWithDecodedFrame(this, e);</entry>
+        <tran trig="FRAME_FILLED" target="../../3">
+         <tran_glyph conn="36,121,2,0,4">
+          <action box="1,1,14,2"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="31,115,37,6">
+         <entry box="1,2,31,2"/>
+        </state_glyph>
+       </state>
+       <state name="DecodingFrame">
+        <entry brief="decodeFrame()">FSP::Pattern_decodeFrame(this, e);</entry>
+        <tran trig="FRAME_DECODED" target="../../5">
+         <tran_glyph conn="36,108,2,0,7">
+          <action box="1,1,16,2"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="32,102,37,6">
+         <entry box="1,2,15,2"/>
+        </state_glyph>
+       </state>
+       <state_glyph node="7,68,79,68">
+        <entry box="1,2,15,2"/>
+        <exit box="1,4,15,2"/>
+       </state_glyph>
+      </state>
+      <state_glyph node="5,36,92,102">
        <entry box="1,2,20,2"/>
        <exit box="1,4,20,2"/>
       </state_glyph>
@@ -767,7 +811,7 @@ This structure of the code is recommended for applications with only one active 
        <entry box="1,2,15,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="3,8,77,126"/>
+     <state_glyph node="3,8,103,133"/>
     </state>
     <state_diagram size="109,144"/>
    </statechart>
