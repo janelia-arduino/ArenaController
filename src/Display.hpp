@@ -43,7 +43,7 @@ namespace AC {
 class Display : public QP::QActive {
 public:
     static Display instance;
-    std::uint32_t refresh_rate_hz_;
+    std::uint32_t refresh_rate_;
     QP::QEQueue display_queue_;
 
 public:

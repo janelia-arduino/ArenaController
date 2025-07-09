@@ -62,7 +62,7 @@ public:
 class DisplayPatternEvt : public QP::QEvt {
 public:
     std::uint16_t pattern_id;
-    std::uint16_t frame_rate;
+    std::int16_t frame_rate;
     std::uint16_t runtime_duration;
 }; // class DisplayPatternEvt
 

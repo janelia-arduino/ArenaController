@@ -52,6 +52,7 @@ public:
     std::uint64_t file_size_;
     std::uint64_t byte_count_per_frame_;
     QP::QEQueue frame_rate_queue_;
+    bool positive_direction_;
 
 public:
     Pattern();

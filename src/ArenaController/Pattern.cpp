@@ -98,7 +98,7 @@ Q_STATE_DEF(Pattern, Initialized) {
         }
         //${AOs::Pattern::SM::Initialized::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
-            FSP::Pattern_storeParameters(this, e);
+            FSP::Pattern_checkAndStoreParameters(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

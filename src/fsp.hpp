@@ -29,7 +29,6 @@ struct FSP
   static void Arena_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_beginDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_endDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
@@ -80,7 +79,7 @@ struct FSP
   static void Watchdog_feedWatchdog(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_storeParameters(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_checkAndStoreParameters(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializeCard(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_openFile(QP::QActive * const ao, QP::QEvt const * e);

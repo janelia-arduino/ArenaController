@@ -727,28 +727,28 @@ PatternHeader BSP::rewindPatternFileAndReadHeader()
   return pattern_header;
 }
 
-uint64_t BSP::rewindPatternFile()
-{
-  uint64_t file_position = constants::pattern_header_size;
-  pattern_file.seek(file_position);
-  return file_position;
-}
-
 void BSP::readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
-    uint64_t byte_count_per_pattern_frame)
+  uint64_t byte_count_per_pattern_frame,
+  bool positive_direction)
 {
-  if ((pattern_file.position() + byte_count_per_pattern_frame) >= pattern_file.size())
+  if (positive_direction)
   {
-    rewindPatternFile();
+    if ((pattern_file.position() + byte_count_per_pattern_frame) > pattern_file.size())
+    {
+      pattern_file.seek(constants::pattern_header_size);
+    }
+    pattern_file.read(buffer, byte_count_per_pattern_frame);
   }
-  // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-  //   QS_STR("pattern file position");
-  //   QS_U16(5, pattern_file.position());
-  //   QS_STR("pattern file size");
-  //   QS_U16(5, pattern_file.size());
-  // QS_END()
-  pattern_file.read(buffer, byte_count_per_pattern_frame);
-  pattern_file.seek(pattern_file.position() + byte_count_per_pattern_frame);
+  else
+  {
+    if (((int64_t)pattern_file.position() - (int64_t)byte_count_per_pattern_frame) < (int64_t)0)
+    {
+      pattern_file.seek(pattern_file.size());
+    }
+    pattern_file.seek(pattern_file.position() - byte_count_per_pattern_frame);
+    pattern_file.read(buffer, byte_count_per_pattern_frame);
+    pattern_file.seek(pattern_file.position() - byte_count_per_pattern_frame);
+  }
   // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
   //   QS_STR("pattern file position");
   //   QS_U16(5, pattern_file.position());

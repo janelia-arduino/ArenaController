@@ -201,12 +201,6 @@ Q_STATE_DEF(Arena, DisplayingPattern) {
     QP::QState status_;
     switch (e->sig) {
         //${AOs::Arena::SM::ArenaOn::DisplayingPattern}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_beginDisplayingPattern(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::DisplayingPattern}
         case Q_EXIT_SIG: {
             FSP::Arena_endDisplayingPattern(this, e);
             status_ = Q_RET_HANDLED;

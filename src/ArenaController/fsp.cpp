@@ -208,11 +208,6 @@ void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
 }
 
-void FSP::Arena_beginDisplayingPattern(QActive * const ao, QEvt const * e)
-{
-  AO_Pattern->POST(&beginDisplayingPatternEvt, ao);
-}
-
 void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
 {
   AO_Pattern->POST(&endDisplayingPatternEvt, ao);
@@ -223,7 +218,7 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   Display * const display = static_cast<Display * const>(ao);
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
-  display->refresh_rate_hz_ = constants::refresh_rate_hz_default;
+  display->refresh_rate_ = constants::refresh_rate_default;
 
   static QEvt const * display_queue_store[constants::display_queue_size];
   display->display_queue_.init(display_queue_store, Q_DIM(display_queue_store));
@@ -237,10 +232,10 @@ void FSP::Display_setRefreshRate(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  display->refresh_rate_hz_ = spev->value;
+  display->refresh_rate_ = spev->value;
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
     QS_STR("set refresh rate");
-    QS_U16(5, display->refresh_rate_hz_);
+    QS_U16(5, display->refresh_rate_);
   QS_END()
 }
 
@@ -252,10 +247,10 @@ void postRefreshTimeout()
 void FSP::Display_armRefreshTimer(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  BSP::armRefreshTimer(display->refresh_rate_hz_, postRefreshTimeout);
+  BSP::armRefreshTimer(display->refresh_rate_, postRefreshTimeout);
   // QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
   //   QS_STR("armRefreshTimer");
-  //   QS_U16(5, display->refresh_rate_hz_);
+  //   QS_U16(5, display->refresh_rate_);
   // QS_END()
 }
 
@@ -616,6 +611,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   pattern->frame_buffer_ = BSP::getPatternFrameBuffer();
   pattern->file_size_ = 0;
   pattern->byte_count_per_frame_ = 0;
+  pattern->positive_direction_ = true;
 
   static QEvt const * frame_rate_queue_store[constants::frame_rate_queue_size];
   pattern->frame_rate_queue_.init(frame_rate_queue_store, Q_DIM(frame_rate_queue_store));
@@ -638,13 +634,38 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(FRAME_DECODED_SIG, ao);
 }
 
-void FSP::Pattern_storeParameters(QActive * const ao, QEvt const * e)
+void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
+  Display * const display = static_cast<Display * const>(AO_Display);
+
+  if ((dpev->frame_rate == 0) || ((uint32_t)(abs(dpev->frame_rate)) > display->refresh_rate_))
+  {
+    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+      QS_STR("invalid frame rate");
+    QS_END()
+    AO_Arena->POST(&allOffEvt, ao);
+    return;
+  }
+  else if (dpev->frame_rate < 0)
+  {
+    pattern->positive_direction_ = false;
+    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+      QS_STR("valid negative frame rate");
+    QS_END()
+  }
+  else
+  {
+    pattern->positive_direction_ = true;
+    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+      QS_STR("valid positive frame rate");
+    QS_END()
+  }
   pattern->id_ = dpev->pattern_id;
-  pattern->frame_rate_ = dpev->frame_rate;
+  pattern->frame_rate_ = abs(dpev->frame_rate);
   pattern->runtime_duration_ = dpev->runtime_duration;
+  AO_Pattern->POST(&beginDisplayingPatternEvt, ao);
 }
 
 void FSP::Pattern_initializeCard(QActive * const ao, QEvt const * e)
@@ -840,7 +861,9 @@ void FSP::Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const *
   //   QS_STR("reading next pattern frame from file");
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  BSP::readNextPatternFrameFromFileIntoBuffer(pattern->frame_buffer_, pattern->byte_count_per_frame_);
+  BSP::readNextPatternFrameFromFileIntoBuffer(pattern->frame_buffer_,
+    pattern->byte_count_per_frame_,
+    pattern->positive_direction_);
   AO_Pattern->POST(&frameReadFromFileEvt, ao);
 }
 
@@ -889,37 +912,6 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
   // QS_END()
   AO_Display->POST(&displayFrameEvt, ao);
 }
-
-// void FSP::Pattern_beginDisplayingPattern(QActive * const ao, QEvt const * e)
-// {
-//   Frame * const frame = static_cast<Frame * const>(AO_Frame);
-//   pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
-//   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
-//   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
-
-//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//     QS_STR("beginDisplayingPattern");
-//     QS_U32(8, bytes_decoded);
-//     QS_U32(8, pattern.fileSize());
-//     QS_U32(8, pattern.filePosition());
-//   QS_END()
-// }
-
-// void FSP::Pattern_setupNextPatternFrame(QActive * const ao, QEvt const * e)
-// {
-//   pattern.closeFile();
-//   Frame * const frame = static_cast<Frame * const>(AO_Frame);
-//   pattern.readNextFrameIntoBufferFromFile(frame->pattern_buffer_);
-//   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame->pattern_buffer_, frame->grayscale_);
-//   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
-
-//   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-//     QS_STR("setupNextPatternFrame");
-//     QS_U32(8, bytes_decoded);
-//     QS_U32(8, pattern.fileSize());
-//     QS_U32(8, pattern.filePosition());
-//   QS_END()
-// }
 
 /**
   @brief Helper function: Appends a text message to a response buffer and updates the length byte
@@ -1018,7 +1010,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       memcpy(&pattern_id, command_buffer + command_buffer_position, sizeof(pattern_id));
       command_buffer_position += sizeof(pattern_id);
 
-      uint16_t frame_rate;
+      int16_t frame_rate;
       memcpy(&frame_rate, command_buffer + command_buffer_position, sizeof(frame_rate));
       command_buffer_position += sizeof(frame_rate);
 

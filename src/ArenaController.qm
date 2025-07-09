@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model version="5.1.3" links="0">
+<model version="5.2.3" links="0">
  <documentation>This is a little more advanced ArenaController example for the Arduino DUE board. The example demonstrates:
 
 1. One active object class &quot;ArenaController&quot; (inside the package &quot;AOs&quot;)
@@ -95,11 +95,9 @@ This structure of the code is recommended for applications with only one active 
       </state_glyph>
      </state>
      <state name="DisplayingPattern">
-      <entry brief="beginDisplayingPattern()">FSP::Arena_beginDisplayingPattern(this, e);</entry>
       <exit brief="endDisplayingPattern()">FSP::Arena_endDisplayingPattern(this, e);</exit>
       <state_glyph node="33,79,35,20">
-       <entry box="1,2,21,2"/>
-       <exit box="1,4,24,2"/>
+       <exit box="1,2,24,2"/>
       </state_glyph>
      </state>
      <state_glyph node="10,15,69,89">
@@ -237,7 +235,7 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
-   <attribute name="refresh_rate_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="refresh_rate_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="display_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
@@ -496,7 +494,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <attribute name="panel_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="buffer_position_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
-   <attribute name="grayscale_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="grayscale_" type="bool" visibility="0x00" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
@@ -635,6 +633,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="file_size_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <attribute name="byte_count_per_frame_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
+   <attribute name="positive_direction_" type="bool" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
@@ -649,23 +648,23 @@ This structure of the code is recommended for applications with only one active 
     </initial>
     <state name="Initialized">
      <initial target="../2">
-      <initial_glyph conn="33,11,4,0,3">
+      <initial_glyph conn="37,12,4,0,2">
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
      <tran trig="DISPLAY_PATTERN">
-      <action brief="storeParameters()">FSP::Pattern_storeParameters(this, e);</action>
-      <tran_glyph conn="3,16,3,-1,19">
-       <action box="0,-2,18,4"/>
+      <action brief="checkAndStoreParameters()">FSP::Pattern_checkAndStoreParameters(this, e);</action>
+      <tran_glyph conn="3,16,3,-1,21">
+       <action box="0,-2,20,5"/>
       </tran_glyph>
      </tran>
      <state name="Inactive">
       <tran trig="BEGIN_DISPLAYING_PATTERN" target="../../4">
-       <tran_glyph conn="36,22,2,0,4">
+       <tran_glyph conn="40,22,2,0,4">
         <action box="1,1,27,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="25,14,40,8"/>
+      <state_glyph node="29,14,40,8"/>
      </state>
      <state name="FileOpened">
       <entry brief="openFile()">FSP::Pattern_openFile(this, e);</entry>
@@ -676,8 +675,8 @@ This structure of the code is recommended for applications with only one active 
        </initial_glyph>
       </initial>
       <tran trig="END_DISPLAYING_PATTERN" target="../../2">
-       <tran_glyph conn="28,36,0,2,-14">
-        <action box="-23,-13,24,2"/>
+       <tran_glyph conn="32,36,0,2,-14">
+        <action box="-22,-8,24,2"/>
        </tran_glyph>
       </tran>
       <state name="CheckingFile">
@@ -797,17 +796,17 @@ This structure of the code is recommended for applications with only one active 
      <state name="InitializingCard">
       <entry brief="initializeCard()">FSP::Pattern_initializeCard(this, e);</entry>
       <tran trig="CARD_FOUND" target="../../3">
-       <tran_glyph conn="36,32,2,0,4">
+       <tran_glyph conn="40,32,2,0,4">
         <action box="1,1,12,2"/>
        </tran_glyph>
       </tran>
       <tran trig="CARD_NOT_FOUND">
        <action brief="postAllOff()">FSP::Pattern_postAllOff(this, e);</action>
-       <tran_glyph conn="52,29,1,-1,19">
+       <tran_glyph conn="56,29,1,-1,19">
         <action box="2,-2,17,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="33,26,19,6">
+      <state_glyph node="37,26,19,6">
        <entry box="1,2,15,2"/>
       </state_glyph>
      </state>
@@ -828,7 +827,7 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="DisplayPatternEvt" superclass="qpcpp::QEvt">
    <attribute name="pattern_id" type="std::uint16_t" visibility="0x00" properties="0x00"/>
-   <attribute name="frame_rate" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_rate" type="std::int16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>
   </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">

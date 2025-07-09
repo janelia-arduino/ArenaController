@@ -48,7 +48,7 @@ public:
     std::uint8_t * buffer_;
     std::uint8_t panel_byte_count_;
     std::uint16_t buffer_position_;
-    std::uint8_t grayscale_;
+    bool grayscale_;
 
 public:
     Frame();
