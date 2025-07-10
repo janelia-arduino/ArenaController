@@ -220,8 +220,8 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(FRAME_TRANSFERRED_SIG);
   display->refresh_rate_hz_ = constants::refresh_rate_default;
 
-  static QEvt const * display_queue_store[constants::display_queue_size];
-  display->display_queue_.init(display_queue_store, Q_DIM(display_queue_store));
+  static QEvt const * display_refresh_queue_store[constants::display_refresh_queue_size];
+  display->refresh_queue_.init(display_refresh_queue_store, Q_DIM(display_refresh_queue_store));
 
   QS_SIG_DICTIONARY(DISPLAY_FRAME_SIG, ao);
   QS_SIG_DICTIONARY(REFRESH_TIMEOUT_SIG, ao);
@@ -270,16 +270,16 @@ void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
 void FSP::Display_defer(QP::QActive * const ao, QP::QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  if (display->display_queue_.getNFree() > 0)
+  if (display->refresh_queue_.getNFree() > 0)
   {
-    display->defer(&display->display_queue_, e);
+    display->defer(&display->refresh_queue_, e);
   }
 }
 
 void FSP::Display_recall(QP::QActive * const ao, QP::QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  display->recall(&display->display_queue_);
+  display->recall(&display->refresh_queue_);
 }
 
 void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -422,7 +422,10 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
   eci->binary_command_ = ece->binary_command;
   eci->binary_command_byte_count_ = ece->binary_command_byte_count;
 
-  uint8_t first_command_byte = (uint8_t)(eci->binary_command_[0]);
+  uint8_t command_buffer_position = 0;
+  uint8_t first_command_byte;
+  memcpy(&first_command_byte, eci->binary_command_ + command_buffer_position, sizeof(first_command_byte));
+  command_buffer_position += sizeof(first_command_byte);
   if (first_command_byte > constants::first_command_byte_max_value_binary)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -432,9 +435,9 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
   }
   else if (first_command_byte == STREAM_FRAME_CMD)
   {
-    uint32_t low_byte = (uint8_t)(eci->binary_command_[1]);
-    uint32_t high_byte = (uint8_t)(eci->binary_command_[2]);
-    eci->binary_command_byte_count_claim_ = (high_byte << constants::bit_count_per_byte) | low_byte;
+    uint16_t binary_command_byte_count_claim;
+    memcpy(&binary_command_byte_count_claim, eci->binary_command_ + command_buffer_position, sizeof(binary_command_byte_count_claim));
+    eci->binary_command_byte_count_claim_ = binary_command_byte_count_claim;
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("stream command");
       QS_U32(8, eci->binary_command_byte_count_claim_);
@@ -481,7 +484,8 @@ void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt
   eci->binary_response_[1] = 0;
   eci->binary_response_[2] = STREAM_FRAME_CMD;
   uint8_t const * buffer = eci->binary_command_ + constants::stream_header_byte_count;
-  FSP::processStreamCommand(buffer);
+  uint32_t frame_byte_count = eci->binary_command_byte_count_ - constants::stream_header_byte_count;
+  FSP::processStreamCommand(buffer, frame_byte_count);
   QF::PUBLISH(&commandProcessedEvt, ao);
 }
 
@@ -498,6 +502,9 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   frame->buffer_ = BSP::getFrameBuffer();
   frame->grayscale_ = true;
 
+  static QEvt const * frame_event_queue_store[constants::frame_event_queue_size];
+  frame->event_queue_.init(frame_event_queue_store, Q_DIM(frame_event_queue_store));
+
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
 
@@ -505,6 +512,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(PANEL_SET_TRANSFERRED_SIG, ao);
   QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, ao);
+  QS_SIG_DICTIONARY(SWITCH_GRAYSCALE_SIG, ao);
 }
 
 void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
@@ -512,9 +520,18 @@ void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::fillFrameBufferWithAllOn(frame->buffer_,
     frame->grayscale_);
+  if (frame->grayscale_)
+  {
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-    QS_STR("filled frame buffer with all on");
+    QS_STR("filled frame buffer with grayscale all on");
   QS_END()
+  }
+  else
+  {
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("filled frame buffer with binary all on");
+  QS_END()
+  }
   QF::PUBLISH(&frameFilledEvt, ao);
 }
 
@@ -578,6 +595,50 @@ void FSP::Frame_publishFrameTransferred(QActive * const ao, QEvt const * e)
   QF::PUBLISH(&frameTransferredEvt, ao);
 }
 
+void FSP::Frame_switchGrayscale(QActive * const ao, QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+
+  uint8_t grayscale_index = spev->value;
+
+  if (grayscale_index == constants::switch_grayscale_command_value_grayscale)
+  {
+    frame->grayscale_ = true;
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("switch grayscale to grayscale");
+    QS_END()
+  }
+  else if (grayscale_index == constants::switch_grayscale_command_value_binary)
+  {
+    frame->grayscale_ = false;
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("switch grayscale to binary");
+    QS_END()
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("invalid switch grayscale value");
+    QS_END()
+  }
+}
+
+void FSP::Frame_defer(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  if (frame->event_queue_.getNFree() > 0)
+  {
+    frame->defer(&frame->event_queue_, e);
+  }
+}
+
+void FSP::Frame_recall(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  frame->recall(&frame->event_queue_);
+}
+
 void FSP::Watchdog_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   BSP::initializeWatchdog();
@@ -613,8 +674,8 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   pattern->byte_count_per_frame_ = 0;
   pattern->positive_direction_ = true;
 
-  static QEvt const * frame_rate_queue_store[constants::frame_rate_queue_size];
-  pattern->frame_rate_queue_.init(frame_rate_queue_store, Q_DIM(frame_rate_queue_store));
+  static QEvt const * pattern_frame_rate_queue_store[constants::pattern_frame_rate_queue_size];
+  pattern->frame_rate_queue_.init(pattern_frame_rate_queue_store, Q_DIM(pattern_frame_rate_queue_store));
 
   ao->subscribe(DISPLAY_PATTERN_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
@@ -760,7 +821,7 @@ void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
     QS_U8(0, pattern_header.panel_count_per_frame_col);
   QS_END()
 
-  if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerRegionRow())
+  if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerFrameRow())
   {
     QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
       QS_STR("pattern frame has incorrect number of rows:");
@@ -772,7 +833,7 @@ void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
     AO_Pattern->POST(&patternNotValidEvt, ao);
     return;
   }
-  if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame())
+  if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerFrameCol())
   {
     QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
       QS_STR("pattern frame has incorrect number of cols:");
@@ -791,21 +852,13 @@ void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
     case constants::pattern_grayscale_value:
     {
       frame->grayscale_ = true;
-      byte_count_per_frame = constants::byte_count_per_panel_grayscale * \
-        pattern_header.panel_count_per_frame_row *                      \
-        pattern_header.panel_count_per_frame_col +                      \
-        constants::pattern_row_signifier_byte_count_per_row *           \
-        pattern_header.panel_count_per_frame_row;
+      byte_count_per_frame = BSP::getByteCountPerPatternFrameGrayscale();
       break;
     }
     case constants::pattern_binary_value:
     {
       frame->grayscale_ = false;
-      byte_count_per_frame = constants::byte_count_per_panel_binary * \
-        pattern_header.panel_count_per_frame_row *                      \
-        pattern_header.panel_count_per_frame_col +                      \
-        constants::pattern_row_signifier_byte_count_per_row *           \
-        pattern_header.panel_count_per_frame_row;
+      byte_count_per_frame = BSP::getByteCountPerPatternFrameBinary();
       break;
     }
     default:
@@ -858,6 +911,7 @@ void FSP::Pattern_disarmTimers(QActive * const ao, QEvt const * e)
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   pattern->frame_rate_time_evt_.disarm();
+  pattern->runtime_duration_time_evt_.disarm();
 }
 
 void FSP::Pattern_deactivateDisplay(QActive * const ao, QEvt const * e)
@@ -1008,6 +1062,15 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case SWITCH_GRAYSCALE_CMD:
     {
+      uint8_t grayscale_index;
+      memcpy(&grayscale_index, command_buffer + command_buffer_position, sizeof(grayscale_index));
+
+      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+
+      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SWITCH_GRAYSCALE_SIG);
+      spev->value = grayscale_index;
+      AO_Frame->POST(spev, &l_FSP_ID);
+
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("switch-grayscale command");
@@ -1096,9 +1159,35 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
   return response_byte_count;
 }
 
-void FSP::processStreamCommand(uint8_t const * buffer)
+void FSP::processStreamCommand(uint8_t const * buffer, uint32_t frame_byte_count)
 {
   Frame * const frame = static_cast<Frame * const>(AO_Frame);
+
+  if (frame_byte_count == BSP::getByteCountPerPatternFrameGrayscale())
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR("streamed frame has grayscale size");
+    QS_END()
+    frame->grayscale_ = true;
+  }
+  else if (frame_byte_count == BSP::getByteCountPerPatternFrameBinary())
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR("streamed frame has binary size");
+    QS_END()
+    frame->grayscale_ = false;
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR("streamed frame has invalid size");
+      QS_U32(8, frame_byte_count);
+      QS_U32(8, BSP::getByteCountPerPatternFrameGrayscale());
+      QS_U32(8, BSP::getByteCountPerPatternFrameBinary());
+    QS_END()
+    AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+    return;
+  }
   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(buffer, frame->grayscale_);
   AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)

@@ -38,6 +38,8 @@ struct BSP {
   static uint8_t getPanelCountPerRegionRow();
   static uint8_t getPanelCountPerRegionCol();
   static uint8_t getRegionCountPerFrame();
+  static uint8_t getPanelCountPerFrameRow();
+  static uint8_t getPanelCountPerFrameCol();
 
   static void fillFrameBufferWithAllOn(uint8_t * const buffer,
     bool grayscale);
@@ -61,6 +63,8 @@ struct BSP {
   static void readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
     uint64_t byte_count_per_pattern_frame,
     bool positive_direction);
+  static uint64_t getByteCountPerPatternFrameGrayscale();
+  static uint64_t getByteCountPerPatternFrameBinary();
 };
 
 #endif // BSP_HPP

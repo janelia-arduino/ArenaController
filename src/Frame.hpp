@@ -49,12 +49,14 @@ public:
     std::uint8_t panel_byte_count_;
     std::uint16_t buffer_position_;
     bool grayscale_;
+    QP::QEQueue event_queue_;
 
 public:
     Frame();
 
 protected:
     Q_STATE_DECL(initial);
+    Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(TransferringFrame);
     Q_STATE_DECL(TransferringPanelSet);

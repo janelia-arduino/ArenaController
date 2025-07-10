@@ -23,7 +23,7 @@ constexpr uint16_t ethernet_server_port = 62222;
 
 // Display
 constexpr uint32_t refresh_rate_default = 200;
-constexpr uint32_t display_queue_size = 1;
+constexpr uint32_t display_refresh_queue_size = 1;
 
 // Commands
 constexpr uint16_t string_command_length_max = 512;
@@ -91,6 +91,10 @@ constexpr uint8_t byte_count_per_panel_grayscale = \
 constexpr uint8_t byte_count_per_panel_binary = \
   byte_count_per_quarter_panel_binary * \
   quarter_panel_count_per_panel; // 36
+
+// Frame
+constexpr uint32_t frame_event_queue_size = 1;
+
 constexpr uint8_t switch_grayscale_command_value_grayscale = 1;
 constexpr uint8_t switch_grayscale_command_value_binary = 0;
 
@@ -103,7 +107,7 @@ constexpr uint8_t filename_str_len = 16;
 constexpr uint8_t pattern_id_str_len = 4;
 constexpr uint8_t pattern_header_size = 7;
 constexpr uint8_t card_type_str_len = 16;
-constexpr uint32_t frame_rate_queue_size = 1;
+constexpr uint32_t pattern_frame_rate_queue_size = 1;
 constexpr uint32_t milliseconds_per_runtime_duration_unit = 100;
 
 }

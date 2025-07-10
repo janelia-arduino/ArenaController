@@ -472,6 +472,16 @@ uint8_t BSP::getRegionCountPerFrame()
   return constants::region_count_per_frame;
 }
 
+uint8_t BSP::getPanelCountPerFrameRow()
+{
+  return constants::panel_count_per_region_row;
+}
+
+uint8_t BSP::getPanelCountPerFrameCol()
+{
+  return constants::panel_count_per_region_col * constants::region_count_per_frame;
+}
+
 void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
   bool grayscale)
 {
@@ -755,6 +765,26 @@ void BSP::readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
   //   QS_STR("pattern file size");
   //   QS_U16(5, pattern_file.size());
   // QS_END()
+}
+
+uint64_t BSP::getByteCountPerPatternFrameGrayscale()
+{
+  uint64_t byte_count_per_frame = constants::byte_count_per_panel_grayscale * \
+    constants::panel_count_per_frame_row *                                    \
+    constants::panel_count_per_frame_col +                                    \
+    constants::pattern_row_signifier_byte_count_per_row *                     \
+    constants::panel_count_per_frame_row;
+  return byte_count_per_frame;
+}
+
+uint64_t BSP::getByteCountPerPatternFrameBinary()
+{
+  uint64_t byte_count_per_frame = constants::byte_count_per_panel_binary * \
+    constants::panel_count_per_frame_row *                                 \
+    constants::panel_count_per_frame_col +                                 \
+    constants::pattern_row_signifier_byte_count_per_row *                  \
+    constants::panel_count_per_frame_row;
+  return byte_count_per_frame;
 }
 
 //----------------------------------------------------------------------------
