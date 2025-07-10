@@ -218,7 +218,7 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   Display * const display = static_cast<Display * const>(ao);
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
-  display->refresh_rate_ = constants::refresh_rate_default;
+  display->refresh_rate_hz_ = constants::refresh_rate_default;
 
   static QEvt const * display_queue_store[constants::display_queue_size];
   display->display_queue_.init(display_queue_store, Q_DIM(display_queue_store));
@@ -232,10 +232,10 @@ void FSP::Display_setRefreshRate(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  display->refresh_rate_ = spev->value;
+  display->refresh_rate_hz_ = spev->value;
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
     QS_STR("set refresh rate");
-    QS_U16(5, display->refresh_rate_);
+    QS_U16(5, display->refresh_rate_hz_);
   QS_END()
 }
 
@@ -247,10 +247,10 @@ void postRefreshTimeout()
 void FSP::Display_armRefreshTimer(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  BSP::armRefreshTimer(display->refresh_rate_, postRefreshTimeout);
+  BSP::armRefreshTimer(display->refresh_rate_hz_, postRefreshTimeout);
   // QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
   //   QS_STR("armRefreshTimer");
-  //   QS_U16(5, display->refresh_rate_);
+  //   QS_U16(5, display->refresh_rate_hz_);
   // QS_END()
 }
 
@@ -638,9 +638,8 @@ void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
-  Display * const display = static_cast<Display * const>(AO_Display);
 
-  if ((dpev->frame_rate == 0) || ((uint32_t)(abs(dpev->frame_rate)) > display->refresh_rate_))
+  if (dpev->frame_rate == 0)
   {
     QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
       QS_STR("invalid frame rate");
@@ -663,8 +662,17 @@ void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
     QS_END()
   }
   pattern->id_ = dpev->pattern_id;
-  pattern->frame_rate_ = abs(dpev->frame_rate);
-  pattern->runtime_duration_ = dpev->runtime_duration;
+  pattern->frame_rate_hz_ = abs(dpev->frame_rate);
+  pattern->runtime_duration_ms_ = dpev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("check and store parameters");
+  // QS_U8(0, control_mode);
+  QS_U16(5, pattern->id_);
+  QS_U16(5, pattern->frame_rate_hz_);
+  // QS_U16(5, init_pos);
+  // QS_U16(5, gain);
+  QS_U16(5, pattern->runtime_duration_ms_);
+  QS_END()
   AO_Pattern->POST(&beginDisplayingPatternEvt, ao);
 }
 
@@ -831,11 +839,16 @@ void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
 
 void FSP::Pattern_armTimers(QActive * const ao, QEvt const * e)
 {
-  // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-  //   QS_STR("arming pattern timers");
-  // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->frame_rate_time_evt_.armX(constants::ticks_per_second / pattern->frame_rate_, constants::ticks_per_second / pattern->frame_rate_);
+  pattern->frame_rate_time_evt_.armX(constants::ticks_per_second / pattern->frame_rate_hz_, constants::ticks_per_second / pattern->frame_rate_hz_);
+  pattern->runtime_duration_time_evt_.armX((constants::ticks_per_second * pattern->runtime_duration_ms_) / constants::milliseconds_per_second);
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("arming pattern timers");
+    QS_STR("frame rate ticks");
+    QS_U32(8, (constants::ticks_per_second / pattern->frame_rate_hz_));
+    QS_STR("runtime duration ticks");
+    QS_U32(8, ((constants::ticks_per_second * pattern->runtime_duration_ms_) / constants::milliseconds_per_second));
+  QS_END()
 }
 
 void FSP::Pattern_disarmTimers(QActive * const ao, QEvt const * e)
@@ -874,7 +887,8 @@ void FSP::Pattern_decodeFrame(QActive * const ao, QEvt const * e)
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(pattern->frame_buffer_, frame->grayscale_);
+  BSP::decodePatternFrameBuffer(pattern->frame_buffer_, frame->grayscale_);
+  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(pattern->frame_buffer_, frame->grayscale_);
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("bytes decoded");
   //   QS_U32(8, bytes_decoded);

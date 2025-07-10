@@ -235,7 +235,7 @@ This structure of the code is recommended for applications with only one active 
   </class>
   <class name="Display" superclass="qpcpp::QActive">
    <attribute name="instance" type="Display" visibility="0x00" properties="0x01"/>
-   <attribute name="refresh_rate_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="refresh_rate_hz_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="display_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <operation name="Display" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Display::initial))</code>
@@ -626,8 +626,8 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="instance" type="Pattern" visibility="0x00" properties="0x01"/>
    <attribute name="frame_rate_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="id_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
-   <attribute name="frame_rate_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
-   <attribute name="runtime_duration_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_rate_hz_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration_ms_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="frame_buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <attribute name="file_size_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
@@ -716,74 +716,80 @@ This structure of the code is recommended for applications with only one active 
       <state name="PatternValid">
        <entry brief="armTimers()">FSP::Pattern_armTimers(this, e);</entry>
        <exit brief="disarmTimers()">FSP::Pattern_disarmTimers(this, e);</exit>
-       <initial target="../4">
-        <initial_glyph conn="36,72,4,0,4">
+       <initial target="../5">
+        <initial_glyph conn="48,73,4,0,3">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
        <tran trig="FRAME_RATE_TIMEOUT">
         <action brief="defer()">FSP::Pattern_defer(this, e);</action>
-        <tran_glyph conn="7,80,3,-1,19">
+        <tran_glyph conn="7,80,3,-1,25">
          <action box="0,-2,19,4"/>
+        </tran_glyph>
+       </tran>
+       <tran trig="RUNTIME_DURATION_TIMEOUT">
+        <action brief="postAllOff()">FSP::Pattern_postAllOff(this, e);</action>
+        <tran_glyph conn="7,85,3,-1,25">
+         <action box="0,-2,25,6"/>
         </tran_glyph>
        </tran>
        <state name="WaitingToDisplayFrame">
         <entry brief="recall()">FSP::Display_recall(this, e);</entry>
-        <tran trig="FRAME_RATE_TIMEOUT" target="../../6">
+        <tran trig="FRAME_RATE_TIMEOUT" target="../../7">
          <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
-         <tran_glyph conn="36,96,2,0,6">
+         <tran_glyph conn="48,96,2,0,6">
           <action box="1,1,20,4"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="32,90,37,6">
+        <state_glyph node="44,90,37,6">
          <entry box="1,2,10,2"/>
         </state_glyph>
        </state>
        <state name="DisplayingFrame">
         <entry brief="displayFrame()">FSP::Pattern_displayFrame(this, e);</entry>
-        <tran trig="FRAME_TRANSFERRED" target="../../4">
-         <tran_glyph conn="32,130,3,3,-3,-49,3">
+        <tran trig="FRAME_TRANSFERRED" target="../../5">
+         <tran_glyph conn="44,130,3,3,-3,-49,3">
           <action box="-21,-23,20,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="32,125,36,10">
+        <state_glyph node="44,125,36,10">
          <entry box="1,2,16,2"/>
         </state_glyph>
        </state>
        <state name="ReadingNextFrameFromFile">
         <entry brief="readNextFrameFromFile()">FSP::Pattern_readNextFrameFromFile(this, e);</entry>
-        <tran trig="FRAME_READ_FROM_FILE" target="../../2">
-         <tran_glyph conn="36,85,2,0,5">
+        <tran trig="FRAME_READ_FROM_FILE" target="../../3">
+         <tran_glyph conn="48,85,2,0,5">
           <action box="1,1,21,4"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="32,76,37,9">
+        <state_glyph node="44,76,37,9">
          <entry box="1,2,31,2"/>
         </state_glyph>
        </state>
        <state name="FillingFrameBufferWithDecodedFrame">
         <entry brief="fillFrameBufferWithDecodedFrame()">FSP::Pattern_fillFrameBufferWithDecodedFrame(this, e);</entry>
-        <tran trig="FRAME_FILLED" target="../../3">
-         <tran_glyph conn="36,121,2,0,4">
+        <tran trig="FRAME_FILLED" target="../../4">
+         <tran_glyph conn="48,121,2,0,4">
           <action box="1,1,14,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="31,115,37,6">
+        <state_glyph node="43,115,37,6">
          <entry box="1,2,31,2"/>
         </state_glyph>
        </state>
        <state name="DecodingFrame">
         <entry brief="decodeFrame()">FSP::Pattern_decodeFrame(this, e);</entry>
-        <tran trig="FRAME_DECODED" target="../../5">
-         <tran_glyph conn="36,108,2,0,7">
+        <tran trig="FRAME_DECODED" target="../../6">
+         <tran_glyph conn="48,108,2,0,7">
           <action box="1,1,16,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="32,102,37,6">
+        <state_glyph node="44,102,37,6">
          <entry box="1,2,15,2"/>
         </state_glyph>
        </state>
-       <state_glyph node="7,68,79,68">
+       <state_glyph node="7,68,81,68">
         <entry box="1,2,15,2"/>
         <exit box="1,4,15,2"/>
        </state_glyph>

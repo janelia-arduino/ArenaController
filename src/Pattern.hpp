@@ -45,8 +45,8 @@ public:
     static Pattern instance;
     QP::QTimeEvt frame_rate_time_evt_;
     std::uint16_t id_;
-    std::uint16_t frame_rate_;
-    std::uint16_t runtime_duration_;
+    std::uint16_t frame_rate_hz_;
+    std::uint16_t runtime_duration_ms_;
     QP::QTimeEvt runtime_duration_time_evt_;
     std::uint8_t * frame_buffer_;
     std::uint64_t file_size_;

@@ -43,6 +43,7 @@ constexpr uint16_t string_log_length_max = 512;
 constexpr uint8_t mac_address_size = 6;
 
 // Conversions
+constexpr uint32_t milliseconds_per_second = 1000;
 constexpr uint32_t microseconds_per_second = 1000000;
 
 // message byte
@@ -103,6 +104,7 @@ constexpr uint8_t pattern_id_str_len = 4;
 constexpr uint8_t pattern_header_size = 7;
 constexpr uint8_t card_type_str_len = 16;
 constexpr uint32_t frame_rate_queue_size = 1;
+constexpr uint32_t milliseconds_per_runtime_duration_unit = 100;
 
 }
 }

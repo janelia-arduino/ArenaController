@@ -246,6 +246,12 @@ Q_STATE_DEF(Pattern, PatternValid) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::RUNTIME_DURATION_TIMEOUT}
+        case RUNTIME_DURATION_TIMEOUT_SIG: {
+            FSP::Pattern_postAllOff(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&FileOpened);
             break;
