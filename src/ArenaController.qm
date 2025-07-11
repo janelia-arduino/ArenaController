@@ -670,10 +670,12 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="byte_count_per_frame_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <attribute name="positive_direction_" type="bool" visibility="0x00" properties="0x00"/>
+   <attribute name="initialize_card_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
-    runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U)</code>
+    runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
+    initialize_card_time_evt_(this, INITIALIZE_CARD_TIMEOUT_SIG, 0U)</code>
    </operation>
    <statechart properties="0x02">
     <initial target="../1">
@@ -711,7 +713,7 @@ This structure of the code is recommended for applications with only one active 
        </initial_glyph>
       </initial>
       <tran trig="END_DISPLAYING_PATTERN" target="../../2">
-       <tran_glyph conn="32,36,0,2,-14">
+       <tran_glyph conn="32,42,0,2,-20">
         <action box="-22,-8,24,2"/>
        </tran_glyph>
       </tran>
@@ -830,26 +832,32 @@ This structure of the code is recommended for applications with only one active 
         <exit box="1,4,15,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="5,36,92,102">
+      <state_glyph node="5,42,92,96">
        <entry box="1,2,20,2"/>
        <exit box="1,4,20,2"/>
       </state_glyph>
      </state>
      <state name="InitializingCard">
-      <entry brief="initializeCard()">FSP::Pattern_initializeCard(this, e);</entry>
+      <entry brief="armInitializeCardTimer()">FSP::Pattern_armInitializeCardTimer(this, e);</entry>
       <tran trig="CARD_FOUND" target="../../3">
-       <tran_glyph conn="40,32,2,0,4">
+       <tran_glyph conn="40,38,2,0,4">
         <action box="1,1,12,2"/>
        </tran_glyph>
       </tran>
       <tran trig="CARD_NOT_FOUND">
        <action brief="postAllOff()">FSP::Pattern_postAllOff(this, e);</action>
-       <tran_glyph conn="56,29,1,-1,19">
+       <tran_glyph conn="64,29,1,-1,20">
         <action box="2,-2,17,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="37,26,19,6">
-       <entry box="1,2,15,2"/>
+      <tran trig="INITIALIZE_CARD_TIMEOUT">
+       <action brief="initializeCard()">FSP::Pattern_initializeCard(this, e);</action>
+       <tran_glyph conn="37,34,3,-1,24">
+        <action box="0,-2,22,4"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="37,26,27,12">
+       <entry box="1,2,22,2"/>
       </state_glyph>
      </state>
      <state_glyph node="3,8,103,133"/>

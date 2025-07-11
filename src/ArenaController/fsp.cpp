@@ -737,11 +737,17 @@ void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
   AO_Pattern->POST(&beginDisplayingPatternEvt, ao);
 }
 
-void FSP::Pattern_initializeCard(QActive * const ao, QEvt const * e)
+void FSP::Pattern_armInitializeCardTimer(QActive * const ao, QEvt const * e)
 {
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  pattern->initialize_card_time_evt_.armX((constants::ticks_per_second * constants::initialize_card_timeout_duration) / constants::milliseconds_per_second);
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
     QS_STR("initializing card may cause reboot if card not found...");
   QS_END()
+}
+
+void FSP::Pattern_initializeCard(QActive * const ao, QEvt const * e)
+{
   if (BSP::initializePatternCard())
   {
     QS_BEGIN_ID(USER_COMMENT, ao->m_prio)

@@ -53,6 +53,7 @@ public:
     std::uint64_t byte_count_per_frame_;
     QP::QEQueue frame_rate_queue_;
     bool positive_direction_;
+    QP::QTimeEvt initialize_card_time_evt_;
 
 public:
     Pattern();

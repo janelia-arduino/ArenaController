@@ -109,6 +109,7 @@ constexpr uint8_t pattern_header_size = 7;
 constexpr uint8_t card_type_str_len = 16;
 constexpr uint32_t pattern_frame_rate_queue_size = 1;
 constexpr uint32_t milliseconds_per_runtime_duration_unit = 100;
+constexpr uint16_t initialize_card_timeout_duration = 50;
 
 }
 }

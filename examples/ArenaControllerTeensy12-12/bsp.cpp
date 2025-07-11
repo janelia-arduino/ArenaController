@@ -486,13 +486,16 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
   bool grayscale)
 {
   uint8_t byte_count_per_quarter_panel_row;
+  uint8_t stretch;
   if (grayscale)
   {
     byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_grayscale;
+    stretch = 1;
   }
   else
   {
     byte_count_per_quarter_panel_row = constants::byte_count_per_quarter_panel_row_binary;
+    stretch = 50;
   }
   uint16_t buffer_position = 0;
   for (uint8_t region_panel_col_index = 0; region_panel_col_index<constants::panel_count_per_region_col; ++region_panel_col_index)
@@ -505,7 +508,7 @@ void BSP::fillFrameBufferWithAllOn(uint8_t * const buffer,
         {
           for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
           {
-            buffer[buffer_position++] = 1;
+            buffer[buffer_position++] = stretch;
             for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
             {
               for (uint8_t byte_index = 0; byte_index<byte_count_per_quarter_panel_row; ++byte_index)

@@ -63,7 +63,8 @@ Pattern Pattern::instance;
 Pattern::Pattern()
 : QActive(Q_STATE_CAST(&Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
-    runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U)
+    runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
+    initialize_card_time_evt_(this, INITIALIZE_CARD_TIMEOUT_SIG, 0U)
 {}
 
 //${AOs::Pattern::SM} ........................................................
@@ -382,7 +383,7 @@ Q_STATE_DEF(Pattern, InitializingCard) {
     switch (e->sig) {
         //${AOs::Pattern::SM::Initialized::InitializingCard}
         case Q_ENTRY_SIG: {
-            FSP::Pattern_initializeCard(this, e);
+            FSP::Pattern_armInitializeCardTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -394,6 +395,12 @@ Q_STATE_DEF(Pattern, InitializingCard) {
         //${AOs::Pattern::SM::Initialized::InitializingCard::CARD_NOT_FOUND}
         case CARD_NOT_FOUND_SIG: {
             FSP::Pattern_postAllOff(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::InitializingCard::INITIALIZE_CARD_TIMEOUT}
+        case INITIALIZE_CARD_TIMEOUT_SIG: {
+            FSP::Pattern_initializeCard(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
