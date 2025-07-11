@@ -4,7 +4,7 @@
 #include <TimerThree.h>
 #include <SPI.h>
 #include <EventResponder.h>
-#include <SD.h>
+#include <SdFat.h>
 
 #include "ArenaController.hpp"
 
@@ -220,8 +220,12 @@ struct DecodedFrame
 };
 static DecodedFrame decoded_frame;
 
+// Pattern
 PatternHeader pattern_header;
-File pattern_file;
+
+// SD Card
+SdFs sd;
+FsFile pattern_file;
 
 // managed by Frame active object
 // do not manipulate directly
@@ -715,16 +719,15 @@ uint8_t * const BSP::getPatternFrameBuffer()
 
 bool BSP::initializePatternCard()
 {
-  // return SD.sdfs.begin(SdioConfig(DMA_SDIO));
-  return SD.sdfs.begin(SdioConfig(FIFO_SDIO));
+  return sd.begin(SdioConfig(FIFO_SDIO));
 }
 
 uint64_t BSP::openPatternFileForReading(uint16_t pattern_id)
 {
   char filename_str[constants::filename_str_len];
   sprintf(filename_str, "pat%0*d.pat", constants::pattern_id_str_len, pattern_id);
-  pattern_file = SD.open(filename_str, O_RDONLY);
-  return pattern_file.size();
+  pattern_file.open(filename_str, O_RDONLY);
+  return pattern_file.fileSize();
 }
 
 void BSP::closePatternFile()
@@ -734,9 +737,8 @@ void BSP::closePatternFile()
 
 PatternHeader BSP::rewindPatternFileAndReadHeader()
 {
-  pattern_file.seek(0);
+  pattern_file.rewind();
   pattern_file.read(&pattern_header, constants::pattern_header_size);
-  pattern_file.seek(constants::pattern_header_size);
   return pattern_header;
 }
 
@@ -746,7 +748,7 @@ void BSP::readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
 {
   if (positive_direction)
   {
-    if ((pattern_file.position() + byte_count_per_pattern_frame) > pattern_file.size())
+    if ((pattern_file.curPosition() + byte_count_per_pattern_frame) > pattern_file.fileSize())
     {
       pattern_file.seek(constants::pattern_header_size);
     }
@@ -754,19 +756,19 @@ void BSP::readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
   }
   else
   {
-    if (((int64_t)pattern_file.position() - (int64_t)byte_count_per_pattern_frame) < (int64_t)0)
+    if (((int64_t)pattern_file.curPosition() - (int64_t)byte_count_per_pattern_frame) < (int64_t)0)
     {
-      pattern_file.seek(pattern_file.size());
+      pattern_file.seek(pattern_file.fileSize());
     }
-    pattern_file.seek(pattern_file.position() - byte_count_per_pattern_frame);
+    pattern_file.seek(pattern_file.curPosition() - byte_count_per_pattern_frame);
     pattern_file.read(buffer, byte_count_per_pattern_frame);
-    pattern_file.seek(pattern_file.position() - byte_count_per_pattern_frame);
+    pattern_file.seek(pattern_file.curPosition() - byte_count_per_pattern_frame);
   }
   // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
   //   QS_STR("pattern file position");
-  //   QS_U16(5, pattern_file.position());
+  //   QS_U16(5, pattern_file.curPosition());
   //   QS_STR("pattern file size");
-  //   QS_U16(5, pattern_file.size());
+  //   QS_U16(5, pattern_file.fileSize());
   // QS_END()
 }
 

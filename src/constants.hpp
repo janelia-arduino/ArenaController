@@ -22,7 +22,8 @@ constexpr uint16_t serial_timeout = 100;
 constexpr uint16_t ethernet_server_port = 62222;
 
 // Display
-constexpr uint32_t refresh_rate_default = 200;
+constexpr uint32_t refresh_rate_grayscale_default = 200;
+constexpr uint32_t refresh_rate_binary_default = 500;
 constexpr uint32_t display_refresh_queue_size = 1;
 
 // Commands

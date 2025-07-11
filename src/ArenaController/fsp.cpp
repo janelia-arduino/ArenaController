@@ -218,7 +218,7 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   Display * const display = static_cast<Display * const>(ao);
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
-  display->refresh_rate_hz_ = constants::refresh_rate_default;
+  display->refresh_rate_hz_ = constants::refresh_rate_grayscale_default;
 
   static QEvt const * display_refresh_queue_store[constants::display_refresh_queue_size];
   display->refresh_queue_.init(display_refresh_queue_store, Q_DIM(display_refresh_queue_store));
