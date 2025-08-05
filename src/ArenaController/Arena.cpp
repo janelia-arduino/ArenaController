@@ -101,24 +101,25 @@ Q_STATE_DEF(Arena, ArenaOn) {
         }
         //${AOs::Arena::SM::ArenaOn::ALL_OFF}
         case ALL_OFF_SIG: {
+            FSP::Arena_allOffTransition(this, e);
             status_ = tran(&AllOff);
             break;
         }
         //${AOs::Arena::SM::ArenaOn::STREAM_FRAME}
         case STREAM_FRAME_SIG: {
-            FSP::Arena_deactivateDisplay(this, e);
+            FSP::Arena_streamFrameTransition(this, e);
             status_ = tran(&StreamingFrame);
             break;
         }
         //${AOs::Arena::SM::ArenaOn::ALL_ON}
         case ALL_ON_SIG: {
-            FSP::Arena_deactivateDisplay(this, e);
+            FSP::Arena_allOnTransition(this, e);
             status_ = tran(&AllOn);
             break;
         }
         //${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
-            FSP::Arena_deactivateDisplay(this, e);
+            FSP::Arena_displayPatternTransition(this, e);
             status_ = tran(&DisplayingPattern);
             break;
         }

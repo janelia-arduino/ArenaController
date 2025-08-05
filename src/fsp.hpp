@@ -30,6 +30,10 @@ struct FSP
   static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_endDisplayingPattern(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_allOnTransition(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_streamFrameTransition(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_displayPatternTransition(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_setRefreshRate(QP::QActive * const ao, QP::QEvt const * e);

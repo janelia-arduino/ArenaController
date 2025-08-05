@@ -43,6 +43,7 @@ namespace AC {
 class Arena : public QP::QActive {
 public:
     static Arena instance;
+    std::uint32_t frames_streamed_;
 
 public:
     Arena();

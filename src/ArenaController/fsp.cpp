@@ -171,6 +171,9 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
   QS_SIG_DICTIONARY(STREAM_FRAME_SIG, ao);
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, ao);
+
+  Arena * const arena = static_cast<Arena * const>(ao);
+  arena->frames_streamed_ = 0;
 }
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
@@ -211,6 +214,31 @@ void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
 void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
 {
   AO_Pattern->POST(&endDisplayingPatternEvt, ao);
+}
+
+void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Arena * const arena = static_cast<Arena * const>(ao);
+  arena->frames_streamed_ = 0;
+}
+
+void FSP::Arena_allOnTransition(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Arena_deactivateDisplay(ao, e);
+  Arena * const arena = static_cast<Arena * const>(ao);
+  arena->frames_streamed_ = 0;
+}
+
+void FSP::Arena_streamFrameTransition(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Arena_deactivateDisplay(ao, e);
+}
+
+void FSP::Arena_displayPatternTransition(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Arena_deactivateDisplay(ao, e);
+  Arena * const arena = static_cast<Arena * const>(ao);
+  arena->frames_streamed_ = 0;
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -1196,9 +1224,13 @@ void FSP::processStreamCommand(uint8_t const * buffer, uint32_t frame_byte_count
   }
   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(buffer, frame->grayscale_);
   AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
+  Arena * const arena = static_cast<Arena * const>(AO_Arena);
+  arena->frames_streamed_ = arena->frames_streamed_ + 1;
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
     QS_STR("processed stream command");
     QS_U32(8, bytes_decoded);
+    QS_STR("frames streamed");
+    QS_U32(8, arena->frames_streamed_);
   QS_END()
 }
 
