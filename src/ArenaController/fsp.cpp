@@ -410,7 +410,7 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
 void FSP::EthernetCommandInterface_armEthernetTimer(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  eci->ethernet_time_evt_.armX(constants::ticks_per_second, constants::ticks_per_second/100);
+  eci->ethernet_time_evt_.armX(constants::ticks_per_second, constants::ticks_per_second/constants::ethernet_timer_frequency_hz);
 }
 
 void FSP::EthernetCommandInterface_disarmEthernetTimer(QActive * const ao, QEvt const * e)
