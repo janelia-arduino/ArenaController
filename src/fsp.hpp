@@ -46,14 +46,15 @@ struct FSP
   static void SerialCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_armSerialTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_disarmSerialTimer(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_beginSerial(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_pollSerialCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_readFirstByte(QP::QActive * const ao, QP::QEvt const * e);
-  static bool SerialCommandInterface_ifBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_readSerialStringCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_processStringCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_writeSerialStringResponse(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_writeSerialBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_initializeSerial(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_pollSerial(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_analyzeCommand(QP::QActive * const ao, QP::QEvt const * e);
+  // static void SerialCommandInterface_readFirstByte(QP::QActive * const ao, QP::QEvt const * e);
+  // static bool SerialCommandInterface_ifBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
+  // static void SerialCommandInterface_readSerialStringCommand(QP::QActive * const ao, QP::QEvt const * e);
+  // static void SerialCommandInterface_processStringCommand(QP::QActive * const ao, QP::QEvt const * e);
+  // static void SerialCommandInterface_writeSerialStringResponse(QP::QActive * const ao, QP::QEvt const * e);
+  // static void SerialCommandInterface_writeSerialBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void EthernetCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_armEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);

@@ -296,14 +296,15 @@ void BSP::initializeArena()
   digitalWriteFast(constants::reset_pin, LOW);
 }
 
-bool BSP::beginSerial()
+bool BSP::initializeSerial()
 {
-  serial_communication_interface_stream.begin(constants::serial_baud_rate);
-  serial_communication_interface_stream.setTimeout(constants::serial_timeout);
+  // Serial.begin() is optional on Teensy. USB hardware initialization is performed before setup() runs.
+  // serial_communication_interface_stream.begin(constants::serial_baud_rate);
+  // serial_communication_interface_stream.setTimeout(constants::serial_timeout);
   return true;
 }
 
-bool BSP::pollSerialCommand()
+bool BSP::pollSerial()
 {
   return serial_communication_interface_stream.available();
 }
@@ -884,7 +885,7 @@ bool QP::QS::onStartup(void const *arg)
   rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
   qs_serial_stream.setTX(constants::qs_serial_stream_tx_pin);
   qs_serial_stream.setRX(constants::qs_serial_stream_rx_pin);
-  qs_serial_stream.begin(115200); // run serial port at 115200 baud rate
+  qs_serial_stream.begin(constants::qs_serial_baud_rate);
   return true; // return success
 }
 //............................................................................

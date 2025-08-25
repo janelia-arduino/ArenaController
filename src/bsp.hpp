@@ -15,8 +15,8 @@ struct BSP {
 
   static void initializeArena();
 
-  static bool beginSerial();
-  static bool pollSerialCommand();
+  static bool initializeSerial();
+  static bool pollSerial();
   static uint8_t readSerialByte();
   static void readSerialStringCommand(char * const command_str,
     char first_char);

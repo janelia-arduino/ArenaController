@@ -54,11 +54,10 @@ public:
 protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Active);
-    Q_STATE_DECL(NotReady);
-    Q_STATE_DECL(PollingForNewCommand);
+    Q_STATE_DECL(Unitialized);
+    Q_STATE_DECL(WaitingForNewCommand);
     Q_STATE_DECL(Waiting);
-    Q_STATE_DECL(ProcessingBinaryCommand);
-    Q_STATE_DECL(ProcessingStringCommand);
+    Q_STATE_DECL(ChoosingCommandProcessor);
     Q_STATE_DECL(Inactive);
 }; // class SerialCommandInterface
 

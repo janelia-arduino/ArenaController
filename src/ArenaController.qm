@@ -130,7 +130,7 @@ This structure of the code is recommended for applications with only one active 
     <state name="Active">
      <entry brief="armSerialTimer()">FSP::SerialCommandInterface_armSerialTimer(this, e);</entry>
      <exit brief="disarmSerialTimer()">FSP::SerialCommandInterface_disarmSerialTimer(this, e);</exit>
-     <initial target="../3">
+     <initial target="../2">
       <initial_glyph conn="36,28,4,0,4">
        <action box="0,-2,10,2"/>
       </initial_glyph>
@@ -140,99 +140,62 @@ This structure of the code is recommended for applications with only one active 
        <action box="-1,-16,35,2"/>
       </tran_glyph>
      </tran>
-     <tran trig="SERIAL_TIMEOUT">
-      <tran_glyph conn="3,32,3,-1,16">
-       <action box="0,-2,15,2"/>
-      </tran_glyph>
-     </tran>
-     <state name="NotReady">
-      <entry brief="beginSerial()">FSP::SerialCommandInterface_beginSerial(this, e);</entry>
-      <tran trig="SERIAL_READY" target="../../4">
-       <tran_glyph conn="71,34,1,1,16,11,-23">
-        <action box="2,-3,13,2"/>
+     <state name="Unitialized">
+      <entry brief="initializeSerial()">FSP::SerialCommandInterface_initializeSerial(this, e);</entry>
+      <tran trig="SERIAL_INITIALIZED" target="../../3">
+       <tran_glyph conn="71,34,1,1,16,13,-27">
+        <action box="2,-3,16,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="29,32,42,8">
-       <entry box="1,2,40,2"/>
+      <state_glyph node="29,32,42,10">
+       <entry box="1,2,15,2"/>
       </state_glyph>
      </state>
-     <state name="PollingForNewCommand">
-      <tran trig="SERIAL_TIMEOUT">
-       <action brief="pollSerialCommand()">FSP::SerialCommandInterface_pollSerialCommand(this, e);</action>
-       <tran_glyph conn="33,53,3,-1,16">
-        <action box="0,-2,18,4"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../5">
-       <tran_glyph conn="64,52,1,3,28">
+     <state name="WaitingForNewCommand">
+      <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../4">
+       <tran_glyph conn="60,54,1,3,32">
         <action box="1,-2,32,3"/>
        </tran_glyph>
       </tran>
-      <tran trig="SERIAL_COMMAND_AVAILABLE">
-       <action brief="readFirstByte()">FSP::SerialCommandInterface_readFirstByte(this, e);</action>
-       <choice target="../../../6">
-        <guard brief="ifBinaryCommand()">FSP::SerialCommandInterface_ifBinaryCommand(this, e)</guard>
-        <action brief="readSerialBinaryCommand()"/>
-        <choice_glyph conn="36,63,5,3,30,9,9">
-         <action box="24,11,22,4"/>
-        </choice_glyph>
-       </choice>
-       <choice target="../../../7">
-        <guard brief="else"/>
-        <action brief="readSerialStringCommand()">FSP::SerialCommandInterface_readSerialStringCommand(this, e);</action>
-        <choice_glyph conn="36,63,5,1,-2,8,-2">
-         <action box="-3,9,22,4"/>
-        </choice_glyph>
-       </choice>
-       <tran_glyph conn="36,57,2,-1,6">
-        <action box="1,1,26,5"/>
+      <tran trig="SERIAL_COMMAND_AVAILABLE" target="../../5">
+       <action brief="analyzeCommand()">FSP::SerialCommandInterface_analyzeCommand(this, e);</action>
+       <tran_glyph conn="32,59,2,0,17">
+        <action box="1,12,25,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="33,43,31,14"/>
+      <tran trig="SERIAL_TIMEOUT">
+       <action brief="pollSerial()">FSP::SerialCommandInterface_pollSerial(this, e);</action>
+       <tran_glyph conn="29,51,3,-1,19">
+        <action box="0,-2,19,4"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="29,45,31,14"/>
      </state>
      <state name="Waiting">
-      <tran trig="COMMAND_PROCESSED" target="../../4">
-       <tran_glyph conn="92,48,3,1,-28">
+      <tran trig="COMMAND_PROCESSED" target="../../3">
+       <tran_glyph conn="92,50,3,1,-32">
         <action box="-22,-2,21,2"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="92,44,16,10"/>
+      <state_glyph node="92,46,16,10"/>
      </state>
-     <state name="ProcessingBinaryCommand">
-      <tran trig="COMMAND_PROCESSED" target="../../4">
-       <action brief="writeSerialBinaryResponse()">FSP::SerialCommandInterface_writeSerialBinaryResponse(this, e);</action>
-       <tran_glyph conn="84,64,0,1,-8,-20">
-        <action box="1,-7,21,4"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="75,64,26,10"/>
+     <state name="ChoosingCommandProcessor">
+      <state_glyph node="29,76,26,15"/>
      </state>
-     <state name="ProcessingStringCommand">
-      <entry brief="processStringCommand()">FSP::SerialCommandInterface_processStringCommand(this, e);</entry>
-      <tran trig="COMMAND_PROCESSED" target="../../4">
-       <action brief="writeSerialStringResponse()">FSP::SerialCommandInterface_writeSerialStringResponse(this, e);</action>
-       <tran_glyph conn="19,64,0,3,-15,14">
-        <action box="-10,-20,20,5"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="7,64,25,13">
-       <entry box="1,2,21,2"/>
-      </state_glyph>
-     </state>
-     <state_glyph node="3,21,106,59">
+     <state_glyph node="3,21,126,104">
       <entry box="1,2,36,2"/>
       <exit box="1,4,34,2"/>
      </state_glyph>
     </state>
     <state name="Inactive">
      <tran trig="ACTIVATE_SERIAL_COMMAND_INTERFACE" target="../../1">
-      <tran_glyph conn="55,13,1,1,56,12,-2">
+      <tran_glyph conn="55,13,1,1,79,12,-5">
        <action box="2,-2,35,2"/>
       </tran_glyph>
      </tran>
      <state_glyph node="37,11,18,7"/>
     </state>
-    <state_diagram size="112,81"/>
+    <state_diagram size="140,137"/>
    </statechart>
   </class>
   <class name="Display" superclass="qpcpp::QActive">

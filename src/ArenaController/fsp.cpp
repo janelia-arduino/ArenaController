@@ -29,7 +29,7 @@ static QEvt const streamFrameEvt = {STREAM_FRAME_SIG, 0U, 0U};
 
 static QEvt const activateSerialCommandInterfaceEvt = {ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
 static QEvt const deactivateSerialCommandInterfaceEvt = {DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const serialReadyEvt = {SERIAL_READY_SIG, 0U, 0U};
+static QEvt const serialInitializedEvt = {SERIAL_INITIALIZED_SIG, 0U, 0U};
 static QEvt const serialCommandAvailableEvt = {SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
 
 static QEvt const activateEthernetCommandInterfaceEvt = {ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
@@ -178,13 +178,13 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  // AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
+  AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
   AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, ao);
 }
 
 void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  // AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
+  AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
   AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, ao);
 }
 
@@ -321,13 +321,13 @@ void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt
   QS_SIG_DICTIONARY(SERIAL_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, ao);
   QS_SIG_DICTIONARY(DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, ao);
-  QS_SIG_DICTIONARY(SERIAL_READY_SIG, ao);
+  QS_SIG_DICTIONARY(SERIAL_INITIALIZED_SIG, ao);
 }
 
 void FSP::SerialCommandInterface_armSerialTimer(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  sci->serial_time_evt_.armX(constants::ticks_per_second/2, constants::ticks_per_second/50);
+  sci->serial_time_evt_.armX(constants::ticks_per_second, constants::ticks_per_second/constants::serial_timer_frequency_hz);
 }
 
 void FSP::SerialCommandInterface_disarmSerialTimer(QActive * const ao, QEvt const * e)
@@ -336,58 +336,97 @@ void FSP::SerialCommandInterface_disarmSerialTimer(QActive * const ao, QEvt cons
   sci->serial_time_evt_.disarm();
 }
 
-void FSP::SerialCommandInterface_beginSerial(QActive * const ao, QEvt const * e)
+void FSP::SerialCommandInterface_initializeSerial(QActive * const ao, QEvt const * e)
 {
-  bool serial_ready = BSP::beginSerial();
+  bool serial_ready = BSP::initializeSerial();
   if (serial_ready)
   {
-    AO_SerialCommandInterface->POST(&serialReadyEvt, ao);
+    AO_SerialCommandInterface->POST(&serialInitializedEvt, ao);
   }
 }
 
-void FSP::SerialCommandInterface_pollSerialCommand(QActive * const ao, QEvt const * e)
+void FSP::SerialCommandInterface_pollSerial(QActive * const ao, QEvt const * e)
 {
-  bool bytes_available = BSP::pollSerialCommand();
+  bool bytes_available = BSP::pollSerial();
   if (bytes_available)
   {
     QF::PUBLISH(&serialCommandAvailableEvt, ao);
   }
 }
 
-void FSP::SerialCommandInterface_readFirstByte(QActive * const ao, QEvt const * e)
+void FSP::SerialCommandInterface_analyzeCommand(QActive * const ao, QEvt const * e)
 {
-  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  sci->first_command_byte_ = BSP::readSerialByte();
+  // EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  // EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
+  // eci->connection_ = ece->connection;
+  // eci->binary_command_ = ece->binary_command;
+  // eci->binary_command_byte_count_ = ece->binary_command_byte_count;
+
+  // uint8_t command_buffer_position = 0;
+  // uint8_t first_command_byte;
+  // memcpy(&first_command_byte, eci->binary_command_ + command_buffer_position, sizeof(first_command_byte));
+  // command_buffer_position += sizeof(first_command_byte);
+  // if (first_command_byte > constants::first_command_byte_max_value_binary)
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+  //     QS_STR("string command");
+  //   QS_END()
+  //   QF::PUBLISH(&processStringCommandEvt, ao);
+  // }
+  // else if (first_command_byte == STREAM_FRAME_CMD)
+  // {
+  //   uint16_t binary_command_byte_count_claim;
+  //   memcpy(&binary_command_byte_count_claim, eci->binary_command_ + command_buffer_position, sizeof(binary_command_byte_count_claim));
+  //   eci->binary_command_byte_count_claim_ = binary_command_byte_count_claim;
+  //   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+  //     QS_STR("stream command");
+  //     QS_U32(8, eci->binary_command_byte_count_claim_);
+  //   QS_END()
+  //   QF::PUBLISH(&processStreamCommandEvt, ao);
+  // }
+  // else
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+  //     QS_STR("binary command");
+  //   QS_END()
+  //   QF::PUBLISH(&processBinaryCommandEvt, ao);
+  // }
 }
 
-bool FSP::SerialCommandInterface_ifBinaryCommand(QActive * const ao, QEvt const * e)
-{
-  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  return (sci->first_command_byte_ <= constants::first_command_byte_max_value_binary);
-}
+// void FSP::SerialCommandInterface_readFirstByte(QActive * const ao, QEvt const * e)
+// {
+//   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+//   sci->first_command_byte_ = BSP::readSerialByte();
+// }
 
-void FSP::SerialCommandInterface_readSerialStringCommand(QActive * const ao, QEvt const * e)
-{
-  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  BSP::readSerialStringCommand(sci->string_command_, (char)sci->first_command_byte_);
-}
+// bool FSP::SerialCommandInterface_ifBinaryCommand(QActive * const ao, QEvt const * e)
+// {
+//   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+//   return (sci->first_command_byte_ <= constants::first_command_byte_max_value_binary);
+// }
 
-void FSP::SerialCommandInterface_processStringCommand(QActive * const ao, QEvt const * e)
-{
-  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  FSP::processStringCommand(sci->string_command_, sci->string_response_);
-  QF::PUBLISH(&commandProcessedEvt, ao);
-}
+// void FSP::SerialCommandInterface_readSerialStringCommand(QActive * const ao, QEvt const * e)
+// {
+//   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+//   BSP::readSerialStringCommand(sci->string_command_, (char)sci->first_command_byte_);
+// }
 
-void FSP::SerialCommandInterface_writeSerialStringResponse(QActive * const ao, QEvt const * e)
-{
-  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  BSP::writeSerialStringResponse(sci->string_response_);
-}
+// void FSP::SerialCommandInterface_processStringCommand(QActive * const ao, QEvt const * e)
+// {
+//   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+//   FSP::processStringCommand(sci->string_command_, sci->string_response_);
+//   QF::PUBLISH(&commandProcessedEvt, ao);
+// }
 
-void FSP::SerialCommandInterface_writeSerialBinaryResponse(QActive * const ao, QEvt const * e)
-{
-}
+// void FSP::SerialCommandInterface_writeSerialStringResponse(QActive * const ao, QEvt const * e)
+// {
+//   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+//   BSP::writeSerialStringResponse(sci->string_response_);
+// }
+
+// void FSP::SerialCommandInterface_writeSerialBinaryResponse(QActive * const ao, QEvt const * e)
+// {
+// }
 
 void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {

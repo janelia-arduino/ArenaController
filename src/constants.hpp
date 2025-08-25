@@ -14,9 +14,13 @@ constexpr uint32_t watchdog_trigger_seconds = 1;
 // duration before watchdog expires
 constexpr uint32_t watchdog_timeout_seconds = 2;
 
+// QS
+constexpr uint32_t qs_serial_baud_rate = 115200;
+
 // Serial Communication Interface
 constexpr uint32_t serial_baud_rate = 115200;
 constexpr uint16_t serial_timeout = 100;
+constexpr uint32_t serial_timer_frequency_hz = 50;
 
 // Ethernet Communication Interface
 constexpr uint16_t ethernet_server_port = 62222;
