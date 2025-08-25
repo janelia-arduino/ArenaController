@@ -123,6 +123,10 @@ namespace AC
 {
 namespace constants
 {
+// QS Serial Pins
+constexpr uint8_t qs_serial_stream_tx_pin = 53;
+constexpr uint8_t qs_serial_stream_rx_pin = 52;
+
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;
 constexpr uint8_t spi_data_mode = SPI_MODE0;
@@ -185,10 +189,10 @@ static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
 
 // Serial Communication Interface
-static HardwareSerial & serial_communication_interface_stream = Serial1;
-static usb_serial_class & qs_serial_stream = Serial;
-// usb_serial_class & serial_communication_interface_stream = Serial;
-// HardwareSerial & qs_serial_stream = Serial1;
+// static HardwareSerial & serial_communication_interface_stream = Serial1;
+// static usb_serial_class & qs_serial_stream = Serial;
+usb_serial_class & serial_communication_interface_stream = Serial;
+HardwareSerialIMXRT & qs_serial_stream = Serial1;
 
 // Ethernet Communication Interface
 // static const char *s_lsn = "tcp://192.168.10.62:62222";
@@ -878,6 +882,8 @@ bool QP::QS::onStartup(void const *arg)
   static uint8_t qsRxBuf[1024];  // buffer for QS receive channel (QS-RX)
   initBuf  (qsTxBuf, sizeof(qsTxBuf));
   rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
+  qs_serial_stream.setTX(constants::qs_serial_stream_tx_pin);
+  qs_serial_stream.setRX(constants::qs_serial_stream_rx_pin);
   qs_serial_stream.begin(115200); // run serial port at 115200 baud rate
   return true; // return success
 }
