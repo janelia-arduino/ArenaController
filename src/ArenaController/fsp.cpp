@@ -58,9 +58,9 @@ static QEvt const frameDecodedEvt = {FRAME_DECODED_SIG, 0U, 0U};
 
 void FSP::ArenaController_setup()
 {
-  static QF_MPOOL_EL(SetParameterEvt) smlPoolSto[constants::pool_event_count];
-  static QF_MPOOL_EL(DisplayPatternEvt) medPoolSto[constants::pool_event_count];
-  static QF_MPOOL_EL(CommandEvt) lrgPoolSto[constants::pool_event_count];
+  static QF_MPOOL_EL(SetParameterEvt) smlPoolSto[constants::set_parameter_pool_event_count];
+  static QF_MPOOL_EL(CommandEvt) medPoolSto[constants::command_pool_event_count];
+  // static QF_MPOOL_EL(CommandEvt) lrgPoolSto[2*constants::pool_event_count];
 
   QF::init(); // initialize the framework
 
@@ -71,7 +71,7 @@ void FSP::ArenaController_setup()
   // initialize the event pools...
   QP::QF::poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
   QP::QF::poolInit(medPoolSto, sizeof(medPoolSto), sizeof(medPoolSto[0]));
-  QP::QF::poolInit(lrgPoolSto, sizeof(lrgPoolSto), sizeof(lrgPoolSto[0]));
+  // QP::QF::poolInit(lrgPoolSto, sizeof(lrgPoolSto), sizeof(lrgPoolSto[0]));
 
   // object dictionaries for AOs...
   QS_OBJ_DICTIONARY(AO_Arena);

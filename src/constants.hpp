@@ -7,7 +7,8 @@ namespace AC
 namespace constants
 {
 constexpr uint32_t ticks_per_second = 1000;
-constexpr uint8_t pool_event_count = 10;
+constexpr uint8_t set_parameter_pool_event_count = 10;
+constexpr uint8_t command_pool_event_count = 20;
 
 // duration before callback fires
 constexpr uint32_t watchdog_trigger_seconds = 1;
