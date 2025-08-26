@@ -50,13 +50,13 @@ public:
     std::uint32_t value;
 }; // class SetParameterEvt
 
-//${Shared::EthernetCommandEvt} ..............................................
-class EthernetCommandEvt : public QP::QEvt {
+//${Shared::CommandEvt} ......................................................
+class CommandEvt : public QP::QEvt {
 public:
     void * connection;
     std::uint8_t const * binary_command;
     std::uint32_t binary_command_byte_count;
-}; // class EthernetCommandEvt
+}; // class CommandEvt
 
 //${Shared::DisplayPatternEvt} ...............................................
 class DisplayPatternEvt : public QP::QEvt {

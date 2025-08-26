@@ -60,7 +60,7 @@ void FSP::ArenaController_setup()
 {
   static QF_MPOOL_EL(SetParameterEvt) smlPoolSto[constants::pool_event_count];
   static QF_MPOOL_EL(DisplayPatternEvt) medPoolSto[constants::pool_event_count];
-  static QF_MPOOL_EL(EthernetCommandEvt) lrgPoolSto[constants::pool_event_count];
+  static QF_MPOOL_EL(CommandEvt) lrgPoolSto[constants::pool_event_count];
 
   QF::init(); // initialize the framework
 
@@ -357,10 +357,10 @@ void FSP::SerialCommandInterface_pollSerial(QActive * const ao, QEvt const * e)
 void FSP::SerialCommandInterface_analyzeCommand(QActive * const ao, QEvt const * e)
 {
   // EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  // EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
-  // eci->connection_ = ece->connection;
-  // eci->binary_command_ = ece->binary_command;
-  // eci->binary_command_byte_count_ = ece->binary_command_byte_count;
+  // CommandEvt const * cev = static_cast<CommandEvt const *>(e);
+  // eci->connection_ = cev->connection;
+  // eci->binary_command_ = cev->binary_command;
+  // eci->binary_command_byte_count_ = cev->binary_command_byte_count;
 
   // uint8_t command_buffer_position = 0;
   // uint8_t first_command_byte;
@@ -484,10 +484,10 @@ void FSP::EthernetCommandInterface_createServerConnection(QActive * const ao, QE
 void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
-  eci->connection_ = ece->connection;
-  eci->binary_command_ = ece->binary_command;
-  eci->binary_command_byte_count_ = ece->binary_command_byte_count;
+  CommandEvt const * cev = static_cast<CommandEvt const *>(e);
+  eci->connection_ = cev->connection;
+  eci->binary_command_ = cev->binary_command;
+  eci->binary_command_byte_count_ = cev->binary_command_byte_count;
 
   uint8_t command_buffer_position = 0;
   uint8_t first_command_byte;
@@ -523,9 +523,9 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
 void FSP::EthernetCommandInterface_updateStreamCommand(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  EthernetCommandEvt const * ece = static_cast<EthernetCommandEvt const *>(e);
-  eci->binary_command_ = ece->binary_command;
-  eci->binary_command_byte_count_ = ece->binary_command_byte_count;
+  CommandEvt const * cev = static_cast<CommandEvt const *>(e);
+  eci->binary_command_ = cev->binary_command;
+  eci->binary_command_byte_count_ = cev->binary_command_byte_count;
 }
 
 bool FSP::EthernetCommandInterface_ifStreamCommandComplete(QActive * const ao, QEvt const * e)
