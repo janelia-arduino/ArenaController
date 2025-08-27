@@ -31,9 +31,9 @@
 #ifndef DISPLAY_HPP
 #define DISPLAY_HPP
 
-#include "ArenaController.hpp"
 #include "Shared.hpp"
 #include "Events.hpp"
+#include "fsp.hpp"
 
 
 //============================================================================

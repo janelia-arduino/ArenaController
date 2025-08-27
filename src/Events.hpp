@@ -32,6 +32,7 @@
 #define EVENTS_HPP
 
 #include "qpcpp.hpp"
+#include "constants.hpp"
 
 
 //$declare${Events} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

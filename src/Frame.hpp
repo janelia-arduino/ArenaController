@@ -31,9 +31,9 @@
 #ifndef FRAME_HPP
 #define FRAME_HPP
 
-#include "ArenaController.hpp"
 #include "Shared.hpp"
 #include "Events.hpp"
+#include "fsp.hpp"
 
 
 //============================================================================

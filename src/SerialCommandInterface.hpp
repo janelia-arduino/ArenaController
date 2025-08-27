@@ -31,9 +31,9 @@
 #ifndef SERIAL_COMMAND_INTERFACE_HPP
 #define SERIAL_COMMAND_INTERFACE_HPP
 
-#include "ArenaController.hpp"
 #include "Shared.hpp"
 #include "Events.hpp"
+#include "fsp.hpp"
 
 
 //============================================================================

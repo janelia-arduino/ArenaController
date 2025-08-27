@@ -896,9 +896,9 @@ void loop();
    <text>#ifndef SERIAL_COMMAND_INTERFACE_HPP
 #define SERIAL_COMMAND_INTERFACE_HPP
 
-#include &quot;ArenaController.hpp&quot;
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 
 //============================================================================
@@ -911,9 +911,9 @@ $declare${AOs::SerialCommandInterface}
    <text>#ifndef ARENA_HPP
 #define ARENA_HPP
 
-#include &quot;ArenaController.hpp&quot;
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 
 //============================================================================
@@ -926,9 +926,9 @@ $declare${AOs::Arena}
    <text>#ifndef DISPLAY_HPP
 #define DISPLAY_HPP
 
-#include &quot;ArenaController.hpp&quot;
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 
 //============================================================================
@@ -941,9 +941,9 @@ $declare${AOs::Display}
    <text>#ifndef ETHERNET_COMMAND_INTERFACE_HPP
 #define ETHERNET_COMMAND_INTERFACE_HPP
 
-#include &quot;ArenaController.hpp&quot;
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 
 //============================================================================
@@ -956,9 +956,9 @@ $declare${AOs::EthernetCommandInterface}
    <text>#ifndef FRAME_HPP
 #define FRAME_HPP
 
-#include &quot;ArenaController.hpp&quot;
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 
 //============================================================================
@@ -971,9 +971,9 @@ $declare${AOs::Frame}
    <text>#ifndef WATCHDOG_HPP
 #define WATCHDOG_HPP
 
-#include &quot;ArenaController.hpp&quot;
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 
 //============================================================================
@@ -986,9 +986,9 @@ $declare${AOs::Watchdog}
    <text>#ifndef PATTERN_HPP
 #define PATTERN_HPP
 
-#include &quot;ArenaController.hpp&quot;
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
 
 
 //============================================================================
@@ -1013,6 +1013,7 @@ $declare${Shared}
 #define EVENTS_HPP
 
 #include &quot;qpcpp.hpp&quot;
+#include &quot;constants.hpp&quot;
 
 
 $declare${Events}

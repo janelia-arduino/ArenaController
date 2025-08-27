@@ -31,9 +31,9 @@
 #ifndef ETHERNET_COMMAND_INTERFACE_HPP
 #define ETHERNET_COMMAND_INTERFACE_HPP
 
-#include "ArenaController.hpp"
 #include "Shared.hpp"
 #include "Events.hpp"
+#include "fsp.hpp"
 
 
 //============================================================================

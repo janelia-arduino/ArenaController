@@ -31,9 +31,9 @@
 #ifndef ARENA_HPP
 #define ARENA_HPP
 
-#include "ArenaController.hpp"
 #include "Shared.hpp"
 #include "Events.hpp"
+#include "fsp.hpp"
 
 
 //============================================================================
