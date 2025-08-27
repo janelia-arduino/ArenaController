@@ -101,6 +101,13 @@ constexpr uint8_t byte_count_per_panel_binary = \
 
 // Frame
 constexpr uint32_t frame_event_queue_size = 1;
+constexpr uint8_t panel_count_per_frame_row_max = 5;
+constexpr uint8_t panel_count_per_frame_col_max = 12;
+constexpr uint8_t panel_count_per_frame_max = \
+  panel_count_per_frame_row_max * panel_count_per_frame_col_max; // 60
+constexpr uint16_t byte_count_per_frame_max = \
+  panel_count_per_frame_max * \
+  byte_count_per_panel_grayscale; // 60*132=7920
 
 constexpr uint8_t switch_grayscale_command_value_grayscale = 1;
 constexpr uint8_t switch_grayscale_command_value_binary = 0;
@@ -117,6 +124,7 @@ constexpr uint8_t card_type_str_len = 16;
 constexpr uint32_t pattern_frame_rate_queue_size = 1;
 constexpr uint32_t milliseconds_per_runtime_duration_unit = 100;
 constexpr uint16_t initialize_card_timeout_duration = 50;
+constexpr uint16_t byte_count_per_pattern_frame_max = byte_count_per_frame_max + pattern_row_signifier_byte_count_per_row * panel_count_per_frame_row_max; // 7920 + 4*5 = 7940
 
 }
 }

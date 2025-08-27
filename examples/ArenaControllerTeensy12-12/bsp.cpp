@@ -135,13 +135,8 @@ constexpr uint32_t spi_clock_speed = 4000000;
 constexpr uint8_t reset_pin = 34;
 
 // frame
-constexpr uint8_t panel_count_per_frame_row_max = 5;
-constexpr uint8_t panel_count_per_frame_col_max = 12;
-constexpr uint8_t panel_count_per_frame_max = \
-  panel_count_per_frame_row_max * panel_count_per_frame_col_max; // 60
-constexpr uint16_t byte_count_per_frame_max = \
-  panel_count_per_frame_max * \
-  byte_count_per_panel_grayscale; // 60*132=7920
+constexpr uint8_t panel_count_per_frame_row_max_bsp = 5;
+constexpr uint8_t panel_count_per_frame_col_max_bsp = 12;
 constexpr uint8_t panel_count_per_frame_row = 2;
 constexpr uint8_t panel_count_per_frame_col = 12;
 
@@ -150,9 +145,9 @@ constexpr uint8_t region_count_per_frame = 2;
 constexpr SPIClass *region_spi_ptrs[region_count_per_frame] = {&SPI, &SPI1};
 constexpr uint8_t region_cipo_pins[region_count_per_frame] = {12, 1};
 
-constexpr uint8_t panel_count_per_region_row_max = panel_count_per_frame_row_max;
+constexpr uint8_t panel_count_per_region_row_max = panel_count_per_frame_row_max_bsp;
 constexpr uint8_t panel_count_per_region_col_max = \
-  panel_count_per_frame_col_max/region_count_per_frame; // 6
+  panel_count_per_frame_col_max_bsp/region_count_per_frame; // 6
 constexpr uint8_t panel_count_per_region_row = panel_count_per_frame_row;
 constexpr uint8_t panel_count_per_region_col = \
   panel_count_per_frame_col/region_count_per_frame; // 6
@@ -165,9 +160,6 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
   {4, 9, 29, 22, 41, 36},
   {5, 10, 30, 21, 40, 35}
 };
-
-// pattern
-constexpr uint16_t byte_count_per_pattern_frame_max = byte_count_per_frame_max + pattern_row_signifier_byte_count_per_row * panel_count_per_frame_row_max; // 7920 + 4*5 = 7940
 
 // files
 constexpr uint16_t frame_count_y_max = 1;
