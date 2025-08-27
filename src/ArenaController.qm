@@ -463,6 +463,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="buffer_position_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="grayscale_" type="bool" visibility="0x00" properties="0x00"/>
    <attribute name="event_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
+   <attribute name="active_frame_" type="FrameEvt const *" visibility="0x02" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
@@ -834,19 +835,6 @@ This structure of the code is recommended for applications with only one active 
   </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
-  <class name="SetParameterEvt" superclass="qpcpp::QEvt">
-   <attribute name="value" type="std::uint32_t" visibility="0x00" properties="0x00"/>
-  </class>
-  <class name="CommandEvt" superclass="qpcpp::QEvt">
-   <attribute name="connection" type="void *" visibility="0x00" properties="0x00"/>
-   <attribute name="binary_command" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
-   <attribute name="binary_command_byte_count" type="std::uint32_t" visibility="0x00" properties="0x00"/>
-  </class>
-  <class name="DisplayPatternEvt" superclass="qpcpp::QEvt">
-   <attribute name="pattern_id" type="std::uint16_t" visibility="0x00" properties="0x00"/>
-   <attribute name="frame_rate" type="std::int16_t" visibility="0x00" properties="0x00"/>
-   <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>
-  </class>
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Arena::instance;</code>
   </attribute>
@@ -869,6 +857,24 @@ This structure of the code is recommended for applications with only one active 
    <code>= &amp;Pattern::instance;</code>
   </attribute>
  </package>
+ <package name="Events" stereotype="0x01">
+  <class name="SetParameterEvt" superclass="qpcpp::QEvt">
+   <attribute name="value" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+  </class>
+  <class name="CommandEvt" superclass="qpcpp::QEvt">
+   <attribute name="connection" type="void *" visibility="0x00" properties="0x00"/>
+   <attribute name="binary_command" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
+   <attribute name="binary_command_byte_count" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+  </class>
+  <class name="DisplayPatternEvt" superclass="qpcpp::QEvt">
+   <attribute name="pattern_id" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_rate" type="std::int16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+  </class>
+  <class name="FrameEvt" superclass="qpcpp::QEvt">
+   <attribute name="buffer[AC::constants::byte_count_per_pattern_frame_max]" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+  </class>
+ </package>
  <directory name=".">
   <file name="ArenaController.hpp">
    <text>#ifndef ARENA_CONTROLLER_HPP
@@ -884,8 +890,6 @@ void setup();
 void loop();
 }
 
-$declare${Shared}
-
 #endif</text>
   </file>
   <file name="SerialCommandInterface.hpp">
@@ -893,6 +897,8 @@ $declare${Shared}
 #define SERIAL_COMMAND_INTERFACE_HPP
 
 #include &quot;ArenaController.hpp&quot;
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
 
 
 //============================================================================
@@ -906,6 +912,8 @@ $declare${AOs::SerialCommandInterface}
 #define ARENA_HPP
 
 #include &quot;ArenaController.hpp&quot;
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
 
 
 //============================================================================
@@ -919,6 +927,8 @@ $declare${AOs::Arena}
 #define DISPLAY_HPP
 
 #include &quot;ArenaController.hpp&quot;
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
 
 
 //============================================================================
@@ -932,6 +942,8 @@ $declare${AOs::Display}
 #define ETHERNET_COMMAND_INTERFACE_HPP
 
 #include &quot;ArenaController.hpp&quot;
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
 
 
 //============================================================================
@@ -945,6 +957,8 @@ $declare${AOs::EthernetCommandInterface}
 #define FRAME_HPP
 
 #include &quot;ArenaController.hpp&quot;
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
 
 
 //============================================================================
@@ -958,6 +972,8 @@ $declare${AOs::Frame}
 #define WATCHDOG_HPP
 
 #include &quot;ArenaController.hpp&quot;
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
 
 
 //============================================================================
@@ -971,11 +987,35 @@ $declare${AOs::Watchdog}
 #define PATTERN_HPP
 
 #include &quot;ArenaController.hpp&quot;
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
 
 
 //============================================================================
 // generate declaration of the active object
 $declare${AOs::Pattern}
+
+#endif</text>
+  </file>
+  <file name="Shared.hpp">
+   <text>#ifndef SHARED_HPP
+#define SHARED_HPP
+
+#include &quot;qpcpp.hpp&quot;
+
+
+$declare${Shared}
+
+#endif</text>
+  </file>
+  <file name="Events.hpp">
+   <text>#ifndef EVENTS_HPP
+#define EVENTS_HPP
+
+#include &quot;qpcpp.hpp&quot;
+
+
+$declare${Events}
 
 #endif</text>
   </file>

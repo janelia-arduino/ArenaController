@@ -32,6 +32,8 @@
 #define WATCHDOG_HPP
 
 #include "ArenaController.hpp"
+#include "Shared.hpp"
+#include "Events.hpp"
 
 
 //============================================================================

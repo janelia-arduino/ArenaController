@@ -9,6 +9,8 @@
 #include "records.hpp"
 #include "pattern_header.hpp"
 
+#include "Shared.hpp"
+#include "Events.hpp"
 #include "Arena.hpp"
 #include "Display.hpp"
 #include "SerialCommandInterface.hpp"

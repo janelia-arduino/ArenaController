@@ -32,6 +32,8 @@
 #define FRAME_HPP
 
 #include "ArenaController.hpp"
+#include "Shared.hpp"
+#include "Events.hpp"
 
 
 //============================================================================
@@ -50,6 +52,9 @@ public:
     std::uint16_t buffer_position_;
     bool grayscale_;
     QP::QEQueue event_queue_;
+
+private:
+    FrameEvt const * active_frame_;
 
 public:
     Frame();
