@@ -458,12 +458,11 @@ This structure of the code is recommended for applications with only one active 
    </attribute>
    <attribute name="panel_set_row_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="panel_set_col_index_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
-   <attribute name="buffer_" type="std::uint8_t *" visibility="0x00" properties="0x00"/>
    <attribute name="panel_byte_count_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="buffer_position_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="grayscale_" type="bool" visibility="0x00" properties="0x00"/>
    <attribute name="event_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
-   <attribute name="active_frame_" type="FrameEvt const *" visibility="0x02" properties="0x00"/>
+   <attribute name="active_frame_" type="FrameEvt const *" visibility="0x00" properties="0x00"/>
    <operation name="Frame" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Frame::initial))</code>
    </operation>
@@ -475,7 +474,7 @@ This structure of the code is recommended for applications with only one active 
      </initial_glyph>
     </initial>
     <state name="Initialized">
-     <initial target="../4">
+     <initial target="../5">
       <initial_glyph conn="38,8,4,0,2">
        <action box="0,-2,10,2"/>
       </initial_glyph>
@@ -498,10 +497,16 @@ This structure of the code is recommended for applications with only one active 
        <action box="0,-2,19,4"/>
       </tran_glyph>
      </tran>
+     <tran trig="DEACTIVATE_DISPLAY">
+      <action brief="deleteFrameReference()">FSP::Frame_deleteFrameReference(this, e);</action>
+      <tran_glyph conn="6,57,3,-1,23">
+       <action box="0,-2,19,5"/>
+      </tran_glyph>
+     </tran>
      <state name="Inactive">
       <entry brief="recall()">FSP::Frame_recall(this, e);</entry>
-      <tran trig="TRANSFER_FRAME" target="../../5">
-       <tran_glyph conn="46,39,2,0,19">
+      <tran trig="TRANSFER_FRAME" target="../../6">
+       <tran_glyph conn="46,39,2,0,23">
         <action box="1,4,32,2"/>
        </tran_glyph>
       </tran>
@@ -523,6 +528,12 @@ This structure of the code is recommended for applications with only one active 
         <action box="0,-2,19,4"/>
        </tran_glyph>
       </tran>
+      <tran trig="FRAME_FILLED">
+       <action brief="saveFrameReference()">FSP::Frame_saveFrameReference(this, e);</action>
+       <tran_glyph conn="11,35,3,-1,23">
+        <action box="0,-2,21,4"/>
+       </tran_glyph>
+      </tran>
       <state_glyph node="11,10,44,29">
        <entry box="1,2,9,2"/>
       </state_glyph>
@@ -530,18 +541,19 @@ This structure of the code is recommended for applications with only one active 
      <state name="TransferringFrame">
       <entry brief="reset();">FSP::Frame_reset(this, e);</entry>
       <initial target="../3">
-       <initial_glyph conn="40,62,4,0,3">
+       <initial_glyph conn="40,66,4,0,3">
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
-      <tran trig="FRAME_TRANSFERRED" target="../../4">
-       <tran_glyph conn="81,65,1,1,2,-50,-28">
-        <action box="-22,-48,20,2"/>
+      <tran trig="FRAME_TRANSFERRED" target="../../5">
+       <tran_glyph conn="81,69,1,1,5,-54,-31">
+        <action box="-23,-53,20,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="DEACTIVATE_DISPLAY" target="../../4">
-       <tran_glyph conn="64,58,0,1,-34,-9">
-        <action box="1,-21,21,2"/>
+      <tran trig="DEACTIVATE_DISPLAY" target="../../5">
+       <action brief="deleteFrameReference()">FSP::Frame_deleteFrameReference(this, e);</action>
+       <tran_glyph conn="64,62,0,1,-38,-9">
+        <action box="1,-21,18,5"/>
        </tran_glyph>
       </tran>
       <state name="TransferringPanelSet">
@@ -550,33 +562,33 @@ This structure of the code is recommended for applications with only one active 
        <tran trig="PANEL_SET_TRANSFERRED">
         <choice target="../..">
          <guard brief="ifFrameNotTransferred()">FSP::Frame_ifFrameNotTransferred(this, e)</guard>
-         <choice_glyph conn="43,86,5,2,6,-5">
+         <choice_glyph conn="43,90,5,2,6,-5">
           <action box="1,0,26,2"/>
          </choice_glyph>
         </choice>
         <choice>
          <guard brief="else"/>
          <action brief="publishFrameTransferred()">FSP::Frame_publishFrameTransferred(this, e);</action>
-         <choice_glyph conn="43,86,4,-1,4,5">
+         <choice_glyph conn="43,90,4,-1,4,5">
           <action box="6,3,18,6"/>
          </choice_glyph>
         </choice>
-        <tran_glyph conn="38,81,2,-1,5,5">
+        <tran_glyph conn="38,85,2,-1,5,5">
          <action box="-23,2,22,5"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="22,65,50,16">
+       <state_glyph node="22,69,50,16">
         <entry box="1,2,49,2"/>
         <exit box="1,4,48,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="10,58,71,38">
+      <state_glyph node="10,62,71,38">
        <entry box="1,2,10,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="6,5,85,94"/>
+     <state_glyph node="6,5,85,99"/>
     </state>
-    <state_diagram size="97,104"/>
+    <state_diagram size="97,111"/>
    </statechart>
   </class>
   <class name="Watchdog" superclass="qpcpp::QActive">

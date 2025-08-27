@@ -223,10 +223,6 @@ PatternHeader pattern_header;
 SdFs sd;
 FsFile pattern_file;
 
-// managed by Frame active object
-// do not manipulate directly
-static uint8_t frame_buffer[constants::byte_count_per_frame_max];
-
 // managed by Pattern object
 // do not manipulate directly
 static uint8_t pattern_frame_buffer[constants::byte_count_per_pattern_frame_max];
@@ -451,11 +447,6 @@ void BSP::initializeFrame()
       digitalWriteFast(pss_pin, HIGH);
     }
   }
-}
-
-uint8_t * const BSP::getFrameBuffer()
-{
-  return frame_buffer;
 }
 
 uint8_t BSP::getPanelCountPerRegionRow()

@@ -74,6 +74,8 @@ struct FSP
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_reset(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_beginTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_endTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);

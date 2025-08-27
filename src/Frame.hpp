@@ -47,13 +47,10 @@ public:
     static Frame instance;
     std::uint8_t panel_set_row_index_;
     std::uint8_t panel_set_col_index_;
-    std::uint8_t * buffer_;
     std::uint8_t panel_byte_count_;
     std::uint16_t buffer_position_;
     bool grayscale_;
     QP::QEQueue event_queue_;
-
-private:
     FrameEvt const * active_frame_;
 
 public:

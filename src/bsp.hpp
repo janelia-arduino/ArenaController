@@ -34,7 +34,6 @@ struct BSP {
   static void disarmRefreshTimer();
 
   static void initializeFrame();
-  static uint8_t * const getFrameBuffer();
   static uint8_t getPanelCountPerRegionRow();
   static uint8_t getPanelCountPerRegionCol();
   static uint8_t getRegionCountPerFrame();

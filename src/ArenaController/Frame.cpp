@@ -104,6 +104,12 @@ Q_STATE_DEF(Frame, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Frame::SM::Initialized::DEACTIVATE_DISPLAY}
+        case DEACTIVATE_DISPLAY_SIG: {
+            FSP::Frame_deleteFrameReference(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;
@@ -145,6 +151,12 @@ Q_STATE_DEF(Frame, Inactive) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Frame::SM::Initialized::Inactive::FRAME_FILLED}
+        case FRAME_FILLED_SIG: {
+            FSP::Frame_saveFrameReference(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&Initialized);
             break;
@@ -175,6 +187,7 @@ Q_STATE_DEF(Frame, TransferringFrame) {
         }
         //${AOs::Frame::SM::Initialized::TransferringFram~::DEACTIVATE_DISPLAY}
         case DEACTIVATE_DISPLAY_SIG: {
+            FSP::Frame_deleteFrameReference(this, e);
             status_ = tran(&Inactive);
             break;
         }

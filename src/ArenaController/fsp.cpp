@@ -13,7 +13,6 @@ static QSpyId const l_FSP_ID = {0U}; // QSpy source ID
 static QEvt const resetEvt = {RESET_SIG, 0U, 0U};
 
 static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
-static QEvt const frameFilledEvt = {FRAME_FILLED_SIG, 0U, 0U};
 static QEvt const displayFrameEvt = {DISPLAY_FRAME_SIG, 0U, 0U};
 static QEvt const transferFrameEvt = {TRANSFER_FRAME_SIG, 0U, 0U};
 static QEvt const frameTransferredEvt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
@@ -155,7 +154,7 @@ void FSP::ArenaController_setup()
 
   QS_LOC_FILTER(-AO_Watchdog->m_prio);
   // QS_LOC_FILTER(-AO_Display->m_prio);
-  QS_LOC_FILTER(-AO_Frame->m_prio);
+  // QS_LOC_FILTER(-AO_Frame->m_prio);
   // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
   QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio);
 }
@@ -190,7 +189,7 @@ void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
 {
-  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("deactivating display");
   QS_END()
   QF::PUBLISH(&deactivateDisplayEvt, ao);
@@ -566,12 +565,13 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::initializeFrame();
-  frame->buffer_ = BSP::getFrameBuffer();
+  frame->active_frame_ = nullptr;
   frame->grayscale_ = true;
 
   static QEvt const * frame_event_queue_store[constants::frame_event_queue_size];
   frame->event_queue_.init(frame_event_queue_store, Q_DIM(frame_event_queue_store));
 
+  ao->subscribe(FRAME_FILLED_SIG);
   ao->subscribe(DEACTIVATE_DISPLAY_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
 
@@ -585,7 +585,9 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  BSP::fillFrameBufferWithAllOn(frame->buffer_,
+  FrameEvt * fe = Q_NEW(FrameEvt, FRAME_FILLED_SIG);
+
+  BSP::fillFrameBufferWithAllOn(fe->buffer,
     frame->grayscale_);
   if (frame->grayscale_)
   {
@@ -599,15 +601,33 @@ void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
     QS_STR("filled frame buffer with binary all on");
   QS_END()
   }
-  QF::PUBLISH(&frameFilledEvt, ao);
+  QF::PUBLISH(fe, ao);
 }
 
 void FSP::Frame_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  BSP::fillFrameBufferWithDecodedFrame(frame->buffer_,
+  FrameEvt * fe = Q_NEW(FrameEvt, FRAME_FILLED_SIG);
+
+  BSP::fillFrameBufferWithDecodedFrame(fe->buffer,
     frame->grayscale_);
-  QF::PUBLISH(&frameFilledEvt, ao);
+  QF::PUBLISH(fe, ao);
+}
+
+void FSP::Frame_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  Q_NEW_REF(frame->active_frame_, FrameEvt);
+}
+
+void FSP::Frame_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  if (frame->active_frame_)
+  {
+    Q_DELETE_REF(frame->active_frame_);
+    frame->active_frame_ = nullptr;
+  }
 }
 
 void FSP::Frame_reset(QActive * const ao, QEvt const * e)
@@ -631,7 +651,7 @@ void FSP::Frame_beginTransferPanelSet(QActive * const ao, QEvt const * e)
   {
     panel_byte_count = constants::byte_count_per_panel_binary;
   }
-  BSP::transferPanelSet(frame->buffer_, frame->buffer_position_, panel_byte_count);
+  BSP::transferPanelSet(frame->active_frame_->buffer, frame->buffer_position_, panel_byte_count);
 }
 
 void FSP::Frame_endTransferPanelSet(QActive * const ao, QEvt const * e)
@@ -672,20 +692,20 @@ void FSP::Frame_switchGrayscale(QActive * const ao, QEvt const * e)
   if (grayscale_index == constants::switch_grayscale_command_value_grayscale)
   {
     frame->grayscale_ = true;
-    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_BEGIN_ID(USER_COMMENT, AO_Frame->m_prio)
       QS_STR("switch grayscale to grayscale");
     QS_END()
   }
   else if (grayscale_index == constants::switch_grayscale_command_value_binary)
   {
     frame->grayscale_ = false;
-    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_BEGIN_ID(USER_COMMENT, AO_Frame->m_prio)
       QS_STR("switch grayscale to binary");
     QS_END()
   }
   else
   {
-    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_BEGIN_ID(USER_COMMENT, AO_Frame->m_prio)
       QS_STR("invalid switch grayscale value");
     QS_END()
   }
