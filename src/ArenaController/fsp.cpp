@@ -155,7 +155,7 @@ void FSP::ArenaController_setup()
   // QS_LOC_FILTER(-AO_Display->m_prio);
   // QS_LOC_FILTER(-AO_Frame->m_prio);
   // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
-  QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio);
+  // QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio);
 }
 
 void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -312,6 +312,9 @@ void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt
 {
   ao->subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
   ao->subscribe(ETHERNET_COMMAND_AVAILABLE_SIG);
+  ao->subscribe(PROCESS_BINARY_COMMAND_SIG);
+  ao->subscribe(PROCESS_STRING_COMMAND_SIG);
+  ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
 
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
@@ -354,41 +357,56 @@ void FSP::SerialCommandInterface_pollSerial(QActive * const ao, QEvt const * e)
 
 void FSP::SerialCommandInterface_analyzeCommand(QActive * const ao, QEvt const * e)
 {
-  // EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  // CommandEvt const * cev = static_cast<CommandEvt const *>(e);
-  // eci->connection_ = cev->connection;
-  // eci->binary_command_ = cev->binary_command;
-  // eci->binary_command_byte_count_ = cev->binary_command_byte_count;
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
 
-  // uint8_t command_buffer_position = 0;
-  // uint8_t first_command_byte;
-  // memcpy(&first_command_byte, eci->binary_command_ + command_buffer_position, sizeof(first_command_byte));
-  // command_buffer_position += sizeof(first_command_byte);
-  // if (first_command_byte > constants::first_command_byte_max_value_binary)
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-  //     QS_STR("string command");
-  //   QS_END()
-  //   QF::PUBLISH(&processStringCommandEvt, ao);
-  // }
-  // else if (first_command_byte == STREAM_FRAME_CMD)
-  // {
-  //   uint16_t binary_command_byte_count_claim;
-  //   memcpy(&binary_command_byte_count_claim, eci->binary_command_ + command_buffer_position, sizeof(binary_command_byte_count_claim));
-  //   eci->binary_command_byte_count_claim_ = binary_command_byte_count_claim;
-  //   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-  //     QS_STR("stream command");
-  //     QS_U32(8, eci->binary_command_byte_count_claim_);
-  //   QS_END()
-  //   QF::PUBLISH(&processStreamCommandEvt, ao);
-  // }
-  // else
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-  //     QS_STR("binary command");
-  //   QS_END()
-  //   QF::PUBLISH(&processBinaryCommandEvt, ao);
-  // }
+  uint8_t first_command_byte = BSP::readSerialByte();
+  sci->command_byte_count_ = 0;
+  sci->command_[sci->command_byte_count_++] = first_command_byte;
+  if (first_command_byte > constants::first_command_byte_max_value_binary)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_SerialCommandInterface->m_prio)
+      QS_STR("string command");
+    QS_END()
+    QF::PUBLISH(&processStringCommandEvt, ao);
+  }
+  else if (first_command_byte == STREAM_FRAME_CMD)
+  {
+    // uint16_t binary_command_byte_count_claim;
+    // memcpy(&binary_command_byte_count_claim, eci->binary_command_ + command_buffer_position, sizeof(binary_command_byte_count_claim));
+    // eci->binary_command_byte_count_claim_ = binary_command_byte_count_claim;
+    // QS_BEGIN_ID(USER_COMMENT, AO_SerialCommandInterface->m_prio)
+    //   QS_STR("stream command");
+    //   QS_U32(8, eci->binary_command_byte_count_claim_);
+    // QS_END()
+    // QF::PUBLISH(&processStreamCommandEvt, ao);
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_SerialCommandInterface->m_prio)
+      QS_STR("binary command");
+    QS_END()
+    QF::PUBLISH(&processBinaryCommandEvt, ao);
+  }
+}
+
+void FSP::SerialCommandInterface_processBinaryCommand(QActive * const ao, QEvt const * e)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  uint8_t command_byte_count = sci->command_[0];
+  for (uint8_t position=0; position<command_byte_count; ++position)
+  {
+    sci->command_[sci->command_byte_count_++] = BSP::readSerialByte();
+  }
+  sci->binary_response_byte_count_ = FSP::processBinaryCommand(sci->command_,
+    sci->command_byte_count_,
+    sci->binary_response_);
+  QF::PUBLISH(&commandProcessedEvt, ao);
+}
+
+void FSP::SerialCommandInterface_writeBinaryResponse(QActive * const ao, QEvt const * e)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  BSP::writeSerialBinaryResponse(sci->binary_response_, sci->binary_response_byte_count_);
 }
 
 // void FSP::SerialCommandInterface_readFirstByte(QActive * const ao, QEvt const * e)
@@ -564,7 +582,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   BSP::initializeFrame();
-  frame->active_frame_ = nullptr;
+  frame->frame_ = nullptr;
   frame->grayscale_ = true;
 
   static QEvt const * frame_event_queue_store[constants::frame_event_queue_size];
@@ -616,16 +634,16 @@ void FSP::Frame_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
 void FSP::Frame_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  Q_NEW_REF(frame->active_frame_, FrameEvt);
+  Q_NEW_REF(frame->frame_, FrameEvt);
 }
 
 void FSP::Frame_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  if (frame->active_frame_)
+  if (frame->frame_)
   {
-    Q_DELETE_REF(frame->active_frame_);
-    frame->active_frame_ = nullptr;
+    Q_DELETE_REF(frame->frame_);
+    frame->frame_ = nullptr;
   }
 }
 
@@ -650,7 +668,7 @@ void FSP::Frame_beginTransferPanelSet(QActive * const ao, QEvt const * e)
   {
     panel_byte_count = constants::byte_count_per_panel_binary;
   }
-  BSP::transferPanelSet(frame->active_frame_->buffer, frame->buffer_position_, panel_byte_count);
+  BSP::transferPanelSet(frame->frame_->buffer, frame->buffer_position_, panel_byte_count);
 }
 
 void FSP::Frame_endTransferPanelSet(QActive * const ao, QEvt const * e)
@@ -755,7 +773,7 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
 void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->active_frame_ = nullptr;
+  pattern->frame_ = nullptr;
   pattern->file_size_ = 0;
   pattern->byte_count_per_frame_ = 0;
   pattern->positive_direction_ = true;
@@ -1030,16 +1048,16 @@ void FSP::Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const *
 void FSP::Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  Q_NEW_REF(pattern->active_frame_, FrameEvt);
+  Q_NEW_REF(pattern->frame_, FrameEvt);
 }
 
 void FSP::Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  if (pattern->active_frame_)
+  if (pattern->frame_)
   {
-    Q_DELETE_REF(pattern->active_frame_);
-    pattern->active_frame_ = nullptr;
+    Q_DELETE_REF(pattern->frame_);
+    pattern->frame_ = nullptr;
   }
 }
 
@@ -1050,8 +1068,8 @@ void FSP::Pattern_decodeFrame(QActive * const ao, QEvt const * e)
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  BSP::decodePatternFrameBuffer(pattern->active_frame_->buffer, frame->grayscale_);
-  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(pattern->active_frame_->buffer, frame->grayscale_);
+  BSP::decodePatternFrameBuffer(pattern->frame_->buffer, frame->grayscale_);
+  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(pattern->frame_->buffer, frame->grayscale_);
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("bytes decoded");
   //   QS_U32(8, bytes_decoded);

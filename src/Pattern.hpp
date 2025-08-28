@@ -55,7 +55,7 @@ public:
     QP::QEQueue frame_rate_queue_;
     bool positive_direction_;
     QP::QTimeEvt initialize_card_time_evt_;
-    FrameEvt const * active_frame_;
+    FrameEvt const * frame_;
 
 public:
     Pattern();

@@ -298,6 +298,12 @@ uint8_t BSP::readSerialByte()
   return serial_communication_interface_stream.read();
 }
 
+void BSP::writeSerialBinaryResponse(uint8_t response[AC::constants::byte_count_per_response_max],
+  uint8_t response_byte_count)
+{
+  serial_communication_interface_stream.write(response, response_byte_count);
+}
+
 void BSP::readSerialStringCommand(char * const command_str,
   char first_char)
 {

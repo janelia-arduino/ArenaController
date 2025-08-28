@@ -51,7 +51,7 @@ public:
     std::uint16_t buffer_position_;
     bool grayscale_;
     QP::QEQueue event_queue_;
-    FrameEvt const * active_frame_;
+    FrameEvt const * frame_;
 
 public:
     Frame();

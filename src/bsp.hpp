@@ -18,6 +18,8 @@ struct BSP {
   static bool initializeSerial();
   static bool pollSerial();
   static uint8_t readSerialByte();
+  static void writeSerialBinaryResponse(uint8_t response[AC::constants::byte_count_per_response_max],
+    uint8_t response_byte_count);
   static void readSerialStringCommand(char * const command_str,
     char first_char);
   static void writeSerialStringResponse(char * const response);

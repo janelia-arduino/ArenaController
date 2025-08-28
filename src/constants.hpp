@@ -9,7 +9,7 @@ namespace constants
 constexpr uint32_t ticks_per_second = 1000;
 constexpr uint8_t set_parameter_event_pool_count = 10;
 constexpr uint8_t command_event_pool_count = 20;
-constexpr uint8_t frame_event_pool_count = 2;
+constexpr uint8_t frame_event_pool_count = 4;
 
 // duration before callback fires
 constexpr uint32_t watchdog_trigger_seconds = 1;
@@ -125,7 +125,7 @@ constexpr uint8_t card_type_str_len = 16;
 constexpr uint32_t pattern_frame_rate_queue_size = 1;
 constexpr uint32_t milliseconds_per_runtime_duration_unit = 100;
 constexpr uint16_t initialize_card_timeout_duration = 50;
-constexpr uint16_t byte_count_per_pattern_frame_max = byte_count_per_frame_max + pattern_row_signifier_byte_count_per_row * panel_count_per_frame_row_max; // 7920 + 4*5 = 7940
+constexpr uint16_t byte_count_per_pattern_frame_max = byte_count_per_frame_max + pattern_row_signifier_byte_count_per_row * panel_count_per_frame_row_max + stream_header_byte_count; // 7920 + 4*5 + 7= 7947
 
 }
 }
