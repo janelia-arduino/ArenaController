@@ -49,7 +49,6 @@ static QEvt const fileValidEvt = {FILE_VALID_SIG, 0U, 0U};
 static QEvt const fileNotValidEvt = {FILE_NOT_VALID_SIG, 0U, 0U};
 static QEvt const patternValidEvt = {PATTERN_VALID_SIG, 0U, 0U};
 static QEvt const patternNotValidEvt = {PATTERN_NOT_VALID_SIG, 0U, 0U};
-static QEvt const frameReadFromFileEvt = {FRAME_READ_FROM_FILE_SIG, 0U, 0U};
 static QEvt const frameDecodedEvt = {FRAME_DECODED_SIG, 0U, 0U};
 
 //----------------------------------------------------------------------------
@@ -756,7 +755,7 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
 void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->frame_buffer_ = BSP::getPatternFrameBuffer();
+  pattern->active_frame_ = nullptr;
   pattern->file_size_ = 0;
   pattern->byte_count_per_frame_ = 0;
   pattern->positive_direction_ = true;
@@ -1021,10 +1020,27 @@ void FSP::Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const *
   //   QS_STR("reading next pattern frame from file");
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  BSP::readNextPatternFrameFromFileIntoBuffer(pattern->frame_buffer_,
+  FrameEvt * fe = Q_NEW(FrameEvt, FRAME_READ_FROM_FILE_SIG);
+  BSP::readNextPatternFrameFromFileIntoBuffer(fe->buffer,
     pattern->byte_count_per_frame_,
     pattern->positive_direction_);
-  AO_Pattern->POST(&frameReadFromFileEvt, ao);
+  AO_Pattern->POST(fe, ao);
+}
+
+void FSP::Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  Q_NEW_REF(pattern->active_frame_, FrameEvt);
+}
+
+void FSP::Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  if (pattern->active_frame_)
+  {
+    Q_DELETE_REF(pattern->active_frame_);
+    pattern->active_frame_ = nullptr;
+  }
 }
 
 void FSP::Pattern_decodeFrame(QActive * const ao, QEvt const * e)
@@ -1034,8 +1050,8 @@ void FSP::Pattern_decodeFrame(QActive * const ao, QEvt const * e)
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  BSP::decodePatternFrameBuffer(pattern->frame_buffer_, frame->grayscale_);
-  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(pattern->frame_buffer_, frame->grayscale_);
+  BSP::decodePatternFrameBuffer(pattern->active_frame_->buffer, frame->grayscale_);
+  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(pattern->active_frame_->buffer, frame->grayscale_);
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("bytes decoded");
   //   QS_U32(8, bytes_decoded);

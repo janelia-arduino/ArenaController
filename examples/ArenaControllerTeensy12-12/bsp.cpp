@@ -223,10 +223,6 @@ PatternHeader pattern_header;
 SdFs sd;
 FsFile pattern_file;
 
-// managed by Pattern object
-// do not manipulate directly
-static uint8_t pattern_frame_buffer[constants::byte_count_per_pattern_frame_max];
-
 //----------------------------------------------------------------------------
 // Local functions
 void watchdogCallback ()
@@ -698,11 +694,6 @@ void BSP::transferPanelSet(const uint8_t * const buffer,
     spi_ptr->transfer((buffer + buffer_position), NULL, panel_byte_count, transfer_panel_complete_event);
     buffer_position += panel_byte_count;
   }
-}
-
-uint8_t * const BSP::getPatternFrameBuffer()
-{
-  return pattern_frame_buffer;
 }
 
 bool BSP::initializePatternCard()

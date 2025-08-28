@@ -50,12 +50,12 @@ public:
     std::uint16_t frame_rate_hz_;
     std::uint16_t runtime_duration_ms_;
     QP::QTimeEvt runtime_duration_time_evt_;
-    std::uint8_t * frame_buffer_;
     std::uint64_t file_size_;
     std::uint64_t byte_count_per_frame_;
     QP::QEQueue frame_rate_queue_;
     bool positive_direction_;
     QP::QTimeEvt initialize_card_time_evt_;
+    FrameEvt const * active_frame_;
 
 public:
     Pattern();

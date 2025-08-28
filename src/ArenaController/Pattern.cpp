@@ -297,6 +297,7 @@ Q_STATE_DEF(Pattern, DisplayingFrame) {
         }
         //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
+            FSP::Pattern_deleteFrameReference(this, e);
             status_ = tran(&ReadingNextFrameFromFile);
             break;
         }
@@ -320,6 +321,7 @@ Q_STATE_DEF(Pattern, ReadingNextFrameFromFile) {
         }
         //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::ReadingNextFrame~::FRAME_READ_FROM_FILE}
         case FRAME_READ_FROM_FILE_SIG: {
+            FSP::Pattern_saveFrameReference(this, e);
             status_ = tran(&WaitingToDisplayFrame);
             break;
         }
