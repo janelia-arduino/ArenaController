@@ -151,6 +151,7 @@ Q_STATE_DEF(Pattern, FileOpened) {
         }
         //${AOs::Pattern::SM::Initialized::FileOpened::END_DISPLAYING_PATTERN}
         case END_DISPLAYING_PATTERN_SIG: {
+            FSP::Pattern_deleteFrameReference(this, e);
             status_ = tran(&Inactive);
             break;
         }

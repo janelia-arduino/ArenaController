@@ -693,8 +693,9 @@ This structure of the code is recommended for applications with only one active 
        </initial_glyph>
       </initial>
       <tran trig="END_DISPLAYING_PATTERN" target="../../2">
+       <action brief="deleteFrameReference()">FSP::Pattern_deleteFrameReference(this, e);</action>
        <tran_glyph conn="32,42,0,2,-20">
-        <action box="-22,-8,24,2"/>
+        <action box="-22,-8,24,4"/>
        </tran_glyph>
       </tran>
       <state name="CheckingFile">
