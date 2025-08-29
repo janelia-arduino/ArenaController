@@ -49,8 +49,9 @@ public:
     char string_response_[constants::string_response_length_max];
     std::uint8_t binary_response_[constants::byte_count_per_response_max];
     std::uint8_t binary_response_byte_count_;
-    std::uint8_t command_[AC::constants::byte_count_per_pattern_frame_max];
-    std::uint32_t command_byte_count_;
+    std::uint8_t binary_command_[AC::constants::byte_count_per_pattern_frame_max];
+    std::uint32_t binary_command_byte_count_;
+    std::uint32_t binary_command_byte_count_claim_;
 
 public:
     SerialCommandInterface();

@@ -53,12 +53,9 @@ struct FSP
   static void SerialCommandInterface_analyzeCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
-  // static void SerialCommandInterface_readFirstByte(QP::QActive * const ao, QP::QEvt const * e);
-  // static bool SerialCommandInterface_ifBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
-  // static void SerialCommandInterface_readSerialStringCommand(QP::QActive * const ao, QP::QEvt const * e);
-  // static void SerialCommandInterface_processStringCommand(QP::QActive * const ao, QP::QEvt const * e);
-  // static void SerialCommandInterface_writeSerialStringResponse(QP::QActive * const ao, QP::QEvt const * e);
-  // static void SerialCommandInterface_writeSerialBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_updateStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static bool SerialCommandInterface_ifStreamCommandComplete(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
 
   static void EthernetCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_armEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
