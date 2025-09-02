@@ -131,7 +131,7 @@ This structure of the code is recommended for applications with only one active 
      </initial_glyph>
     </initial>
     <state name="Active">
-     <entry brief="armSerialTimer()">FSP::SerialCommandInterface_armSerialTimer(this, e);</entry>
+     <entry brief="armSerialTimerLowSpeed()">FSP::SerialCommandInterface_armSerialTimerLowSpeed(this, e);</entry>
      <exit brief="disarmSerialTimer()">FSP::SerialCommandInterface_disarmSerialTimer(this, e);</exit>
      <initial target="../3">
       <initial_glyph conn="36,28,4,0,4">
@@ -214,6 +214,8 @@ This structure of the code is recommended for applications with only one active 
       </state_glyph>
      </state>
      <state name="ProcessingStreamCommand">
+      <entry brief="armSerialTimerHighSpeed()">FSP::SerialCommandInterface_armSerialTimerHighSpeed(this, e);</entry>
+      <exit brief="armSerialTimerLowSpeed()">FSP::SerialCommandInterface_armSerialTimerLowSpeed(this, e);</exit>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeBinaryResponse()">FSP::SerialCommandInterface_writeBinaryResponse(this, e);</action>
        <tran_glyph conn="86,70,0,2,-9,-36,-2">
@@ -235,11 +237,14 @@ This structure of the code is recommended for applications with only one active 
          <action box="1,9,10,2"/>
         </choice_glyph>
        </choice>
-       <tran_glyph conn="74,78,3,-1,24,6">
+       <tran_glyph conn="74,80,3,-1,24,4">
         <action box="0,-2,25,5"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="74,70,54,40"/>
+      <state_glyph node="74,70,54,40">
+       <entry box="1,2,27,2"/>
+       <exit box="1,4,30,4"/>
+      </state_glyph>
      </state>
      <state_glyph node="3,21,127,104">
       <entry box="1,2,36,2"/>
@@ -380,7 +385,7 @@ This structure of the code is recommended for applications with only one active 
      <state_glyph node="55,17,14,9"/>
     </state>
     <state name="Active">
-     <entry brief="armEthernetTimer()">FSP::EthernetCommandInterface_armEthernetTimer(this, e);</entry>
+     <entry brief="armEthernetTimerLowSpeed()">FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(this, e);</entry>
      <exit brief="disarmEthernetTimer()">FSP::EthernetCommandInterface_disarmEthernetTimer(this, e);</exit>
      <initial target="../3">
       <initial_glyph conn="18,43,5,3,3">
@@ -474,10 +479,12 @@ This structure of the code is recommended for applications with only one active 
       <state_glyph node="20,96,24,14"/>
      </state>
      <state name="ProcessingStreamCommand">
+      <entry brief="armEthernetTimerHighSpeed()">FSP::EthernetCommandInterface_armEthernetTimerHighSpeed(this, e);</entry>
+      <exit brief="armEthernetTimerLowSpeed()">FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(this, e);</exit>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeBinaryResponse(this, e);</action>
-       <tran_glyph conn="82,85,0,2,-1,-51,-8">
-        <action box="-50,-3,23,5"/>
+       <tran_glyph conn="82,81,0,2,-1,-51,-4">
+        <action box="-49,-3,23,5"/>
        </tran_glyph>
       </tran>
       <tran trig="ETHERNET_COMMAND_AVAILABLE">
@@ -499,7 +506,10 @@ This structure of the code is recommended for applications with only one active 
         <action box="0,-2,28,5"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="80,85,48,25"/>
+      <state_glyph node="80,81,48,29">
+       <entry box="1,2,27,2"/>
+       <exit box="1,4,27,5"/>
+      </state_glyph>
      </state>
      <state_glyph node="15,28,116,85">
       <entry box="1,2,24,2"/>

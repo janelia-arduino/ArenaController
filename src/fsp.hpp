@@ -46,7 +46,8 @@ struct FSP
   static void Display_recall(QP::QActive * const ao, QP::QEvt const * e);
 
   static void SerialCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_armSerialTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_armSerialTimerLowSpeed(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_armSerialTimerHighSpeed(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_disarmSerialTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_initializeSerial(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_pollSerial(QP::QActive * const ao, QP::QEvt const * e);
@@ -58,7 +59,8 @@ struct FSP
   static void SerialCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
 
   static void EthernetCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
-  static void EthernetCommandInterface_armEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_armEthernetTimerLowSpeed(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_armEthernetTimerHighSpeed(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_disarmEthernetTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_initializeEthernet(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_pollEthernet(QP::QActive * const ao, QP::QEvt const * e);

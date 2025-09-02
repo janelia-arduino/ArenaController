@@ -106,7 +106,7 @@ Q_STATE_DEF(EthernetCommandInterface, Active) {
     switch (e->sig) {
         //${AOs::EthernetCommandI~::SM::Active}
         case Q_ENTRY_SIG: {
-            FSP::EthernetCommandInterface_armEthernetTimer(this, e);
+            FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -276,6 +276,18 @@ Q_STATE_DEF(EthernetCommandInterface, ChoosingCommandProcessor) {
 Q_STATE_DEF(EthernetCommandInterface, ProcessingStreamCommand) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::EthernetCommandI~::SM::Active::ProcessingStreamCommand}
+        case Q_ENTRY_SIG: {
+            FSP::EthernetCommandInterface_armEthernetTimerHighSpeed(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::EthernetCommandI~::SM::Active::ProcessingStreamCommand}
+        case Q_EXIT_SIG: {
+            FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             FSP::EthernetCommandInterface_writeBinaryResponse(this, e);

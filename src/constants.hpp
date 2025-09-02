@@ -22,11 +22,13 @@ constexpr uint32_t qs_serial_baud_rate = 115200;
 // Serial Communication Interface
 constexpr uint32_t serial_baud_rate = 115200;
 constexpr uint16_t serial_timeout = 100;
-constexpr uint32_t serial_timer_frequency_hz = 50;
+constexpr uint32_t serial_timer_frequency_low_speed_hz = 100;
+constexpr uint32_t serial_timer_frequency_high_speed_hz = 500;
 
 // Ethernet Communication Interface
 constexpr uint16_t ethernet_server_port = 62222;
-constexpr uint32_t ethernet_timer_frequency_hz = 100;
+constexpr uint32_t ethernet_timer_frequency_low_speed_hz = 100;
+constexpr uint32_t ethernet_timer_frequency_high_speed_hz = 1000;
 
 // Display
 constexpr uint32_t refresh_rate_grayscale_default = 200;

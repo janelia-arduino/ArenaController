@@ -325,10 +325,20 @@ void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt
   QS_SIG_DICTIONARY(SERIAL_INITIALIZED_SIG, ao);
 }
 
-void FSP::SerialCommandInterface_armSerialTimer(QActive * const ao, QEvt const * e)
+void FSP::SerialCommandInterface_armSerialTimerLowSpeed(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  sci->serial_time_evt_.armX(constants::ticks_per_second, constants::ticks_per_second/constants::serial_timer_frequency_hz);
+  sci->serial_time_evt_.disarm();
+  sci->serial_time_evt_.armX(constants::ticks_per_second/constants::serial_timer_frequency_low_speed_hz,
+    constants::ticks_per_second/constants::serial_timer_frequency_low_speed_hz);
+}
+
+void FSP::SerialCommandInterface_armSerialTimerHighSpeed(QActive * const ao, QEvt const * e)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  sci->serial_time_evt_.disarm();
+  sci->serial_time_evt_.armX(constants::ticks_per_second/constants::serial_timer_frequency_high_speed_hz,
+    constants::ticks_per_second/constants::serial_timer_frequency_high_speed_hz);
 }
 
 void FSP::SerialCommandInterface_disarmSerialTimer(QActive * const ao, QEvt const * e)
@@ -418,10 +428,16 @@ void FSP::SerialCommandInterface_writeBinaryResponse(QActive * const ao, QEvt co
 void FSP::SerialCommandInterface_updateStreamCommand(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  uint32_t byte_count = 0;
   while (BSP::pollSerial())
   {
     sci->binary_command_[sci->binary_command_byte_count_++] = BSP::readSerialByte();
+    ++byte_count;
   }
+  QS_BEGIN_ID(USER_COMMENT, AO_SerialCommandInterface->m_prio)
+    QS_STR("update stream command");
+  QS_U32(8, byte_count);
+  QS_END()
 }
 
 bool FSP::SerialCommandInterface_ifStreamCommandComplete(QActive * const ao, QEvt const * e)
@@ -461,10 +477,20 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
   QS_SIG_DICTIONARY(ETHERNET_SERVER_CONNECTED_SIG, ao);
 }
 
-void FSP::EthernetCommandInterface_armEthernetTimer(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  eci->ethernet_time_evt_.armX(constants::ticks_per_second, constants::ticks_per_second/constants::ethernet_timer_frequency_hz);
+  eci->ethernet_time_evt_.disarm();
+  eci->ethernet_time_evt_.armX(constants::ticks_per_second/constants::ethernet_timer_frequency_low_speed_hz,
+    constants::ticks_per_second/constants::ethernet_timer_frequency_low_speed_hz);
+}
+
+void FSP::EthernetCommandInterface_armEthernetTimerHighSpeed(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  eci->ethernet_time_evt_.disarm();
+  eci->ethernet_time_evt_.armX(constants::ticks_per_second/constants::ethernet_timer_frequency_high_speed_hz,
+    constants::ticks_per_second/constants::ethernet_timer_frequency_high_speed_hz);
 }
 
 void FSP::EthernetCommandInterface_disarmEthernetTimer(QActive * const ao, QEvt const * e)

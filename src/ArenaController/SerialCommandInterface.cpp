@@ -88,7 +88,7 @@ Q_STATE_DEF(SerialCommandInterface, Active) {
     switch (e->sig) {
         //${AOs::SerialCommandInt~::SM::Active}
         case Q_ENTRY_SIG: {
-            FSP::SerialCommandInterface_armSerialTimer(this, e);
+            FSP::SerialCommandInterface_armSerialTimerLowSpeed(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -241,6 +241,18 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingBinaryCommand) {
 Q_STATE_DEF(SerialCommandInterface, ProcessingStreamCommand) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::SerialCommandInt~::SM::Active::ProcessingStreamCommand}
+        case Q_ENTRY_SIG: {
+            FSP::SerialCommandInterface_armSerialTimerHighSpeed(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::SerialCommandInt~::SM::Active::ProcessingStreamCommand}
+        case Q_EXIT_SIG: {
+            FSP::SerialCommandInterface_armSerialTimerLowSpeed(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //${AOs::SerialCommandInt~::SM::Active::ProcessingStream~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             FSP::SerialCommandInterface_writeBinaryResponse(this, e);
