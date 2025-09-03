@@ -58,9 +58,6 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
   {5, 10, 30, 21, 40, 35}
 };
 
-// files
-constexpr uint16_t frame_count_y_max = 1;
-constexpr uint16_t frame_count_x_max = 20;
 } // namespace constants
 } // namespace AC
 
@@ -84,7 +81,6 @@ usb_serial_class & serial_communication_interface_stream = Serial;
 HardwareSerialIMXRT & qs_serial_stream = Serial1;
 
 // Ethernet Communication Interface
-// static const char *s_lsn = "tcp://192.168.10.62:62222";
 static const char *s_lsn = "tcp://192.168.10.62:62222";
 
 // Log
