@@ -108,7 +108,7 @@ void FSP::ArenaController_setup()
   // QS_GLB_FILTER(QP::QS_QF_NEW);QS_QF_EQUEUE_POST
   // QS_GLB_FILTER(QP::QS_QF_EQUEUE_POST);
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
-  // QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
+  QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
   // QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
 
   // init publish-subscribe
