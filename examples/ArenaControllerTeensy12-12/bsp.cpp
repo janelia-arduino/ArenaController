@@ -77,8 +77,8 @@ static uint8_t transfer_panel_complete_count;
 // Serial Communication Interface
 // static HardwareSerial & serial_communication_interface_stream = Serial1;
 // static usb_serial_class & qs_serial_stream = Serial;
-usb_serial_class & serial_communication_interface_stream = Serial;
-HardwareSerialIMXRT & qs_serial_stream = Serial1;
+static usb_serial_class & serial_communication_interface_stream = Serial;
+static HardwareSerialIMXRT & qs_serial_stream = Serial1;
 
 // Ethernet Communication Interface
 static const char *s_lsn = "tcp://192.168.10.62:62222";
@@ -110,11 +110,11 @@ struct DecodedFrame
 static DecodedFrame decoded_frame;
 
 // Pattern
-PatternHeader pattern_header;
+static PatternHeader pattern_header;
 
 // SD Card
-SdFs sd;
-FsFile pattern_file;
+static SdFs sd;
+static FsFile pattern_file;
 
 //----------------------------------------------------------------------------
 // Local functions
