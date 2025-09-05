@@ -54,6 +54,7 @@ struct FSP
   static void SerialCommandInterface_analyzeCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_updateStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
   static bool SerialCommandInterface_ifStreamCommandComplete(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
@@ -71,6 +72,7 @@ struct FSP
   static void EthernetCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
@@ -113,6 +115,7 @@ struct FSP
   static void Pattern_recall(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
 
+  static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message);
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,
     uint8_t response[AC::constants::byte_count_per_response_max]);

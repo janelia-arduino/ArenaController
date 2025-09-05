@@ -197,6 +197,12 @@ Q_STATE_DEF(EthernetCommandInterface, DisplayingPattern) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::DisplayingPatter~::PATTERN_FINISHED_DISPLAYING}
+        case PATTERN_FINISHED_DISPLAYING_SIG: {
+            FSP::EthernetCommandInterface_writePatternFinishedResponse(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&WaitingForNewCommand);
             break;

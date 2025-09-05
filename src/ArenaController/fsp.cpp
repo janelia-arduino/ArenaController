@@ -21,6 +21,7 @@ static QEvt const processBinaryCommandEvt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U}
 static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
 static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
 static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
+static QEvt const patternFinishedDisplayingEvt = {PATTERN_FINISHED_DISPLAYING_SIG, 0U, 0U};
 
 static QEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
 static QEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
@@ -93,6 +94,7 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(PROCESS_STRING_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(PROCESS_STREAM_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(COMMAND_PROCESSED_SIG, nullptr);
+  QS_SIG_DICTIONARY(PATTERN_FINISHED_DISPLAYING_SIG, nullptr);
 
   // user record dictionaries
   QS_USR_DICTIONARY(ETHERNET_LOG);
@@ -108,7 +110,7 @@ void FSP::ArenaController_setup()
   // QS_GLB_FILTER(QP::QS_QF_NEW);QS_QF_EQUEUE_POST
   // QS_GLB_FILTER(QP::QS_QF_EQUEUE_POST);
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
-  QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
+  // QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
   // QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
 
   // init publish-subscribe
@@ -317,6 +319,7 @@ void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt
   ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
   ao->subscribe(DISPLAY_PATTERN_SIG);
+  ao->subscribe(PATTERN_FINISHED_DISPLAYING_SIG);
 
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(sci->serial_time_evt_));
@@ -426,6 +429,22 @@ void FSP::SerialCommandInterface_writeBinaryResponse(QActive * const ao, QEvt co
   BSP::writeSerialBinaryResponse(sci->binary_response_, sci->binary_response_byte_count_);
 }
 
+void FSP::SerialCommandInterface_writePatternFinishedResponse(QActive * const ao, QEvt const * e)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  uint8_t response[constants::byte_count_per_pattern_finished_response_max];
+  uint8_t response_byte_count = 0;
+  response[response_byte_count++] = 2;
+  response[response_byte_count++] = 0;
+  response[response_byte_count++] = TRIAL_PARAMS_CMD;
+  appendMessage(response, response_byte_count, "Sequence completed in ");
+
+  BSP::writeSerialBinaryResponse(response, response_byte_count);
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("wrote pattern finished response over serial");
+  QS_END()
+}
+
 void FSP::SerialCommandInterface_updateStreamCommand(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
@@ -469,6 +488,7 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
   ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
   ao->subscribe(DISPLAY_PATTERN_SIG);
+  ao->subscribe(PATTERN_FINISHED_DISPLAYING_SIG);
 
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(eci->ethernet_time_evt_));
@@ -603,6 +623,22 @@ void FSP::EthernetCommandInterface_writeBinaryResponse(QActive * const ao, QEvt 
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   BSP::writeEthernetBinaryResponse(eci->connection_, eci->binary_response_, eci->binary_response_byte_count_);
+}
+
+void FSP::EthernetCommandInterface_writePatternFinishedResponse(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  uint8_t response[constants::byte_count_per_pattern_finished_response_max];
+  uint8_t response_byte_count = 0;
+  response[response_byte_count++] = 2;
+  response[response_byte_count++] = 0;
+  response[response_byte_count++] = TRIAL_PARAMS_CMD;
+  appendMessage(response, response_byte_count, "Sequence completed in ");
+
+  BSP::writeEthernetBinaryResponse(eci->connection_, response, response_byte_count);
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("wrote pattern finished response over ethernet");
+  QS_END()
 }
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -902,6 +938,7 @@ void FSP::Pattern_postAllOff(QActive * const ao, QEvt const * e)
 
 void FSP::Pattern_endRuntimeDuration(QActive * const ao, QEvt const * e)
 {
+  QF::PUBLISH(&patternFinishedDisplayingEvt, ao);
   AO_Arena->POST(&allOffEvt, ao);
 }
 
@@ -1151,7 +1188,8 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
   @param[in,out] response_byte_count Current position in the buffer, updated after append
   @param[in] message Null-terminated string to append to the response
 **/
-static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message) {
+void FSP::appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message)
+{
   size_t msg_len = strlen(message);
   memcpy(&response[response_byte_count], message, msg_len);
   response_byte_count += msg_len;

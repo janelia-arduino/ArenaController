@@ -45,6 +45,7 @@ constexpr uint8_t stream_header_byte_count = 7;
 // Response
 constexpr uint16_t string_response_length_max = 512;
 constexpr uint16_t byte_count_per_response_max = 32;
+constexpr uint16_t byte_count_per_pattern_finished_response_max = 200;
 
 // Log
 constexpr uint16_t string_log_length_max = 512;

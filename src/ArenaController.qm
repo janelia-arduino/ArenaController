@@ -185,6 +185,12 @@ This structure of the code is recommended for applications with only one active 
          <action box="0,-2,21,4"/>
         </tran_glyph>
        </tran>
+       <tran trig="PATTERN_FINISHED_DISPLAYING">
+        <action brief="writePatternFinishedResponse()">FSP::SerialCommandInterface_writePatternFinishedResponse(this, e);</action>
+        <tran_glyph conn="17,61,3,-1,28">
+         <action box="0,-2,29,4"/>
+        </tran_glyph>
+       </tran>
        <state_glyph node="17,51,44,14"/>
       </state>
       <state_glyph node="7,44,57,23"/>
@@ -448,6 +454,12 @@ This structure of the code is recommended for applications with only one active 
         <action brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeBinaryResponse(this, e);</action>
         <tran_glyph conn="27,68,3,-1,21">
          <action box="0,-2,22,4"/>
+        </tran_glyph>
+       </tran>
+       <tran trig="PATTERN_FINISHED_DISPLAYING">
+        <action brief="writePatternFinishedResponse()">FSP::EthernetCommandInterface_writePatternFinishedResponse(this, e);</action>
+        <tran_glyph conn="27,73,3,-1,28">
+         <action box="0,-2,29,4"/>
         </tran_glyph>
        </tran>
        <state_glyph node="27,63,44,14"/>
