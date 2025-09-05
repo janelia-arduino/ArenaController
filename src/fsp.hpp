@@ -96,6 +96,7 @@ struct FSP
   static void Pattern_armInitializeCardTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializeCard(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_endRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_openFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_closeFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_checkFile(QP::QActive * const ao, QP::QEvt const * e);

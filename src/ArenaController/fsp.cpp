@@ -316,6 +316,7 @@ void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt
   ao->subscribe(PROCESS_STRING_COMMAND_SIG);
   ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
+  ao->subscribe(DISPLAY_PATTERN_SIG);
 
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(sci->serial_time_evt_));
@@ -467,6 +468,7 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
   ao->subscribe(PROCESS_STRING_COMMAND_SIG);
   ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
+  ao->subscribe(DISPLAY_PATTERN_SIG);
 
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(eci->ethernet_time_evt_));
@@ -894,6 +896,11 @@ void FSP::Pattern_initializeCard(QActive * const ao, QEvt const * e)
 }
 
 void FSP::Pattern_postAllOff(QActive * const ao, QEvt const * e)
+{
+  AO_Arena->POST(&allOffEvt, ao);
+}
+
+void FSP::Pattern_endRuntimeDuration(QActive * const ao, QEvt const * e)
 {
   AO_Arena->POST(&allOffEvt, ao);
 }

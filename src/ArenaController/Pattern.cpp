@@ -250,7 +250,7 @@ Q_STATE_DEF(Pattern, PatternValid) {
         }
         //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::RUNTIME_DURATION_TIMEOUT}
         case RUNTIME_DURATION_TIMEOUT_SIG: {
-            FSP::Pattern_postAllOff(this, e);
+            FSP::Pattern_endRuntimeDuration(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

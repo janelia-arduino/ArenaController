@@ -73,6 +73,7 @@ Q_STATE_DEF(SerialCommandInterface, initial) {
     QS_FUN_DICTIONARY(&SerialCommandInterface::Active);
     QS_FUN_DICTIONARY(&SerialCommandInterface::Unitialized);
     QS_FUN_DICTIONARY(&SerialCommandInterface::WaitingForNewCommand);
+    QS_FUN_DICTIONARY(&SerialCommandInterface::DisplayingPattern);
     QS_FUN_DICTIONARY(&SerialCommandInterface::Waiting);
     QS_FUN_DICTIONARY(&SerialCommandInterface::ChoosingCommandProcessor);
     QS_FUN_DICTIONARY(&SerialCommandInterface::ProcessingBinaryCommand);
@@ -174,6 +175,24 @@ Q_STATE_DEF(SerialCommandInterface, WaitingForNewCommand) {
     return status_;
 }
 
+//${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::DisplayingPattern}
+Q_STATE_DEF(SerialCommandInterface, DisplayingPattern) {
+    QP::QState status_;
+    switch (e->sig) {
+        //${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::DisplayingPatter~::COMMAND_PROCESSED}
+        case COMMAND_PROCESSED_SIG: {
+            FSP::SerialCommandInterface_writeBinaryResponse(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&WaitingForNewCommand);
+            break;
+        }
+    }
+    return status_;
+}
+
 //${AOs::SerialCommandInt~::SM::Active::Waiting} .............................
 Q_STATE_DEF(SerialCommandInterface, Waiting) {
     QP::QState status_;
@@ -227,6 +246,11 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingBinaryCommand) {
         case COMMAND_PROCESSED_SIG: {
             FSP::SerialCommandInterface_writeBinaryResponse(this, e);
             status_ = tran(&WaitingForNewCommand);
+            break;
+        }
+        //${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::DISPLAY_PATTERN}
+        case DISPLAY_PATTERN_SIG: {
+            status_ = tran(&DisplayingPattern);
             break;
         }
         default: {
