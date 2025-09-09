@@ -119,6 +119,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="binary_command_[AC::constants::byte_count_per_pattern_frame_max]" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count_claim_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration_ms_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <operation name="SerialCommandInterface" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;SerialCommandInterface::initial)),
     serial_time_evt_(this, SERIAL_TIMEOUT_SIG, 0U)</code>
@@ -225,8 +226,9 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <tran trig="DISPLAY_PATTERN" target="../../4/3">
+       <action brief="storeRuntimeDuration()">FSP::SerialCommandInterface_storeRuntimeDuration(this, e);</action>
        <tran_glyph conn="46,85,0,2,-20">
-        <action box="-15,-8,17,2"/>
+        <action box="-17,-10,19,4"/>
        </tran_glyph>
       </tran>
       <state_glyph node="44,85,28,9">
@@ -385,6 +387,7 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="binary_command_" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count_claim_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration_ms_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <operation name="EthernetCommandInterface" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;EthernetCommandInterface::initial)),
     ethernet_time_evt_(this, ETHERNET_TIMEOUT_SIG, 0U)</code>
@@ -497,8 +500,9 @@ This structure of the code is recommended for applications with only one active 
        </tran_glyph>
       </tran>
       <tran trig="DISPLAY_PATTERN" target="../../4/2">
+       <action brief="storeRuntimeDuration()">FSP::EthernetCommandInterface_storeRuntimeDuration(this, e);</action>
        <tran_glyph conn="54,87,0,2,-4,-20,-6">
-        <action box="-18,-7,16,2"/>
+        <action box="-18,-6,17,5"/>
        </tran_glyph>
       </tran>
       <state_glyph node="53,87,23,11">

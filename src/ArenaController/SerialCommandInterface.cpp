@@ -256,6 +256,7 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingBinaryCommand) {
         }
         //${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
+            FSP::SerialCommandInterface_storeRuntimeDuration(this, e);
             status_ = tran(&DisplayingPattern);
             break;
         }

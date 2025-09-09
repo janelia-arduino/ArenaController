@@ -52,6 +52,7 @@ public:
     std::uint8_t binary_command_[AC::constants::byte_count_per_pattern_frame_max];
     std::uint32_t binary_command_byte_count_;
     std::uint32_t binary_command_byte_count_claim_;
+    std::uint16_t runtime_duration_ms_;
 
 public:
     SerialCommandInterface();

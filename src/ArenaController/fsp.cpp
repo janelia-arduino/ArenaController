@@ -110,7 +110,7 @@ void FSP::ArenaController_setup()
   // QS_GLB_FILTER(QP::QS_QF_NEW);QS_QF_EQUEUE_POST
   // QS_GLB_FILTER(QP::QS_QF_EQUEUE_POST);
   QS_GLB_FILTER(QP::QS_UA_RECORDS); // all user records ON
-  // QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
+  QS_GLB_FILTER(-QP::QS_U0_RECORDS); // ethernet records OFF
   // QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
 
   // init publish-subscribe
@@ -438,6 +438,10 @@ void FSP::SerialCommandInterface_writePatternFinishedResponse(QActive * const ao
   response[response_byte_count++] = 0;
   response[response_byte_count++] = TRIAL_PARAMS_CMD;
   appendMessage(response, response_byte_count, "Sequence completed in ");
+  char runtime_duration_str[constants::char_count_runtime_duration_str];
+  itoa(sci->runtime_duration_ms_, runtime_duration_str, 10);
+  appendMessage(response, response_byte_count, runtime_duration_str);
+  appendMessage(response, response_byte_count, " ms");
 
   BSP::writeSerialBinaryResponse(response, response_byte_count);
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
@@ -477,6 +481,14 @@ void FSP::SerialCommandInterface_processStreamCommand(QActive * const ao, QEvt c
   uint32_t frame_byte_count = sci->binary_command_byte_count_ - constants::stream_header_byte_count;
   FSP::processStreamCommand(buffer, frame_byte_count);
   QF::PUBLISH(&commandProcessedEvt, ao);
+}
+
+void FSP::SerialCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
+
+  sci->runtime_duration_ms_ = dpev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
 }
 
 void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -634,11 +646,23 @@ void FSP::EthernetCommandInterface_writePatternFinishedResponse(QActive * const 
   response[response_byte_count++] = 0;
   response[response_byte_count++] = TRIAL_PARAMS_CMD;
   appendMessage(response, response_byte_count, "Sequence completed in ");
+  char runtime_duration_str[constants::char_count_runtime_duration_str];
+  itoa(eci->runtime_duration_ms_, runtime_duration_str, 10);
+  appendMessage(response, response_byte_count, runtime_duration_str);
+  appendMessage(response, response_byte_count, " ms");
 
   BSP::writeEthernetBinaryResponse(eci->connection_, response, response_byte_count);
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
     QS_STR("wrote pattern finished response over ethernet");
   QS_END()
+}
+
+void FSP::EthernetCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
+
+  eci->runtime_duration_ms_ = dpev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
 }
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)

@@ -269,6 +269,7 @@ Q_STATE_DEF(EthernetCommandInterface, ProcessingBinaryCommand) {
         }
         //${AOs::EthernetCommandI~::SM::Active::ProcessingBinary~::DISPLAY_PATTERN}
         case DISPLAY_PATTERN_SIG: {
+            FSP::EthernetCommandInterface_storeRuntimeDuration(this, e);
             status_ = tran(&DisplayingPattern);
             break;
         }
