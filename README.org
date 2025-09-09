@@ -22,6 +22,7 @@
   - https://www.pjrc.com/store/ethernet_kit.html
   - https://github.com/QuantumLeaps/qp-arduino
   - https://mongoose.ws/
+  - https://www.adafruit.com/product/4470
 
 * Modular LED Display
 
