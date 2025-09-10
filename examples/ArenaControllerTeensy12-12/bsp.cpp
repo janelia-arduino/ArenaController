@@ -5,6 +5,8 @@
 #include <SPI.h>
 #include <EventResponder.h>
 #include <SdFat.h>
+#include <Wire.h>
+#include <Adafruit_MCP4728.h>
 
 #include "ArenaController.hpp"
 
@@ -115,6 +117,9 @@ static PatternHeader pattern_header;
 // SD Card
 static SdFs sd;
 static FsFile pattern_file;
+
+// Analog Output
+static Adafruit_MCP4728 analog_output_chip;
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -668,6 +673,17 @@ uint64_t BSP::getByteCountPerPatternFrameBinary()
     constants::pattern_row_signifier_byte_count_per_row *                  \
     constants::panel_count_per_frame_row;
   return byte_count_per_frame;
+}
+
+bool BSP::initializeAnalogOutput()
+{
+  return analog_output_chip.begin();
+}
+
+void BSP::setAnalogOutput(uint16_t value)
+{
+  analog_output_chip.setChannelValue(MCP4728_CHANNEL_A, value, MCP4728_VREF_INTERNAL,
+    MCP4728_GAIN_2X);
 }
 
 //----------------------------------------------------------------------------

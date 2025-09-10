@@ -74,6 +74,9 @@ enum ArenaControllerSignals
   FRAME_READ_FROM_FILE_SIG,
   FRAME_DECODED_SIG,
 
+  // dispatched to Analog
+  ANALOG_INITIALIZED_SIG,
+
   MAX_SIG // the last signal
 };
 

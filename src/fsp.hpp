@@ -18,6 +18,7 @@
 #include "Frame.hpp"
 #include "Watchdog.hpp"
 #include "Pattern.hpp"
+#include "Analog.hpp"
 
 
 struct FSP
@@ -116,6 +117,9 @@ struct FSP
   static void Pattern_defer(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_recall(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
+
+  static void Analog_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Analog_initializeOutput(QP::QHsm * const hsm, QP::QEvt const * e);
 
   static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message);
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,

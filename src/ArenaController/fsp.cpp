@@ -52,6 +52,8 @@ static QEvt const patternValidEvt = {PATTERN_VALID_SIG, 0U, 0U};
 static QEvt const patternNotValidEvt = {PATTERN_NOT_VALID_SIG, 0U, 0U};
 static QEvt const frameDecodedEvt = {FRAME_DECODED_SIG, 0U, 0U};
 
+static QEvt const analogInitializedEvt = {ANALOG_INITIALIZED_SIG, 0U, 0U};
+
 //----------------------------------------------------------------------------
 // Local functions
 
@@ -80,6 +82,7 @@ void FSP::ArenaController_setup()
   QS_OBJ_DICTIONARY(AO_Frame);
   QS_OBJ_DICTIONARY(AO_Watchdog);
   QS_OBJ_DICTIONARY(AO_Pattern);
+  QS_OBJ_DICTIONARY(HSM_Analog);
 
   QS_OBJ_DICTIONARY(&l_FSP_ID);
 
@@ -174,6 +177,8 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->frames_streamed_ = 0;
+
+  HSM_Analog->init(ao->m_prio);
 }
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
@@ -1199,6 +1204,32 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
   //   QS_STR("displaying pattern frame");
   // QS_END()
   AO_Display->POST(&displayFrameEvt, ao);
+}
+
+void FSP::Analog_initialize(QHsm * const hsm, QEvt const * e)
+{
+  QS_SIG_DICTIONARY(ANALOG_INITIALIZED_SIG, hsm);
+}
+
+void FSP::Analog_initializeOutput(QHsm * const hsm, QEvt const * e)
+{
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("initializing analog output");
+  QS_END()
+    // bool analog_initialized = BSP::initializeAnalogOutput();
+  // if(BSP::initializeAnalogOutput())
+  // {
+  //   AO_Arena->POST(&analogInitializedEvt, hsm);
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("analog output initialized!");
+  //   QS_END()
+  // }
+  // else
+  // {
+  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //     QS_STR("analog output not initialized!");
+  //   QS_END()
+  // }
 }
 
 /**
