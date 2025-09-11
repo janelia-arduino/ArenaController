@@ -11,13 +11,16 @@ constexpr uint8_t set_parameter_event_pool_count = 10;
 constexpr uint8_t command_event_pool_count = 20;
 constexpr uint8_t frame_event_pool_count = 4;
 
-// duration before callback fires
+// Duration before callback fires
 constexpr uint32_t watchdog_trigger_seconds = 1;
-// duration before watchdog expires
+// Duration before watchdog expires
 constexpr uint32_t watchdog_timeout_seconds = 2;
 
 // QS
 constexpr uint32_t qs_serial_baud_rate = 115200;
+
+// Arena
+constexpr uint32_t initialize_analog_duration_ms = 500;
 
 // Serial Communication Interface
 constexpr uint32_t serial_baud_rate = 115200;
@@ -58,30 +61,30 @@ constexpr uint8_t mac_address_size = 6;
 constexpr uint32_t milliseconds_per_second = 1000;
 constexpr uint32_t microseconds_per_second = 1000000;
 
-// message byte
+// Message byte
 constexpr uint8_t bit_count_per_byte = 8;
 
-// quarter panel pixels
+// Quarter panel pixels
 constexpr uint8_t pixel_count_per_quarter_panel_row = 8;
 constexpr uint8_t pixel_count_per_quarter_panel_col = 8;
 constexpr uint8_t pixel_count_per_quarter_panel = \
   pixel_count_per_quarter_panel_row * pixel_count_per_quarter_panel_col; // 64
 
-// quarter panel grayscale
+// Quarter panel grayscale
 constexpr uint8_t bit_count_per_pixel_grayscale = 4;
 constexpr uint8_t pixel_count_per_byte_grayscale = \
   bit_count_per_byte / bit_count_per_pixel_grayscale; // 2
 constexpr uint8_t byte_count_per_quarter_panel_row_grayscale = \
   pixel_count_per_quarter_panel_row / pixel_count_per_byte_grayscale; // 4
 
-// quarter panel binary
+// Quarter panel binary
 constexpr uint8_t bit_count_per_pixel_binary = 1;
 constexpr uint8_t pixel_count_per_byte_binary = \
   bit_count_per_byte / bit_count_per_pixel_binary; // 8
 constexpr uint8_t byte_count_per_quarter_panel_row_binary = \
   pixel_count_per_quarter_panel_row / pixel_count_per_byte_binary; // 1
 
-// quarter panel message bytes
+// Quarter panel message bytes
 constexpr uint8_t byte_count_per_quarter_panel_control = 1;
 constexpr uint8_t byte_count_per_quarter_panel_grayscale = \
   byte_count_per_quarter_panel_control + \
@@ -90,13 +93,13 @@ constexpr uint8_t byte_count_per_quarter_panel_binary = \
   byte_count_per_quarter_panel_control + \
   pixel_count_per_quarter_panel / pixel_count_per_byte_binary; // 9
 
-// panel
+// Panel
 constexpr uint8_t quarter_panel_count_per_panel_row = 2;
 constexpr uint8_t quarter_panel_count_per_panel_col = 2;
 constexpr uint8_t quarter_panel_count_per_panel = \
   quarter_panel_count_per_panel_row * quarter_panel_count_per_panel_col; // 4
 
-// panel message bytes
+// Panel message bytes
 constexpr uint8_t byte_count_per_panel_grayscale = \
   byte_count_per_quarter_panel_grayscale * \
   quarter_panel_count_per_panel; // 132
@@ -117,7 +120,7 @@ constexpr uint16_t byte_count_per_frame_max = \
 constexpr uint8_t switch_grayscale_command_value_grayscale = 1;
 constexpr uint8_t switch_grayscale_command_value_binary = 0;
 
-// pattern
+// Pattern
 constexpr uint8_t pattern_grayscale_value = 16;
 constexpr uint8_t pattern_binary_value = 2;
 constexpr uint8_t pattern_row_signifier_byte_count_per_row = quarter_panel_count_per_panel;
@@ -131,6 +134,9 @@ constexpr uint32_t milliseconds_per_runtime_duration_unit = 100;
 constexpr uint16_t initialize_card_timeout_duration = 50;
 constexpr uint16_t byte_count_per_pattern_frame_max = byte_count_per_frame_max + pattern_row_signifier_byte_count_per_row * panel_count_per_frame_row_max + stream_header_byte_count; // 7920 + 4*5 + 7= 7947
 
+// Analog
+constexpr uint16_t analog_output_min = 0;
+constexpr uint16_t analog_output_max = 4095;
 }
 }
 #endif

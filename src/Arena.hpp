@@ -46,9 +46,14 @@ class Arena : public QP::QActive {
 public:
     static Arena instance;
     std::uint32_t frames_streamed_;
+    QP::QTimeEvt initialize_analog_time_evt_;
+    QP::QHsm * analog_;
 
 public:
     Arena();
+
+private:
+    void dispatchToAnalog(QP::QEvt const * e);
 
 protected:
     Q_STATE_DECL(initial);

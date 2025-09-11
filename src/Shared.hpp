@@ -58,8 +58,8 @@ extern QP::QActive * const AO_Watchdog;
 //${Shared::AO_Pattern} ......................................................
 extern QP::QActive * const AO_Pattern;
 
-//${Shared::HSM_Analog} ......................................................
-extern QP::QHsm * const HSM_Analog;
+//${Shared::Analog_getInstance} ..............................................
+QP::QHsm * Analog_getInstance();
 
 } // namespace AC
 //$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

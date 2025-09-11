@@ -61,8 +61,16 @@ Arena Arena::instance;
 
 //${AOs::Arena::Arena} .......................................................
 Arena::Arena()
-: QActive(Q_STATE_CAST(&Arena::initial))
-{}
+: QActive(Q_STATE_CAST(&Arena::initial)),
+    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U)
+{
+    analog_ = Analog_getInstance();
+}
+
+//${AOs::Arena::dispatchToAnalog} ............................................
+void Arena::dispatchToAnalog(QP::QEvt const * e) {
+    analog_->dispatch(e, m_prio);
+}
 
 //${AOs::Arena::SM} ..........................................................
 Q_STATE_DEF(Arena, initial) {
@@ -121,6 +129,24 @@ Q_STATE_DEF(Arena, ArenaOn) {
         case DISPLAY_PATTERN_SIG: {
             FSP::Arena_displayPatternTransition(this, e);
             status_ = tran(&DisplayingPattern);
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::INITIALIZE_ANALOG_TIMEOUT}
+        case INITIALIZE_ANALOG_TIMEOUT_SIG: {
+            FSP::Arena_initializeAnalog(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::ANALOG_INITIALIZED}
+        case ANALOG_INITIALIZED_SIG: {
+            dispatchToAnalog(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::SET_ANALOG_OUTPUT}
+        case SET_ANALOG_OUTPUT_SIG: {
+            dispatchToAnalog(e);
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {

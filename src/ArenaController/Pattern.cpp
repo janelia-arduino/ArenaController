@@ -239,6 +239,7 @@ Q_STATE_DEF(Pattern, PatternValid) {
         }
         //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::initial}
         case Q_INIT_SIG: {
+            FSP::Pattern_initializeFrameIndex(this, e);
             status_ = tran(&ReadingNextFrameFromFile);
             break;
         }

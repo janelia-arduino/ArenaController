@@ -34,7 +34,6 @@
 using namespace QP;
 
 //============================================================================
-// generate definition of to opaque pointer to the HSM
 //$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Check for the minimum required QP version
 #if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
@@ -42,14 +41,16 @@ using namespace QP;
 #endif
 //$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-//$define${Shared::HSM_Analog} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+//$define${Shared::Analog_getInstance} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
-//${Shared::HSM_Analog} ......................................................
-QP::QHsm * const HSM_Analog = &Analog::instance;
+//${Shared::Analog_getInstance} ..............................................
+QP::QHsm * Analog_getInstance() {
+    return &Analog::instance;
+}
 
 } // namespace AC
-//$enddef${Shared::HSM_Analog} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//$enddef${Shared::Analog_getInstance} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of the AO
@@ -79,15 +80,15 @@ Q_STATE_DEF(Analog, initial) {
 Q_STATE_DEF(Analog, Uninitialized) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Analog::SM::Uninitialized}
-        case Q_ENTRY_SIG: {
-            FSP::Analog_initializeOutput(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         //${AOs::Analog::SM::Uninitialized::ANALOG_INITIALIZED}
         case ANALOG_INITIALIZED_SIG: {
             status_ = tran(&Initialized);
+            break;
+        }
+        //${AOs::Analog::SM::Uninitialized::INITIALIZE_ANALOG}
+        case INITIALIZE_ANALOG_SIG: {
+            FSP::Analog_initializeOutput(this, e);
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {
@@ -102,6 +103,18 @@ Q_STATE_DEF(Analog, Uninitialized) {
 Q_STATE_DEF(Analog, Initialized) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Analog::SM::Initialized}
+        case Q_ENTRY_SIG: {
+            FSP::Analog_enterInitialized(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Analog::SM::Initialized::SET_ANALOG_OUTPUT}
+        case SET_ANALOG_OUTPUT_SIG: {
+            FSP::Analog_setOutput(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;

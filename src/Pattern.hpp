@@ -56,6 +56,8 @@ public:
     bool positive_direction_;
     QP::QTimeEvt initialize_card_time_evt_;
     FrameEvt const * frame_;
+    std::uint16_t frame_count_per_pattern_;
+    std::uint16_t frame_index_;
 
 public:
     Pattern();

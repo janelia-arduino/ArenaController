@@ -29,6 +29,7 @@ enum ArenaControllerSignals
   ALL_ON_SIG,
   ALL_OFF_SIG,
   STREAM_FRAME_SIG,
+  INITIALIZE_ANALOG_TIMEOUT_SIG,
 
   // POST to SerialCommandInterface
   SERIAL_TIMEOUT_SIG,
@@ -75,7 +76,9 @@ enum ArenaControllerSignals
   FRAME_DECODED_SIG,
 
   // dispatched to Analog
+  INITIALIZE_ANALOG_SIG,
   ANALOG_INITIALIZED_SIG,
+  SET_ANALOG_OUTPUT_SIG,
 
   MAX_SIG // the last signal
 };

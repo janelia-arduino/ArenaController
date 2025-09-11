@@ -52,6 +52,7 @@ static QEvt const patternValidEvt = {PATTERN_VALID_SIG, 0U, 0U};
 static QEvt const patternNotValidEvt = {PATTERN_NOT_VALID_SIG, 0U, 0U};
 static QEvt const frameDecodedEvt = {FRAME_DECODED_SIG, 0U, 0U};
 
+static QEvt const initializeAnalogEvt = {INITIALIZE_ANALOG_SIG, 0U, 0U};
 static QEvt const analogInitializedEvt = {ANALOG_INITIALIZED_SIG, 0U, 0U};
 
 //----------------------------------------------------------------------------
@@ -82,7 +83,6 @@ void FSP::ArenaController_setup()
   QS_OBJ_DICTIONARY(AO_Frame);
   QS_OBJ_DICTIONARY(AO_Watchdog);
   QS_OBJ_DICTIONARY(AO_Pattern);
-  QS_OBJ_DICTIONARY(HSM_Analog);
 
   QS_OBJ_DICTIONARY(&l_FSP_ID);
 
@@ -173,12 +173,17 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
   QS_SIG_DICTIONARY(STREAM_FRAME_SIG, ao);
-  QS_SIG_DICTIONARY(FRAME_FILLED_SIG, ao);
+  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_TIMEOUT_SIG, ao);
+
+  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_SIG, ao);
+  QS_SIG_DICTIONARY(ANALOG_INITIALIZED_SIG, ao);
+  QS_SIG_DICTIONARY(SET_ANALOG_OUTPUT_SIG, ao);
 
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->frames_streamed_ = 0;
+  arena->initialize_analog_time_evt_.armX(constants::ticks_per_second/constants::milliseconds_per_second * constants::initialize_analog_duration_ms);
 
-  HSM_Analog->init(ao->m_prio);
+  arena->analog_->init(ao->m_prio);
 }
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
@@ -244,6 +249,15 @@ void FSP::Arena_displayPatternTransition(QP::QActive * const ao, QP::QEvt const 
   Arena_deactivateDisplay(ao, e);
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->frames_streamed_ = 0;
+}
+
+void FSP::Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e)
+{
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("Arena_initializeAnalog");
+  QS_END()
+  Arena * const arena = static_cast<Arena * const>(ao);
+  arena->analog_->dispatch(&initializeAnalogEvt, ao->m_prio);
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -1085,6 +1099,7 @@ void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
     AO_Pattern->POST(&patternNotValidEvt, ao);
     return;
   }
+  pattern->frame_count_per_pattern_ = pattern_header.frame_count_x;
 
   pattern->byte_count_per_frame_ = byte_count_per_frame;
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
@@ -1120,6 +1135,10 @@ void FSP::Pattern_disarmTimers(QActive * const ao, QEvt const * e)
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   pattern->frame_rate_time_evt_.disarm();
   pattern->runtime_duration_time_evt_.disarm();
+
+  SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
+  spev->value = constants::analog_output_min;
+  AO_Arena->POST(spev, ao);
 }
 
 void FSP::Pattern_deactivateDisplay(QActive * const ao, QEvt const * e)
@@ -1140,6 +1159,24 @@ void FSP::Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const *
   BSP::readNextPatternFrameFromFileIntoBuffer(fe->buffer,
     pattern->byte_count_per_frame_,
     pattern->positive_direction_);
+  if (pattern->positive_direction_)
+  {
+    if (++pattern->frame_index_ > pattern->frame_count_per_pattern_)
+    {
+      pattern->frame_index_ = 0;
+    }
+  }
+  else
+  {
+    if (pattern->frame_index_ > 0)
+    {
+      pattern->frame_index_ = pattern->frame_index_ - 1;
+    }
+    else
+    {
+      pattern->frame_index_ = pattern->frame_count_per_pattern_;
+    }
+  }
   AO_Pattern->POST(fe, ao);
 }
 
@@ -1203,12 +1240,25 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("displaying pattern frame");
   // QS_END()
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  uint16_t analog_value = (uint32_t)pattern->frame_index_ * (uint32_t)constants::analog_output_max / (uint32_t)pattern->frame_count_per_pattern_;
+  SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
+  spev->value = analog_value;
+  AO_Arena->POST(spev, ao);
   AO_Display->POST(&displayFrameEvt, ao);
+}
+
+void FSP::Pattern_initializeFrameIndex(QActive * const ao, QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  pattern->frame_index_ = 0;
 }
 
 void FSP::Analog_initialize(QHsm * const hsm, QEvt const * e)
 {
+  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_SIG, hsm);
   QS_SIG_DICTIONARY(ANALOG_INITIALIZED_SIG, hsm);
+  QS_SIG_DICTIONARY(SET_ANALOG_OUTPUT_SIG, hsm);
 }
 
 void FSP::Analog_initializeOutput(QHsm * const hsm, QEvt const * e)
@@ -1216,20 +1266,34 @@ void FSP::Analog_initializeOutput(QHsm * const hsm, QEvt const * e)
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("initializing analog output");
   QS_END()
-    // bool analog_initialized = BSP::initializeAnalogOutput();
-  // if(BSP::initializeAnalogOutput())
-  // {
-  //   AO_Arena->POST(&analogInitializedEvt, hsm);
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("analog output initialized!");
-  //   QS_END()
-  // }
-  // else
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("analog output not initialized!");
-  //   QS_END()
-  // }
+  bool analog_initialized = BSP::initializeAnalogOutput();
+  if(analog_initialized)
+  {
+    AO_Arena->POST(&analogInitializedEvt, hsm);
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("analog output not initialized!");
+    QS_END()
+  }
+}
+
+void FSP::Analog_enterInitialized(QHsm * const hsm, QEvt const * e)
+{
+  SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
+  spev->value = constants::analog_output_min;
+  AO_Arena->POST(spev, hsm);
+}
+
+void FSP::Analog_setOutput(QHsm * const hsm, QEvt const * e)
+{
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  BSP::setAnalogOutput(spev->value);
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("Analog_setOutput");
+    QS_U16(5, spev->value);
+  QS_END()
 }
 
 /**
