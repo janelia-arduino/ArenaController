@@ -21,7 +21,7 @@ static QEvt const processBinaryCommandEvt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U}
 static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
 static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
 static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
-static QEvt const patternFinishedDisplayingEvt = {PATTERN_FINISHED_DISPLAYING_SIG, 0U, 0U};
+static QEvt const patternFinishedPlayingEvt = {PATTERN_FINISHED_PLAYING_SIG, 0U, 0U};
 
 static QEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
 static QEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
@@ -42,8 +42,8 @@ static QEvt const refreshTimeoutEvt = {REFRESH_TIMEOUT_SIG, 0U, 0U};
 static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
 static QEvt const fillFrameBufferWithDecodedFrameEvt = {FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, 0U, 0U};
 
-static QEvt const beginDisplayingPatternEvt = {BEGIN_DISPLAYING_PATTERN_SIG, 0U, 0U};
-static QEvt const endDisplayingPatternEvt = {END_DISPLAYING_PATTERN_SIG, 0U, 0U};
+static QEvt const beginPlayingPatternEvt = {BEGIN_PLAYING_PATTERN_SIG, 0U, 0U};
+static QEvt const endPlayingPatternEvt = {END_PLAYING_PATTERN_SIG, 0U, 0U};
 static QEvt const cardFoundEvt = {CARD_FOUND_SIG, 0U, 0U};
 static QEvt const cardNotFoundEvt = {CARD_NOT_FOUND_SIG, 0U, 0U};
 static QEvt const fileValidEvt = {FILE_VALID_SIG, 0U, 0U};
@@ -90,14 +90,14 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_TRANSFERRED_SIG, nullptr);
-  QS_SIG_DICTIONARY(DISPLAY_PATTERN_SIG, nullptr);
+  QS_SIG_DICTIONARY(PLAY_PATTERN_SIG, nullptr);
   QS_SIG_DICTIONARY(SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(PROCESS_BINARY_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(PROCESS_STRING_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(PROCESS_STREAM_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(COMMAND_PROCESSED_SIG, nullptr);
-  QS_SIG_DICTIONARY(PATTERN_FINISHED_DISPLAYING_SIG, nullptr);
+  QS_SIG_DICTIONARY(PATTERN_FINISHED_PLAYING_SIG, nullptr);
 
   // user record dictionaries
   QS_USR_DICTIONARY(ETHERNET_LOG);
@@ -167,7 +167,7 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   BSP::initializeArena();
 
-  ao->subscribe(DISPLAY_PATTERN_SIG);
+  ao->subscribe(PLAY_PATTERN_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
@@ -221,9 +221,9 @@ void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
 }
 
-void FSP::Arena_endDisplayingPattern(QActive * const ao, QEvt const * e)
+void FSP::Arena_endPlayingPattern(QActive * const ao, QEvt const * e)
 {
-  AO_Pattern->POST(&endDisplayingPatternEvt, ao);
+  AO_Pattern->POST(&endPlayingPatternEvt, ao);
 }
 
 void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
@@ -244,7 +244,7 @@ void FSP::Arena_streamFrameTransition(QP::QActive * const ao, QP::QEvt const * e
   Arena_deactivateDisplay(ao, e);
 }
 
-void FSP::Arena_displayPatternTransition(QP::QActive * const ao, QP::QEvt const * e)
+void FSP::Arena_playPatternTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
   Arena_deactivateDisplay(ao, e);
   Arena * const arena = static_cast<Arena * const>(ao);
@@ -337,8 +337,8 @@ void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt
   ao->subscribe(PROCESS_STRING_COMMAND_SIG);
   ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
-  ao->subscribe(DISPLAY_PATTERN_SIG);
-  ao->subscribe(PATTERN_FINISHED_DISPLAYING_SIG);
+  ao->subscribe(PLAY_PATTERN_SIG);
+  ao->subscribe(PATTERN_FINISHED_PLAYING_SIG);
 
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(sci->serial_time_evt_));
@@ -505,9 +505,9 @@ void FSP::SerialCommandInterface_processStreamCommand(QActive * const ao, QEvt c
 void FSP::SerialCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
+  PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
 
-  sci->runtime_duration_ms_ = dpev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
+  sci->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
 }
 
 void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -518,8 +518,8 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
   ao->subscribe(PROCESS_STRING_COMMAND_SIG);
   ao->subscribe(PROCESS_STREAM_COMMAND_SIG);
   ao->subscribe(COMMAND_PROCESSED_SIG);
-  ao->subscribe(DISPLAY_PATTERN_SIG);
-  ao->subscribe(PATTERN_FINISHED_DISPLAYING_SIG);
+  ao->subscribe(PLAY_PATTERN_SIG);
+  ao->subscribe(PATTERN_FINISHED_PLAYING_SIG);
 
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(eci->ethernet_time_evt_));
@@ -679,9 +679,9 @@ void FSP::EthernetCommandInterface_writePatternFinishedResponse(QActive * const 
 void FSP::EthernetCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
+  PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
 
-  eci->runtime_duration_ms_ = dpev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
+  eci->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
 }
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -887,14 +887,14 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   static QEvt const * pattern_frame_rate_queue_store[constants::pattern_frame_rate_queue_size];
   pattern->frame_rate_queue_.init(pattern_frame_rate_queue_store, Q_DIM(pattern_frame_rate_queue_store));
 
-  ao->subscribe(DISPLAY_PATTERN_SIG);
+  ao->subscribe(PLAY_PATTERN_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
 
   QS_SIG_DICTIONARY(FRAME_RATE_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(RUNTIME_DURATION_TIMEOUT_SIG, ao);
-  QS_SIG_DICTIONARY(BEGIN_DISPLAYING_PATTERN_SIG, ao);
-  QS_SIG_DICTIONARY(END_DISPLAYING_PATTERN_SIG, ao);
+  QS_SIG_DICTIONARY(BEGIN_PLAYING_PATTERN_SIG, ao);
+  QS_SIG_DICTIONARY(END_PLAYING_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(CARD_FOUND_SIG, ao);
   QS_SIG_DICTIONARY(CARD_NOT_FOUND_SIG, ao);
   QS_SIG_DICTIONARY(FILE_VALID_SIG, ao);
@@ -908,9 +908,9 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  DisplayPatternEvt const * dpev = static_cast<DisplayPatternEvt const *>(e);
+  PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
 
-  if (dpev->frame_rate == 0)
+  if (ppev->frame_rate == 0)
   {
     QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
       QS_STR("invalid frame rate");
@@ -918,7 +918,7 @@ void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
     AO_Arena->POST(&allOffEvt, ao);
     return;
   }
-  else if (dpev->frame_rate < 0)
+  else if (ppev->frame_rate < 0)
   {
     pattern->positive_direction_ = false;
     QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
@@ -932,9 +932,9 @@ void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
       QS_STR("valid positive frame rate");
     QS_END()
   }
-  pattern->id_ = dpev->pattern_id;
-  pattern->frame_rate_hz_ = abs(dpev->frame_rate);
-  pattern->runtime_duration_ms_ = dpev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
+  pattern->id_ = ppev->pattern_id;
+  pattern->frame_rate_hz_ = abs(ppev->frame_rate);
+  pattern->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("check and store parameters");
   // QS_U8(0, control_mode);
@@ -944,7 +944,7 @@ void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
   // QS_U16(5, gain);
   QS_U16(5, pattern->runtime_duration_ms_);
   QS_END()
-  AO_Pattern->POST(&beginDisplayingPatternEvt, ao);
+  AO_Pattern->POST(&beginPlayingPatternEvt, ao);
 }
 
 void FSP::Pattern_armInitializeCardTimer(QActive * const ao, QEvt const * e)
@@ -981,7 +981,7 @@ void FSP::Pattern_postAllOff(QActive * const ao, QEvt const * e)
 
 void FSP::Pattern_endRuntimeDuration(QActive * const ao, QEvt const * e)
 {
-  QF::PUBLISH(&patternFinishedDisplayingEvt, ao);
+  QF::PUBLISH(&patternFinishedPlayingEvt, ao);
   AO_Arena->POST(&allOffEvt, ao);
 }
 
@@ -1420,15 +1420,16 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       memcpy(&runtime_duration, command_buffer + command_buffer_position, sizeof(runtime_duration));
       command_buffer_position += sizeof(runtime_duration);
 
-      DisplayPatternEvt *dpev = Q_NEW(DisplayPatternEvt, DISPLAY_PATTERN_SIG);
-      dpev->pattern_id = pattern_id;
-      dpev->frame_rate = frame_rate;
-      dpev->runtime_duration = runtime_duration;
-      QF::PUBLISH(dpev, &l_FSP_ID);
+      PlayPatternEvt *ppev = Q_NEW(PlayPatternEvt, PLAY_PATTERN_SIG);
+      ppev->pattern_id = pattern_id;
+      ppev->frame_rate = frame_rate;
+      ppev->runtime_duration = runtime_duration;
+      QF::PUBLISH(ppev, &l_FSP_ID);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("trial-params command");
+        QS_STR("play pattern");
         // QS_U8(0, control_mode);
         // QS_U16(5, pattern_id);
         // QS_U16(5, frame_rate);

@@ -73,7 +73,7 @@ Q_STATE_DEF(SerialCommandInterface, initial) {
     QS_FUN_DICTIONARY(&SerialCommandInterface::Active);
     QS_FUN_DICTIONARY(&SerialCommandInterface::Unitialized);
     QS_FUN_DICTIONARY(&SerialCommandInterface::WaitingForNewCommand);
-    QS_FUN_DICTIONARY(&SerialCommandInterface::DisplayingPattern);
+    QS_FUN_DICTIONARY(&SerialCommandInterface::PlayingPattern);
     QS_FUN_DICTIONARY(&SerialCommandInterface::Waiting);
     QS_FUN_DICTIONARY(&SerialCommandInterface::ChoosingCommandProcessor);
     QS_FUN_DICTIONARY(&SerialCommandInterface::ProcessingBinaryCommand);
@@ -175,18 +175,18 @@ Q_STATE_DEF(SerialCommandInterface, WaitingForNewCommand) {
     return status_;
 }
 
-//${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::DisplayingPattern}
-Q_STATE_DEF(SerialCommandInterface, DisplayingPattern) {
+//${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::PlayingPattern} ...
+Q_STATE_DEF(SerialCommandInterface, PlayingPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::DisplayingPatter~::COMMAND_PROCESSED}
+        //${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::PlayingPattern::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             FSP::SerialCommandInterface_writeBinaryResponse(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::DisplayingPatter~::PATTERN_FINISHED_DISPLAYING}
-        case PATTERN_FINISHED_DISPLAYING_SIG: {
+        //${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::PlayingPattern::PATTERN_FINISHED_PLAYING}
+        case PATTERN_FINISHED_PLAYING_SIG: {
             FSP::SerialCommandInterface_writePatternFinishedResponse(this, e);
             status_ = Q_RET_HANDLED;
             break;
@@ -254,10 +254,10 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingBinaryCommand) {
             status_ = tran(&WaitingForNewCommand);
             break;
         }
-        //${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::DISPLAY_PATTERN}
-        case DISPLAY_PATTERN_SIG: {
+        //${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::PLAY_PATTERN}
+        case PLAY_PATTERN_SIG: {
             FSP::SerialCommandInterface_storeRuntimeDuration(this, e);
-            status_ = tran(&DisplayingPattern);
+            status_ = tran(&PlayingPattern);
             break;
         }
         default: {

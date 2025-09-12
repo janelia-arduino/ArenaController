@@ -69,8 +69,8 @@ analog_ = Analog_getInstance();</code>
        <action box="1,-2,16,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="DISPLAY_PATTERN" target="../11">
-      <action brief="displayPatternTransition()">FSP::Arena_displayPatternTransition(this, e);</action>
+     <tran trig="PLAY_PATTERN" target="../11">
+      <action brief="playPatternTransition()">FSP::Arena_playPatternTransition(this, e);</action>
       <tran_glyph conn="10,90,3,3,23">
        <action box="0,-2,21,4"/>
       </tran_glyph>
@@ -123,8 +123,8 @@ analog_ = Analog_getInstance();</code>
        <entry box="1,2,30,2"/>
       </state_glyph>
      </state>
-     <state name="DisplayingPattern">
-      <exit brief="endDisplayingPattern()">FSP::Arena_endDisplayingPattern(this, e);</exit>
+     <state name="PlayingPattern">
+      <exit brief="endPlayingPattern()">FSP::Arena_endPlayingPattern(this, e);</exit>
       <state_glyph node="33,85,35,20">
        <exit box="1,2,24,2"/>
       </state_glyph>
@@ -206,14 +206,14 @@ analog_ = Analog_getInstance();</code>
         <action box="1,-2,19,4"/>
        </tran_glyph>
       </tran>
-      <state name="DisplayingPattern">
+      <state name="PlayingPattern">
        <tran trig="COMMAND_PROCESSED">
         <action brief="writeBinaryResponse()">FSP::SerialCommandInterface_writeBinaryResponse(this, e);</action>
         <tran_glyph conn="17,56,3,-1,23">
          <action box="0,-2,21,4"/>
         </tran_glyph>
        </tran>
-       <tran trig="PATTERN_FINISHED_DISPLAYING">
+       <tran trig="PATTERN_FINISHED_PLAYING">
         <action brief="writePatternFinishedResponse()">FSP::SerialCommandInterface_writePatternFinishedResponse(this, e);</action>
         <tran_glyph conn="17,61,3,-1,28">
          <action box="0,-2,29,4"/>
@@ -252,7 +252,7 @@ analog_ = Analog_getInstance();</code>
         <action box="1,-14,22,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="DISPLAY_PATTERN" target="../../4/3">
+      <tran trig="PLAY_PATTERN" target="../../4/3">
        <action brief="storeRuntimeDuration()">FSP::SerialCommandInterface_storeRuntimeDuration(this, e);</action>
        <tran_glyph conn="46,85,0,2,-20">
         <action box="-17,-10,19,4"/>
@@ -479,14 +479,14 @@ analog_ = Analog_getInstance();</code>
         <action box="1,16,29,5"/>
        </tran_glyph>
       </tran>
-      <state name="DisplayingPattern">
+      <state name="PlayingPattern">
        <tran trig="COMMAND_PROCESSED">
         <action brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeBinaryResponse(this, e);</action>
         <tran_glyph conn="27,68,3,-1,21">
          <action box="0,-2,22,4"/>
         </tran_glyph>
        </tran>
-       <tran trig="PATTERN_FINISHED_DISPLAYING">
+       <tran trig="PATTERN_FINISHED_PLAYING">
         <action brief="writePatternFinishedResponse()">FSP::EthernetCommandInterface_writePatternFinishedResponse(this, e);</action>
         <tran_glyph conn="27,73,3,-1,28">
          <action box="0,-2,29,4"/>
@@ -526,7 +526,7 @@ analog_ = Analog_getInstance();</code>
         <action box="-26,-2,21,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="DISPLAY_PATTERN" target="../../4/2">
+      <tran trig="PLAY_PATTERN" target="../../4/2">
        <action brief="storeRuntimeDuration()">FSP::EthernetCommandInterface_storeRuntimeDuration(this, e);</action>
        <tran_glyph conn="54,87,0,2,-4,-20,-6">
         <action box="-18,-6,17,5"/>
@@ -810,14 +810,14 @@ analog_ = Analog_getInstance();</code>
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
-     <tran trig="DISPLAY_PATTERN">
+     <tran trig="PLAY_PATTERN">
       <action brief="checkAndStoreParameters()">FSP::Pattern_checkAndStoreParameters(this, e);</action>
       <tran_glyph conn="3,16,3,-1,21">
        <action box="0,-2,20,5"/>
       </tran_glyph>
      </tran>
      <state name="Inactive">
-      <tran trig="BEGIN_DISPLAYING_PATTERN" target="../../4">
+      <tran trig="BEGIN_PLAYING_PATTERN" target="../../4">
        <tran_glyph conn="40,22,2,0,4">
         <action box="1,1,27,4"/>
        </tran_glyph>
@@ -832,7 +832,7 @@ analog_ = Analog_getInstance();</code>
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
-      <tran trig="END_DISPLAYING_PATTERN" target="../../2">
+      <tran trig="END_PLAYING_PATTERN" target="../../2">
        <action brief="deleteFrameReference()">FSP::Pattern_deleteFrameReference(this, e);</action>
        <tran_glyph conn="32,42,0,2,-20">
         <action box="-22,-8,24,4"/>
@@ -872,7 +872,7 @@ analog_ = Analog_getInstance();</code>
         <entry box="1,2,14,2"/>
        </state_glyph>
       </state>
-      <state name="PatternValid">
+      <state name="PlayingPattern">
        <entry brief="armTimers()">FSP::Pattern_armTimers(this, e);</entry>
        <exit brief="disarmTimers()">FSP::Pattern_disarmTimers(this, e);</exit>
        <initial target="../5">
@@ -1066,7 +1066,7 @@ analog_ = Analog_getInstance();</code>
    <attribute name="binary_command" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
-  <class name="DisplayPatternEvt" superclass="qpcpp::QEvt">
+  <class name="PlayPatternEvt" superclass="qpcpp::QEvt">
    <attribute name="pattern_id" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate" type="std::int16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>

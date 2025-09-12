@@ -81,7 +81,7 @@ Q_STATE_DEF(Arena, initial) {
     QS_FUN_DICTIONARY(&Arena::AllOn);
     QS_FUN_DICTIONARY(&Arena::AllOff);
     QS_FUN_DICTIONARY(&Arena::StreamingFrame);
-    QS_FUN_DICTIONARY(&Arena::DisplayingPattern);
+    QS_FUN_DICTIONARY(&Arena::PlayingPattern);
 
     return tran(&ArenaOn);
 }
@@ -125,10 +125,10 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = tran(&AllOn);
             break;
         }
-        //${AOs::Arena::SM::ArenaOn::DISPLAY_PATTERN}
-        case DISPLAY_PATTERN_SIG: {
-            FSP::Arena_displayPatternTransition(this, e);
-            status_ = tran(&DisplayingPattern);
+        //${AOs::Arena::SM::ArenaOn::PLAY_PATTERN}
+        case PLAY_PATTERN_SIG: {
+            FSP::Arena_playPatternTransition(this, e);
+            status_ = tran(&PlayingPattern);
             break;
         }
         //${AOs::Arena::SM::ArenaOn::INITIALIZE_ANALOG_TIMEOUT}
@@ -223,13 +223,13 @@ Q_STATE_DEF(Arena, StreamingFrame) {
     return status_;
 }
 
-//${AOs::Arena::SM::ArenaOn::DisplayingPattern} ..............................
-Q_STATE_DEF(Arena, DisplayingPattern) {
+//${AOs::Arena::SM::ArenaOn::PlayingPattern} .................................
+Q_STATE_DEF(Arena, PlayingPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn::DisplayingPattern}
+        //${AOs::Arena::SM::ArenaOn::PlayingPattern}
         case Q_EXIT_SIG: {
-            FSP::Arena_endDisplayingPattern(this, e);
+            FSP::Arena_endPlayingPattern(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

@@ -74,7 +74,7 @@ Q_STATE_DEF(EthernetCommandInterface, initial) {
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Active);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Unintitalized);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::WaitingForNewCommand);
-    QS_FUN_DICTIONARY(&EthernetCommandInterface::DisplayingPattern);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::PlayingPattern);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::CreatingServerConnection);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingBinaryCommand);
@@ -187,18 +187,18 @@ Q_STATE_DEF(EthernetCommandInterface, WaitingForNewCommand) {
     return status_;
 }
 
-//${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::DisplayingPattern}
-Q_STATE_DEF(EthernetCommandInterface, DisplayingPattern) {
+//${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::PlayingPattern} ...
+Q_STATE_DEF(EthernetCommandInterface, PlayingPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::DisplayingPatter~::COMMAND_PROCESSED}
+        //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::PlayingPattern::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             FSP::EthernetCommandInterface_writeBinaryResponse(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::DisplayingPatter~::PATTERN_FINISHED_DISPLAYING}
-        case PATTERN_FINISHED_DISPLAYING_SIG: {
+        //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::PlayingPattern::PATTERN_FINISHED_PLAYING}
+        case PATTERN_FINISHED_PLAYING_SIG: {
             FSP::EthernetCommandInterface_writePatternFinishedResponse(this, e);
             status_ = Q_RET_HANDLED;
             break;
@@ -267,10 +267,10 @@ Q_STATE_DEF(EthernetCommandInterface, ProcessingBinaryCommand) {
             status_ = tran(&WaitingForNewCommand);
             break;
         }
-        //${AOs::EthernetCommandI~::SM::Active::ProcessingBinary~::DISPLAY_PATTERN}
-        case DISPLAY_PATTERN_SIG: {
+        //${AOs::EthernetCommandI~::SM::Active::ProcessingBinary~::PLAY_PATTERN}
+        case PLAY_PATTERN_SIG: {
             FSP::EthernetCommandInterface_storeRuntimeDuration(this, e);
-            status_ = tran(&DisplayingPattern);
+            status_ = tran(&PlayingPattern);
             break;
         }
         default: {

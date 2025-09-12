@@ -69,7 +69,7 @@ protected:
     Q_STATE_DECL(FileOpened);
     Q_STATE_DECL(CheckingFile);
     Q_STATE_DECL(CheckingPattern);
-    Q_STATE_DECL(PatternValid);
+    Q_STATE_DECL(PlayingPattern);
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayingFrame);
     Q_STATE_DECL(ReadingFrameFromFile);

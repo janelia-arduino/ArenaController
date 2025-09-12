@@ -61,7 +61,7 @@ protected:
     Q_STATE_DECL(AllOn);
     Q_STATE_DECL(AllOff);
     Q_STATE_DECL(StreamingFrame);
-    Q_STATE_DECL(DisplayingPattern);
+    Q_STATE_DECL(PlayingPattern);
 }; // class Arena
 
 } // namespace AC

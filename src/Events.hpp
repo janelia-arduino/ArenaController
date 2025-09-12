@@ -51,13 +51,13 @@ public:
     std::uint32_t binary_command_byte_count;
 }; // class CommandEvt
 
-//${Events::DisplayPatternEvt} ...............................................
-class DisplayPatternEvt : public QP::QEvt {
+//${Events::PlayPatternEvt} ..................................................
+class PlayPatternEvt : public QP::QEvt {
 public:
     std::uint16_t pattern_id;
     std::int16_t frame_rate;
     std::uint16_t runtime_duration;
-}; // class DisplayPatternEvt
+}; // class PlayPatternEvt
 
 //${Events::FrameEvt} ........................................................
 class FrameEvt : public QP::QEvt {
