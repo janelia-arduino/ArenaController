@@ -80,7 +80,7 @@ Q_STATE_DEF(Pattern, initial) {
     QS_FUN_DICTIONARY(&Pattern::PatternValid);
     QS_FUN_DICTIONARY(&Pattern::WaitingToDisplayFrame);
     QS_FUN_DICTIONARY(&Pattern::DisplayingFrame);
-    QS_FUN_DICTIONARY(&Pattern::ReadingNextFrameFromFile);
+    QS_FUN_DICTIONARY(&Pattern::ReadingFrameFromFile);
     QS_FUN_DICTIONARY(&Pattern::FillingFrameBufferWithDecodedFrame);
     QS_FUN_DICTIONARY(&Pattern::DecodingFrame);
     QS_FUN_DICTIONARY(&Pattern::InitializingCard);
@@ -240,7 +240,7 @@ Q_STATE_DEF(Pattern, PatternValid) {
         //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::initial}
         case Q_INIT_SIG: {
             FSP::Pattern_initializeFrameIndex(this, e);
-            status_ = tran(&ReadingNextFrameFromFile);
+            status_ = tran(&ReadingFrameFromFile);
             break;
         }
         //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::FRAME_RATE_TIMEOUT}
@@ -300,7 +300,7 @@ Q_STATE_DEF(Pattern, DisplayingFrame) {
         //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             FSP::Pattern_deleteFrameReference(this, e);
-            status_ = tran(&ReadingNextFrameFromFile);
+            status_ = tran(&ReadingFrameFromFile);
             break;
         }
         default: {
@@ -311,17 +311,17 @@ Q_STATE_DEF(Pattern, DisplayingFrame) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::ReadingNextFrameFromFile}
-Q_STATE_DEF(Pattern, ReadingNextFrameFromFile) {
+//${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::ReadingFrameFromFile}
+Q_STATE_DEF(Pattern, ReadingFrameFromFile) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::ReadingNextFrameFromFile}
+        //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::ReadingFrameFromFile}
         case Q_ENTRY_SIG: {
-            FSP::Pattern_readNextFrameFromFile(this, e);
+            FSP::Pattern_readFrameFromFile(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::ReadingNextFrame~::FRAME_READ_FROM_FILE}
+        //${AOs::Pattern::SM::Initialized::FileOpened::PatternValid::ReadingFrameFrom~::FRAME_READ_FROM_FILE}
         case FRAME_READ_FROM_FILE_SIG: {
             FSP::Pattern_saveFrameReference(this, e);
             status_ = tran(&WaitingToDisplayFrame);

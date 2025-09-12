@@ -110,7 +110,7 @@ struct FSP
   static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_disarmTimers(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_deactivateDisplay(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_readFrameFromFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_decodeFrame(QP::QActive * const ao, QP::QEvt const * e);
@@ -125,6 +125,7 @@ struct FSP
   static void Analog_enterInitialized(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Analog_setOutput(QP::QHsm * const hsm, QP::QEvt const * e);
 
+  static uint16_t frameIndexToAnalogValue(uint16_t frame_index, uint16_t frame_count_per_pattern);
   static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message);
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,

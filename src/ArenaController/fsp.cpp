@@ -1149,19 +1149,16 @@ void FSP::Pattern_deactivateDisplay(QActive * const ao, QEvt const * e)
   QF::PUBLISH(&deactivateDisplayEvt, ao);
 }
 
-void FSP::Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const * e)
+void FSP::Pattern_readFrameFromFile(QP::QActive * const ao, QP::QEvt const * e)
 {
-  // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-  //   QS_STR("reading next pattern frame from file");
-  // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   FrameEvt * fe = Q_NEW(FrameEvt, FRAME_READ_FROM_FILE_SIG);
-  BSP::readNextPatternFrameFromFileIntoBuffer(fe->buffer,
-    pattern->byte_count_per_frame_,
-    pattern->positive_direction_);
+  BSP::readPatternFrameFromFileIntoBuffer(fe->buffer,
+    pattern->frame_index_,
+    pattern->byte_count_per_frame_);
   if (pattern->positive_direction_)
   {
-    if (++pattern->frame_index_ > pattern->frame_count_per_pattern_)
+    if (++pattern->frame_index_ >= pattern->frame_count_per_pattern_)
     {
       pattern->frame_index_ = 0;
     }
@@ -1174,7 +1171,7 @@ void FSP::Pattern_readNextFrameFromFile(QP::QActive * const ao, QP::QEvt const *
     }
     else
     {
-      pattern->frame_index_ = pattern->frame_count_per_pattern_;
+      pattern->frame_index_ = pattern->frame_count_per_pattern_ - 1;
     }
   }
   AO_Pattern->POST(fe, ao);
@@ -1241,9 +1238,8 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
   //   QS_STR("displaying pattern frame");
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  uint16_t analog_value = (uint32_t)pattern->frame_index_ * (uint32_t)constants::analog_output_max / (uint32_t)pattern->frame_count_per_pattern_;
   SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
-  spev->value = analog_value;
+  spev->value = frameIndexToAnalogValue(pattern->frame_index_, pattern->frame_count_per_pattern_);
   AO_Arena->POST(spev, ao);
   AO_Display->POST(&displayFrameEvt, ao);
 }
@@ -1290,10 +1286,15 @@ void FSP::Analog_setOutput(QHsm * const hsm, QEvt const * e)
 {
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
   BSP::setAnalogOutput(spev->value);
-  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-    QS_STR("Analog_setOutput");
-    QS_U16(5, spev->value);
-  QS_END()
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("Analog_setOutput");
+  //   QS_U16(5, spev->value);
+  // QS_END()
+}
+
+uint16_t FSP::frameIndexToAnalogValue(uint16_t frame_index, uint16_t frame_count_per_pattern)
+{
+  return (uint32_t)frame_index * (uint32_t)constants::analog_output_max / (uint32_t)(frame_count_per_pattern - 1);
 }
 
 /**

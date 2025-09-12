@@ -60,9 +60,9 @@ struct BSP {
   static uint64_t openPatternFileForReading(uint16_t pattern_id);
   static void closePatternFile();
   static AC::PatternHeader rewindPatternFileAndReadHeader();
-  static void readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
-    uint64_t byte_count_per_pattern_frame,
-    bool positive_direction);
+  static void readPatternFrameFromFileIntoBuffer(uint8_t * buffer,
+    uint16_t frame_index,
+    uint64_t byte_count_per_pattern_frame);
   static uint64_t getByteCountPerPatternFrameGrayscale();
   static uint64_t getByteCountPerPatternFrameBinary();
   static bool initializeAnalogOutput();

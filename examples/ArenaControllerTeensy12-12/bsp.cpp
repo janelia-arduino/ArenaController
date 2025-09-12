@@ -15,6 +15,8 @@ extern "C"
 #include "mongoose_glue.h"
 }
 
+Q_DEFINE_THIS_FILE
+
 using namespace QP;
 using namespace AC;
 
@@ -625,31 +627,17 @@ PatternHeader BSP::rewindPatternFileAndReadHeader()
   return pattern_header;
 }
 
-void BSP::readNextPatternFrameFromFileIntoBuffer(uint8_t * buffer,
-  uint64_t byte_count_per_pattern_frame,
-  bool positive_direction)
+void BSP::readPatternFrameFromFileIntoBuffer(uint8_t * buffer,
+  uint16_t frame_index,
+  uint64_t byte_count_per_pattern_frame)
 {
-  if (positive_direction)
-  {
-    if ((pattern_file.curPosition() + byte_count_per_pattern_frame) > pattern_file.fileSize())
-    {
-      pattern_file.seek(constants::pattern_header_size);
-    }
-    pattern_file.read(buffer, byte_count_per_pattern_frame);
-  }
-  else
-  {
-    if (((int64_t)pattern_file.curPosition() - (int64_t)byte_count_per_pattern_frame) < (int64_t)0)
-    {
-      pattern_file.seek(pattern_file.fileSize());
-    }
-    pattern_file.seek(pattern_file.curPosition() - byte_count_per_pattern_frame);
-    pattern_file.read(buffer, byte_count_per_pattern_frame);
-    pattern_file.seek(pattern_file.curPosition() - byte_count_per_pattern_frame);
-  }
+  uint32_t file_position = constants::pattern_header_size + frame_index * byte_count_per_pattern_frame;
+  Q_ASSERT((file_position + byte_count_per_pattern_frame) <= pattern_file.fileSize());
+  pattern_file.seek(file_position);
+  pattern_file.read(buffer, byte_count_per_pattern_frame);
   // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
   //   QS_STR("pattern file position");
-  //   QS_U16(5, pattern_file.curPosition());
+  //   QS_U16(5, file_position);
   //   QS_STR("pattern file size");
   //   QS_U16(5, pattern_file.fileSize());
   // QS_END()

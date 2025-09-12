@@ -917,8 +917,8 @@ analog_ = Analog_getInstance();</code>
          <entry box="1,2,16,2"/>
         </state_glyph>
        </state>
-       <state name="ReadingNextFrameFromFile">
-        <entry brief="readNextFrameFromFile()">FSP::Pattern_readNextFrameFromFile(this, e);</entry>
+       <state name="ReadingFrameFromFile">
+        <entry brief="readFrameFromFile()">FSP::Pattern_readFrameFromFile(this, e);</entry>
         <tran trig="FRAME_READ_FROM_FILE" target="../../3">
          <action brief="saveFrameReference()">FSP::Pattern_saveFrameReference(this, e);</action>
          <tran_glyph conn="48,85,2,0,6">
