@@ -1137,7 +1137,7 @@ void FSP::Pattern_disarmTimers(QActive * const ao, QEvt const * e)
   pattern->runtime_duration_time_evt_.disarm();
 
   SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
-  spev->value = constants::analog_output_min;
+  spev->value = constants::analog_output_zero;
   AO_Arena->POST(spev, ao);
 }
 
@@ -1278,7 +1278,7 @@ void FSP::Analog_initializeOutput(QHsm * const hsm, QEvt const * e)
 void FSP::Analog_enterInitialized(QHsm * const hsm, QEvt const * e)
 {
   SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
-  spev->value = constants::analog_output_min;
+  spev->value = constants::analog_output_zero;
   AO_Arena->POST(spev, hsm);
 }
 
@@ -1294,7 +1294,7 @@ void FSP::Analog_setOutput(QHsm * const hsm, QEvt const * e)
 
 uint16_t FSP::frameIndexToAnalogValue(uint16_t frame_index, uint16_t frame_count_per_pattern)
 {
-  return (uint32_t)frame_index * (uint32_t)constants::analog_output_max / (uint32_t)(frame_count_per_pattern - 1);
+  return (uint32_t)constants::analog_output_min + (uint32_t)frame_index * (uint32_t)(constants::analog_output_max - constants::analog_output_min) / (uint32_t)(frame_count_per_pattern - 1);
 }
 
 /**
