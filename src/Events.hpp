@@ -64,6 +64,13 @@ class FrameEvt : public QP::QEvt {
 public:
     std::uint8_t buffer[AC::constants::byte_count_per_pattern_frame_max];
 }; // class FrameEvt
+
+//${Events::ShowPatternFrameEvt} .............................................
+class ShowPatternFrameEvt : public QP::QEvt {
+public:
+    std::uint16_t pattern_id;
+    std::uint16_t frame_index;
+}; // class ShowPatternFrameEvt
 //$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

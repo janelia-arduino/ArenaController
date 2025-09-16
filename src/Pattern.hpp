@@ -76,6 +76,8 @@ protected:
     Q_STATE_DECL(FillingFrameBufferWithDecodedFrame);
     Q_STATE_DECL(DecodingFrame);
     Q_STATE_DECL(WaitingToPlayPattern);
+    Q_STATE_DECL(ShowingPatternFrame);
+    Q_STATE_DECL(WaitingToShowPatternFrame);
 }; // class Pattern
 
 } // namespace AC

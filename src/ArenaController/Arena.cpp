@@ -82,6 +82,7 @@ Q_STATE_DEF(Arena, initial) {
     QS_FUN_DICTIONARY(&Arena::AllOff);
     QS_FUN_DICTIONARY(&Arena::StreamingFrame);
     QS_FUN_DICTIONARY(&Arena::PlayingPattern);
+    QS_FUN_DICTIONARY(&Arena::ShowingPatternFrame);
 
     return tran(&ArenaOn);
 }
@@ -147,6 +148,11 @@ Q_STATE_DEF(Arena, ArenaOn) {
         case SET_ANALOG_OUTPUT_SIG: {
             dispatchToAnalog(e);
             status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::SHOW_PATTERN_FRAME}
+        case SHOW_PATTERN_FRAME_SIG: {
+            status_ = tran(&ShowingPatternFrame);
             break;
         }
         default: {
@@ -233,6 +239,18 @@ Q_STATE_DEF(Arena, PlayingPattern) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        default: {
+            status_ = super(&ArenaOn);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Arena::SM::ArenaOn::ShowingPatternFrame} ............................
+Q_STATE_DEF(Arena, ShowingPatternFrame) {
+    QP::QState status_;
+    switch (e->sig) {
         default: {
             status_ = super(&ArenaOn);
             break;

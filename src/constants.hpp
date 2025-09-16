@@ -7,7 +7,7 @@ namespace AC
 namespace constants
 {
 constexpr uint32_t ticks_per_second = 1000;
-constexpr uint8_t set_parameter_event_pool_count = 10;
+constexpr uint8_t set_parameter_event_pool_count = 20;
 constexpr uint8_t command_event_pool_count = 20;
 constexpr uint8_t frame_event_pool_count = 4;
 

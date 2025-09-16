@@ -89,6 +89,8 @@ Q_STATE_DEF(Pattern, initial) {
     QS_FUN_DICTIONARY(&Pattern::FillingFrameBufferWithDecodedFrame);
     QS_FUN_DICTIONARY(&Pattern::DecodingFrame);
     QS_FUN_DICTIONARY(&Pattern::WaitingToPlayPattern);
+    QS_FUN_DICTIONARY(&Pattern::ShowingPatternFrame);
+    QS_FUN_DICTIONARY(&Pattern::WaitingToShowPatternFrame);
 
     return tran(&Initialized);
 }
@@ -368,6 +370,36 @@ Q_STATE_DEF(Pattern, WaitingToPlayPattern) {
         case PATTERN_VALID_SIG: {
             dispatchToCard(e);
             status_ = tran(&PlayingPattern);
+            break;
+        }
+        default: {
+            status_ = super(&DisplayingPattern);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFrame} ...
+Q_STATE_DEF(Pattern, ShowingPatternFrame) {
+    QP::QState status_;
+    switch (e->sig) {
+        default: {
+            status_ = super(&DisplayingPattern);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::WaitingToShowPatternFrame}
+Q_STATE_DEF(Pattern, WaitingToShowPatternFrame) {
+    QP::QState status_;
+    switch (e->sig) {
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::WaitingToShowPat~::PATTERN_VALID}
+        case PATTERN_VALID_SIG: {
+            dispatchToCard(e);
+            status_ = tran(&ShowingPatternFrame);
             break;
         }
         default: {

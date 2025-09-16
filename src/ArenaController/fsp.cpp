@@ -99,6 +99,7 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(PROCESS_STREAM_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(COMMAND_PROCESSED_SIG, nullptr);
   QS_SIG_DICTIONARY(PATTERN_FINISHED_PLAYING_SIG, nullptr);
+  QS_SIG_DICTIONARY(SHOW_PATTERN_FRAME_SIG, nullptr);
 
   // user record dictionaries
   QS_USR_DICTIONARY(ETHERNET_LOG);
@@ -170,6 +171,7 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
   ao->subscribe(PLAY_PATTERN_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
+  ao->subscribe(SHOW_PATTERN_FRAME_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
@@ -1470,9 +1472,9 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       memcpy(&frame_rate, command_buffer + command_buffer_position, sizeof(frame_rate));
       command_buffer_position += sizeof(frame_rate);
 
-      uint16_t init_pos;
-      memcpy(&init_pos, command_buffer + command_buffer_position, sizeof(init_pos));
-      command_buffer_position += sizeof(init_pos);
+      uint16_t frame_index;
+      memcpy(&frame_index, command_buffer + command_buffer_position, sizeof(frame_index));
+      command_buffer_position += sizeof(frame_index);
 
       uint16_t gain;
       memcpy(&gain, command_buffer + command_buffer_position, sizeof(gain));
@@ -1504,6 +1506,21 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
           QS_END()
           break;
         }
+        case SHOW_PATTERN_FRAME_MODE:
+        {
+          ShowPatternFrameEvt *spfev = Q_NEW(ShowPatternFrameEvt, SHOW_PATTERN_FRAME_SIG);
+          spfev->pattern_id = pattern_id;
+          spfev->frame_index = frame_index;
+          QF::PUBLISH(spfev, &l_FSP_ID);
+
+          appendMessage(response, response_byte_count, "");
+          QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+            QS_STR("showing pattern frame mode");
+            QS_U16(5, pattern_id);
+            QS_U16(5, frame_index);
+          QS_END()
+          break;
+        }
         default:
           break;
       }
@@ -1517,6 +1534,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_REFRESH_RATE_SIG);
       spev->value = refresh_rate;
       AO_Display->POST(spev, &l_FSP_ID);
+
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("set-refresh-rate command");
@@ -1529,6 +1547,21 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       appendMessage(response, response_byte_count, "Display has been stopped");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("stop-display command");
+      QS_END()
+      break;
+    }
+    case SET_FRAME_POSITION_CMD:
+    {
+      uint16_t refresh_rate;
+      memcpy(&refresh_rate, command_buffer + command_buffer_position, sizeof(refresh_rate));
+
+      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_REFRESH_RATE_SIG);
+      spev->value = refresh_rate;
+      AO_Display->POST(spev, &l_FSP_ID);
+
+      appendMessage(response, response_byte_count, "");
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("set-frame-position command");
       QS_END()
       break;
     }
