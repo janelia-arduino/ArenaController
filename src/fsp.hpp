@@ -137,7 +137,7 @@ struct FSP
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,
     uint8_t response[AC::constants::byte_count_per_response_max]);
-  static void processStreamCommand(uint8_t const * buffer, uint32_t frame_byte_count);
+  static void processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_byte_count);
   static void processStringCommand(const char * command, char * response);
 };
 

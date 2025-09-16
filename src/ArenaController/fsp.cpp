@@ -231,6 +231,9 @@ void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->frames_streamed_ = 0;
+  SetParameterEvt *set_analog_output_ev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
+  set_analog_output_ev->value = constants::analog_output_zero;
+  AO_Arena->POST(set_analog_output_ev, ao);
 }
 
 void FSP::Arena_allOnTransition(QP::QActive * const ao, QP::QEvt const * e)
@@ -238,6 +241,9 @@ void FSP::Arena_allOnTransition(QP::QActive * const ao, QP::QEvt const * e)
   Arena_deactivateDisplay(ao, e);
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->frames_streamed_ = 0;
+  SetParameterEvt *set_analog_output_ev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
+  set_analog_output_ev->value = constants::analog_output_zero;
+  AO_Arena->POST(set_analog_output_ev, ao);
 }
 
 void FSP::Arena_streamFrameTransition(QP::QActive * const ao, QP::QEvt const * e)
@@ -539,9 +545,7 @@ void FSP::SerialCommandInterface_processStreamCommand(QActive * const ao, QEvt c
   sci->binary_response_[0] = 2;
   sci->binary_response_[1] = 0;
   sci->binary_response_[2] = STREAM_FRAME_CMD;
-  uint8_t const * buffer = sci->binary_command_ + constants::stream_header_byte_count;
-  uint32_t frame_byte_count = sci->binary_command_byte_count_ - constants::stream_header_byte_count;
-  FSP::processStreamCommand(buffer, frame_byte_count);
+  FSP::processStreamCommand(sci->binary_command_, sci->binary_command_byte_count_);
   QF::PUBLISH(&commandProcessedEvt, ao);
 }
 
@@ -687,9 +691,7 @@ void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt
   eci->binary_response_[0] = 2;
   eci->binary_response_[1] = 0;
   eci->binary_response_[2] = STREAM_FRAME_CMD;
-  uint8_t const * buffer = eci->binary_command_ + constants::stream_header_byte_count;
-  uint32_t frame_byte_count = eci->binary_command_byte_count_ - constants::stream_header_byte_count;
-  FSP::processStreamCommand(buffer, frame_byte_count);
+  FSP::processStreamCommand(eci->binary_command_, eci->binary_command_byte_count_);
   QF::PUBLISH(&commandProcessedEvt, ao);
 }
 
@@ -1545,9 +1547,11 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
   return response_byte_count;
 }
 
-void FSP::processStreamCommand(uint8_t const * buffer, uint32_t frame_byte_count)
+void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_byte_count)
 {
   Frame * const frame = static_cast<Frame * const>(AO_Frame);
+  uint8_t const * frame_buffer = stream_buffer + constants::stream_header_byte_count;
+  uint32_t frame_byte_count = stream_byte_count - constants::stream_header_byte_count;
 
   if (frame_byte_count == BSP::getByteCountPerPatternFrameGrayscale())
   {
@@ -1574,7 +1578,26 @@ void FSP::processStreamCommand(uint8_t const * buffer, uint32_t frame_byte_count
     AO_Arena->POST(&allOffEvt, &l_FSP_ID);
     return;
   }
-  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(buffer, frame->grayscale_);
+
+  // skip byte 0 (command byte) and bytes 1 and 2 (data length)
+  uint8_t stream_buffer_position = 3;
+  uint16_t analog_output_value_x;
+  memcpy(&analog_output_value_x, stream_buffer + stream_buffer_position, sizeof(analog_output_value_x));
+  stream_buffer_position += sizeof(analog_output_value_x);
+  uint16_t analog_output_value_y;
+  memcpy(&analog_output_value_y, stream_buffer + stream_buffer_position, sizeof(analog_output_value_y));
+  stream_buffer_position += sizeof(analog_output_value_y);
+  SetParameterEvt *set_analog_output_ev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
+  set_analog_output_ev->value = analog_output_value_x;
+  AO_Arena->POST(set_analog_output_ev, &l_FSP_ID);
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("analog_output_value_x");
+    QS_U32(8, analog_output_value_x);
+    QS_STR("analog_output_value_y");
+    QS_U32(8, analog_output_value_y);
+  QS_END()
+
+  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame_buffer, frame->grayscale_);
   AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
   Arena * const arena = static_cast<Arena * const>(AO_Arena);
   arena->frames_streamed_ = arena->frames_streamed_ + 1;
