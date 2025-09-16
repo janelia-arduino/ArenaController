@@ -56,7 +56,7 @@ struct BSP {
     uint16_t & buffer_position,
     uint8_t panel_byte_count);
 
-  static bool initializePatternCard();
+  static bool findPatternCard();
   static uint64_t openPatternFileForReading(uint16_t pattern_id);
   static void closePatternFile();
   static AC::PatternHeader rewindPatternFileAndReadHeader();

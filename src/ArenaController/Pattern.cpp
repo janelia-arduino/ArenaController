@@ -64,8 +64,15 @@ Pattern::Pattern()
 : QActive(Q_STATE_CAST(&Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
     runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
-    initialize_card_time_evt_(this, INITIALIZE_CARD_TIMEOUT_SIG, 0U)
-{}
+    find_card_time_evt_(this, FIND_CARD_TIMEOUT_SIG, 0U)
+{
+    card_ = Card_getInstance();
+}
+
+//${AOs::Pattern::dispatchToCard} ............................................
+void Pattern::dispatchToCard(QP::QEvt const * e) {
+    card_->dispatch(e, m_prio);
+}
 
 //${AOs::Pattern::SM} ........................................................
 Q_STATE_DEF(Pattern, initial) {
@@ -74,16 +81,14 @@ Q_STATE_DEF(Pattern, initial) {
 
     QS_FUN_DICTIONARY(&Pattern::Initialized);
     QS_FUN_DICTIONARY(&Pattern::Inactive);
-    QS_FUN_DICTIONARY(&Pattern::FileOpened);
-    QS_FUN_DICTIONARY(&Pattern::CheckingFile);
-    QS_FUN_DICTIONARY(&Pattern::CheckingPattern);
+    QS_FUN_DICTIONARY(&Pattern::DisplayingPattern);
     QS_FUN_DICTIONARY(&Pattern::PlayingPattern);
     QS_FUN_DICTIONARY(&Pattern::WaitingToDisplayFrame);
     QS_FUN_DICTIONARY(&Pattern::DisplayingFrame);
     QS_FUN_DICTIONARY(&Pattern::ReadingFrameFromFile);
     QS_FUN_DICTIONARY(&Pattern::FillingFrameBufferWithDecodedFrame);
     QS_FUN_DICTIONARY(&Pattern::DecodingFrame);
-    QS_FUN_DICTIONARY(&Pattern::InitializingCard);
+    QS_FUN_DICTIONARY(&Pattern::WaitingToPlayPattern);
 
     return tran(&Initialized);
 }
@@ -103,6 +108,54 @@ Q_STATE_DEF(Pattern, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Pattern::SM::Initialized::FIND_CARD_TIMEOUT}
+        case FIND_CARD_TIMEOUT_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::CARD_FOUND}
+        case CARD_FOUND_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::CARD_NOT_FOUND}
+        case CARD_NOT_FOUND_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::FILE_VALID}
+        case FILE_VALID_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::FILE_NOT_VALID}
+        case FILE_NOT_VALID_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::PATTERN_NOT_VALID}
+        case PATTERN_NOT_VALID_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::SET_FRAME_COUNT_PER_PATTERN}
+        case SET_FRAME_COUNT_PER_PATTERN_SIG: {
+            FSP::Pattern_setFrameCountPerPattern(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::SET_BYTE_COUNT_PER_FRAME}
+        case SET_BYTE_COUNT_PER_FRAME_SIG: {
+            FSP::Pattern_setByteCountPerFrame(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;
@@ -117,7 +170,8 @@ Q_STATE_DEF(Pattern, Inactive) {
     switch (e->sig) {
         //${AOs::Pattern::SM::Initialized::Inactive::BEGIN_PLAYING_PATTERN}
         case BEGIN_PLAYING_PATTERN_SIG: {
-            status_ = tran(&InitializingCard);
+            FSP::Pattern_armFindCardTimer(this, e);
+            status_ = tran(&WaitingToPlayPattern);
             break;
         }
         default: {
@@ -128,30 +182,13 @@ Q_STATE_DEF(Pattern, Inactive) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened} ...............................
-Q_STATE_DEF(Pattern, FileOpened) {
+//${AOs::Pattern::SM::Initialized::DisplayingPattern} ........................
+Q_STATE_DEF(Pattern, DisplayingPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened}
-        case Q_ENTRY_SIG: {
-            FSP::Pattern_openFile(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::FileOpened}
-        case Q_EXIT_SIG: {
-            FSP::Pattern_closeFile(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::FileOpened::initial}
-        case Q_INIT_SIG: {
-            status_ = tran(&CheckingFile);
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::FileOpened::END_PLAYING_PATTERN}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::END_PLAYING_PATTERN}
         case END_PLAYING_PATTERN_SIG: {
-            FSP::Pattern_deleteFrameReference(this, e);
+            dispatchToCard(e);
             status_ = tran(&Inactive);
             break;
         }
@@ -163,117 +200,59 @@ Q_STATE_DEF(Pattern, FileOpened) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile} .................
-Q_STATE_DEF(Pattern, CheckingFile) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile}
-        case Q_ENTRY_SIG: {
-            FSP::Pattern_checkFile(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile::FILE_VALID}
-        case FILE_VALID_SIG: {
-            status_ = tran(&CheckingPattern);
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::FileOpened::CheckingFile::FILE_NOT_VALID}
-        case FILE_NOT_VALID_SIG: {
-            FSP::Pattern_postAllOff(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&FileOpened);
-            break;
-        }
-    }
-    return status_;
-}
-
-//${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern} ..............
-Q_STATE_DEF(Pattern, CheckingPattern) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern}
-        case Q_ENTRY_SIG: {
-            FSP::Pattern_checkPattern(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern::PATTERN_VALID}
-        case PATTERN_VALID_SIG: {
-            status_ = tran(&PlayingPattern);
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::FileOpened::CheckingPattern::PATTERN_NOT_VALID}
-        case PATTERN_NOT_VALID_SIG: {
-            FSP::Pattern_postAllOff(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&FileOpened);
-            break;
-        }
-    }
-    return status_;
-}
-
-//${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern} ...............
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern} ........
 Q_STATE_DEF(Pattern, PlayingPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern}
         case Q_ENTRY_SIG: {
             FSP::Pattern_armTimers(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern}
         case Q_EXIT_SIG: {
-            FSP::Pattern_disarmTimers(this, e);
+            FSP::Pattern_disarmTimersAndCleanup(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::initial}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::initial}
         case Q_INIT_SIG: {
             FSP::Pattern_initializeFrameIndex(this, e);
             status_ = tran(&ReadingFrameFromFile);
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::FRAME_RATE_TIMEOUT}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::FRAME_RATE_TIMEOUT}
         case FRAME_RATE_TIMEOUT_SIG: {
             FSP::Pattern_defer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::RUNTIME_DURATION_TIMEOUT}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::RUNTIME_DURATION_TIMEOUT}
         case RUNTIME_DURATION_TIMEOUT_SIG: {
             FSP::Pattern_endRuntimeDuration(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         default: {
-            status_ = super(&FileOpened);
+            status_ = super(&DisplayingPattern);
             break;
         }
     }
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::WaitingToDisplayFrame}
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::WaitingToDisplayFrame}
 Q_STATE_DEF(Pattern, WaitingToDisplayFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::WaitingToDisplayFrame}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::WaitingToDisplayFrame}
         case Q_ENTRY_SIG: {
             FSP::Display_recall(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::WaitingToDisplay~::FRAME_RATE_TIMEOUT}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::WaitingToDisplay~::FRAME_RATE_TIMEOUT}
         case FRAME_RATE_TIMEOUT_SIG: {
             FSP::Pattern_deactivateDisplay(this, e);
             status_ = tran(&DecodingFrame);
@@ -287,17 +266,17 @@ Q_STATE_DEF(Pattern, WaitingToDisplayFrame) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::DisplayingFrame}
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::DisplayingFrame}
 Q_STATE_DEF(Pattern, DisplayingFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::DisplayingFrame}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::DisplayingFrame}
         case Q_ENTRY_SIG: {
             FSP::Pattern_displayFrame(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::DisplayingFrame::FRAME_TRANSFERRED}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
             FSP::Pattern_deleteFrameReference(this, e);
             status_ = tran(&ReadingFrameFromFile);
@@ -311,17 +290,17 @@ Q_STATE_DEF(Pattern, DisplayingFrame) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::ReadingFrameFromFile}
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::ReadingFrameFromFile}
 Q_STATE_DEF(Pattern, ReadingFrameFromFile) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::ReadingFrameFromFile}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::ReadingFrameFromFile}
         case Q_ENTRY_SIG: {
             FSP::Pattern_readFrameFromFile(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::ReadingFrameFrom~::FRAME_READ_FROM_FILE}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::ReadingFrameFrom~::FRAME_READ_FROM_FILE}
         case FRAME_READ_FROM_FILE_SIG: {
             FSP::Pattern_saveFrameReference(this, e);
             status_ = tran(&WaitingToDisplayFrame);
@@ -335,17 +314,17 @@ Q_STATE_DEF(Pattern, ReadingFrameFromFile) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::FillingFrameBufferWithDecodedFra~}
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::FillingFrameBufferWithDecodedFra~}
 Q_STATE_DEF(Pattern, FillingFrameBufferWithDecodedFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::FillingFrameBufferWithDecodedFra~}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::FillingFrameBufferWithDecodedFra~}
         case Q_ENTRY_SIG: {
             FSP::Pattern_fillFrameBufferWithDecodedFrame(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::FillingFrameBuff~::FRAME_FILLED}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::FillingFrameBuff~::FRAME_FILLED}
         case FRAME_FILLED_SIG: {
             status_ = tran(&DisplayingFrame);
             break;
@@ -358,17 +337,17 @@ Q_STATE_DEF(Pattern, FillingFrameBufferWithDecodedFrame) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::DecodingFrame}
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::DecodingFrame}
 Q_STATE_DEF(Pattern, DecodingFrame) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::DecodingFrame}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::DecodingFrame}
         case Q_ENTRY_SIG: {
             FSP::Pattern_decodeFrame(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FileOpened::PlayingPattern::DecodingFrame::FRAME_DECODED}
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::DecodingFrame::FRAME_DECODED}
         case FRAME_DECODED_SIG: {
             status_ = tran(&FillingFrameBufferWithDecodedFrame);
             break;
@@ -381,35 +360,18 @@ Q_STATE_DEF(Pattern, DecodingFrame) {
     return status_;
 }
 
-//${AOs::Pattern::SM::Initialized::InitializingCard} .........................
-Q_STATE_DEF(Pattern, InitializingCard) {
+//${AOs::Pattern::SM::Initialized::DisplayingPatter~::WaitingToPlayPattern} ..
+Q_STATE_DEF(Pattern, WaitingToPlayPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Pattern::SM::Initialized::InitializingCard}
-        case Q_ENTRY_SIG: {
-            FSP::Pattern_armInitializeCardTimer(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::InitializingCard::CARD_FOUND}
-        case CARD_FOUND_SIG: {
-            status_ = tran(&FileOpened);
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::InitializingCard::CARD_NOT_FOUND}
-        case CARD_NOT_FOUND_SIG: {
-            FSP::Pattern_postAllOff(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::InitializingCard::INITIALIZE_CARD_TIMEOUT}
-        case INITIALIZE_CARD_TIMEOUT_SIG: {
-            FSP::Pattern_initializeCard(this, e);
-            status_ = Q_RET_HANDLED;
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::WaitingToPlayPat~::PATTERN_VALID}
+        case PATTERN_VALID_SIG: {
+            dispatchToCard(e);
+            status_ = tran(&PlayingPattern);
             break;
         }
         default: {
-            status_ = super(&Initialized);
+            status_ = super(&DisplayingPattern);
             break;
         }
     }

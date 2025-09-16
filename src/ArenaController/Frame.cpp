@@ -70,9 +70,9 @@ Q_STATE_DEF(Frame, initial) {
     FSP::Frame_initializeAndSubscribe(this, e);
 
     QS_FUN_DICTIONARY(&Frame::Initialized);
-    QS_FUN_DICTIONARY(&Frame::Inactive);
     QS_FUN_DICTIONARY(&Frame::TransferringFrame);
     QS_FUN_DICTIONARY(&Frame::TransferringPanelSet);
+    QS_FUN_DICTIONARY(&Frame::Inactive);
 
     return tran(&Initialized);
 }
@@ -110,55 +110,14 @@ Q_STATE_DEF(Frame, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Frame::SM::Initialized::SET_GRAYSCALE}
+        case SET_GRAYSCALE_SIG: {
+            FSP::Frame_setGrayscale(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
-            break;
-        }
-    }
-    return status_;
-}
-
-//${AOs::Frame::SM::Initialized::Inactive} ...................................
-Q_STATE_DEF(Frame, Inactive) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Frame::SM::Initialized::Inactive}
-        case Q_ENTRY_SIG: {
-            FSP::Frame_recall(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Frame::SM::Initialized::Inactive::TRANSFER_FRAME}
-        case TRANSFER_FRAME_SIG: {
-            status_ = tran(&TransferringFrame);
-            break;
-        }
-        //${AOs::Frame::SM::Initialized::Inactive::FILL_FRAME_BUFFER_WITH_ALL_ON}
-        case FILL_FRAME_BUFFER_WITH_ALL_ON_SIG: {
-            FSP::Frame_fillFrameBufferWithAllOn(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Frame::SM::Initialized::Inactive::FILL_FRAME_BUFFER_WITH_DECODED_F~}
-        case FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG: {
-            FSP::Frame_fillFrameBufferWithDecodedFrame(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Frame::SM::Initialized::Inactive::SWITCH_GRAYSCALE}
-        case SWITCH_GRAYSCALE_SIG: {
-            FSP::Frame_switchGrayscale(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Frame::SM::Initialized::Inactive::FRAME_FILLED}
-        case FRAME_FILLED_SIG: {
-            FSP::Frame_saveFrameReference(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&Initialized);
             break;
         }
     }
@@ -230,6 +189,53 @@ Q_STATE_DEF(Frame, TransferringPanelSet) {
         }
         default: {
             status_ = super(&TransferringFrame);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Frame::SM::Initialized::Inactive} ...................................
+Q_STATE_DEF(Frame, Inactive) {
+    QP::QState status_;
+    switch (e->sig) {
+        //${AOs::Frame::SM::Initialized::Inactive}
+        case Q_ENTRY_SIG: {
+            FSP::Frame_recall(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Frame::SM::Initialized::Inactive::TRANSFER_FRAME}
+        case TRANSFER_FRAME_SIG: {
+            status_ = tran(&TransferringFrame);
+            break;
+        }
+        //${AOs::Frame::SM::Initialized::Inactive::FILL_FRAME_BUFFER_WITH_ALL_ON}
+        case FILL_FRAME_BUFFER_WITH_ALL_ON_SIG: {
+            FSP::Frame_fillFrameBufferWithAllOn(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Frame::SM::Initialized::Inactive::FILL_FRAME_BUFFER_WITH_DECODED_F~}
+        case FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG: {
+            FSP::Frame_fillFrameBufferWithDecodedFrame(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Frame::SM::Initialized::Inactive::SWITCH_GRAYSCALE}
+        case SWITCH_GRAYSCALE_SIG: {
+            FSP::Frame_switchGrayscale(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Frame::SM::Initialized::Inactive::FRAME_FILLED}
+        case FRAME_FILLED_SIG: {
+            FSP::Frame_saveFrameReference(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&Initialized);
             break;
         }
     }

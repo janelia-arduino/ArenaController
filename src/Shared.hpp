@@ -61,6 +61,9 @@ extern QP::QActive * const AO_Pattern;
 //${Shared::Analog_getInstance} ..............................................
 QP::QHsm * Analog_getInstance();
 
+//${Shared::Card_getInstance} ................................................
+QP::QHsm * Card_getInstance();
+
 } // namespace AC
 //$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -12,13 +12,14 @@
 #include "Shared.hpp"
 #include "Events.hpp"
 #include "Arena.hpp"
+#include "Analog.hpp"
 #include "Display.hpp"
 #include "SerialCommandInterface.hpp"
 #include "EthernetCommandInterface.hpp"
 #include "Frame.hpp"
 #include "Watchdog.hpp"
 #include "Pattern.hpp"
-#include "Analog.hpp"
+#include "Card.hpp"
 
 
 struct FSP
@@ -38,6 +39,11 @@ struct FSP
   static void Arena_streamFrameTransition(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_playPatternTransition(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e);
+
+  static void Analog_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Analog_initializeOutput(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Analog_enterInitialized(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Analog_setOutput(QP::QHsm * const hsm, QP::QEvt const * e);
 
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_setRefreshRate(QP::QActive * const ao, QP::QEvt const * e);
@@ -91,6 +97,7 @@ struct FSP
   static void Frame_switchGrayscale(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_defer(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_recall(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_setGrayscale(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Watchdog_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Watchdog_armWatchdogTimer(QP::QActive * const ao, QP::QEvt const * e);
@@ -99,16 +106,10 @@ struct FSP
 
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_checkAndStoreParameters(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_armInitializeCardTimer(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_initializeCard(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_postAllOff(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_armFindCardTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_endRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_openFile(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_closeFile(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_checkFile(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_checkPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_disarmTimers(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_disarmTimersAndCleanup(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_deactivateDisplay(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_readFrameFromFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e);
@@ -119,11 +120,17 @@ struct FSP
   static void Pattern_recall(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializeFrameIndex(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * e);
 
-  static void Analog_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
-  static void Analog_initializeOutput(QP::QHsm * const hsm, QP::QEvt const * e);
-  static void Analog_enterInitialized(QP::QHsm * const hsm, QP::QEvt const * e);
-  static void Analog_setOutput(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_storeParameters(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_findCard(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_postAllOff(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_openFile(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_closeFile(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_checkFile(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_checkPattern(QP::QHsm * const hsm, QP::QEvt const * e);
 
   static uint16_t frameIndexToAnalogValue(uint16_t frame_index, uint16_t frame_count_per_pattern);
   static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message);

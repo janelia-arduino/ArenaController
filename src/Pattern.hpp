@@ -46,36 +46,36 @@ class Pattern : public QP::QActive {
 public:
     static Pattern instance;
     QP::QTimeEvt frame_rate_time_evt_;
-    std::uint16_t id_;
     std::uint16_t frame_rate_hz_;
     std::uint16_t runtime_duration_ms_;
     QP::QTimeEvt runtime_duration_time_evt_;
-    std::uint64_t file_size_;
     std::uint64_t byte_count_per_frame_;
     QP::QEQueue frame_rate_queue_;
     bool positive_direction_;
-    QP::QTimeEvt initialize_card_time_evt_;
+    QP::QTimeEvt find_card_time_evt_;
     FrameEvt const * frame_;
     std::uint16_t frame_count_per_pattern_;
     std::uint16_t frame_index_;
+    QP::QHsm * card_;
 
 public:
     Pattern();
+
+private:
+    void dispatchToCard(QP::QEvt const * e);
 
 protected:
     Q_STATE_DECL(initial);
     Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
-    Q_STATE_DECL(FileOpened);
-    Q_STATE_DECL(CheckingFile);
-    Q_STATE_DECL(CheckingPattern);
+    Q_STATE_DECL(DisplayingPattern);
     Q_STATE_DECL(PlayingPattern);
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(DisplayingFrame);
     Q_STATE_DECL(ReadingFrameFromFile);
     Q_STATE_DECL(FillingFrameBufferWithDecodedFrame);
     Q_STATE_DECL(DecodingFrame);
-    Q_STATE_DECL(InitializingCard);
+    Q_STATE_DECL(WaitingToPlayPattern);
 }; // class Pattern
 
 } // namespace AC

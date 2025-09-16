@@ -53,7 +53,7 @@ QP::QHsm * Analog_getInstance() {
 //$enddef${Shared::Analog_getInstance} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
-// generate definition of the AO
+// generate definition of the HSM
 //$define${AOs::Analog} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 

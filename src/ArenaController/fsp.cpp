@@ -1,5 +1,6 @@
 #include "fsp.hpp"
 #include "commands.hpp"
+#include "modes.hpp"
 
 
 using namespace QP;
@@ -258,6 +259,48 @@ void FSP::Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e)
   QS_END()
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->analog_->dispatch(&initializeAnalogEvt, ao->m_prio);
+}
+
+void FSP::Analog_initialize(QHsm * const hsm, QEvt const * e)
+{
+  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_SIG, hsm);
+  QS_SIG_DICTIONARY(ANALOG_INITIALIZED_SIG, hsm);
+  QS_SIG_DICTIONARY(SET_ANALOG_OUTPUT_SIG, hsm);
+}
+
+void FSP::Analog_initializeOutput(QHsm * const hsm, QEvt const * e)
+{
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("initializing analog output");
+  QS_END()
+  bool analog_initialized = BSP::initializeAnalogOutput();
+  if(analog_initialized)
+  {
+    AO_Arena->POST(&analogInitializedEvt, hsm);
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("analog output not initialized!");
+    QS_END()
+  }
+}
+
+void FSP::Analog_enterInitialized(QHsm * const hsm, QEvt const * e)
+{
+  SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
+  spev->value = constants::analog_output_zero;
+  AO_Arena->POST(spev, hsm);
+}
+
+void FSP::Analog_setOutput(QHsm * const hsm, QEvt const * e)
+{
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  BSP::setAnalogOutput(spev->value);
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("Analog_setOutput");
+  //   QS_U16(5, spev->value);
+  // QS_END()
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -703,6 +746,7 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, ao);
   QS_SIG_DICTIONARY(SWITCH_GRAYSCALE_SIG, ao);
+  QS_SIG_DICTIONARY(SET_GRAYSCALE_SIG, ao);
 }
 
 void FSP::Frame_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
@@ -849,6 +893,13 @@ void FSP::Frame_recall(QP::QActive * const ao, QP::QEvt const * e)
   frame->recall(&frame->event_queue_);
 }
 
+void FSP::Frame_setGrayscale(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Frame * const frame = static_cast<Frame * const>(ao);
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  frame->grayscale_ = spev->value;
+}
+
 void FSP::Watchdog_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   BSP::initializeWatchdog();
@@ -880,7 +931,6 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   pattern->frame_ = nullptr;
-  pattern->file_size_ = 0;
   pattern->byte_count_per_frame_ = 0;
   pattern->positive_direction_ = true;
 
@@ -893,16 +943,15 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
   QS_SIG_DICTIONARY(FRAME_RATE_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(RUNTIME_DURATION_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(FIND_CARD_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(BEGIN_PLAYING_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(END_PLAYING_PATTERN_SIG, ao);
-  QS_SIG_DICTIONARY(CARD_FOUND_SIG, ao);
-  QS_SIG_DICTIONARY(CARD_NOT_FOUND_SIG, ao);
-  QS_SIG_DICTIONARY(FILE_VALID_SIG, ao);
-  QS_SIG_DICTIONARY(FILE_NOT_VALID_SIG, ao);
-  QS_SIG_DICTIONARY(PATTERN_VALID_SIG, ao);
-  QS_SIG_DICTIONARY(PATTERN_NOT_VALID_SIG, ao);
   QS_SIG_DICTIONARY(FRAME_READ_FROM_FILE_SIG, ao);
   QS_SIG_DICTIONARY(FRAME_DECODED_SIG, ao);
+  QS_SIG_DICTIONARY(SET_FRAME_COUNT_PER_PATTERN_SIG, ao);
+  QS_SIG_DICTIONARY(SET_BYTE_COUNT_PER_FRAME_SIG, ao);
+
+  pattern->card_->init(ao->m_prio);
 }
 
 void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
@@ -932,185 +981,33 @@ void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
       QS_STR("valid positive frame rate");
     QS_END()
   }
-  pattern->id_ = ppev->pattern_id;
   pattern->frame_rate_hz_ = abs(ppev->frame_rate);
   pattern->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("check and store parameters");
   // QS_U8(0, control_mode);
-  QS_U16(5, pattern->id_);
   QS_U16(5, pattern->frame_rate_hz_);
   // QS_U16(5, init_pos);
   // QS_U16(5, gain);
   QS_U16(5, pattern->runtime_duration_ms_);
   QS_END()
+  pattern->card_->dispatch(e, ao->m_prio);
   AO_Pattern->POST(&beginPlayingPatternEvt, ao);
 }
 
-void FSP::Pattern_armInitializeCardTimer(QActive * const ao, QEvt const * e)
+void FSP::Pattern_armFindCardTimer(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->initialize_card_time_evt_.armX((constants::ticks_per_second * constants::initialize_card_timeout_duration) / constants::milliseconds_per_second);
+  pattern->find_card_time_evt_.armX((constants::ticks_per_second * constants::find_card_timeout_duration) / constants::milliseconds_per_second);
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("initializing card may cause reboot if card not found...");
+    QS_STR("finding card may cause reboot if card not found...");
   QS_END()
-}
-
-void FSP::Pattern_initializeCard(QActive * const ao, QEvt const * e)
-{
-  if (BSP::initializePatternCard())
-  {
-    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-      QS_STR("pattern card found");
-    QS_END()
-    AO_Pattern->POST(&cardFoundEvt, ao);
-  }
-  else
-  {
-    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-      QS_STR("pattern card not found");
-    QS_END()
-    AO_Pattern->POST(&cardNotFoundEvt, ao);
-  }
-}
-
-void FSP::Pattern_postAllOff(QActive * const ao, QEvt const * e)
-{
-  AO_Arena->POST(&allOffEvt, ao);
 }
 
 void FSP::Pattern_endRuntimeDuration(QActive * const ao, QEvt const * e)
 {
   QF::PUBLISH(&patternFinishedPlayingEvt, ao);
   AO_Arena->POST(&allOffEvt, ao);
-}
-
-void FSP::Pattern_openFile(QActive * const ao, QEvt const * e)
-{
-  Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->file_size_ = BSP::openPatternFileForReading(pattern->id_);
-  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("file opened");
-  QS_END()
-}
-
-void FSP::Pattern_closeFile(QActive * const ao, QEvt const * e)
-{
-  BSP::closePatternFile();
-  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("file closed");
-  QS_END()
-}
-
-void FSP::Pattern_checkFile(QActive * const ao, QEvt const * e)
-{
-  Pattern * const pattern = static_cast<Pattern * const>(ao);
-  if (pattern->file_size_)
-  {
-    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-      QS_STR("file valid");
-      QS_U32(8, pattern->id_);
-      QS_U32(8, pattern->file_size_);
-    QS_END()
-    AO_Pattern->POST(&fileValidEvt, ao);
-  }
-  else
-  {
-    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-      QS_STR("file not valid");
-      QS_U32(8, pattern->id_);
-    QS_END()
-    AO_Pattern->POST(&fileNotValidEvt, ao);
-  }
-}
-
-void FSP::Pattern_checkPattern(QActive * const ao, QEvt const * e)
-{
-  Pattern * const pattern = static_cast<Pattern * const>(ao);
-  Frame * const frame = static_cast<Frame * const>(AO_Frame);
-
-  PatternHeader pattern_header = BSP::rewindPatternFileAndReadHeader();
-  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("frame_count_x");
-    QS_U16(5, pattern_header.frame_count_x);
-    QS_STR("frame_count_y");
-    QS_U16(5, pattern_header.frame_count_y);
-    QS_STR("grayscale_value");
-    QS_U8(0, pattern_header.grayscale_value);
-    QS_STR("panel_count_per_frame_row");
-    QS_U8(0, pattern_header.panel_count_per_frame_row);
-    QS_STR("panel_count_per_frame_col");
-    QS_U8(0, pattern_header.panel_count_per_frame_col);
-  QS_END()
-
-  if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerFrameRow())
-  {
-    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-      QS_STR("pattern frame has incorrect number of rows:");
-      QS_STR("header row count");
-      QS_U8(0, pattern_header.panel_count_per_frame_row);
-      QS_STR("bsp row count");
-      QS_U8(0, BSP::getPanelCountPerRegionRow());
-    QS_END()
-    AO_Pattern->POST(&patternNotValidEvt, ao);
-    return;
-  }
-  if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerFrameCol())
-  {
-    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-      QS_STR("pattern frame has incorrect number of cols:");
-      QS_STR("header col count");
-      QS_U8(0, pattern_header.panel_count_per_frame_col);
-      QS_STR("bsp col count");
-      QS_U8(0, BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame());
-    QS_END()
-    AO_Pattern->POST(&patternNotValidEvt, ao);
-    return;
-  }
-
-  uint64_t byte_count_per_frame;
-  switch (pattern_header.grayscale_value)
-  {
-    case constants::pattern_grayscale_value:
-    {
-      frame->grayscale_ = true;
-      byte_count_per_frame = BSP::getByteCountPerPatternFrameGrayscale();
-      break;
-    }
-    case constants::pattern_binary_value:
-    {
-      frame->grayscale_ = false;
-      byte_count_per_frame = BSP::getByteCountPerPatternFrameBinary();
-      break;
-    }
-    default:
-      QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-        QS_STR("pattern has invalid grayscale value");
-      QS_END()
-      AO_Pattern->POST(&patternNotValidEvt, ao);
-      return;
-  }
-
-  if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_frame + constants::pattern_header_size) != pattern->file_size_)
-  {
-    QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-      QS_STR("pattern frame has incorrect file size");
-    QS_END()
-    AO_Pattern->POST(&patternNotValidEvt, ao);
-    return;
-  }
-  pattern->frame_count_per_pattern_ = pattern_header.frame_count_x;
-
-  pattern->byte_count_per_frame_ = byte_count_per_frame;
-  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("byte count per pattern frame");
-    QS_U16(5, byte_count_per_frame);
-  QS_END()
-
-  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("pattern valid");
-  QS_END()
-  AO_Pattern->POST(&patternValidEvt, ao);
 }
 
 void FSP::Pattern_armTimers(QActive * const ao, QEvt const * e)
@@ -1127,7 +1024,7 @@ void FSP::Pattern_armTimers(QActive * const ao, QEvt const * e)
   QS_END()
 }
 
-void FSP::Pattern_disarmTimers(QActive * const ao, QEvt const * e)
+void FSP::Pattern_disarmTimersAndCleanup(QActive * const ao, QEvt const * e)
 {
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("disarming pattern timers");
@@ -1139,6 +1036,12 @@ void FSP::Pattern_disarmTimers(QActive * const ao, QEvt const * e)
   SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
   spev->value = constants::analog_output_zero;
   AO_Arena->POST(spev, ao);
+
+  if (pattern->frame_)
+  {
+    Q_DELETE_REF(pattern->frame_);
+    pattern->frame_ = nullptr;
+  }
 }
 
 void FSP::Pattern_deactivateDisplay(QActive * const ao, QEvt const * e)
@@ -1250,46 +1153,203 @@ void FSP::Pattern_initializeFrameIndex(QActive * const ao, QEvt const * e)
   pattern->frame_index_ = 0;
 }
 
-void FSP::Analog_initialize(QHsm * const hsm, QEvt const * e)
+void FSP::Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const * e)
 {
-  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_SIG, hsm);
-  QS_SIG_DICTIONARY(ANALOG_INITIALIZED_SIG, hsm);
-  QS_SIG_DICTIONARY(SET_ANALOG_OUTPUT_SIG, hsm);
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  pattern->frame_count_per_pattern_ = spev->value;
 }
 
-void FSP::Analog_initializeOutput(QHsm * const hsm, QEvt const * e)
+void FSP::Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * e)
 {
-  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-    QS_STR("initializing analog output");
-  QS_END()
-  bool analog_initialized = BSP::initializeAnalogOutput();
-  if(analog_initialized)
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  pattern->byte_count_per_frame_ = spev->value;
+}
+
+void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
+{
+  Card * const card = static_cast<Card * const>(hsm);
+  card->pattern_id_ = 0;
+  card->file_size_ = 0;
+
+  QS_SIG_DICTIONARY(FIND_CARD_TIMEOUT_SIG, hsm);
+  QS_SIG_DICTIONARY(CARD_FOUND_SIG, hsm);
+  QS_SIG_DICTIONARY(CARD_NOT_FOUND_SIG, hsm);
+  QS_SIG_DICTIONARY(FILE_VALID_SIG, hsm);
+  QS_SIG_DICTIONARY(FILE_NOT_VALID_SIG, hsm);
+  QS_SIG_DICTIONARY(PATTERN_VALID_SIG, hsm);
+  QS_SIG_DICTIONARY(PATTERN_NOT_VALID_SIG, hsm);
+}
+
+void FSP::Card_storeParameters(QHsm * const hsm, QEvt const * e)
+{
+  Card * const card = static_cast<Card * const>(hsm);
+  PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
+
+  card->pattern_id_ = ppev->pattern_id;
+}
+
+void FSP::Card_findCard(QHsm * const hsm, QEvt const * e)
+{
+  if (BSP::findPatternCard())
   {
-    AO_Arena->POST(&analogInitializedEvt, hsm);
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern card found");
+    QS_END()
+    AO_Pattern->POST(&cardFoundEvt, hsm);
   }
   else
   {
-    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-      QS_STR("analog output not initialized!");
+    QS_BEGIN_ID(USER_COMMENT,AO_Pattern->m_prio)
+      QS_STR("pattern card not found");
     QS_END()
+    AO_Pattern->POST(&cardNotFoundEvt, hsm);
   }
 }
 
-void FSP::Analog_enterInitialized(QHsm * const hsm, QEvt const * e)
+void FSP::Card_postAllOff(QHsm * const hsm, QEvt const * e)
 {
-  SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
-  spev->value = constants::analog_output_zero;
-  AO_Arena->POST(spev, hsm);
+  AO_Arena->POST(&allOffEvt, hsm);
 }
 
-void FSP::Analog_setOutput(QHsm * const hsm, QEvt const * e)
+void FSP::Card_openFile(QHsm * const hsm, QEvt const * e)
 {
-  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  BSP::setAnalogOutput(spev->value);
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("Analog_setOutput");
-  //   QS_U16(5, spev->value);
-  // QS_END()
+  Card * const card = static_cast<Card * const>(hsm);
+
+  card->file_size_ = BSP::openPatternFileForReading(card->pattern_id_);
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("file opened");
+  QS_END()
+}
+
+void FSP::Card_closeFile(QHsm * const hsm, QEvt const * e)
+{
+  BSP::closePatternFile();
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("file closed");
+  QS_END()
+}
+
+void FSP::Card_checkFile(QHsm * const hsm, QEvt const * e)
+{
+  Card * const card = static_cast<Card * const>(hsm);
+  if (card->file_size_)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("file valid");
+      QS_U32(8, card->pattern_id_);
+      QS_U32(8, card->file_size_);
+    QS_END()
+    AO_Pattern->POST(&fileValidEvt, AO_Pattern);
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("file not valid");
+      QS_U32(8, card->pattern_id_);
+    QS_END()
+    AO_Pattern->POST(&fileNotValidEvt, AO_Pattern);
+  }
+}
+
+void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
+{
+  Card * const card = static_cast<Card * const>(hsm);
+
+  PatternHeader pattern_header = BSP::rewindPatternFileAndReadHeader();
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("frame_count_x");
+    QS_U16(5, pattern_header.frame_count_x);
+    QS_STR("frame_count_y");
+    QS_U16(5, pattern_header.frame_count_y);
+    QS_STR("grayscale_value");
+    QS_U8(0, pattern_header.grayscale_value);
+    QS_STR("panel_count_per_frame_row");
+    QS_U8(0, pattern_header.panel_count_per_frame_row);
+    QS_STR("panel_count_per_frame_col");
+    QS_U8(0, pattern_header.panel_count_per_frame_col);
+  QS_END()
+
+  if (pattern_header.panel_count_per_frame_row != BSP::getPanelCountPerFrameRow())
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern frame has incorrect number of rows:");
+      QS_STR("header row count");
+      QS_U8(0, pattern_header.panel_count_per_frame_row);
+      QS_STR("bsp row count");
+      QS_U8(0, BSP::getPanelCountPerRegionRow());
+    QS_END()
+    AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+    return;
+  }
+  if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerFrameCol())
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern frame has incorrect number of cols:");
+      QS_STR("header col count");
+      QS_U8(0, pattern_header.panel_count_per_frame_col);
+      QS_STR("bsp col count");
+      QS_U8(0, BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame());
+    QS_END()
+    AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+    return;
+  }
+
+  bool grayscale;
+  uint64_t byte_count_per_frame;
+  switch (pattern_header.grayscale_value)
+  {
+    case constants::pattern_grayscale_value:
+    {
+      grayscale = true;
+      byte_count_per_frame = BSP::getByteCountPerPatternFrameGrayscale();
+      break;
+    }
+    case constants::pattern_binary_value:
+    {
+      grayscale = false;
+      byte_count_per_frame = BSP::getByteCountPerPatternFrameBinary();
+      break;
+    }
+    default:
+      QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+        QS_STR("pattern has invalid grayscale value");
+      QS_END()
+      AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+      return;
+  }
+
+  if ((uint64_t)(pattern_header.frame_count_x * byte_count_per_frame + constants::pattern_header_size) != card->file_size_)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern frame has incorrect file size");
+    QS_END()
+    AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+    return;
+  }
+
+  SetParameterEvt *set_grayscale_ev = Q_NEW(SetParameterEvt, SET_GRAYSCALE_SIG);
+  set_grayscale_ev->value = grayscale;
+  AO_Frame->POST(set_grayscale_ev, AO_Pattern);
+
+  SetParameterEvt *set_frame_count_ev = Q_NEW(SetParameterEvt, SET_FRAME_COUNT_PER_PATTERN_SIG);
+  set_frame_count_ev->value = pattern_header.frame_count_x;
+  AO_Pattern->POST(set_frame_count_ev, AO_Pattern);
+
+  SetParameterEvt *set_byte_count_ev = Q_NEW(SetParameterEvt, SET_BYTE_COUNT_PER_FRAME_SIG);
+  set_byte_count_ev->value = byte_count_per_frame;
+  AO_Pattern->POST(set_byte_count_ev, AO_Pattern);
+
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("byte count per pattern frame");
+    QS_U16(5, byte_count_per_frame);
+  QS_END()
+
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("pattern valid");
+  QS_END()
+  AO_Pattern->POST(&patternValidEvt, AO_Pattern);
 }
 
 uint16_t FSP::frameIndexToAnalogValue(uint16_t frame_index, uint16_t frame_count_per_pattern)
@@ -1420,23 +1480,31 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       memcpy(&runtime_duration, command_buffer + command_buffer_position, sizeof(runtime_duration));
       command_buffer_position += sizeof(runtime_duration);
 
-      PlayPatternEvt *ppev = Q_NEW(PlayPatternEvt, PLAY_PATTERN_SIG);
-      ppev->pattern_id = pattern_id;
-      ppev->frame_rate = frame_rate;
-      ppev->runtime_duration = runtime_duration;
-      QF::PUBLISH(ppev, &l_FSP_ID);
-
-      appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("trial-params command");
-        QS_STR("play pattern");
-        // QS_U8(0, control_mode);
-        // QS_U16(5, pattern_id);
-        // QS_U16(5, frame_rate);
-        // QS_U16(5, init_pos);
-        // QS_U16(5, gain);
-        // QS_U16(5, runtime_duration);
       QS_END()
+      switch (control_mode)
+      {
+        case PLAY_PATTERN_MODE:
+        {
+          PlayPatternEvt *ppev = Q_NEW(PlayPatternEvt, PLAY_PATTERN_SIG);
+          ppev->pattern_id = pattern_id;
+          ppev->frame_rate = frame_rate;
+          ppev->runtime_duration = runtime_duration;
+          QF::PUBLISH(ppev, &l_FSP_ID);
+
+          appendMessage(response, response_byte_count, "");
+          QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+            QS_STR("play pattern mode");
+            QS_U16(5, pattern_id);
+            QS_U16(5, frame_rate);
+            QS_U16(5, runtime_duration);
+          QS_END()
+          break;
+        }
+        default:
+          break;
+      }
       break;
     }
     case SET_REFRESH_RATE_CMD:

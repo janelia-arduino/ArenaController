@@ -602,7 +602,7 @@ void BSP::transferPanelSet(const uint8_t * const buffer,
   }
 }
 
-bool BSP::initializePatternCard()
+bool BSP::findPatternCard()
 {
   return sd.begin(SdioConfig(FIFO_SDIO));
 }
