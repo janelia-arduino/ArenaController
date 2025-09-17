@@ -106,7 +106,7 @@ struct FSP
   static void Watchdog_feedWatchdog(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_checkAndStoreParameters(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_initializePlayPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armFindCardTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_endRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);

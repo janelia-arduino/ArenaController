@@ -952,7 +952,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   pattern->card_->init(ao->m_prio);
 }
 
-void FSP::Pattern_checkAndStoreParameters(QActive * const ao, QEvt const * e)
+void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);

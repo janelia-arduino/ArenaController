@@ -106,7 +106,7 @@ Q_STATE_DEF(Pattern, Initialized) {
         }
         //${AOs::Pattern::SM::Initialized::PLAY_PATTERN}
         case PLAY_PATTERN_SIG: {
-            FSP::Pattern_checkAndStoreParameters(this, e);
+            FSP::Pattern_initializePlayPattern(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

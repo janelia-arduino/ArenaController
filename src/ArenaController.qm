@@ -828,7 +828,7 @@ card_ = Card_getInstance();</code>
       </initial_glyph>
      </initial>
      <tran trig="PLAY_PATTERN">
-      <action brief="checkAndStoreParameters()">FSP::Pattern_checkAndStoreParameters(this, e);</action>
+      <action brief="initializePlayPattern()">FSP::Pattern_initializePlayPattern(this, e);</action>
       <tran_glyph conn="1,13,3,-1,33">
        <action box="0,-2,20,5"/>
       </tran_glyph>
