@@ -92,7 +92,13 @@ Q_STATE_DEF(Card, Initialized) {
         }
         //${AOs::Card::SM::Initialized::PLAY_PATTERN}
         case PLAY_PATTERN_SIG: {
-            FSP::Card_storeParameters(this, e);
+            FSP::Card_storePlayPatternParameters(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Card::SM::Initialized::SHOW_PATTERN_FRAME}
+        case SHOW_PATTERN_FRAME_SIG: {
+            FSP::Card_storeShowPatternFrameParameters(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -108,8 +114,19 @@ Q_STATE_DEF(Card, Initialized) {
 Q_STATE_DEF(Card, WaitingToFindCard) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Card::SM::Initialized::WaitingToFindCard}
+        case Q_ENTRY_SIG: {
+              QS_BEGIN_ID(USER_COMMENT, 3)
+                QS_STR("WaitingToFindCard");
+              QS_END()
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //${AOs::Card::SM::Initialized::WaitingToFindCar~::FIND_CARD_TIMEOUT}
         case FIND_CARD_TIMEOUT_SIG: {
+              QS_BEGIN_ID(USER_COMMENT, 3)
+                QS_STR("FIND_CARD_TIMEOUT");
+              QS_END()
             status_ = tran(&FindingCard);
             break;
         }
@@ -173,6 +190,11 @@ Q_STATE_DEF(Card, FileOpened) {
         }
         //${AOs::Card::SM::Initialized::FileOpened::END_PLAYING_PATTERN}
         case END_PLAYING_PATTERN_SIG: {
+            status_ = tran(&WaitingToFindCard);
+            break;
+        }
+        //${AOs::Card::SM::Initialized::FileOpened::END_SHOWING_PATTERN_FRAME}
+        case END_SHOWING_PATTERN_FRAME_SIG: {
             status_ = tran(&WaitingToFindCard);
             break;
         }

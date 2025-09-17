@@ -72,13 +72,18 @@ protected:
     Q_STATE_DECL(DisplayingPattern);
     Q_STATE_DECL(WaitingToPlayPattern);
     Q_STATE_DECL(ShowingPatternFrame);
+    Q_STATE_DECL(SPF_ReadingFrameFromFile);
+    Q_STATE_DECL(SPF_DecodingFrame);
+    Q_STATE_DECL(SPF_FillingFrameBufferWithDecodedFrame);
+    Q_STATE_DECL(SPF_DisplayingFrame);
+    Q_STATE_DECL(WaitingToDisplayNextFrame);
     Q_STATE_DECL(WaitingToShowPatternFrame);
     Q_STATE_DECL(PlayingPattern);
-    Q_STATE_DECL(DecodingFrame);
-    Q_STATE_DECL(DisplayingFrame);
+    Q_STATE_DECL(PP_DecodingFrame);
+    Q_STATE_DECL(PP_DisplayingFrame);
     Q_STATE_DECL(WaitingToDisplayFrame);
-    Q_STATE_DECL(FillingFrameBufferWithDecodedFrame);
-    Q_STATE_DECL(ReadingFrameFromFile);
+    Q_STATE_DECL(PP_FillingFrameBufferWithDecodedFrame);
+    Q_STATE_DECL(PP_ReadingFrameFromFile);
 }; // class Pattern
 
 } // namespace AC

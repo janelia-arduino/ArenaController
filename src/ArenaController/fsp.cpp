@@ -45,6 +45,8 @@ static QEvt const fillFrameBufferWithDecodedFrameEvt = {FILL_FRAME_BUFFER_WITH_D
 
 static QEvt const beginPlayingPatternEvt = {BEGIN_PLAYING_PATTERN_SIG, 0U, 0U};
 static QEvt const endPlayingPatternEvt = {END_PLAYING_PATTERN_SIG, 0U, 0U};
+static QEvt const beginShowingPatternFrameEvt = {BEGIN_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
+static QEvt const endShowingPatternFrameEvt = {END_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
 static QEvt const cardFoundEvt = {CARD_FOUND_SIG, 0U, 0U};
 static QEvt const cardNotFoundEvt = {CARD_NOT_FOUND_SIG, 0U, 0U};
 static QEvt const fileValidEvt = {FILE_VALID_SIG, 0U, 0U};
@@ -259,7 +261,7 @@ void FSP::Arena_showPatternFrameTransition(QP::QActive * const ao, QP::QEvt cons
 
 void FSP::Arena_endShowPatternFrame(QActive * const ao, QEvt const * e)
 {
-  AO_Pattern->POST(&endPlayingPatternEvt, ao);
+  AO_Pattern->POST(&endShowingPatternFrameEvt, ao);
 }
 
 void FSP::Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e)
@@ -982,22 +984,25 @@ void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
   }
   pattern->frame_rate_hz_ = abs(ppev->frame_rate);
   pattern->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
-  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-    QS_STR("check and store parameters");
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("check and store parameters");
   // QS_U8(0, control_mode);
-  QS_U16(5, pattern->frame_rate_hz_);
+  // QS_U16(5, pattern->frame_rate_hz_);
   // QS_U16(5, init_pos);
   // QS_U16(5, gain);
-  QS_U16(5, pattern->runtime_duration_ms_);
-  QS_END()
+  // QS_U16(5, pattern->runtime_duration_ms_);
+  // QS_END()
   pattern->card_->dispatch(e, ao->m_prio);
   AO_Pattern->POST(&beginPlayingPatternEvt, ao);
 }
 
 void FSP::Pattern_initializeShowPatternFrame(QActive * const ao, QEvt const * e)
 {
-  // Pattern * const pattern = static_cast<Pattern * const>(ao);
-  // ShowPatternFrameEvt const * spfev = static_cast<ShowPatternFrameEvt const *>(e);
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  ShowPatternFrameEvt const * spfev = static_cast<ShowPatternFrameEvt const *>(e);
+  pattern->frame_index_ = spfev->frame_index;
+  pattern->card_->dispatch(e, ao->m_prio);
+  AO_Pattern->POST(&beginShowingPatternFrameEvt, ao);
 }
 
 void FSP::Pattern_armFindCardTimer(QActive * const ao, QEvt const * e)
@@ -1197,16 +1202,35 @@ void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
   QS_SIG_DICTIONARY(PATTERN_NOT_VALID_SIG, hsm);
 }
 
-void FSP::Card_storeParameters(QHsm * const hsm, QEvt const * e)
+void FSP::Card_storePlayPatternParameters(QHsm * const hsm, QEvt const * e)
 {
   Card * const card = static_cast<Card * const>(hsm);
   PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
 
   card->pattern_id_ = ppev->pattern_id;
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("store pattern id");
+    QS_U32(8, card->pattern_id_);
+  QS_END()
+}
+
+void FSP::Card_storeShowPatternFrameParameters(QHsm * const hsm, QEvt const * e)
+{
+  Card * const card = static_cast<Card * const>(hsm);
+  ShowPatternFrameEvt const * spfev = static_cast<ShowPatternFrameEvt const *>(e);
+
+  card->pattern_id_ = spfev->pattern_id;
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("store pattern id");
+    QS_U32(8, card->pattern_id_);
+  QS_END()
 }
 
 void FSP::Card_findCard(QHsm * const hsm, QEvt const * e)
 {
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("Card_findCard");
+  QS_END()
   if (BSP::findPatternCard())
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)

@@ -128,7 +128,8 @@ struct FSP
   static void Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Card_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
-  static void Card_storeParameters(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_storePlayPatternParameters(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_storeShowPatternFrameParameters(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_findCard(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_postAllOff(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_openFile(QP::QHsm * const hsm, QP::QEvt const * e);
