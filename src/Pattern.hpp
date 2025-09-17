@@ -57,6 +57,7 @@ public:
     std::uint16_t frame_count_per_pattern_;
     std::uint16_t frame_index_;
     QP::QHsm * card_;
+    std::uint8_t grayscale_;
 
 public:
     Pattern();
@@ -69,15 +70,15 @@ protected:
     Q_STATE_DECL(Initialized);
     Q_STATE_DECL(Inactive);
     Q_STATE_DECL(DisplayingPattern);
-    Q_STATE_DECL(PlayingPattern);
-    Q_STATE_DECL(WaitingToDisplayFrame);
-    Q_STATE_DECL(DisplayingFrame);
-    Q_STATE_DECL(ReadingFrameFromFile);
-    Q_STATE_DECL(FillingFrameBufferWithDecodedFrame);
-    Q_STATE_DECL(DecodingFrame);
     Q_STATE_DECL(WaitingToPlayPattern);
     Q_STATE_DECL(ShowingPatternFrame);
     Q_STATE_DECL(WaitingToShowPatternFrame);
+    Q_STATE_DECL(PlayingPattern);
+    Q_STATE_DECL(DecodingFrame);
+    Q_STATE_DECL(DisplayingFrame);
+    Q_STATE_DECL(WaitingToDisplayFrame);
+    Q_STATE_DECL(FillingFrameBufferWithDecodedFrame);
+    Q_STATE_DECL(ReadingFrameFromFile);
 }; // class Pattern
 
 } // namespace AC

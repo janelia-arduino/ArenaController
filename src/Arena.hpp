@@ -45,7 +45,6 @@ namespace AC {
 class Arena : public QP::QActive {
 public:
     static Arena instance;
-    std::uint32_t frames_streamed_;
     QP::QTimeEvt initialize_analog_time_evt_;
     QP::QHsm * analog_;
 

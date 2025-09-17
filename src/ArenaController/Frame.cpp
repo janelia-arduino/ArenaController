@@ -98,8 +98,8 @@ Q_STATE_DEF(Frame, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Frame::SM::Initialized::SWITCH_GRAYSCALE}
-        case SWITCH_GRAYSCALE_SIG: {
+        //${AOs::Frame::SM::Initialized::SET_GRAYSCALE}
+        case SET_GRAYSCALE_SIG: {
             FSP::Frame_defer(this, e);
             status_ = Q_RET_HANDLED;
             break;
@@ -107,12 +107,6 @@ Q_STATE_DEF(Frame, Initialized) {
         //${AOs::Frame::SM::Initialized::DEACTIVATE_DISPLAY}
         case DEACTIVATE_DISPLAY_SIG: {
             FSP::Frame_deleteFrameReference(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Frame::SM::Initialized::SET_GRAYSCALE}
-        case SET_GRAYSCALE_SIG: {
-            FSP::Frame_setGrayscale(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -222,9 +216,9 @@ Q_STATE_DEF(Frame, Inactive) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Frame::SM::Initialized::Inactive::SWITCH_GRAYSCALE}
-        case SWITCH_GRAYSCALE_SIG: {
-            FSP::Frame_switchGrayscale(this, e);
+        //${AOs::Frame::SM::Initialized::Inactive::SET_GRAYSCALE}
+        case SET_GRAYSCALE_SIG: {
+            FSP::Frame_setGrayscale(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

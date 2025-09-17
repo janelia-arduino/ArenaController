@@ -152,6 +152,7 @@ Q_STATE_DEF(Arena, ArenaOn) {
         }
         //${AOs::Arena::SM::ArenaOn::SHOW_PATTERN_FRAME}
         case SHOW_PATTERN_FRAME_SIG: {
+            FSP::Arena_showPatternFrameTransition(this, e);
             status_ = tran(&ShowingPatternFrame);
             break;
         }
@@ -251,6 +252,12 @@ Q_STATE_DEF(Arena, PlayingPattern) {
 Q_STATE_DEF(Arena, ShowingPatternFrame) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Arena::SM::ArenaOn::ShowingPatternFrame}
+        case Q_EXIT_SIG: {
+            FSP::Arena_endShowPatternFrame(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&ArenaOn);
             break;

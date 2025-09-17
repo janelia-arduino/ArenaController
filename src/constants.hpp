@@ -7,9 +7,16 @@ namespace AC
 namespace constants
 {
 constexpr uint32_t ticks_per_second = 1000;
-constexpr uint8_t set_parameter_event_pool_count = 20;
+constexpr uint8_t set_parameter_event_pool_count = 30;
 constexpr uint8_t command_event_pool_count = 20;
 constexpr uint8_t frame_event_pool_count = 4;
+constexpr uint8_t watchdog_event_queue_count = 2;
+constexpr uint8_t serial_command_interface_event_queue_count = 10;
+constexpr uint8_t ethernet_command_interface_event_queue_count = 10;
+constexpr uint8_t pattern_event_queue_count = 20;
+constexpr uint8_t arena_event_queue_count = 20;
+constexpr uint8_t display_event_queue_count = 20;
+constexpr uint8_t frame_event_queue_count = 20;
 
 // Duration before callback fires
 constexpr uint32_t watchdog_trigger_seconds = 1;
@@ -117,8 +124,8 @@ constexpr uint16_t byte_count_per_frame_max = \
   panel_count_per_frame_max * \
   byte_count_per_panel_grayscale; // 60*132=7920
 
-constexpr uint8_t switch_grayscale_command_value_grayscale = 1;
-constexpr uint8_t switch_grayscale_command_value_binary = 0;
+constexpr uint8_t set_grayscale_command_value_grayscale = 1;
+constexpr uint8_t set_grayscale_command_value_binary = 0;
 
 // Pattern
 constexpr uint8_t pattern_grayscale_value = 16;

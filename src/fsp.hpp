@@ -33,11 +33,13 @@ struct FSP
   static void Arena_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_endPlayingPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_allOnTransition(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_streamFrameTransition(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_playPatternTransition(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_endPlayingPattern(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_showPatternFrameTransition(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_endShowPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Analog_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
@@ -94,10 +96,9 @@ struct FSP
   static void Frame_endTransferPanelSet(QP::QActive * const ao, QP::QEvt const * e);
   static bool Frame_ifFrameNotTransferred(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_publishFrameTransferred(QP::QActive * const ao, QP::QEvt const * e);
-  static void Frame_switchGrayscale(QP::QActive * const ao, QP::QEvt const * e);
+  static void Frame_setGrayscale(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_defer(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_recall(QP::QActive * const ao, QP::QEvt const * e);
-  static void Frame_setGrayscale(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Watchdog_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Watchdog_armWatchdogTimer(QP::QActive * const ao, QP::QEvt const * e);
@@ -122,6 +123,7 @@ struct FSP
   static void Pattern_initializeFrameIndex(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Card_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_storeParameters(QP::QHsm * const hsm, QP::QEvt const * e);

@@ -49,7 +49,6 @@ static QEvt const cardFoundEvt = {CARD_FOUND_SIG, 0U, 0U};
 static QEvt const cardNotFoundEvt = {CARD_NOT_FOUND_SIG, 0U, 0U};
 static QEvt const fileValidEvt = {FILE_VALID_SIG, 0U, 0U};
 static QEvt const fileNotValidEvt = {FILE_NOT_VALID_SIG, 0U, 0U};
-static QEvt const patternValidEvt = {PATTERN_VALID_SIG, 0U, 0U};
 static QEvt const patternNotValidEvt = {PATTERN_NOT_VALID_SIG, 0U, 0U};
 static QEvt const frameDecodedEvt = {FRAME_DECODED_SIG, 0U, 0U};
 
@@ -123,37 +122,37 @@ void FSP::ArenaController_setup()
   QF::psInit(subscrSto, Q_DIM(subscrSto));
 
   // statically allocate event queues for the AOs and start them...
-  static QEvt const *watchdog_queueSto[2];
+  static QEvt const *watchdog_queueSto[constants::watchdog_event_queue_count];
   AO_Watchdog->start(1U, // priority
     watchdog_queueSto, Q_DIM(watchdog_queueSto),
     (void *)0, 0U); // no stack
 
-  static QEvt const *serial_command_interface_queueSto[10];
+  static QEvt const *serial_command_interface_queueSto[constants::serial_command_interface_event_queue_count];
   AO_SerialCommandInterface->start(2U, // priority
     serial_command_interface_queueSto, Q_DIM(serial_command_interface_queueSto),
     (void *)0, 0U); // no stack
 
-  static QEvt const *ethernet_command_interface_queueSto[10];
+  static QEvt const *ethernet_command_interface_queueSto[constants::serial_command_interface_event_queue_count];
   AO_EthernetCommandInterface->start(3U, // priority
     ethernet_command_interface_queueSto, Q_DIM(ethernet_command_interface_queueSto),
     (void *)0, 0U); // no stack
 
-  static QEvt const *pattern_queueSto[10];
+  static QEvt const *pattern_queueSto[constants::pattern_event_queue_count];
   AO_Pattern->start(4U, // priority
     pattern_queueSto, Q_DIM(pattern_queueSto),
     (void *)0, 0U); // no stack
 
-  static QEvt const *arena_queueSto[10];
+  static QEvt const *arena_queueSto[constants::arena_event_queue_count];
   AO_Arena->start(5U, // priority
     arena_queueSto, Q_DIM(arena_queueSto),
     (void *)0, 0U); // no stack
 
-  static QEvt const *display_queueSto[10];
+  static QEvt const *display_queueSto[constants::display_event_queue_count];
   AO_Display->start(6U, // priority
     display_queueSto, Q_DIM(display_queueSto),
     (void *)0, 0U); // no stack
 
-  static QEvt const *frame_queueSto[10];
+  static QEvt const *frame_queueSto[constants::frame_event_queue_count];
   AO_Frame->start(7U, // priority
     frame_queueSto, Q_DIM(frame_queueSto),
     (void *)0, 0U); // no stack
@@ -183,7 +182,6 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(SET_ANALOG_OUTPUT_SIG, ao);
 
   Arena * const arena = static_cast<Arena * const>(ao);
-  arena->frames_streamed_ = 0;
   arena->initialize_analog_time_evt_.armX(constants::ticks_per_second/constants::milliseconds_per_second * constants::initialize_analog_duration_ms);
 
   arena->analog_->init(ao->m_prio);
@@ -224,15 +222,8 @@ void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
 }
 
-void FSP::Arena_endPlayingPattern(QActive * const ao, QEvt const * e)
-{
-  AO_Pattern->POST(&endPlayingPatternEvt, ao);
-}
-
 void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
-  Arena * const arena = static_cast<Arena * const>(ao);
-  arena->frames_streamed_ = 0;
   SetParameterEvt *set_analog_output_ev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
   set_analog_output_ev->value = constants::analog_output_zero;
   AO_Arena->POST(set_analog_output_ev, ao);
@@ -241,8 +232,6 @@ void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
 void FSP::Arena_allOnTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
   Arena_deactivateDisplay(ao, e);
-  Arena * const arena = static_cast<Arena * const>(ao);
-  arena->frames_streamed_ = 0;
   SetParameterEvt *set_analog_output_ev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
   set_analog_output_ev->value = constants::analog_output_zero;
   AO_Arena->POST(set_analog_output_ev, ao);
@@ -256,8 +245,21 @@ void FSP::Arena_streamFrameTransition(QP::QActive * const ao, QP::QEvt const * e
 void FSP::Arena_playPatternTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
   Arena_deactivateDisplay(ao, e);
-  Arena * const arena = static_cast<Arena * const>(ao);
-  arena->frames_streamed_ = 0;
+}
+
+void FSP::Arena_endPlayingPattern(QActive * const ao, QEvt const * e)
+{
+  AO_Pattern->POST(&endPlayingPatternEvt, ao);
+}
+
+void FSP::Arena_showPatternFrameTransition(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Arena_deactivateDisplay(ao, e);
+}
+
+void FSP::Arena_endShowPatternFrame(QActive * const ao, QEvt const * e)
+{
+  AO_Pattern->POST(&endPlayingPatternEvt, ao);
 }
 
 void FSP::Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e)
@@ -749,7 +751,6 @@ void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(PANEL_SET_TRANSFERRED_SIG, ao);
   QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, ao);
-  QS_SIG_DICTIONARY(SWITCH_GRAYSCALE_SIG, ao);
   QS_SIG_DICTIONARY(SET_GRAYSCALE_SIG, ao);
 }
 
@@ -853,31 +854,31 @@ void FSP::Frame_publishFrameTransferred(QActive * const ao, QEvt const * e)
   QF::PUBLISH(&frameTransferredEvt, ao);
 }
 
-void FSP::Frame_switchGrayscale(QActive * const ao, QEvt const * e)
+void FSP::Frame_setGrayscale(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
 
   uint8_t grayscale_index = spev->value;
 
-  if (grayscale_index == constants::switch_grayscale_command_value_grayscale)
+  if (grayscale_index == constants::set_grayscale_command_value_grayscale)
   {
     frame->grayscale_ = true;
     QS_BEGIN_ID(USER_COMMENT, AO_Frame->m_prio)
-      QS_STR("switch grayscale to grayscale");
+      QS_STR("set grayscale to true");
     QS_END()
   }
-  else if (grayscale_index == constants::switch_grayscale_command_value_binary)
+  else if (grayscale_index == constants::set_grayscale_command_value_binary)
   {
     frame->grayscale_ = false;
     QS_BEGIN_ID(USER_COMMENT, AO_Frame->m_prio)
-      QS_STR("switch grayscale to binary");
+      QS_STR("set grayscale to false");
     QS_END()
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Frame->m_prio)
-      QS_STR("invalid switch grayscale value");
+      QS_STR("invalid grayscale value");
     QS_END()
   }
 }
@@ -895,13 +896,6 @@ void FSP::Frame_recall(QP::QActive * const ao, QP::QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
   frame->recall(&frame->event_queue_);
-}
-
-void FSP::Frame_setGrayscale(QP::QActive * const ao, QP::QEvt const * e)
-{
-  Frame * const frame = static_cast<Frame * const>(ao);
-  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
-  frame->grayscale_ = spev->value;
 }
 
 void FSP::Watchdog_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -1102,17 +1096,8 @@ void FSP::Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * 
 
 void FSP::Pattern_decodeFrame(QActive * const ao, QEvt const * e)
 {
-  // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-  //   QS_STR("decoding pattern frame");
-  // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  Frame * const frame = static_cast<Frame * const>(AO_Frame);
-  BSP::decodePatternFrameBuffer(pattern->frame_->buffer, frame->grayscale_);
-  // uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(pattern->frame_->buffer, frame->grayscale_);
-  // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-  //   QS_STR("bytes decoded");
-  //   QS_U32(8, bytes_decoded);
-  // QS_END()
+  BSP::decodePatternFrameBuffer(pattern->frame_->buffer, pattern->grayscale_);
   AO_Pattern->POST(&frameDecodedEvt, ao);
 }
 
@@ -1169,6 +1154,15 @@ void FSP::Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * 
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
   pattern->byte_count_per_frame_ = spev->value;
+}
+
+void FSP::Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  pattern->grayscale_ = spev->value;
+
+  pattern->card_->dispatch(e, pattern->m_prio);
 }
 
 void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
@@ -1350,10 +1344,12 @@ void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
     QS_U16(5, byte_count_per_frame);
   QS_END()
 
+  SetParameterEvt *pattern_valid_ev = Q_NEW(SetParameterEvt, PATTERN_VALID_SIG);
+  pattern_valid_ev->value = grayscale;
+  AO_Pattern->POST(pattern_valid_ev, AO_Pattern);
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
     QS_STR("pattern valid");
   QS_END()
-  AO_Pattern->POST(&patternValidEvt, AO_Pattern);
 }
 
 uint16_t FSP::frameIndexToAnalogValue(uint16_t frame_index, uint16_t frame_count_per_pattern)
@@ -1448,7 +1444,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 
       AO_Arena->POST(&allOffEvt, &l_FSP_ID);
 
-      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SWITCH_GRAYSCALE_SIG);
+      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_GRAYSCALE_SIG);
       spev->value = grayscale_index;
       AO_Frame->POST(spev, &l_FSP_ID);
 
@@ -1582,23 +1578,23 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 
 void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_byte_count)
 {
-  Frame * const frame = static_cast<Frame * const>(AO_Frame);
   uint8_t const * frame_buffer = stream_buffer + constants::stream_header_byte_count;
   uint32_t frame_byte_count = stream_byte_count - constants::stream_header_byte_count;
 
+  bool grayscale;
   if (frame_byte_count == BSP::getByteCountPerPatternFrameGrayscale())
   {
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("streamed frame has grayscale size");
     QS_END()
-    frame->grayscale_ = true;
+    grayscale = true;
   }
   else if (frame_byte_count == BSP::getByteCountPerPatternFrameBinary())
   {
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("streamed frame has binary size");
     QS_END()
-    frame->grayscale_ = false;
+    grayscale = false;
   }
   else
   {
@@ -1611,6 +1607,9 @@ void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_by
     AO_Arena->POST(&allOffEvt, &l_FSP_ID);
     return;
   }
+  SetParameterEvt *set_grayscale_ev = Q_NEW(SetParameterEvt, SET_GRAYSCALE_SIG);
+  set_grayscale_ev->value = grayscale;
+  AO_Frame->POST(set_grayscale_ev, &l_FSP_ID);
 
   // skip byte 0 (command byte) and bytes 1 and 2 (data length)
   uint8_t stream_buffer_position = 3;
@@ -1630,15 +1629,11 @@ void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_by
     QS_U32(8, analog_output_value_y);
   QS_END()
 
-  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame_buffer, frame->grayscale_);
+  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame_buffer, grayscale);
   AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
-  Arena * const arena = static_cast<Arena * const>(AO_Arena);
-  arena->frames_streamed_ = arena->frames_streamed_ + 1;
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
     QS_STR("processed stream command");
     QS_U32(8, bytes_decoded);
-    QS_STR("frames streamed");
-    QS_U32(8, arena->frames_streamed_);
   QS_END()
 }
 
