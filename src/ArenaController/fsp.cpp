@@ -936,6 +936,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   pattern->frame_rate_queue_.init(pattern_frame_rate_queue_store, Q_DIM(pattern_frame_rate_queue_store));
 
   ao->subscribe(PLAY_PATTERN_SIG);
+  ao->subscribe(SHOW_PATTERN_FRAME_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
   ao->subscribe(FRAME_TRANSFERRED_SIG);
 
@@ -991,6 +992,12 @@ void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
   QS_END()
   pattern->card_->dispatch(e, ao->m_prio);
   AO_Pattern->POST(&beginPlayingPatternEvt, ao);
+}
+
+void FSP::Pattern_initializeShowPatternFrame(QActive * const ao, QEvt const * e)
+{
+  // Pattern * const pattern = static_cast<Pattern * const>(ao);
+  // ShowPatternFrameEvt const * spfev = static_cast<ShowPatternFrameEvt const *>(e);
 }
 
 void FSP::Pattern_armFindCardTimer(QActive * const ao, QEvt const * e)
@@ -1057,6 +1064,33 @@ void FSP::Pattern_readFrameFromFile(QP::QActive * const ao, QP::QEvt const * e)
   BSP::readPatternFrameFromFileIntoBuffer(fe->buffer,
     pattern->frame_index_,
     pattern->byte_count_per_frame_);
+  AO_Pattern->POST(fe, ao);
+}
+
+void FSP::Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  Q_NEW_REF(pattern->frame_, FrameEvt);
+}
+
+void FSP::Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  if (pattern->frame_)
+  {
+    Q_DELETE_REF(pattern->frame_);
+    pattern->frame_ = nullptr;
+  }
+}
+
+void FSP::Pattern_setupNextFrame(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  if (pattern->frame_)
+  {
+    Q_DELETE_REF(pattern->frame_);
+    pattern->frame_ = nullptr;
+  }
   if (pattern->positive_direction_)
   {
     if (++pattern->frame_index_ >= pattern->frame_count_per_pattern_)
@@ -1074,23 +1108,6 @@ void FSP::Pattern_readFrameFromFile(QP::QActive * const ao, QP::QEvt const * e)
     {
       pattern->frame_index_ = pattern->frame_count_per_pattern_ - 1;
     }
-  }
-  AO_Pattern->POST(fe, ao);
-}
-
-void FSP::Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e)
-{
-  Pattern * const pattern = static_cast<Pattern * const>(ao);
-  Q_NEW_REF(pattern->frame_, FrameEvt);
-}
-
-void FSP::Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e)
-{
-  Pattern * const pattern = static_cast<Pattern * const>(ao);
-  if (pattern->frame_)
-  {
-    Q_DELETE_REF(pattern->frame_);
-    pattern->frame_ = nullptr;
   }
 }
 

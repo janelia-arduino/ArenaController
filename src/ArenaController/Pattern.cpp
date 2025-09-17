@@ -158,6 +158,12 @@ Q_STATE_DEF(Pattern, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Pattern::SM::Initialized::SHOW_PATTERN_FRAME}
+        case SHOW_PATTERN_FRAME_SIG: {
+            FSP::Pattern_initializeShowPatternFrame(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;
@@ -337,7 +343,7 @@ Q_STATE_DEF(Pattern, DisplayingFrame) {
         }
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::DisplayingFrame::FRAME_TRANSFERRED}
         case FRAME_TRANSFERRED_SIG: {
-            FSP::Pattern_deleteFrameReference(this, e);
+            FSP::Pattern_setupNextFrame(this, e);
             status_ = tran(&ReadingFrameFromFile);
             break;
         }

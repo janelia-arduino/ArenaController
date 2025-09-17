@@ -107,6 +107,7 @@ struct FSP
 
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializePlayPattern(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_initializeShowPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armFindCardTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_endRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);
@@ -115,6 +116,7 @@ struct FSP
   static void Pattern_readFrameFromFile(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_setupNextFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_decodeFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_defer(QP::QActive * const ao, QP::QEvt const * e);
