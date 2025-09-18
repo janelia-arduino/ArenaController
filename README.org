@@ -23,6 +23,7 @@
   - https://github.com/QuantumLeaps/qp-arduino
   - https://mongoose.ws/
   - https://www.adafruit.com/product/4470
+  - https://github.com/janelia-python/arena_interface_python
 
 * Modular LED Display
 
