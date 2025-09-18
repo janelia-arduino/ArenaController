@@ -309,10 +309,10 @@ void FSP::Analog_setOutput(QHsm * const hsm, QEvt const * e)
 {
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
   BSP::setAnalogOutput(spev->value);
-  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-    QS_STR("Analog_setOutput");
-    QS_U16(5, spev->value);
-  QS_END()
+  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+  //   QS_STR("Analog_setOutput");
+  //   QS_U16(5, spev->value);
+  // QS_END()
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -951,6 +951,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(FRAME_DECODED_SIG, ao);
   QS_SIG_DICTIONARY(SET_FRAME_COUNT_PER_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(SET_BYTE_COUNT_PER_FRAME_SIG, ao);
+  QS_SIG_DICTIONARY(UPDATE_PATTERN_FRAME_SIG, ao);
 
   pattern->card_->init(ao->m_prio);
 }
@@ -1114,6 +1115,29 @@ void FSP::Pattern_setupNextFrame(QP::QActive * const ao, QP::QEvt const * e)
       pattern->frame_index_ = pattern->frame_count_per_pattern_ - 1;
     }
   }
+}
+
+void FSP::Pattern_updatePatternFrame(QP::QActive * const ao, QP::QEvt const * e)
+{
+  QF::PUBLISH(&deactivateDisplayEvt, ao);
+
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  if (pattern->frame_)
+  {
+    Q_DELETE_REF(pattern->frame_);
+    pattern->frame_ = nullptr;
+  }
+
+  SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
+  pattern->frame_index_ = spev->value;
+  if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
+  {
+    pattern->frame_index_ = 0;
+  }
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("update pattern frame");
+    QS_U16(5, pattern->frame_index_);
+  QS_END()
 }
 
 void FSP::Pattern_decodeFrame(QActive * const ao, QEvt const * e)
@@ -1593,12 +1617,12 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case SET_FRAME_POSITION_CMD:
     {
-      uint16_t refresh_rate;
-      memcpy(&refresh_rate, command_buffer + command_buffer_position, sizeof(refresh_rate));
+      uint16_t frame_index;
+      memcpy(&frame_index, command_buffer + command_buffer_position, sizeof(frame_index));
 
-      SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_REFRESH_RATE_SIG);
-      spev->value = refresh_rate;
-      AO_Display->POST(spev, &l_FSP_ID);
+      SetParameterEvt *spev = Q_NEW(SetParameterEvt, UPDATE_PATTERN_FRAME_SIG);
+      spev->value = frame_index;
+      AO_Pattern->POST(spev, &l_FSP_ID);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)

@@ -978,9 +978,15 @@ card_ = Card_getInstance();</code>
         </state_glyph>
        </state>
        <state name="WaitingToDisplayNextFrame">
+        <tran trig="UPDATE_PATTERN_FRAME" target="../../1">
+         <action brief="updatePatternFrame()">FSP::Pattern_updatePatternFrame(this, e);</action>
+         <tran_glyph conn="104,138,1,1,11,-46,-11">
+          <action box="1,0,22,4"/>
+         </tran_glyph>
+        </tran>
         <state_glyph node="78,135,26,6"/>
        </state>
-       <state_glyph node="74,75,47,69">
+       <state_glyph node="74,75,54,69">
         <exit box="1,2,25,2"/>
        </state_glyph>
       </state>
@@ -1077,9 +1083,9 @@ card_ = Card_getInstance();</code>
         <exit box="1,4,23,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="2,56,125,89"/>
+      <state_glyph node="2,56,130,89"/>
      </state>
-     <state_glyph node="1,5,128,141"/>
+     <state_glyph node="1,5,133,141"/>
     </state>
     <state_diagram size="136,146"/>
    </statechart>

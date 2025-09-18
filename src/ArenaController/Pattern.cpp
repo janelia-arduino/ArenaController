@@ -364,6 +364,12 @@ Q_STATE_DEF(Pattern, SPF_DisplayingFrame) {
 Q_STATE_DEF(Pattern, WaitingToDisplayNextFrame) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFr~::WaitingToDisplay~::UPDATE_PATTERN_FRAME}
+        case UPDATE_PATTERN_FRAME_SIG: {
+            FSP::Pattern_updatePatternFrame(this, e);
+            status_ = tran(&SPF_ReadingFrameFromFile);
+            break;
+        }
         default: {
             status_ = super(&ShowingPatternFrame);
             break;

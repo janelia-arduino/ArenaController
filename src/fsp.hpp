@@ -117,6 +117,7 @@ struct FSP
   static void Pattern_saveFrameReference(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_deleteFrameReference(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setupNextFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_updatePatternFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_decodeFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_defer(QP::QActive * const ao, QP::QEvt const * e);
