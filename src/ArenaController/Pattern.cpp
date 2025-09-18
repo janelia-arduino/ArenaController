@@ -247,8 +247,15 @@ Q_STATE_DEF(Pattern, WaitingToPlayPattern) {
 Q_STATE_DEF(Pattern, ShowingPatternFrame) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFrame}
+        case Q_EXIT_SIG: {
+            FSP::Pattern_deleteFrameReference(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFr~::initial}
         case Q_INIT_SIG: {
+            FSP::Pattern_deactivateDisplay(this, e);
             status_ = tran(&SPF_ReadingFrameFromFile);
             break;
         }
@@ -272,7 +279,7 @@ Q_STATE_DEF(Pattern, SPF_ReadingFrameFromFile) {
         }
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFr~::SPF_ReadingFrame~::FRAME_READ_FROM_FILE}
         case FRAME_READ_FROM_FILE_SIG: {
-            FSP::Pattern_deactivateDisplay(this, e);
+            FSP::Pattern_saveFrameReference(this, e);
             status_ = tran(&SPF_DecodingFrame);
             break;
         }

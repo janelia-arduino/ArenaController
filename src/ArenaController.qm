@@ -925,15 +925,17 @@ card_ = Card_getInstance();</code>
        <state_glyph node="56,60,17,6"/>
       </state>
       <state name="ShowingPatternFrame">
+       <exit brief="deleteFrameReference()">FSP::Pattern_deleteFrameReference(this, e);</exit>
        <initial target="../1">
-        <initial_glyph conn="79,85,4,0,3">
-         <action box="0,-2,10,2"/>
+        <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
+        <initial_glyph conn="79,83,4,0,5">
+         <action box="1,1,19,2"/>
         </initial_glyph>
        </initial>
        <state name="SPF_ReadingFrameFromFile">
         <entry brief="readFrameFromFile()">FSP::Pattern_readFrameFromFile(this, e);</entry>
         <tran trig="FRAME_READ_FROM_FILE" target="../../2">
-         <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
+         <action brief="saveFrameReference()">FSP::Pattern_saveFrameReference(this, e);</action>
          <tran_glyph conn="79,96,2,0,6">
           <action box="1,1,21,4"/>
          </tran_glyph>
@@ -945,8 +947,8 @@ card_ = Card_getInstance();</code>
        <state name="SPF_DecodingFrame">
         <entry brief="decodeFrame()">FSP::Pattern_decodeFrame(this, e);</entry>
         <tran trig="FRAME_DECODED" target="../../3">
-         <tran_glyph conn="79,108,2,0,4">
-          <action box="1,1,15,2"/>
+         <tran_glyph conn="79,108,2,0,6">
+          <action box="1,1,19,5"/>
          </tran_glyph>
         </tran>
         <state_glyph node="77,102,27,6">
@@ -956,29 +958,31 @@ card_ = Card_getInstance();</code>
        <state name="SPF_FillingFrameBufferWithDecodedFrame">
         <entry brief="fillFrameBufferWithDecodedFrame()">FSP::Pattern_fillFrameBufferWithDecodedFrame(this, e);</entry>
         <tran trig="FRAME_FILLED" target="../../4">
-         <tran_glyph conn="79,119,2,0,4">
+         <tran_glyph conn="79,121,2,0,4">
           <action box="1,1,13,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="77,112,33,7">
+        <state_glyph node="77,114,33,7">
          <entry box="1,2,29,2"/>
         </state_glyph>
        </state>
        <state name="SPF_DisplayingFrame">
         <entry brief="displayFrame()">FSP::Pattern_displayFrame(this, e);</entry>
         <tran trig="FRAME_TRANSFERRED" target="../../5">
-         <tran_glyph conn="79,129,2,0,4">
+         <tran_glyph conn="79,131,2,0,4">
           <action box="1,1,19,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="77,123,27,6">
+        <state_glyph node="77,125,27,6">
          <entry box="1,2,14,2"/>
         </state_glyph>
        </state>
        <state name="WaitingToDisplayNextFrame">
-        <state_glyph node="78,133,26,6"/>
+        <state_glyph node="78,135,26,6"/>
        </state>
-       <state_glyph node="74,75,47,69"/>
+       <state_glyph node="74,75,47,69">
+        <exit box="1,2,25,2"/>
+       </state_glyph>
       </state>
       <state name="WaitingToShowPatternFrame">
        <tran trig="PATTERN_VALID" target="../../3">
@@ -1154,20 +1158,12 @@ card_ = Card_getInstance();</code>
       </tran_glyph>
      </tran>
      <state name="WaitingToFindCard">
-      <entry>  QS_BEGIN_ID(USER_COMMENT, 3)
-    QS_STR(&quot;WaitingToFindCard&quot;);
-  QS_END()</entry>
       <tran trig="FIND_CARD_TIMEOUT" target="../../4">
-       <action>  QS_BEGIN_ID(USER_COMMENT, 3)
-    QS_STR(&quot;FIND_CARD_TIMEOUT&quot;);
-  QS_END()</action>
        <tran_glyph conn="34,24,2,0,6">
         <action box="1,2,25,5"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="30,18,48,6">
-       <entry box="1,2,6,2"/>
-      </state_glyph>
+      <state_glyph node="30,18,48,6"/>
      </state>
      <state name="FindingCard">
       <entry brief="findCard()">FSP::Card_findCard(this, e);</entry>

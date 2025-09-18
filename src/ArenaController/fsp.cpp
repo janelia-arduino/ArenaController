@@ -309,10 +309,10 @@ void FSP::Analog_setOutput(QHsm * const hsm, QEvt const * e)
 {
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
   BSP::setAnalogOutput(spev->value);
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("Analog_setOutput");
-  //   QS_U16(5, spev->value);
-  // QS_END()
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("Analog_setOutput");
+    QS_U16(5, spev->value);
+  QS_END()
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -1169,6 +1169,10 @@ void FSP::Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
   pattern->frame_count_per_pattern_ = spev->value;
+  if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
+  {
+    pattern->frame_index_ = 0;
+  }
 }
 
 void FSP::Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * e)
@@ -1209,7 +1213,7 @@ void FSP::Card_storePlayPatternParameters(QHsm * const hsm, QEvt const * e)
 
   card->pattern_id_ = ppev->pattern_id;
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-    QS_STR("store pattern id");
+    QS_STR("play pattern store pattern id");
     QS_U32(8, card->pattern_id_);
   QS_END()
 }
@@ -1221,7 +1225,7 @@ void FSP::Card_storeShowPatternFrameParameters(QHsm * const hsm, QEvt const * e)
 
   card->pattern_id_ = spfev->pattern_id;
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-    QS_STR("store pattern id");
+    QS_STR("show pattern frame store pattern id");
     QS_U32(8, card->pattern_id_);
   QS_END()
 }

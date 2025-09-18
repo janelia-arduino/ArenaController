@@ -670,8 +670,8 @@ bool BSP::initializeAnalogOutput()
 
 void BSP::setAnalogOutput(uint16_t value)
 {
-  analog_output_chip.setChannelValue(MCP4728_CHANNEL_A, value, MCP4728_VREF_INTERNAL,
-    MCP4728_GAIN_2X);
+  analog_output_chip.setChannelValue(MCP4728_CHANNEL_A, value, MCP4728_VREF_VDD,
+    MCP4728_GAIN_1X);
 }
 
 //----------------------------------------------------------------------------
