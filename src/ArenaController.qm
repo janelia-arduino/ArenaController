@@ -46,13 +46,13 @@ analog_output_ = AnalogOutput_getInstance();</code>
      <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
      <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
      <initial target="../10">
-      <initial_glyph conn="51,27,4,0,3">
+      <initial_glyph conn="51,39,4,0,3">
        <action box="1,-1,18,3"/>
       </initial_glyph>
      </initial>
      <tran trig="ALL_OFF" target="../10">
       <action brief="allOffTransition()">FSP::Arena_allOffTransition(this, e);</action>
-      <tran_glyph conn="10,33,3,3,23">
+      <tran_glyph conn="10,45,3,3,23">
        <action box="1,-2,12,5"/>
       </tran_glyph>
      </tran>
@@ -64,13 +64,13 @@ analog_output_ = AnalogOutput_getInstance();</code>
      </tran>
      <tran trig="ALL_ON" target="../9">
       <action brief="allOnTransition()">FSP::Arena_allOnTransition(this, e);</action>
-      <tran_glyph conn="10,49,3,3,23">
+      <tran_glyph conn="10,55,3,3,23">
        <action box="1,-2,16,5"/>
       </tran_glyph>
      </tran>
      <tran trig="PLAY_PATTERN" target="../12">
       <action brief="playPatternTransition()">FSP::Arena_playPatternTransition(this, e);</action>
-      <tran_glyph conn="10,90,3,3,23">
+      <tran_glyph conn="10,85,3,3,23">
        <action box="0,-2,21,4"/>
       </tran_glyph>
      </tran>
@@ -94,7 +94,7 @@ analog_output_ = AnalogOutput_getInstance();</code>
      </tran>
      <tran trig="SHOW_PATTERN_FRAME" target="../13">
       <action brief="showPatternFrameTransition()">FSP::Arena_showPatternFrameTransition(this, e);</action>
-      <tran_glyph conn="10,117,3,3,23">
+      <tran_glyph conn="10,96,3,3,23">
        <action box="0,-2,24,4"/>
       </tran_glyph>
      </tran>
@@ -102,17 +102,17 @@ analog_output_ = AnalogOutput_getInstance();</code>
       <entry brief="fillFrameBufferWithAllOn()">FSP::Arena_fillFrameBufferWithAllOn(this, e);</entry>
       <tran trig="FRAME_FILLED">
        <action brief="displayFrame()">FSP::Arena_displayFrame(this, e);</action>
-       <tran_glyph conn="33,52,3,-1,25">
+       <tran_glyph conn="33,58,3,-1,25">
         <action box="0,-2,17,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="33,44,35,17">
+      <state_glyph node="33,50,35,12">
        <entry box="1,2,26,3"/>
       </state_glyph>
      </state>
      <state name="AllOff">
       <entry brief="deactivateDisplay()">FSP::Arena_deactivateDisplay(this, e);</entry>
-      <state_glyph node="33,30,35,11">
+      <state_glyph node="33,42,35,6">
        <entry box="1,2,22,2"/>
       </state_glyph>
      </state>
@@ -124,19 +124,19 @@ analog_output_ = AnalogOutput_getInstance();</code>
         <action box="0,-2,15,4"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="33,64,35,18">
+      <state_glyph node="33,64,35,12">
        <entry box="1,2,30,2"/>
       </state_glyph>
      </state>
      <state name="PlayingPattern">
       <exit brief="endPlayingPattern()">FSP::Arena_endPlayingPattern(this, e);</exit>
-      <state_glyph node="33,85,35,20">
+      <state_glyph node="33,80,35,7">
        <exit box="1,2,24,2"/>
       </state_glyph>
      </state>
      <state name="ShowingPatternFrame">
       <exit brief="endShowPatternFrame()">FSP::Arena_endShowPatternFrame(this, e);</exit>
-      <state_glyph node="33,108,35,23">
+      <state_glyph node="33,90,35,10">
        <exit box="1,2,24,3"/>
       </state_glyph>
      </state>
