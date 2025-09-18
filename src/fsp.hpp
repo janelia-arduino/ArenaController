@@ -12,7 +12,7 @@
 #include "Shared.hpp"
 #include "Events.hpp"
 #include "Arena.hpp"
-#include "Analog.hpp"
+#include "AnalogOutput.hpp"
 #include "Display.hpp"
 #include "SerialCommandInterface.hpp"
 #include "EthernetCommandInterface.hpp"
@@ -40,12 +40,12 @@ struct FSP
   static void Arena_endPlayingPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_showPatternFrameTransition(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_endShowPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
-  static void Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_initializeAnalogOutput(QP::QActive * const ao, QP::QEvt const * e);
 
-  static void Analog_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
-  static void Analog_initializeOutput(QP::QHsm * const hsm, QP::QEvt const * e);
-  static void Analog_enterInitialized(QP::QHsm * const hsm, QP::QEvt const * e);
-  static void Analog_setOutput(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void AnalogOutput_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void AnalogOutput_initializeOutput(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void AnalogOutput_enterInitialized(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void AnalogOutput_setOutput(QP::QHsm * const hsm, QP::QEvt const * e);
 
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_setRefreshRate(QP::QActive * const ao, QP::QEvt const * e);
@@ -138,7 +138,7 @@ struct FSP
   static void Card_checkFile(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_checkPattern(QP::QHsm * const hsm, QP::QEvt const * e);
 
-  static uint16_t frameIndexToAnalogValue(uint16_t frame_index, uint16_t frame_count_per_pattern);
+  static uint16_t frameIndexToAnalogOutputValue(uint16_t frame_index, uint16_t frame_count_per_pattern);
   static void appendMessage(uint8_t* response, uint8_t& response_byte_count, const char* message);
   static uint8_t processBinaryCommand(uint8_t const * command_buffer,
     size_t command_byte_count,

@@ -23,17 +23,17 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="instance" type="Arena" visibility="0x00" properties="0x01">
     <documentation>static class instance (Singleton)</documentation>
    </attribute>
-   <attribute name="initialize_analog_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
-   <attribute name="analog_" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
+   <attribute name="initialize_analog_output_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
+   <attribute name="analog_output_" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
    <operation name="Arena" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Arena::initial)),
-    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U)
+    initialize_analog_output_time_evt_(this, INITIALIZE_ANALOG_OUTPUT_TIMEOUT_SIG, 0U)
 
-analog_ = Analog_getInstance();</code>
+analog_output_ = AnalogOutput_getInstance();</code>
    </operation>
-   <operation name="dispatchToAnalog" type="void" visibility="0x02" properties="0x00">
+   <operation name="dispatchToAnalogOutput" type="void" visibility="0x02" properties="0x00">
     <parameter name="e" type="QP::QEvt const *"/>
-    <code>analog_-&gt;dispatch(e, m_prio);</code>
+    <code>analog_output_-&gt;dispatch(e, m_prio);</code>
    </operation>
    <statechart properties="0x02">
     <initial target="../1">
@@ -74,22 +74,22 @@ analog_ = Analog_getInstance();</code>
        <action box="0,-2,21,4"/>
       </tran_glyph>
      </tran>
-     <tran trig="INITIALIZE_ANALOG_TIMEOUT">
-      <action brief="initializeAnalog()">FSP::Arena_initializeAnalog(this, e);</action>
-      <tran_glyph conn="10,18,3,-1,28">
+     <tran trig="INITIALIZE_ANALOG_OUTPUT_TIMEOUT">
+      <action brief="initializeAnalogOutput()">FSP::Arena_initializeAnalogOutput(this, e);</action>
+      <tran_glyph conn="10,18,3,-1,34">
+       <action box="0,-2,32,4"/>
+      </tran_glyph>
+     </tran>
+     <tran trig="ANALOG_OUTPUT_INITIALIZED">
+      <action brief="dispatchToAnalogOutput()">dispatchToAnalogOutput(e);</action>
+      <tran_glyph conn="10,22,3,-1,34">
        <action box="0,-2,26,4"/>
       </tran_glyph>
      </tran>
-     <tran trig="ANALOG_INITIALIZED">
-      <action brief="dispatchToAnalog()">dispatchToAnalog(e);</action>
-      <tran_glyph conn="10,22,3,-1,28">
-       <action box="0,-2,21,4"/>
-      </tran_glyph>
-     </tran>
      <tran trig="SET_ANALOG_OUTPUT">
-      <action brief="dispatchToAnalog()">dispatchToAnalog(e);</action>
-      <tran_glyph conn="10,26,3,-1,28">
-       <action box="0,-2,18,5"/>
+      <action brief="dispatchToAnalogOutput()">dispatchToAnalogOutput(e);</action>
+      <tran_glyph conn="10,26,3,-1,34">
+       <action box="0,-2,21,5"/>
       </tran_glyph>
      </tran>
      <tran trig="SHOW_PATTERN_FRAME" target="../13">
@@ -1090,41 +1090,41 @@ card_ = Card_getInstance();</code>
     <state_diagram size="136,146"/>
    </statechart>
   </class>
-  <class name="Analog" superclass="qpcpp::QHsm">
-   <attribute name="instance" type="Analog" visibility="0x00" properties="0x01"/>
-   <operation name="Analog" type="" visibility="0x00" properties="0x00">
+  <class name="AnalogOutput" superclass="qpcpp::QHsm">
+   <attribute name="instance" type="AnalogOutput" visibility="0x00" properties="0x01"/>
+   <operation name="AnalogOutput" type="" visibility="0x00" properties="0x00">
     <code>  : QHsm(&amp;initial)</code>
    </operation>
    <statechart properties="0x02">
     <initial target="../1">
-     <action brief="initialize()">FSP::Analog_initialize(this, e);</action>
+     <action brief="initialize()">FSP::AnalogOutput_initialize(this, e);</action>
      <initial_glyph conn="37,11,4,0,5">
       <action box="1,1,10,2"/>
      </initial_glyph>
     </initial>
     <state name="Uninitialized">
-     <tran trig="ANALOG_INITIALIZED" target="../../2">
+     <tran trig="ANALOG_OUTPUT_INITIALIZED" target="../../2">
       <tran_glyph conn="37,32,2,0,9">
-       <action box="1,3,17,2"/>
+       <action box="1,3,24,2"/>
       </tran_glyph>
      </tran>
-     <tran trig="INITIALIZE_ANALOG">
-      <action brief="initializeOutput()">FSP::Analog_initializeOutput(this, e);</action>
-      <tran_glyph conn="28,25,3,-1,19">
-       <action box="0,-2,17,4"/>
+     <tran trig="INITIALIZE_ANALOG_OUTPUT">
+      <action brief="initializeOutput()">FSP::AnalogOutput_initializeOutput(this, e);</action>
+      <tran_glyph conn="28,25,3,-1,25">
+       <action box="0,-2,23,4"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="28,16,22,16"/>
+     <state_glyph node="28,16,28,16"/>
     </state>
     <state name="Initialized">
-     <entry brief="enterInitialized()">FSP::Analog_enterInitialized(this, e);</entry>
+     <entry brief="enterInitialized()">FSP::AnalogOutput_enterInitialized(this, e);</entry>
      <tran trig="SET_ANALOG_OUTPUT">
-      <action brief="setOutput()">FSP::Analog_setOutput(this, e);</action>
+      <action brief="setOutput()">FSP::AnalogOutput_setOutput(this, e);</action>
       <tran_glyph conn="28,49,3,-1,19">
        <action box="0,-2,18,5"/>
       </tran_glyph>
      </tran>
-     <state_glyph node="28,41,22,14">
+     <state_glyph node="28,41,28,14">
       <entry box="1,2,17,2"/>
      </state_glyph>
     </state>
@@ -1276,8 +1276,8 @@ card_ = Card_getInstance();</code>
   <attribute name="AO_Pattern" type="QP::QActive * const" visibility="0x00" properties="0x00">
    <code>= &amp;Pattern::instance;</code>
   </attribute>
-  <operation name="Analog_getInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
-   <code>return &amp;Analog::instance;</code>
+  <operation name="AnalogOutput_getInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
+   <code>return &amp;AnalogOutput::instance;</code>
   </operation>
   <operation name="Card_getInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
    <code>return &amp;Card::instance;</code>
@@ -1450,9 +1450,9 @@ $declare${Events}
 
 #endif</text>
   </file>
-  <file name="Analog.hpp">
-   <text>#ifndef ANALOG_HPP
-#define ANALOG_HPP
+  <file name="AnalogOutput.hpp">
+   <text>#ifndef ANALOG_OUTPUT_HPP
+#define ANALOG_OUTPUT_HPP
 
 #include &quot;Shared.hpp&quot;
 #include &quot;Events.hpp&quot;
@@ -1461,7 +1461,7 @@ $declare${Events}
 
 //============================================================================
 // generate declaration of the hsm
-$declare${AOs::Analog}
+$declare${AOs::AnalogOutput}
 
 #endif</text>
   </file>
@@ -1598,18 +1598,18 @@ $define${Shared::AO_Pattern}
 // generate definition of the AO
 $define${AOs::Pattern}</text>
   </file>
-  <file name="Analog.cpp">
-   <text>#include &quot;Analog.hpp&quot;
+  <file name="AnalogOutput.cpp">
+   <text>#include &quot;AnalogOutput.hpp&quot;
 
 
 using namespace QP;
 
 //============================================================================
-$define${Shared::Analog_getInstance}
+$define${Shared::AnalogOutput_getInstance}
 
 //============================================================================
 // generate definition of the HSM
-$define${AOs::Analog}</text>
+$define${AOs::AnalogOutput}</text>
   </file>
   <file name="Card.cpp">
    <text>#include &quot;Card.hpp&quot;

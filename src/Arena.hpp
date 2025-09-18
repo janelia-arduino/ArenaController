@@ -45,14 +45,14 @@ namespace AC {
 class Arena : public QP::QActive {
 public:
     static Arena instance;
-    QP::QTimeEvt initialize_analog_time_evt_;
-    QP::QHsm * analog_;
+    QP::QTimeEvt initialize_analog_output_time_evt_;
+    QP::QHsm * analog_output_;
 
 public:
     Arena();
 
 private:
-    void dispatchToAnalog(QP::QEvt const * e);
+    void dispatchToAnalogOutput(QP::QEvt const * e);
 
 protected:
     Q_STATE_DECL(initial);
