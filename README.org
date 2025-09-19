@@ -15,15 +15,16 @@
 - Email: peter@polidoro.io
 - Copyright: 2025 Howard Hughes Medical Institute
 - References:
-  - https://reiserlab.github.io/Modular-LED-Display/
-  - https://github.com/floesche/LED-Display_G4_Hardware_Arena
-  - https://github.com/leburnett/G4_Display_Tools
-  - https://www.pjrc.com/store/teensy41.html
-  - https://www.pjrc.com/store/ethernet_kit.html
-  - https://github.com/QuantumLeaps/qp-arduino
-  - https://mongoose.ws/
-  - https://www.adafruit.com/product/4470
-  - https://github.com/janelia-python/arena_interface_python
+  - [[https://github.com/janelia-python/arena_interface_python][Arena Python Interface]]
+  - [[https://reiserlab.github.io/Modular-LED-Display/][Modular LED Displays]]
+  - [[https://github.com/floesche/LED-Display_G4_Hardware_Arena][LED-Display_G4_Hardware_Arena]]
+  - [[https://github.com/leburnett/G4_Display_Tools][G4_Display_Tools]]
+  - [[https://www.pjrc.com/store/teensy41.html][Teensy 4.1]]
+  - [[https://www.pjrc.com/store/ethernet_kit.html][Teensy 4.1 Ethernet Kit]]
+  - [[https://github.com/QuantumLeaps/qp-arduino][qp-arduino]]
+  - [[https://mongoose.ws/][Embedded Mongoose web server]]
+  - [[https://www.adafruit.com/product/4470][Analog Output Board]]
+  - [[https://www.adafruit.com/product/1083][Analog Input Board]]
 
 * Modular LED Display
 
