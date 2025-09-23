@@ -81,7 +81,7 @@ enum ArenaControllerSignals
   UPDATE_PATTERN_FRAME_SIG,
 
   // dispatched to Card
-  FIND_CARD_TIMEOUT_SIG,
+  FIND_PATTERN_TIMEOUT_SIG,
   CARD_FOUND_SIG,
   CARD_NOT_FOUND_SIG,
   FILE_VALID_SIG,

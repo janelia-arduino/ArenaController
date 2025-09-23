@@ -64,7 +64,7 @@ Pattern::Pattern()
 : QActive(Q_STATE_CAST(&Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
     runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
-    find_card_time_evt_(this, FIND_CARD_TIMEOUT_SIG, 0U)
+    find_pattern_time_evt_(this, FIND_PATTERN_TIMEOUT_SIG, 0U)
 {
     card_ = Card_getInstance();
 }
@@ -115,8 +115,8 @@ Q_STATE_DEF(Pattern, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FIND_CARD_TIMEOUT}
-        case FIND_CARD_TIMEOUT_SIG: {
+        //${AOs::Pattern::SM::Initialized::FIND_PATTERN_TIMEOUT}
+        case FIND_PATTERN_TIMEOUT_SIG: {
             dispatchToCard(e);
             status_ = Q_RET_HANDLED;
             break;
@@ -181,15 +181,19 @@ Q_STATE_DEF(Pattern, Initialized) {
 Q_STATE_DEF(Pattern, Inactive) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Pattern::SM::Initialized::Inactive}
+        case Q_EXIT_SIG: {
+            FSP::Pattern_armFindPatternTimer(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         //${AOs::Pattern::SM::Initialized::Inactive::BEGIN_PLAYING_PATTERN}
         case BEGIN_PLAYING_PATTERN_SIG: {
-            FSP::Pattern_armFindCardTimer(this, e);
             status_ = tran(&WaitingToPlayPattern);
             break;
         }
         //${AOs::Pattern::SM::Initialized::Inactive::BEGIN_SHOWING_PATTERN_FRAME}
         case BEGIN_SHOWING_PATTERN_FRAME_SIG: {
-            FSP::Pattern_armFindCardTimer(this, e);
             status_ = tran(&WaitingToShowPatternFrame);
             break;
         }

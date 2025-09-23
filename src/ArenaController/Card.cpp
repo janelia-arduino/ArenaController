@@ -114,8 +114,8 @@ Q_STATE_DEF(Card, Initialized) {
 Q_STATE_DEF(Card, WaitingToFindCard) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Card::SM::Initialized::WaitingToFindCar~::FIND_CARD_TIMEOUT}
-        case FIND_CARD_TIMEOUT_SIG: {
+        //${AOs::Card::SM::Initialized::WaitingToFindCar~::FIND_PATTERN_TIMEOUT}
+        case FIND_PATTERN_TIMEOUT_SIG: {
             status_ = tran(&FindingCard);
             break;
         }

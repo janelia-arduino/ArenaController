@@ -979,7 +979,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
   QS_SIG_DICTIONARY(FRAME_RATE_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(RUNTIME_DURATION_TIMEOUT_SIG, ao);
-  QS_SIG_DICTIONARY(FIND_CARD_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(FIND_PATTERN_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(BEGIN_PLAYING_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(END_PLAYING_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(FRAME_READ_FROM_FILE_SIG, ao);
@@ -1041,12 +1041,12 @@ void FSP::Pattern_initializeShowPatternFrame(QActive * const ao, QEvt const * e)
   AO_Pattern->POST(&beginShowingPatternFrameEvt, ao);
 }
 
-void FSP::Pattern_armFindCardTimer(QActive * const ao, QEvt const * e)
+void FSP::Pattern_armFindPatternTimer(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->find_card_time_evt_.armX((constants::ticks_per_second * constants::find_card_timeout_duration) / constants::milliseconds_per_second);
+  pattern->find_pattern_time_evt_.armX((constants::ticks_per_second * constants::find_card_timeout_duration) / constants::milliseconds_per_second);
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("finding card may cause reboot if card not found...");
+    QS_STR("finding pattern may cause reboot if card not found...");
   QS_END()
 }
 
@@ -1263,7 +1263,7 @@ void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
   card->pattern_id_ = 0;
   card->file_size_ = 0;
 
-  QS_SIG_DICTIONARY(FIND_CARD_TIMEOUT_SIG, hsm);
+  QS_SIG_DICTIONARY(FIND_PATTERN_TIMEOUT_SIG, hsm);
   QS_SIG_DICTIONARY(CARD_FOUND_SIG, hsm);
   QS_SIG_DICTIONARY(CARD_NOT_FOUND_SIG, hsm);
   QS_SIG_DICTIONARY(FILE_VALID_SIG, hsm);
