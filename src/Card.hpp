@@ -45,7 +45,7 @@ namespace AC {
 class Card : public QP::QHsm {
 public:
     static Card instance;
-    std::uint16_t pattern_id_;
+    std::uint16_t pattern_index_;
     std::uint64_t file_size_;
 
 public:
@@ -60,7 +60,7 @@ protected:
     Q_STATE_DECL(CheckingFile);
     Q_STATE_DECL(CheckingPattern);
     Q_STATE_DECL(DisplayingPattern);
-    Q_STATE_DECL(WaitingToFindFile);
+    Q_STATE_DECL(WaitingToFindPattern);
 }; // class Card
 
 } // namespace AC

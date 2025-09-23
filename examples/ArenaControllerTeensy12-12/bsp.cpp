@@ -608,10 +608,10 @@ bool BSP::findPatternCard()
   return sd.begin(SdioConfig(FIFO_SDIO));
 }
 
-uint64_t BSP::openPatternFileForReading(uint16_t pattern_id)
+uint64_t BSP::openPatternFileForReading(uint16_t pattern_index)
 {
   char filename_str[constants::filename_str_len];
-  sprintf(filename_str, "pat%0*d.pat", constants::pattern_id_str_len, pattern_id);
+  sprintf(filename_str, "pat%0*d.pat", constants::pattern_index_str_len, pattern_index);
   pattern_file.open(filename_str, O_RDONLY);
   return pattern_file.fileSize();
 }

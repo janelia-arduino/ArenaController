@@ -77,7 +77,7 @@ Q_STATE_DEF(Card, initial) {
     QS_FUN_DICTIONARY(&Card::CheckingFile);
     QS_FUN_DICTIONARY(&Card::CheckingPattern);
     QS_FUN_DICTIONARY(&Card::DisplayingPattern);
-    QS_FUN_DICTIONARY(&Card::WaitingToFindFile);
+    QS_FUN_DICTIONARY(&Card::WaitingToFindPattern);
 
     return tran(&Initialized);
 }
@@ -146,7 +146,7 @@ Q_STATE_DEF(Card, FindingCard) {
         }
         //${AOs::Card::SM::Initialized::FindingCard::CARD_FOUND}
         case CARD_FOUND_SIG: {
-            status_ = tran(&WaitingToFindFile);
+            status_ = tran(&WaitingToFindPattern);
             break;
         }
         default: {
@@ -180,12 +180,12 @@ Q_STATE_DEF(Card, FileOpened) {
         }
         //${AOs::Card::SM::Initialized::FileOpened::END_PLAYING_PATTERN}
         case END_PLAYING_PATTERN_SIG: {
-            status_ = tran(&WaitingToFindFile);
+            status_ = tran(&WaitingToFindPattern);
             break;
         }
         //${AOs::Card::SM::Initialized::FileOpened::END_SHOWING_PATTERN_FRAME}
         case END_SHOWING_PATTERN_FRAME_SIG: {
-            status_ = tran(&WaitingToFindFile);
+            status_ = tran(&WaitingToFindPattern);
             break;
         }
         default: {
@@ -266,11 +266,11 @@ Q_STATE_DEF(Card, DisplayingPattern) {
     return status_;
 }
 
-//${AOs::Card::SM::Initialized::WaitingToFindFile} ...........................
-Q_STATE_DEF(Card, WaitingToFindFile) {
+//${AOs::Card::SM::Initialized::WaitingToFindPattern} ........................
+Q_STATE_DEF(Card, WaitingToFindPattern) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::Card::SM::Initialized::WaitingToFindFil~::FIND_PATTERN}
+        //${AOs::Card::SM::Initialized::WaitingToFindPat~::FIND_PATTERN}
         case FIND_PATTERN_SIG: {
             status_ = tran(&FileOpened);
             break;

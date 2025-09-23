@@ -1282,7 +1282,7 @@ void FSP::Pattern_dispatchFindPatternToCard(QP::QActive * const ao, QP::QEvt con
 void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
 {
   Card * const card = static_cast<Card * const>(hsm);
-  card->pattern_id_ = 0;
+  card->pattern_index_ = 0;
   card->file_size_ = 0;
 
   QS_SIG_DICTIONARY(FIND_PATTERN_SIG, hsm);
@@ -1300,10 +1300,10 @@ void FSP::Card_storePlayPatternParameters(QHsm * const hsm, QEvt const * e)
   Card * const card = static_cast<Card * const>(hsm);
   PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
 
-  card->pattern_id_ = ppev->pattern_id;
+  card->pattern_index_ = ppev->pattern_index;
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-    QS_STR("play pattern store pattern id");
-    QS_U32(8, card->pattern_id_);
+    QS_STR("play pattern store pattern index");
+    QS_U32(8, card->pattern_index_);
   QS_END()
 }
 
@@ -1312,10 +1312,10 @@ void FSP::Card_storeShowPatternFrameParameters(QHsm * const hsm, QEvt const * e)
   Card * const card = static_cast<Card * const>(hsm);
   ShowPatternFrameEvt const * spfev = static_cast<ShowPatternFrameEvt const *>(e);
 
-  card->pattern_id_ = spfev->pattern_id;
+  card->pattern_index_ = spfev->pattern_index;
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-    QS_STR("show pattern frame store pattern id");
-    QS_U32(8, card->pattern_id_);
+    QS_STR("show pattern frame store pattern index");
+    QS_U32(8, card->pattern_index_);
   QS_END()
 }
 
@@ -1349,7 +1349,7 @@ void FSP::Card_openFile(QHsm * const hsm, QEvt const * e)
 {
   Card * const card = static_cast<Card * const>(hsm);
 
-  card->file_size_ = BSP::openPatternFileForReading(card->pattern_id_);
+  card->file_size_ = BSP::openPatternFileForReading(card->pattern_index_);
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
     QS_STR("file opened");
   QS_END()
@@ -1370,7 +1370,7 @@ void FSP::Card_checkFile(QHsm * const hsm, QEvt const * e)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
       QS_STR("file valid");
-      QS_U32(8, card->pattern_id_);
+      QS_U32(8, card->pattern_index_);
       QS_U32(8, card->file_size_);
     QS_END()
     AO_Pattern->POST(&fileValidEvt, AO_Pattern);
@@ -1379,7 +1379,7 @@ void FSP::Card_checkFile(QHsm * const hsm, QEvt const * e)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
       QS_STR("file not valid");
-      QS_U32(8, card->pattern_id_);
+      QS_U32(8, card->pattern_index_);
     QS_END()
     AO_Pattern->POST(&fileNotValidEvt, AO_Pattern);
   }
@@ -1594,9 +1594,9 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       memcpy(&control_mode, command_buffer + command_buffer_position, sizeof(control_mode));
       command_buffer_position += sizeof(control_mode);
 
-      uint16_t pattern_id;
-      memcpy(&pattern_id, command_buffer + command_buffer_position, sizeof(pattern_id));
-      command_buffer_position += sizeof(pattern_id);
+      uint16_t pattern_index;
+      memcpy(&pattern_index, command_buffer + command_buffer_position, sizeof(pattern_index));
+      command_buffer_position += sizeof(pattern_index);
 
       int16_t frame_rate;
       memcpy(&frame_rate, command_buffer + command_buffer_position, sizeof(frame_rate));
@@ -1622,7 +1622,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
         case PLAY_PATTERN_MODE:
         {
           PlayPatternEvt *ppev = Q_NEW(PlayPatternEvt, PLAY_PATTERN_SIG);
-          ppev->pattern_id = pattern_id;
+          ppev->pattern_index = pattern_index;
           ppev->frame_rate = frame_rate;
           ppev->runtime_duration = runtime_duration;
           QF::PUBLISH(ppev, &l_FSP_ID);
@@ -1630,7 +1630,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
           appendMessage(response, response_byte_count, "");
           QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
             QS_STR("play pattern mode");
-            QS_U16(5, pattern_id);
+            QS_U16(5, pattern_index);
             QS_U16(5, frame_rate);
             QS_U16(5, runtime_duration);
           QS_END()
@@ -1639,14 +1639,14 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
         case SHOW_PATTERN_FRAME_MODE:
         {
           ShowPatternFrameEvt *spfev = Q_NEW(ShowPatternFrameEvt, SHOW_PATTERN_FRAME_SIG);
-          spfev->pattern_id = pattern_id;
+          spfev->pattern_index = pattern_index;
           spfev->frame_index = frame_index;
           QF::PUBLISH(spfev, &l_FSP_ID);
 
           appendMessage(response, response_byte_count, "");
           QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
             QS_STR("showing pattern frame mode");
-            QS_U16(5, pattern_id);
+            QS_U16(5, pattern_index);
             QS_U16(5, frame_index);
           QS_END()
           break;
