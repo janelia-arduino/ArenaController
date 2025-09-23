@@ -129,7 +129,7 @@ Q_STATE_DEF(Pattern, Initialized) {
         }
         //${AOs::Pattern::SM::Initialized::CARD_NOT_FOUND}
         case CARD_NOT_FOUND_SIG: {
-            dispatchToCard(e);
+            FSP::Pattern_handleErrorAndDispatchToCard(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -141,13 +141,13 @@ Q_STATE_DEF(Pattern, Initialized) {
         }
         //${AOs::Pattern::SM::Initialized::FILE_NOT_VALID}
         case FILE_NOT_VALID_SIG: {
-            dispatchToCard(e);
+            FSP::Pattern_handleErrorAndDispatchToCard(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //${AOs::Pattern::SM::Initialized::PATTERN_NOT_VALID}
         case PATTERN_NOT_VALID_SIG: {
-            dispatchToCard(e);
+            FSP::Pattern_handleErrorAndDispatchToCard(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }

@@ -64,9 +64,9 @@ protected:
     Q_STATE_DECL(WaitingForNewCommand);
     Q_STATE_DECL(PlayingPattern);
     Q_STATE_DECL(Waiting);
-    Q_STATE_DECL(ChoosingCommandProcessor);
     Q_STATE_DECL(ProcessingBinaryCommand);
     Q_STATE_DECL(ProcessingStreamCommand);
+    Q_STATE_DECL(ChoosingCommandProcessor);
     Q_STATE_DECL(Inactive);
 }; // class SerialCommandInterface
 

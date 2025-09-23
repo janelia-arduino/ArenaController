@@ -64,11 +64,12 @@ struct FSP
   static void SerialCommandInterface_analyzeCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_updateStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
   static bool SerialCommandInterface_ifStreamCommandComplete(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_storeRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_writePatternErrorResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void EthernetCommandInterface_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_armEthernetTimerLowSpeed(QP::QActive * const ao, QP::QEvt const * e);
@@ -78,13 +79,14 @@ struct FSP
   static void EthernetCommandInterface_pollEthernet(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_createServerConnection(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_analyzeCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_updateStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
   static bool EthernetCommandInterface_ifStreamCommandComplete(QP::QActive * const ao, QP::QEvt const * e);
-  static void EthernetCommandInterface_processBinaryCommand(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void EthernetCommandInterface_writeBinaryResponse(QP::QActive * const ao, QP::QEvt const * e);
-  static void EthernetCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_storeRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_writePatternErrorResponse(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Frame_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Frame_fillFrameBufferWithAllOn(QP::QActive * const ao, QP::QEvt const * e);
@@ -127,6 +129,7 @@ struct FSP
   static void Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_handleErrorAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Card_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_storePlayPatternParameters(QP::QHsm * const hsm, QP::QEvt const * e);

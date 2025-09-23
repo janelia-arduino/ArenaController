@@ -203,6 +203,12 @@ Q_STATE_DEF(EthernetCommandInterface, PlayingPattern) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::PlayingPattern::PLAY_PATTERN_ERROR}
+        case PLAY_PATTERN_ERROR_SIG: {
+            FSP::EthernetCommandInterface_writePatternErrorResponse(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&WaitingForNewCommand);
             break;

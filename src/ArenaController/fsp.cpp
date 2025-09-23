@@ -23,6 +23,7 @@ static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U}
 static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
 static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
 static QEvt const patternFinishedPlayingEvt = {PATTERN_FINISHED_PLAYING_SIG, 0U, 0U};
+static QEvt const playPatternErrorEvt = {PLAY_PATTERN_ERROR_SIG, 0U, 0U};
 
 static QEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
 static QEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
@@ -100,6 +101,7 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(PROCESS_STREAM_COMMAND_SIG, nullptr);
   QS_SIG_DICTIONARY(COMMAND_PROCESSED_SIG, nullptr);
   QS_SIG_DICTIONARY(PATTERN_FINISHED_PLAYING_SIG, nullptr);
+  QS_SIG_DICTIONARY(PLAY_PATTERN_ERROR_SIG, nullptr);
   QS_SIG_DICTIONARY(SHOW_PATTERN_FRAME_SIG, nullptr);
 
   // user record dictionaries
@@ -394,6 +396,7 @@ void FSP::SerialCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt
   ao->subscribe(COMMAND_PROCESSED_SIG);
   ao->subscribe(PLAY_PATTERN_SIG);
   ao->subscribe(PATTERN_FINISHED_PLAYING_SIG);
+  ao->subscribe(PLAY_PATTERN_ERROR_SIG);
 
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(sci->serial_time_evt_));
@@ -503,26 +506,6 @@ void FSP::SerialCommandInterface_writeBinaryResponse(QActive * const ao, QEvt co
   BSP::writeSerialBinaryResponse(sci->binary_response_, sci->binary_response_byte_count_);
 }
 
-void FSP::SerialCommandInterface_writePatternFinishedResponse(QActive * const ao, QEvt const * e)
-{
-  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
-  uint8_t response[constants::byte_count_per_pattern_finished_response_max];
-  uint8_t response_byte_count = 0;
-  response[response_byte_count++] = 2;
-  response[response_byte_count++] = 0;
-  response[response_byte_count++] = TRIAL_PARAMS_CMD;
-  appendMessage(response, response_byte_count, "Sequence completed in ");
-  char runtime_duration_str[constants::char_count_runtime_duration_str];
-  itoa(sci->runtime_duration_ms_, runtime_duration_str, 10);
-  appendMessage(response, response_byte_count, runtime_duration_str);
-  appendMessage(response, response_byte_count, " ms");
-
-  BSP::writeSerialBinaryResponse(response, response_byte_count);
-  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("wrote pattern finished response over serial");
-  QS_END()
-}
-
 void FSP::SerialCommandInterface_updateStreamCommand(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
@@ -563,6 +546,41 @@ void FSP::SerialCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt c
   sci->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
 }
 
+void FSP::SerialCommandInterface_writePatternFinishedResponse(QActive * const ao, QEvt const * e)
+{
+  SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+  uint8_t response[constants::byte_count_per_pattern_finished_response_max];
+  uint8_t response_byte_count = 0;
+  response[response_byte_count++] = 2;
+  response[response_byte_count++] = 0;
+  response[response_byte_count++] = TRIAL_PARAMS_CMD;
+  appendMessage(response, response_byte_count, "Sequence completed in ");
+  char runtime_duration_str[constants::char_count_runtime_duration_str];
+  itoa(sci->runtime_duration_ms_, runtime_duration_str, 10);
+  appendMessage(response, response_byte_count, runtime_duration_str);
+  appendMessage(response, response_byte_count, " ms");
+
+  BSP::writeSerialBinaryResponse(response, response_byte_count);
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("wrote pattern finished response over serial");
+  QS_END()
+}
+
+void FSP::SerialCommandInterface_writePatternErrorResponse(QActive * const ao, QEvt const * e)
+{
+  uint8_t response[constants::byte_count_per_pattern_finished_response_max];
+  uint8_t response_byte_count = 0;
+  response[response_byte_count++] = 2;
+  response[response_byte_count++] = 0;
+  response[response_byte_count++] = TRIAL_PARAMS_CMD;
+  appendMessage(response, response_byte_count, "Play pattern error!");
+
+  BSP::writeSerialBinaryResponse(response, response_byte_count);
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("wrote pattern error response over serial");
+  QS_END()
+}
+
 void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   ao->subscribe(SERIAL_COMMAND_AVAILABLE_SIG);
@@ -573,6 +591,7 @@ void FSP::EthernetCommandInterface_initializeAndSubscribe(QActive * const ao, QE
   ao->subscribe(COMMAND_PROCESSED_SIG);
   ao->subscribe(PLAY_PATTERN_SIG);
   ao->subscribe(PATTERN_FINISHED_PLAYING_SIG);
+  ao->subscribe(PLAY_PATTERN_ERROR_SIG);
 
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
   QS_OBJ_DICTIONARY(&(eci->ethernet_time_evt_));
@@ -667,6 +686,21 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
   }
 }
 
+void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  eci->binary_response_byte_count_ = FSP::processBinaryCommand(eci->binary_command_,
+    eci->binary_command_byte_count_,
+    eci->binary_response_);
+  QF::PUBLISH(&commandProcessedEvt, ao);
+}
+
+void FSP::EthernetCommandInterface_writeBinaryResponse(QActive * const ao, QEvt const * e)
+{
+  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
+  BSP::writeEthernetBinaryResponse(eci->connection_, eci->binary_response_, eci->binary_response_byte_count_);
+}
+
 void FSP::EthernetCommandInterface_updateStreamCommand(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
@@ -681,15 +715,6 @@ bool FSP::EthernetCommandInterface_ifStreamCommandComplete(QActive * const ao, Q
   return (eci->binary_command_byte_count_ >= eci->binary_command_byte_count_claim_);
 }
 
-void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt const * e)
-{
-  EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  eci->binary_response_byte_count_ = FSP::processBinaryCommand(eci->binary_command_,
-    eci->binary_command_byte_count_,
-    eci->binary_response_);
-  QF::PUBLISH(&commandProcessedEvt, ao);
-}
-
 void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
@@ -701,10 +726,12 @@ void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt
   QF::PUBLISH(&commandProcessedEvt, ao);
 }
 
-void FSP::EthernetCommandInterface_writeBinaryResponse(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  BSP::writeEthernetBinaryResponse(eci->connection_, eci->binary_response_, eci->binary_response_byte_count_);
+  PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
+
+  eci->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
 }
 
 void FSP::EthernetCommandInterface_writePatternFinishedResponse(QActive * const ao, QEvt const * e)
@@ -727,12 +754,20 @@ void FSP::EthernetCommandInterface_writePatternFinishedResponse(QActive * const 
   QS_END()
 }
 
-void FSP::EthernetCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
+void FSP::EthernetCommandInterface_writePatternErrorResponse(QActive * const ao, QEvt const * e)
 {
   EthernetCommandInterface * const eci = static_cast<EthernetCommandInterface * const>(ao);
-  PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
+  uint8_t response[constants::byte_count_per_pattern_finished_response_max];
+  uint8_t response_byte_count = 0;
+  response[response_byte_count++] = 2;
+  response[response_byte_count++] = 0;
+  response[response_byte_count++] = TRIAL_PARAMS_CMD;
+  appendMessage(response, response_byte_count, "Play pattern error!");
 
-  eci->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
+  BSP::writeEthernetBinaryResponse(eci->connection_, response, response_byte_count);
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("wrote pattern error response over ethernet");
+  QS_END()
 }
 
 void FSP::Frame_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -1212,6 +1247,13 @@ void FSP::Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt
   SetParameterEvt const * spev = static_cast<SetParameterEvt const *>(e);
   pattern->grayscale_ = spev->value;
 
+  pattern->card_->dispatch(e, pattern->m_prio);
+}
+
+void FSP::Pattern_handleErrorAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  QF::PUBLISH(&playPatternErrorEvt, ao);
   pattern->card_->dispatch(e, pattern->m_prio);
 }
 

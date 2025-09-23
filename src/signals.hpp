@@ -23,6 +23,7 @@ enum ArenaControllerSignals
   PROCESS_STREAM_COMMAND_SIG,
   COMMAND_PROCESSED_SIG,
   PATTERN_FINISHED_PLAYING_SIG,
+  PLAY_PATTERN_ERROR_SIG,
 
   MAX_PUB_SIG, // the last published signal
 
