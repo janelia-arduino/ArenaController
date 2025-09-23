@@ -110,7 +110,7 @@ struct FSP
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializePlayPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializeShowPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_armFindPatternTimer(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_armFindCardTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_endRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_disarmTimersAndCleanup(QP::QActive * const ao, QP::QEvt const * e);
@@ -122,14 +122,17 @@ struct FSP
   static void Pattern_updatePatternFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_decodeFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_fillFrameBufferWithDecodedFrame(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_defer(QP::QActive * const ao, QP::QEvt const * e);
-  static void Pattern_recall(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_deferBeginPattern(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_recallBeginPattern(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_deferFrameRate(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_recallFrameRate(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_displayFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializeFrameIndex(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_handleErrorAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_dispatchFindPatternToCard(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Card_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_storePlayPatternParameters(QP::QHsm * const hsm, QP::QEvt const * e);

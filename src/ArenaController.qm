@@ -808,17 +808,18 @@ analog_output_ = AnalogOutput_getInstance();</code>
    <attribute name="byte_count_per_frame_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <attribute name="positive_direction_" type="bool" visibility="0x00" properties="0x00"/>
-   <attribute name="find_pattern_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
+   <attribute name="find_card_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="frame_" type="FrameEvt const *" visibility="0x00" properties="0x00"/>
    <attribute name="frame_count_per_pattern_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_index_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="card_" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
    <attribute name="grayscale_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="begin_pattern_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
     runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
-    find_pattern_time_evt_(this, FIND_PATTERN_TIMEOUT_SIG, 0U)
+    find_card_time_evt_(this, FIND_CARD_SIG, 0U)
 
 card_ = Card_getInstance();</code>
    </operation>
@@ -834,8 +835,8 @@ card_ = Card_getInstance();</code>
      </initial_glyph>
     </initial>
     <state name="Initialized">
-     <initial target="../11">
-      <initial_glyph conn="49,13,4,0,2">
+     <initial target="../10">
+      <initial_glyph conn="40,8,4,0,3">
        <action box="0,-2,10,2"/>
       </initial_glyph>
      </initial>
@@ -845,21 +846,9 @@ card_ = Card_getInstance();</code>
        <action box="0,-2,20,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="FIND_PATTERN_TIMEOUT">
+     <tran trig="FIND_PATTERN">
       <action brief="dispatchToCard()">dispatchToCard(e);</action>
       <tran_glyph conn="1,17,3,-1,33">
-       <action box="0,-2,23,5"/>
-      </tran_glyph>
-     </tran>
-     <tran trig="CARD_FOUND">
-      <action brief="dispatchToCard()">dispatchToCard(e);</action>
-      <tran_glyph conn="1,21,3,-1,33">
-       <action box="0,-2,23,5"/>
-      </tran_glyph>
-     </tran>
-     <tran trig="CARD_NOT_FOUND">
-      <action brief="handleErrorAndDispatchToCard()">FSP::Pattern_handleErrorAndDispatchToCard(this, e);</action>
-      <tran_glyph conn="1,25,3,-1,33">
        <action box="0,-2,23,5"/>
       </tran_glyph>
      </tran>
@@ -899,33 +888,41 @@ card_ = Card_getInstance();</code>
        <action box="0,-2,20,5"/>
       </tran_glyph>
      </tran>
+     <tran trig="FIND_CARD">
+      <action brief="dispatchToCard()">dispatchToCard(e);</action>
+      <tran_glyph conn="1,21,3,-1,33">
+       <action box="0,-2,20,5"/>
+      </tran_glyph>
+     </tran>
      <state name="Inactive">
-      <exit brief="armFindPatternTimer()">FSP::Pattern_armFindPatternTimer(this, e);</exit>
-      <tran trig="BEGIN_PLAYING_PATTERN" target="../../12/2">
-       <tran_glyph conn="49,23,2,0,37">
-        <action box="1,1,27,4"/>
+      <exit brief="armFindCardTimer()">FSP::Pattern_armFindCardTimer(this, e);</exit>
+      <tran trig="BEGIN_PLAYING_PATTERN" target="../../12">
+       <action brief="deferBeginPattern()">FSP::Pattern_deferBeginPattern(this, e);</action>
+       <tran_glyph conn="38,19,2,0,8">
+        <action box="0,2,27,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="BEGIN_SHOWING_PATTERN_FRAME" target="../../12/4">
-       <tran_glyph conn="96,23,2,0,37">
-        <action box="-28,16,31,5"/>
+      <tran trig="BEGIN_SHOWING_PATTERN_FRAME" target="../../12">
+       <action brief="deferBeginPattern()">FSP::Pattern_deferBeginPattern(this, e);</action>
+       <tran_glyph conn="59,19,2,0,8">
+        <action box="0,2,31,5"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="41,15,62,8">
+      <state_glyph node="36,11,96,8">
        <exit box="1,2,32,2"/>
       </state_glyph>
      </state>
      <state name="DisplayingPattern">
-      <tran trig="END_PLAYING_PATTERN" target="../../11">
+      <tran trig="END_PLAYING_PATTERN" target="../../13">
        <action brief="dispatchToCard()">dispatchToCard(e);</action>
-       <tran_glyph conn="43,56,0,2,-33">
+       <tran_glyph conn="43,56,0,2,-10">
         <action box="-20,-5,24,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="END_SHOWING_PATTERN_FRAME" target="../../11">
+      <tran trig="END_SHOWING_PATTERN_FRAME" target="../../13">
        <action brief="dispatchToCard()">dispatchToCard(e);</action>
-       <tran_glyph conn="98,56,0,2,-33">
-        <action box="1,-17,27,4"/>
+       <tran_glyph conn="106,56,0,2,-10">
+        <action box="0,-5,27,4"/>
        </tran_glyph>
       </tran>
       <state name="WaitingToPlayPattern">
@@ -935,7 +932,7 @@ card_ = Card_getInstance();</code>
          <action box="1,2,26,4"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="47,60,17,6"/>
+       <state_glyph node="40,60,24,6"/>
       </state>
       <state name="ShowingPatternFrame">
        <exit brief="deleteFrameReference()">FSP::Pattern_deleteFrameReference(this, e);</exit>
@@ -1010,7 +1007,7 @@ card_ = Card_getInstance();</code>
          <action box="1,2,25,4"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="75,60,24,6"/>
+       <state_glyph node="75,60,35,6"/>
       </state>
       <state name="PlayingPattern">
        <entry brief="armTimers()">FSP::Pattern_armTimers(this, e);</entry>
@@ -1022,7 +1019,7 @@ card_ = Card_getInstance();</code>
         </initial_glyph>
        </initial>
        <tran trig="FRAME_RATE_TIMEOUT">
-        <action brief="defer()">FSP::Pattern_defer(this, e);</action>
+        <action brief="deferFrameRate()">FSP::Pattern_deferFrameRate(this, e);</action>
         <tran_glyph conn="3,87,3,-1,27">
          <action box="0,-2,19,4"/>
         </tran_glyph>
@@ -1057,7 +1054,7 @@ card_ = Card_getInstance();</code>
         </state_glyph>
        </state>
        <state name="WaitingToDisplayFrame">
-        <entry brief="recall()">FSP::Display_recall(this, e);</entry>
+        <entry brief="recallFrameRate()">FSP::Pattern_recallFrameRate(this, e);</entry>
         <tran trig="FRAME_RATE_TIMEOUT" target="../../3">
          <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
          <tran_glyph conn="42,104,2,0,7">
@@ -1065,7 +1062,7 @@ card_ = Card_getInstance();</code>
          </tran_glyph>
         </tran>
         <state_glyph node="38,98,32,6">
-         <entry box="1,2,10,2"/>
+         <entry box="1,2,16,2"/>
         </state_glyph>
        </state>
        <state name="PP_FillingFrameBufferWithDecodedFrame">
@@ -1097,6 +1094,39 @@ card_ = Card_getInstance();</code>
        </state_glyph>
       </state>
       <state_glyph node="2,56,130,89"/>
+     </state>
+     <state name="AnalyzingCard">
+      <tran trig="CARD_NOT_FOUND" target="../../10">
+       <action brief="handleErrorAndDispatchToCard()">FSP::Pattern_handleErrorAndDispatchToCard(this, e);</action>
+       <tran_glyph conn="87,27,0,2,-8">
+        <action box="0,-5,23,5"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="CARD_FOUND" target="../../13">
+       <action brief="dispatchToCard()">dispatchToCard(e);</action>
+       <tran_glyph conn="50,33,2,0,6">
+        <action box="1,1,23,5"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="36,27,96,6"/>
+     </state>
+     <state name="CardAnalyzed">
+      <entry brief="recallBeginPattern()">FSP::Pattern_recallBeginPattern(this, e);</entry>
+      <exit brief="dispatchFindPatternToCard()">FSP::Pattern_dispatchFindPatternToCard(this, e);</exit>
+      <tran trig="BEGIN_PLAYING_PATTERN" target="../../11/2">
+       <tran_glyph conn="46,46,2,0,14">
+        <action box="1,2,27,4"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="BEGIN_SHOWING_PATTERN_FRAME" target="../../11/4">
+       <tran_glyph conn="104,46,2,0,14">
+        <action box="-28,2,31,5"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="37,39,95,7">
+       <entry box="1,2,22,2"/>
+       <exit box="1,4,23,2"/>
+      </state_glyph>
      </state>
      <state_glyph node="1,5,133,141"/>
     </state>
@@ -1177,7 +1207,7 @@ card_ = Card_getInstance();</code>
       </tran_glyph>
      </tran>
      <state name="WaitingToFindCard">
-      <tran trig="FIND_PATTERN_TIMEOUT" target="../../4">
+      <tran trig="FIND_CARD" target="../../4">
        <tran_glyph conn="34,24,2,0,6">
         <action box="1,2,25,5"/>
        </tran_glyph>
@@ -1192,8 +1222,8 @@ card_ = Card_getInstance();</code>
         <action box="0,-2,20,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="CARD_FOUND" target="../../5">
-       <tran_glyph conn="34,41,2,0,38">
+      <tran trig="CARD_FOUND" target="../../6">
+       <tran_glyph conn="34,41,2,0,7">
         <action box="1,3,13,2"/>
        </tran_glyph>
       </tran>
@@ -1209,13 +1239,13 @@ card_ = Card_getInstance();</code>
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
-      <tran trig="END_PLAYING_PATTERN" target="../../3">
-       <tran_glyph conn="30,88,3,3,-8,-67,8">
+      <tran trig="END_PLAYING_PATTERN" target="../../6">
+       <tran_glyph conn="30,88,3,3,-8,-36,8">
         <action box="-23,1,22,3"/>
        </tran_glyph>
       </tran>
-      <tran trig="END_SHOWING_PATTERN_FRAME" target="../../3">
-       <tran_glyph conn="75,92,1,1,22,-72,-19">
+      <tran trig="END_SHOWING_PATTERN_FRAME" target="../../6">
+       <tran_glyph conn="75,92,1,1,22,-40,-18">
         <action box="1,1,29,2"/>
        </tran_glyph>
       </tran>
@@ -1260,6 +1290,14 @@ card_ = Card_getInstance();</code>
        <entry box="1,2,21,2"/>
        <exit box="1,4,23,2"/>
       </state_glyph>
+     </state>
+     <state name="WaitingToFindFile">
+      <tran trig="FIND_PATTERN" target="../../5">
+       <tran_glyph conn="34,60,2,0,19">
+        <action box="1,6,14,2"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="30,48,49,12"/>
      </state>
      <state_glyph node="1,7,102,134"/>
     </state>

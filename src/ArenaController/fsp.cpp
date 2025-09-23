@@ -50,6 +50,7 @@ static QEvt const beginShowingPatternFrameEvt = {BEGIN_SHOWING_PATTERN_FRAME_SIG
 static QEvt const endShowingPatternFrameEvt = {END_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
 static QEvt const cardFoundEvt = {CARD_FOUND_SIG, 0U, 0U};
 static QEvt const cardNotFoundEvt = {CARD_NOT_FOUND_SIG, 0U, 0U};
+static QEvt const findPatternEvt = {FIND_PATTERN_SIG, 0U, 0U};
 static QEvt const fileValidEvt = {FILE_VALID_SIG, 0U, 0U};
 static QEvt const fileNotValidEvt = {FILE_NOT_VALID_SIG, 0U, 0U};
 static QEvt const patternNotValidEvt = {PATTERN_NOT_VALID_SIG, 0U, 0U};
@@ -969,6 +970,8 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   pattern->byte_count_per_frame_ = 0;
   pattern->positive_direction_ = true;
 
+  static QEvt const * pattern_begin_pattern_queue_store[constants::pattern_begin_pattern_queue_size];
+  pattern->begin_pattern_queue_.init(pattern_begin_pattern_queue_store, Q_DIM(pattern_begin_pattern_queue_store));
   static QEvt const * pattern_frame_rate_queue_store[constants::pattern_frame_rate_queue_size];
   pattern->frame_rate_queue_.init(pattern_frame_rate_queue_store, Q_DIM(pattern_frame_rate_queue_store));
 
@@ -979,7 +982,8 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
   QS_SIG_DICTIONARY(FRAME_RATE_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY(RUNTIME_DURATION_TIMEOUT_SIG, ao);
-  QS_SIG_DICTIONARY(FIND_PATTERN_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(FIND_CARD_SIG, ao);
+  QS_SIG_DICTIONARY(FIND_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(BEGIN_PLAYING_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(END_PLAYING_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(FRAME_READ_FROM_FILE_SIG, ao);
@@ -1041,12 +1045,12 @@ void FSP::Pattern_initializeShowPatternFrame(QActive * const ao, QEvt const * e)
   AO_Pattern->POST(&beginShowingPatternFrameEvt, ao);
 }
 
-void FSP::Pattern_armFindPatternTimer(QActive * const ao, QEvt const * e)
+void FSP::Pattern_armFindCardTimer(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->find_pattern_time_evt_.armX((constants::ticks_per_second * constants::find_card_timeout_duration) / constants::milliseconds_per_second);
+  pattern->find_card_time_evt_.armX((constants::ticks_per_second * constants::find_card_timeout_duration) / constants::milliseconds_per_second);
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("finding pattern may cause reboot if card not found...");
+    QS_STR("finding card may cause reboot if card not found...");
   QS_END()
 }
 
@@ -1190,7 +1194,19 @@ void FSP::Pattern_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const
   AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
 }
 
-void FSP::Pattern_defer(QP::QActive * const ao, QP::QEvt const * e)
+void FSP::Pattern_deferBeginPattern(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  pattern->defer(&pattern->begin_pattern_queue_, e);
+}
+
+void FSP::Pattern_recallBeginPattern(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  pattern->recall(&pattern->begin_pattern_queue_);
+}
+
+void FSP::Pattern_deferFrameRate(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   if (pattern->frame_rate_queue_.getNFree() > 0)
@@ -1199,7 +1215,7 @@ void FSP::Pattern_defer(QP::QActive * const ao, QP::QEvt const * e)
   }
 }
 
-void FSP::Pattern_recall(QP::QActive * const ao, QP::QEvt const * e)
+void FSP::Pattern_recallFrameRate(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   pattern->recall(&pattern->frame_rate_queue_);
@@ -1257,13 +1273,20 @@ void FSP::Pattern_handleErrorAndDispatchToCard(QP::QActive * const ao, QP::QEvt 
   pattern->card_->dispatch(e, pattern->m_prio);
 }
 
+void FSP::Pattern_dispatchFindPatternToCard(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  pattern->card_->dispatch(&findPatternEvt, pattern->m_prio);
+}
+
 void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
 {
   Card * const card = static_cast<Card * const>(hsm);
   card->pattern_id_ = 0;
   card->file_size_ = 0;
 
-  QS_SIG_DICTIONARY(FIND_PATTERN_TIMEOUT_SIG, hsm);
+  QS_SIG_DICTIONARY(FIND_PATTERN_SIG, hsm);
+  QS_SIG_DICTIONARY(FIND_CARD_SIG, hsm);
   QS_SIG_DICTIONARY(CARD_FOUND_SIG, hsm);
   QS_SIG_DICTIONARY(CARD_NOT_FOUND_SIG, hsm);
   QS_SIG_DICTIONARY(FILE_VALID_SIG, hsm);

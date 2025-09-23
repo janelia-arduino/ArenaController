@@ -64,7 +64,7 @@ Pattern::Pattern()
 : QActive(Q_STATE_CAST(&Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
     runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
-    find_pattern_time_evt_(this, FIND_PATTERN_TIMEOUT_SIG, 0U)
+    find_card_time_evt_(this, FIND_CARD_SIG, 0U)
 {
     card_ = Card_getInstance();
 }
@@ -96,6 +96,8 @@ Q_STATE_DEF(Pattern, initial) {
     QS_FUN_DICTIONARY(&Pattern::WaitingToDisplayFrame);
     QS_FUN_DICTIONARY(&Pattern::PP_FillingFrameBufferWithDecodedFrame);
     QS_FUN_DICTIONARY(&Pattern::PP_ReadingFrameFromFile);
+    QS_FUN_DICTIONARY(&Pattern::AnalyzingCard);
+    QS_FUN_DICTIONARY(&Pattern::CardAnalyzed);
 
     return tran(&Initialized);
 }
@@ -115,21 +117,9 @@ Q_STATE_DEF(Pattern, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Pattern::SM::Initialized::FIND_PATTERN_TIMEOUT}
-        case FIND_PATTERN_TIMEOUT_SIG: {
+        //${AOs::Pattern::SM::Initialized::FIND_PATTERN}
+        case FIND_PATTERN_SIG: {
             dispatchToCard(e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::CARD_FOUND}
-        case CARD_FOUND_SIG: {
-            dispatchToCard(e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Pattern::SM::Initialized::CARD_NOT_FOUND}
-        case CARD_NOT_FOUND_SIG: {
-            FSP::Pattern_handleErrorAndDispatchToCard(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -169,6 +159,12 @@ Q_STATE_DEF(Pattern, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Pattern::SM::Initialized::FIND_CARD}
+        case FIND_CARD_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;
@@ -183,18 +179,20 @@ Q_STATE_DEF(Pattern, Inactive) {
     switch (e->sig) {
         //${AOs::Pattern::SM::Initialized::Inactive}
         case Q_EXIT_SIG: {
-            FSP::Pattern_armFindPatternTimer(this, e);
+            FSP::Pattern_armFindCardTimer(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
         //${AOs::Pattern::SM::Initialized::Inactive::BEGIN_PLAYING_PATTERN}
         case BEGIN_PLAYING_PATTERN_SIG: {
-            status_ = tran(&WaitingToPlayPattern);
+            FSP::Pattern_deferBeginPattern(this, e);
+            status_ = tran(&AnalyzingCard);
             break;
         }
         //${AOs::Pattern::SM::Initialized::Inactive::BEGIN_SHOWING_PATTERN_FRAME}
         case BEGIN_SHOWING_PATTERN_FRAME_SIG: {
-            status_ = tran(&WaitingToShowPatternFrame);
+            FSP::Pattern_deferBeginPattern(this, e);
+            status_ = tran(&AnalyzingCard);
             break;
         }
         default: {
@@ -212,13 +210,13 @@ Q_STATE_DEF(Pattern, DisplayingPattern) {
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::END_PLAYING_PATTERN}
         case END_PLAYING_PATTERN_SIG: {
             dispatchToCard(e);
-            status_ = tran(&Inactive);
+            status_ = tran(&CardAnalyzed);
             break;
         }
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::END_SHOWING_PATTERN_FRAME}
         case END_SHOWING_PATTERN_FRAME_SIG: {
             dispatchToCard(e);
-            status_ = tran(&Inactive);
+            status_ = tran(&CardAnalyzed);
             break;
         }
         default: {
@@ -424,7 +422,7 @@ Q_STATE_DEF(Pattern, PlayingPattern) {
         }
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::FRAME_RATE_TIMEOUT}
         case FRAME_RATE_TIMEOUT_SIG: {
-            FSP::Pattern_defer(this, e);
+            FSP::Pattern_deferFrameRate(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -495,7 +493,7 @@ Q_STATE_DEF(Pattern, WaitingToDisplayFrame) {
     switch (e->sig) {
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::WaitingToDisplayFrame}
         case Q_ENTRY_SIG: {
-            FSP::Display_recall(this, e);
+            FSP::Pattern_recallFrameRate(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -554,6 +552,64 @@ Q_STATE_DEF(Pattern, PP_ReadingFrameFromFile) {
         }
         default: {
             status_ = super(&PlayingPattern);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Pattern::SM::Initialized::AnalyzingCard} ............................
+Q_STATE_DEF(Pattern, AnalyzingCard) {
+    QP::QState status_;
+    switch (e->sig) {
+        //${AOs::Pattern::SM::Initialized::AnalyzingCard::CARD_NOT_FOUND}
+        case CARD_NOT_FOUND_SIG: {
+            FSP::Pattern_handleErrorAndDispatchToCard(this, e);
+            status_ = tran(&Inactive);
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::AnalyzingCard::CARD_FOUND}
+        case CARD_FOUND_SIG: {
+            dispatchToCard(e);
+            status_ = tran(&CardAnalyzed);
+            break;
+        }
+        default: {
+            status_ = super(&Initialized);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Pattern::SM::Initialized::CardAnalyzed} .............................
+Q_STATE_DEF(Pattern, CardAnalyzed) {
+    QP::QState status_;
+    switch (e->sig) {
+        //${AOs::Pattern::SM::Initialized::CardAnalyzed}
+        case Q_ENTRY_SIG: {
+            FSP::Pattern_recallBeginPattern(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::CardAnalyzed}
+        case Q_EXIT_SIG: {
+            FSP::Pattern_dispatchFindPatternToCard(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::CardAnalyzed::BEGIN_PLAYING_PATTERN}
+        case BEGIN_PLAYING_PATTERN_SIG: {
+            status_ = tran(&WaitingToPlayPattern);
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::CardAnalyzed::BEGIN_SHOWING_PATTERN_FRAME}
+        case BEGIN_SHOWING_PATTERN_FRAME_SIG: {
+            status_ = tran(&WaitingToShowPatternFrame);
+            break;
+        }
+        default: {
+            status_ = super(&Initialized);
             break;
         }
     }

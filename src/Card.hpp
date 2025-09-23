@@ -60,6 +60,7 @@ protected:
     Q_STATE_DECL(CheckingFile);
     Q_STATE_DECL(CheckingPattern);
     Q_STATE_DECL(DisplayingPattern);
+    Q_STATE_DECL(WaitingToFindFile);
 }; // class Card
 
 } // namespace AC

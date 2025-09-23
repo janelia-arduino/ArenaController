@@ -136,6 +136,7 @@ constexpr uint8_t filename_str_len = 16;
 constexpr uint8_t pattern_id_str_len = 4;
 constexpr uint8_t pattern_header_size = 7;
 constexpr uint8_t card_type_str_len = 16;
+constexpr uint32_t pattern_begin_pattern_queue_size = 1;
 constexpr uint32_t pattern_frame_rate_queue_size = 1;
 constexpr uint32_t milliseconds_per_runtime_duration_unit = 100;
 constexpr uint16_t find_card_timeout_duration = 50;

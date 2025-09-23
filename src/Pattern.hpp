@@ -52,12 +52,13 @@ public:
     std::uint64_t byte_count_per_frame_;
     QP::QEQueue frame_rate_queue_;
     bool positive_direction_;
-    QP::QTimeEvt find_pattern_time_evt_;
+    QP::QTimeEvt find_card_time_evt_;
     FrameEvt const * frame_;
     std::uint16_t frame_count_per_pattern_;
     std::uint16_t frame_index_;
     QP::QHsm * card_;
     std::uint8_t grayscale_;
+    QP::QEQueue begin_pattern_queue_;
 
 public:
     Pattern();
@@ -84,6 +85,8 @@ protected:
     Q_STATE_DECL(WaitingToDisplayFrame);
     Q_STATE_DECL(PP_FillingFrameBufferWithDecodedFrame);
     Q_STATE_DECL(PP_ReadingFrameFromFile);
+    Q_STATE_DECL(AnalyzingCard);
+    Q_STATE_DECL(CardAnalyzed);
 }; // class Pattern
 
 } // namespace AC
