@@ -78,6 +78,7 @@ Q_STATE_DEF(Card, initial) {
     QS_FUN_DICTIONARY(&Card::CheckingPattern);
     QS_FUN_DICTIONARY(&Card::DisplayingPattern);
     QS_FUN_DICTIONARY(&Card::WaitingToFindPattern);
+    QS_FUN_DICTIONARY(&Card::OpeningDirectory);
 
     return tran(&Initialized);
 }
@@ -146,7 +147,7 @@ Q_STATE_DEF(Card, FindingCard) {
         }
         //${AOs::Card::SM::Initialized::FindingCard::CARD_FOUND}
         case CARD_FOUND_SIG: {
-            status_ = tran(&WaitingToFindPattern);
+            status_ = tran(&OpeningDirectory);
             break;
         }
         default: {
@@ -273,6 +274,34 @@ Q_STATE_DEF(Card, WaitingToFindPattern) {
         //${AOs::Card::SM::Initialized::WaitingToFindPat~::FIND_PATTERN}
         case FIND_PATTERN_SIG: {
             status_ = tran(&FileOpened);
+            break;
+        }
+        default: {
+            status_ = super(&Initialized);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Card::SM::Initialized::OpeningDirectory} ............................
+Q_STATE_DEF(Card, OpeningDirectory) {
+    QP::QState status_;
+    switch (e->sig) {
+        //${AOs::Card::SM::Initialized::OpeningDirectory}
+        case Q_ENTRY_SIG: {
+            FSP::Card_openDirectory(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Card::SM::Initialized::OpeningDirectory::DIRECTORY_OPEN_FAILURE}
+        case DIRECTORY_OPEN_FAILURE_SIG: {
+            status_ = tran(&FindingCard);
+            break;
+        }
+        //${AOs::Card::SM::Initialized::OpeningDirectory::DIRECTORY_OPEN_SUCCESS}
+        case DIRECTORY_OPEN_SUCCESS_SIG: {
+            status_ = tran(&WaitingToFindPattern);
             break;
         }
         default: {

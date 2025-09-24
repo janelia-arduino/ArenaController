@@ -119,6 +119,7 @@ static PatternHeader pattern_header;
 
 // SD Card
 static SdFs sd;
+static FsFile dir;
 static FsFile pattern_file;
 
 // Analog Output
@@ -606,6 +607,11 @@ void BSP::transferPanelSet(const uint8_t * const buffer,
 bool BSP::findPatternCard()
 {
   return sd.begin(SdioConfig(FIFO_SDIO));
+}
+
+bool BSP::openPatternDirectory()
+{
+  return dir.open(constants::base_dir_str);
 }
 
 uint64_t BSP::openPatternFileForReading(uint16_t pattern_index)

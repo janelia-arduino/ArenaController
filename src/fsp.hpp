@@ -138,6 +138,7 @@ struct FSP
   static void Card_storePlayPatternParameters(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_storeShowPatternFrameParameters(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_findCard(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_openDirectory(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_postAllOff(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_openFile(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_closeFile(QP::QHsm * const hsm, QP::QEvt const * e);

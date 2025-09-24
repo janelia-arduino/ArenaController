@@ -50,6 +50,8 @@ static QEvt const beginShowingPatternFrameEvt = {BEGIN_SHOWING_PATTERN_FRAME_SIG
 static QEvt const endShowingPatternFrameEvt = {END_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
 static QEvt const cardFoundEvt = {CARD_FOUND_SIG, 0U, 0U};
 static QEvt const cardNotFoundEvt = {CARD_NOT_FOUND_SIG, 0U, 0U};
+static QEvt const directoryOpenSuccessEvt = {DIRECTORY_OPEN_SUCCESS_SIG, 0U, 0U};
+static QEvt const directoryOpenFailureEvt = {DIRECTORY_OPEN_FAILURE_SIG, 0U, 0U};
 static QEvt const findPatternEvt = {FIND_PATTERN_SIG, 0U, 0U};
 static QEvt const fileValidEvt = {FILE_VALID_SIG, 0U, 0U};
 static QEvt const fileNotValidEvt = {FILE_NOT_VALID_SIG, 0U, 0U};
@@ -1289,6 +1291,8 @@ void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
   QS_SIG_DICTIONARY(FIND_CARD_SIG, hsm);
   QS_SIG_DICTIONARY(CARD_FOUND_SIG, hsm);
   QS_SIG_DICTIONARY(CARD_NOT_FOUND_SIG, hsm);
+  QS_SIG_DICTIONARY(DIRECTORY_OPEN_SUCCESS_SIG, hsm);
+  QS_SIG_DICTIONARY(DIRECTORY_OPEN_FAILURE_SIG, hsm);
   QS_SIG_DICTIONARY(FILE_VALID_SIG, hsm);
   QS_SIG_DICTIONARY(FILE_NOT_VALID_SIG, hsm);
   QS_SIG_DICTIONARY(PATTERN_VALID_SIG, hsm);
@@ -1337,6 +1341,29 @@ void FSP::Card_findCard(QHsm * const hsm, QEvt const * e)
       QS_STR("pattern card not found");
     QS_END()
     AO_Pattern->POST(&cardNotFoundEvt, hsm);
+  }
+}
+
+void FSP::Card_openDirectory(QHsm * const hsm, QEvt const * e)
+{
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("Card_openDirectory");
+  QS_END()
+  if (BSP::openPatternDirectory())
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern directory open success");
+      QS_STR(constants::base_dir_str);
+    QS_END()
+    AO_Pattern->POST(&directoryOpenSuccessEvt, hsm);
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT,AO_Pattern->m_prio)
+      QS_STR("pattern directory open failure");
+      QS_STR(constants::base_dir_str);
+    QS_END()
+    AO_Pattern->POST(&directoryOpenFailureEvt, hsm);
   }
 }
 
