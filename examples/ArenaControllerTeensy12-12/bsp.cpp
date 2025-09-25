@@ -8,6 +8,7 @@
 #include <Wire.h>
 #include <Adafruit_MCP4728.h>
 #include <Adafruit_ADS1X15.h>
+#include <ArduinoSort.h>
 
 #include "ArenaController.hpp"
 
@@ -25,6 +26,10 @@ namespace AC
 {
 namespace constants
 {
+static QP::QSpyId const bsp_id = {1U}; // QSpy source ID
+
+static QEvt const panel_set_transferred_evt = {PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
+
 // QS Serial Pins
 constexpr uint8_t qs_serial_stream_tx_pin = 53;
 constexpr uint8_t qs_serial_stream_rx_pin = 52;
@@ -63,17 +68,18 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
   {5, 10, 30, 21, 40, 35}
 };
 
+// pattern files
+constexpr uint8_t pattern_filename_str_len_max = 255;
+constexpr uint16_t pattern_file_count_max = 20;
 } // namespace constants
 } // namespace AC
 
 //----------------------------------------------------------------------------
-// QS facilities
-
-static QP::QSpyId const l_BSP_ID = {1U}; // QSpy source ID
-
+// Static bsp_global variables
+namespace bsp_global
+{
 //----------------------------------------------------------------------------
-// Static global variables
-static QEvt const panelSetTransferredEvt = {PANEL_SET_TRANSFERRED_SIG, 0U, 0U};
+// QS facilities
 
 static WDT_T4<WDT1> wdt;
 static EventResponder transfer_panel_complete_event;
@@ -118,12 +124,16 @@ static DecodedFrame decoded_frame;
 static PatternHeader pattern_header;
 
 // SD Card
-static SdFs sd;
-static FsFile dir;
+static SdFs pattern_sd;
+static FsFile pattern_dir;
 static FsFile pattern_file;
+static char pattern_filename_array[constants::pattern_file_count_max][constants::pattern_filename_str_len_max];
+static char * pattern_filenames_sorted[constants::pattern_file_count_max];
+static uint16_t pattern_file_count;
 
 // Analog Output
 static Adafruit_MCP4728 analog_output_chip;
+}
 
 //----------------------------------------------------------------------------
 // Local functions
@@ -149,7 +159,7 @@ void BSP::init()
     SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
     spi_ptr->begin();
   }
-  QS_OBJ_DICTIONARY(&l_BSP_ID);
+  QS_OBJ_DICTIONARY(&constants::bsp_id);
 }
 
 void BSP::ledOff()
@@ -168,12 +178,12 @@ void BSP::initializeWatchdog()
   config.trigger = constants::watchdog_trigger_seconds;
   config.timeout = constants::watchdog_timeout_seconds;
   config.callback = watchdogCallback;
-  wdt.begin(config);
+  bsp_global::wdt.begin(config);
 }
 
 void BSP::feedWatchdog()
 {
-  wdt.feed();
+  bsp_global::wdt.feed();
 }
 
 void BSP::initializeArena()
@@ -185,32 +195,32 @@ void BSP::initializeArena()
 bool BSP::initializeSerial()
 {
   // Serial.begin() is optional on Teensy. USB hardware initialization is performed before setup() runs.
-  // serial_communication_interface_stream.begin(constants::serial_baud_rate);
-  // serial_communication_interface_stream.setTimeout(constants::serial_timeout);
+  // bsp_global::serial_communication_interface_stream.begin(constants::serial_baud_rate);
+  // bsp_global::serial_communication_interface_stream.setTimeout(constants::serial_timeout);
   return true;
 }
 
 bool BSP::pollSerial()
 {
-  return serial_communication_interface_stream.available();
+  return bsp_global::serial_communication_interface_stream.available();
 }
 
 uint8_t BSP::readSerialByte()
 {
-  return serial_communication_interface_stream.read();
+  return bsp_global::serial_communication_interface_stream.read();
 }
 
 void BSP::writeSerialBinaryResponse(uint8_t response[AC::constants::byte_count_per_response_max],
   uint8_t response_byte_count)
 {
-  serial_communication_interface_stream.write(response, response_byte_count);
+  bsp_global::serial_communication_interface_stream.write(response, response_byte_count);
 }
 
 void BSP::readSerialStringCommand(char * const command_str,
   char first_char)
 {
   char command_tail[constants::string_command_length_max];
-  size_t chars_read = serial_communication_interface_stream.readBytesUntil(constants::command_termination_character,
+  size_t chars_read = bsp_global::serial_communication_interface_stream.readBytesUntil(constants::command_termination_character,
     command_tail, constants::string_command_length_max - 1);
   command_tail[chars_read] = '\0';
   command_str[0] = first_char;
@@ -220,23 +230,23 @@ void BSP::readSerialStringCommand(char * const command_str,
 
 void BSP::writeSerialStringResponse(char * const response)
 {
-  serial_communication_interface_stream.println(response);
+  bsp_global::serial_communication_interface_stream.println(response);
 }
 
 void log_fn(char ch, void *param)
 {
-  if ((ch == '\n') || (log_str_pos == (constants::string_log_length_max - 1)))
+  if ((ch == '\n') || (bsp_global::log_str_pos == (constants::string_log_length_max - 1)))
   {
-    log_str[log_str_pos] = 0;
+    bsp_global::log_str[bsp_global::log_str_pos] = 0;
     QS_BEGIN_ID(ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR(log_str);
+      QS_STR(bsp_global::log_str);
     QS_END()
-    log_str[0] = 0;
-    log_str_pos = 0;
+    bsp_global::log_str[0] = 0;
+    bsp_global::log_str_pos = 0;
   }
   else if (ch != '\r')
   {
-    log_str[log_str_pos++] = ch;
+    bsp_global::log_str[bsp_global::log_str_pos++] = ch;
   }
 }
 
@@ -272,7 +282,7 @@ void sfn(struct mg_connection *c, int ev, void *ev_data)
     cev->connection = c;
     cev->binary_command = r->buf;
     cev->binary_command_byte_count = r->len;
-    QF::PUBLISH(cev, &l_BSP_ID);
+    QF::PUBLISH(cev, &constants::bsp_id);
   }
   else if (ev == MG_EV_WRITE)
   {
@@ -297,7 +307,7 @@ void sfn(struct mg_connection *c, int ev, void *ev_data)
 
 bool BSP::createEthernetServerConnection()
 {
-  struct mg_connection *c = mg_listen(&g_mgr, s_lsn, sfn, NULL);
+  struct mg_connection *c = mg_listen(&g_mgr, bsp_global::s_lsn, sfn, NULL);
   if (c == NULL)
   {
     MG_INFO(("SERVER cannot open a connection"));
@@ -318,10 +328,10 @@ void BSP::writeEthernetBinaryResponse(void * const connection,
 
 void transferPanelCompleteCallback(EventResponderRef event_responder)
 {
-  ++transfer_panel_complete_count;
-  if (transfer_panel_complete_count == constants::region_count_per_frame)
+  ++bsp_global::transfer_panel_complete_count;
+  if (bsp_global::transfer_panel_complete_count == constants::region_count_per_frame)
   {
-    AO_Frame->POST(&panelSetTransferredEvt, &l_BSP_ID);
+    AO_Frame->POST(&constants::panel_set_transferred_evt, &constants::bsp_id);
   }
 }
 
@@ -341,7 +351,7 @@ void BSP::disarmRefreshTimer()
 
 void BSP::initializeFrame()
 {
-  transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);
+  bsp_global::transfer_panel_complete_event.attachImmediate(&transferPanelCompleteCallback);
   for (uint8_t panel_set_col_index = 0; panel_set_col_index<constants::panel_count_per_region_col_max; ++panel_set_col_index)
   {
     for (uint8_t panel_set_row_index = 0; panel_set_row_index<constants::panel_count_per_region_row_max; ++panel_set_row_index)
@@ -495,7 +505,7 @@ uint16_t BSP::decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffe
         //   QS_U8(0, region_index);
         //   QS_U8(0, region_panel_col_index);
         // QS_END()
-          QuarterPanel & quarter_panel = decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+          bsp_global::QuarterPanel & quarter_panel = bsp_global::decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
           stretch = pattern_frame_buffer[pattern_frame_buffer_position++];
           quarter_panel.stretch = stretch;
           // QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -514,7 +524,7 @@ uint16_t BSP::decodePatternFrameBuffer(const uint8_t * const pattern_frame_buffe
               remapped_frame_panel_col_index = remapColumnIndex(frame_panel_col_index);
               region_index = remapped_frame_panel_col_index / constants::panel_count_per_region_col_max;
               region_panel_col_index = remapped_frame_panel_col_index - region_index * constants::panel_count_per_region_col_max;
-              QuarterPanel & quarter_panel = decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+              bsp_global::QuarterPanel & quarter_panel = bsp_global::decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
               quarter_panel.data[pixel_row_index][byte_index] = pattern_frame_buffer[pattern_frame_buffer_position++];
               // quarter_panel.data[pixel_row_index][byte_index] = reverseBits(pattern_frame_buffer[pattern_frame_buffer_position++]);
               // quarter_panel.data[pixel_row_index][byte_index] = flipBits(pattern_frame_buffer[pattern_frame_buffer_position++]);
@@ -551,7 +561,7 @@ void BSP::fillFrameBufferWithDecodedFrame(uint8_t * const buffer,
         {
           for (uint8_t quarter_panel_row_index = 0; quarter_panel_row_index<constants::quarter_panel_count_per_panel_row; ++quarter_panel_row_index)
           {
-            QuarterPanel & quarter_panel = decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
+            bsp_global::QuarterPanel & quarter_panel = bsp_global::decoded_frame.regions[region_index].panels[region_panel_row_index][region_panel_col_index].quarter_panels[quarter_panel_row_index][quarter_panel_col_index];
             buffer[buffer_position++] = quarter_panel.stretch;
             for (uint8_t pixel_row_index = 0; pixel_row_index<constants::pixel_count_per_quarter_panel_row; ++pixel_row_index)
             {
@@ -595,43 +605,93 @@ void BSP::transferPanelSet(const uint8_t * const buffer,
   uint16_t & buffer_position,
   uint8_t panel_byte_count)
 {
-  transfer_panel_complete_count = 0;
+  bsp_global::transfer_panel_complete_count = 0;
   for (uint8_t region_index = 0; region_index<constants::region_count_per_frame; ++region_index)
   {
     SPIClass *spi_ptr = constants::region_spi_ptrs[region_index];
-    spi_ptr->transfer((buffer + buffer_position), NULL, panel_byte_count, transfer_panel_complete_event);
+    spi_ptr->transfer((buffer + buffer_position), NULL, panel_byte_count, bsp_global::transfer_panel_complete_event);
     buffer_position += panel_byte_count;
   }
 }
 
 bool BSP::findPatternCard()
 {
-  return sd.begin(SdioConfig(FIFO_SDIO));
+  return bsp_global::pattern_sd.begin(SdioConfig(FIFO_SDIO));
 }
 
 bool BSP::openPatternDirectory()
 {
-  return dir.open(constants::base_dir_str);
+  return bsp_global::pattern_dir.open(constants::pattern_dir_str);
 }
 
-uint64_t BSP::openPatternFileForReading(uint16_t pattern_index)
+bool BSP::sortPatternFilenames()
 {
-  char filename_str[constants::filename_str_len];
-  sprintf(filename_str, "pat%0*d.pat", constants::pattern_index_str_len, pattern_index);
-  pattern_file.open(filename_str, O_RDONLY);
-  return pattern_file.fileSize();
+  bsp_global::pattern_dir.rewind();
+  bsp_global::pattern_file_count = 0;
+  while (bsp_global::pattern_file.openNext(&bsp_global::pattern_dir, O_RDONLY))
+  {
+    if (bsp_global::pattern_file.isDir())
+    {
+      bsp_global::pattern_file.close();
+      break;
+    }
+    char * pattern_filename_buffer = bsp_global::pattern_filename_array[bsp_global::pattern_file_count++];
+    bsp_global::pattern_file.getName(pattern_filename_buffer, constants::pattern_filename_str_len_max);
+    bsp_global::pattern_file.close();
+  }
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("pattern file count");
+    QS_U32(8, bsp_global::pattern_file_count);
+  QS_END()
+  for (uint16_t pattern_index = 0; pattern_index<bsp_global::pattern_file_count; ++pattern_index)
+  {
+    bsp_global::pattern_filenames_sorted[pattern_index] = bsp_global::pattern_filename_array[pattern_index];
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern filename presort");
+      QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
+    QS_END()
+  }
+  sortArray(bsp_global::pattern_filenames_sorted, bsp_global::pattern_file_count);
+  for (uint16_t pattern_index = 0; pattern_index<bsp_global::pattern_file_count; ++pattern_index)
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern filename sorted");
+      QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
+    QS_END()
+  }
+  if (bsp_global::pattern_dir.getError())
+  {
+    return false;
+  }
+  return true;
+}
+
+uint64_t BSP::openPatternFileForReading(uint16_t pattern_id)
+{
+  // pattern_id uses one-based indexing
+  if ((pattern_id == 0) || (pattern_id > bsp_global::pattern_file_count))
+  {
+    return 0;
+  }
+  uint16_t pattern_index = pattern_id - 1;
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("opening pattern filename");
+    QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
+  QS_END()
+  bsp_global::pattern_file.open(bsp_global::pattern_filenames_sorted[pattern_index], O_RDONLY);
+  return bsp_global::pattern_file.fileSize();
 }
 
 void BSP::closePatternFile()
 {
-  pattern_file.close();
+  bsp_global::pattern_file.close();
 }
 
 PatternHeader BSP::rewindPatternFileAndReadHeader()
 {
-  pattern_file.rewind();
-  pattern_file.read(&pattern_header, constants::pattern_header_size);
-  return pattern_header;
+  bsp_global::pattern_file.rewind();
+  bsp_global::pattern_file.read(&bsp_global::pattern_header, constants::pattern_header_size);
+  return bsp_global::pattern_header;
 }
 
 void BSP::readPatternFrameFromFileIntoBuffer(uint8_t * buffer,
@@ -639,14 +699,14 @@ void BSP::readPatternFrameFromFileIntoBuffer(uint8_t * buffer,
   uint64_t byte_count_per_pattern_frame)
 {
   uint32_t file_position = constants::pattern_header_size + frame_index * byte_count_per_pattern_frame;
-  Q_ASSERT((file_position + byte_count_per_pattern_frame) <= pattern_file.fileSize());
-  pattern_file.seek(file_position);
-  pattern_file.read(buffer, byte_count_per_pattern_frame);
+  Q_ASSERT((file_position + byte_count_per_pattern_frame) <= bsp_global::pattern_file.fileSize());
+  bsp_global::pattern_file.seek(file_position);
+  bsp_global::pattern_file.read(buffer, byte_count_per_pattern_frame);
   // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
   //   QS_STR("pattern file position");
   //   QS_U16(5, file_position);
   //   QS_STR("pattern file size");
-  //   QS_U16(5, pattern_file.fileSize());
+  //   QS_U16(5, bsp_global::pattern_file.fileSize());
   // QS_END()
 }
 
@@ -672,12 +732,12 @@ uint64_t BSP::getByteCountPerPatternFrameBinary()
 
 bool BSP::initializeAnalogOutput()
 {
-  return analog_output_chip.begin();
+  return bsp_global::analog_output_chip.begin();
 }
 
 void BSP::setAnalogOutput(uint16_t value)
 {
-  analog_output_chip.setChannelValue(MCP4728_CHANNEL_A, value, MCP4728_VREF_VDD,
+  bsp_global::analog_output_chip.setChannelValue(MCP4728_CHANNEL_A, value, MCP4728_VREF_VDD,
     MCP4728_GAIN_1X);
 }
 
@@ -698,7 +758,7 @@ void BSP::setAnalogOutput(uint16_t value)
 // interrupts.................................................................
 void TIMER_HANDLER()
 {
-  QF::TICK_X(0, &l_BSP_ID); // process time events for tick rate 0
+  QF::TICK_X(0, &constants::bsp_id); // process time events for tick rate 0
 }
 //............................................................................
 void QF::onStartup()
@@ -720,23 +780,23 @@ void QV::onIdle()
   QF_INT_ENABLE(); // simply re-enable interrupts
 
   // transmit QS outgoing data (QS-TX)
-  uint16_t len = qs_serial_stream.availableForWrite();
+  uint16_t len = bsp_global::qs_serial_stream.availableForWrite();
   if (len > 0U)
   { // any space available in the output buffer?
     uint8_t const *buf = QS::getBlock(&len);
     if (buf)
     {
-      qs_serial_stream.write(buf, len); // asynchronous and non-blocking
+      bsp_global::qs_serial_stream.write(buf, len); // asynchronous and non-blocking
     }
   }
 
   // receive QS incoming data (QS-RX)
-  len = qs_serial_stream.available();
+  len = bsp_global::qs_serial_stream.available();
   if (len > 0U)
   {
     do
     {
-      QP::QS::rxPut(qs_serial_stream.read());
+      QP::QS::rxPut(bsp_global::qs_serial_stream.read());
     } while (--len > 0U);
     QS::rxParse();
   }
@@ -767,9 +827,9 @@ bool QP::QS::onStartup(void const *arg)
   static uint8_t qsRxBuf[1024];  // buffer for QS receive channel (QS-RX)
   initBuf  (qsTxBuf, sizeof(qsTxBuf));
   rxInitBuf(qsRxBuf, sizeof(qsRxBuf));
-  qs_serial_stream.setTX(constants::qs_serial_stream_tx_pin);
-  qs_serial_stream.setRX(constants::qs_serial_stream_rx_pin);
-  qs_serial_stream.begin(constants::qs_serial_baud_rate);
+  bsp_global::qs_serial_stream.setTX(constants::qs_serial_stream_tx_pin);
+  bsp_global::qs_serial_stream.setRX(constants::qs_serial_stream_rx_pin);
+  bsp_global::qs_serial_stream.begin(constants::qs_serial_baud_rate);
   return true; // return success
 }
 //............................................................................
@@ -794,11 +854,11 @@ void QP::QS::onFlush()
   uint8_t const *buf = QS::getBlock(&len); // get continguous block of data
   while (buf != nullptr)
   { // data available?
-    qs_serial_stream.write(buf, len); // might poll until all bytes fit
+    bsp_global::qs_serial_stream.write(buf, len); // might poll until all bytes fit
     len = 0xFFFFU; // big number to get as many bytes as available
     buf = QS::getBlock(&len); // try to get more data
   }
-  qs_serial_stream.flush(); // wait for the transmission of outgoing data to complete
+  bsp_global::qs_serial_stream.flush(); // wait for the transmission of outgoing data to complete
 }
 //............................................................................
 void QP::QS::onReset()

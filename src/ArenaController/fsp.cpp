@@ -7,60 +7,65 @@ using namespace QP;
 
 using namespace AC;
 
-//----------------------------------------------------------------------------
-// Static global variables
-static QSpyId const l_FSP_ID = {0U}; // QSpy source ID
+namespace AC
+{
+namespace constants
+{
+static QSpyId const fsp_id = {0U}; // QSpy source ID
 
-static QEvt const resetEvt = {RESET_SIG, 0U, 0U};
+static QEvt const reset_evt = {RESET_SIG, 0U, 0U};
 
-static QEvt const deactivateDisplayEvt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
-static QEvt const displayFrameEvt = {DISPLAY_FRAME_SIG, 0U, 0U};
-static QEvt const transferFrameEvt = {TRANSFER_FRAME_SIG, 0U, 0U};
-static QEvt const frameTransferredEvt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
+static QEvt const deactivate_display_evt = {DEACTIVATE_DISPLAY_SIG, 0U, 0U};
+static QEvt const display_frame_evt = {DISPLAY_FRAME_SIG, 0U, 0U};
+static QEvt const transfer_frame_evt = {TRANSFER_FRAME_SIG, 0U, 0U};
+static QEvt const frame_transferred_evt = {FRAME_TRANSFERRED_SIG, 0U, 0U};
 
-static QEvt const processBinaryCommandEvt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U};
-static QEvt const processStringCommandEvt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
-static QEvt const processStreamCommandEvt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
-static QEvt const commandProcessedEvt = {COMMAND_PROCESSED_SIG, 0U, 0U};
-static QEvt const patternFinishedPlayingEvt = {PATTERN_FINISHED_PLAYING_SIG, 0U, 0U};
-static QEvt const playPatternErrorEvt = {PLAY_PATTERN_ERROR_SIG, 0U, 0U};
+static QEvt const process_binary_command_evt = {PROCESS_BINARY_COMMAND_SIG, 0U, 0U};
+static QEvt const process_string_command_evt = {PROCESS_STRING_COMMAND_SIG, 0U, 0U};
+static QEvt const process_stream_command_evt = {PROCESS_STREAM_COMMAND_SIG, 0U, 0U};
+static QEvt const command_processed_evt = {COMMAND_PROCESSED_SIG, 0U, 0U};
+static QEvt const pattern_finished_playing_evt = {PATTERN_FINISHED_PLAYING_SIG, 0U, 0U};
+static QEvt const play_pattern_error_evt = {PLAY_PATTERN_ERROR_SIG, 0U, 0U};
 
-static QEvt const allOnEvt = {ALL_ON_SIG, 0U, 0U};
-static QEvt const allOffEvt = {ALL_OFF_SIG, 0U, 0U};
-static QEvt const streamFrameEvt = {STREAM_FRAME_SIG, 0U, 0U};
+static QEvt const all_on_evt = {ALL_ON_SIG, 0U, 0U};
+static QEvt const all_off_evt = {ALL_OFF_SIG, 0U, 0U};
+static QEvt const stream_frame_evt = {STREAM_FRAME_SIG, 0U, 0U};
 
-static QEvt const activateSerialCommandInterfaceEvt = {ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const deactivateSerialCommandInterfaceEvt = {DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const serialInitializedEvt = {SERIAL_INITIALIZED_SIG, 0U, 0U};
-static QEvt const serialCommandAvailableEvt = {SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
+static QEvt const activate_serial_command_interface_evt = {ACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivate_serial_command_interface_evt = {DEACTIVATE_SERIAL_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const serial_initialized_evt = {SERIAL_INITIALIZED_SIG, 0U, 0U};
+static QEvt const serial_command_available_evt = {SERIAL_COMMAND_AVAILABLE_SIG, 0U, 0U};
 
-static QEvt const activateEthernetCommandInterfaceEvt = {ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const deactivateEthernetCommandInterfaceEvt = {DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
-static QEvt const ethernetInitializedEvt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
-static QEvt const ethernetServerConnectedEvt = {ETHERNET_SERVER_CONNECTED_SIG, 0U, 0U};
+static QEvt const activate_ethernet_command_interface_evt = {ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const deactivate_ethernet_command_interface_evt = {DEACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, 0U, 0U};
+static QEvt const ethernet_initialized_evt = {ETHERNET_INITIALIZED_SIG, 0U, 0U};
+static QEvt const ethernet_server_connected_evt = {ETHERNET_SERVER_CONNECTED_SIG, 0U, 0U};
 
-static QEvt const refreshTimeoutEvt = {REFRESH_TIMEOUT_SIG, 0U, 0U};
+static QEvt const refresh_timeout_evt = {REFRESH_TIMEOUT_SIG, 0U, 0U};
 
-static QEvt const fillFrameBufferWithAllOnEvt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
-static QEvt const fillFrameBufferWithDecodedFrameEvt = {FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, 0U, 0U};
+static QEvt const fill_frame_buffer_with_all_on_evt = {FILL_FRAME_BUFFER_WITH_ALL_ON_SIG, 0U, 0U};
+static QEvt const fill_frame_buffer_with_decoded_frame_evt = {FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG, 0U, 0U};
 
-static QEvt const beginPlayingPatternEvt = {BEGIN_PLAYING_PATTERN_SIG, 0U, 0U};
-static QEvt const endPlayingPatternEvt = {END_PLAYING_PATTERN_SIG, 0U, 0U};
-static QEvt const beginShowingPatternFrameEvt = {BEGIN_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
-static QEvt const endShowingPatternFrameEvt = {END_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
-static QEvt const cardFoundEvt = {CARD_FOUND_SIG, 0U, 0U};
-static QEvt const cardNotFoundEvt = {CARD_NOT_FOUND_SIG, 0U, 0U};
-static QEvt const directoryOpenSuccessEvt = {DIRECTORY_OPEN_SUCCESS_SIG, 0U, 0U};
-static QEvt const directoryOpenFailureEvt = {DIRECTORY_OPEN_FAILURE_SIG, 0U, 0U};
-static QEvt const findPatternEvt = {FIND_PATTERN_SIG, 0U, 0U};
-static QEvt const fileValidEvt = {FILE_VALID_SIG, 0U, 0U};
-static QEvt const fileNotValidEvt = {FILE_NOT_VALID_SIG, 0U, 0U};
-static QEvt const patternNotValidEvt = {PATTERN_NOT_VALID_SIG, 0U, 0U};
-static QEvt const frameDecodedEvt = {FRAME_DECODED_SIG, 0U, 0U};
+static QEvt const begin_playing_pattern_evt = {BEGIN_PLAYING_PATTERN_SIG, 0U, 0U};
+static QEvt const end_playing_pattern_evt = {END_PLAYING_PATTERN_SIG, 0U, 0U};
+static QEvt const begin_showing_pattern_frame_evt = {BEGIN_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
+static QEvt const end_showing_pattern_frame_evt = {END_SHOWING_PATTERN_FRAME_SIG, 0U, 0U};
+static QEvt const card_found_evt = {CARD_FOUND_SIG, 0U, 0U};
+static QEvt const card_not_found_evt = {CARD_NOT_FOUND_SIG, 0U, 0U};
+static QEvt const directory_open_success_evt = {DIRECTORY_OPEN_SUCCESS_SIG, 0U, 0U};
+static QEvt const directory_open_failure_evt = {DIRECTORY_OPEN_FAILURE_SIG, 0U, 0U};
+static QEvt const filename_sort_success_evt = {FILENAME_SORT_SUCCESS_SIG, 0U, 0U};
+static QEvt const filename_sort_failure_evt = {FILENAME_SORT_FAILURE_SIG, 0U, 0U};
+static QEvt const find_pattern_evt = {FIND_PATTERN_SIG, 0U, 0U};
+static QEvt const file_valid_evt = {FILE_VALID_SIG, 0U, 0U};
+static QEvt const file_not_valid_evt = {FILE_NOT_VALID_SIG, 0U, 0U};
+static QEvt const pattern_not_valid_evt = {PATTERN_NOT_VALID_SIG, 0U, 0U};
+static QEvt const frame_decoded_evt = {FRAME_DECODED_SIG, 0U, 0U};
 
-static QEvt const initializeAnalogOutputEvt = {INITIALIZE_ANALOG_OUTPUT_SIG, 0U, 0U};
-static QEvt const analogOutputInitializedEvt = {ANALOG_OUTPUT_INITIALIZED_SIG, 0U, 0U};
-
+static QEvt const initialize_analog_output_evt = {INITIALIZE_ANALOG_OUTPUT_SIG, 0U, 0U};
+static QEvt const analog_output_initialized_evt = {ANALOG_OUTPUT_INITIALIZED_SIG, 0U, 0U};
+}
+}
 //----------------------------------------------------------------------------
 // Local functions
 
@@ -90,7 +95,7 @@ void FSP::ArenaController_setup()
   QS_OBJ_DICTIONARY(AO_Watchdog);
   QS_OBJ_DICTIONARY(AO_Pattern);
 
-  QS_OBJ_DICTIONARY(&l_FSP_ID);
+  QS_OBJ_DICTIONARY(&constants::fsp_id);
 
   // signal dictionaries for globally published events...
   QS_SIG_DICTIONARY(DEACTIVATE_DISPLAY_SIG, nullptr);
@@ -196,14 +201,14 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  AO_SerialCommandInterface->POST(&activateSerialCommandInterfaceEvt, &l_FSP_ID);
-  AO_EthernetCommandInterface->POST(&activateEthernetCommandInterfaceEvt, ao);
+  AO_SerialCommandInterface->POST(&constants::activate_serial_command_interface_evt, &constants::fsp_id);
+  AO_EthernetCommandInterface->POST(&constants::activate_ethernet_command_interface_evt, ao);
 }
 
 void FSP::Arena_deactivateCommandInterfaces(QActive * const ao, QEvt const * e)
 {
-  AO_SerialCommandInterface->POST(&deactivateSerialCommandInterfaceEvt, &l_FSP_ID);
-  AO_EthernetCommandInterface->POST(&deactivateEthernetCommandInterfaceEvt, ao);
+  AO_SerialCommandInterface->POST(&constants::deactivate_serial_command_interface_evt, &constants::fsp_id);
+  AO_EthernetCommandInterface->POST(&constants::deactivate_ethernet_command_interface_evt, ao);
 }
 
 void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
@@ -211,22 +216,22 @@ void FSP::Arena_deactivateDisplay(QActive * const ao, QEvt const * e)
   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
     QS_STR("deactivating display");
   QS_END()
-  QF::PUBLISH(&deactivateDisplayEvt, ao);
+  QF::PUBLISH(&constants::deactivate_display_evt, ao);
 }
 
 void FSP::Arena_displayFrame(QActive * const ao, QEvt const * e)
 {
-  AO_Display->POST(&displayFrameEvt, ao);
+  AO_Display->POST(&constants::display_frame_evt, ao);
 }
 
 void FSP::Arena_fillFrameBufferWithAllOn(QActive * const ao, QEvt const * e)
 {
-  AO_Frame->POST(&fillFrameBufferWithAllOnEvt, ao);
+  AO_Frame->POST(&constants::fill_frame_buffer_with_all_on_evt, ao);
 }
 
 void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const * e)
 {
-  AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
+  AO_Frame->POST(&constants::fill_frame_buffer_with_decoded_frame_evt, ao);
 }
 
 void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
@@ -256,7 +261,7 @@ void FSP::Arena_playPatternTransition(QP::QActive * const ao, QP::QEvt const * e
 
 void FSP::Arena_endPlayingPattern(QActive * const ao, QEvt const * e)
 {
-  AO_Pattern->POST(&endPlayingPatternEvt, ao);
+  AO_Pattern->POST(&constants::end_playing_pattern_evt, ao);
 }
 
 void FSP::Arena_showPatternFrameTransition(QP::QActive * const ao, QP::QEvt const * e)
@@ -266,7 +271,7 @@ void FSP::Arena_showPatternFrameTransition(QP::QActive * const ao, QP::QEvt cons
 
 void FSP::Arena_endShowPatternFrame(QActive * const ao, QEvt const * e)
 {
-  AO_Pattern->POST(&endShowingPatternFrameEvt, ao);
+  AO_Pattern->POST(&constants::end_showing_pattern_frame_evt, ao);
 }
 
 void FSP::Arena_initializeAnalogOutput(QP::QActive * const ao, QP::QEvt const * e)
@@ -275,7 +280,7 @@ void FSP::Arena_initializeAnalogOutput(QP::QActive * const ao, QP::QEvt const * 
     QS_STR("Arena_initializeAnalogOutput");
   QS_END()
   Arena * const arena = static_cast<Arena * const>(ao);
-  arena->analog_output_->dispatch(&initializeAnalogOutputEvt, ao->m_prio);
+  arena->analog_output_->dispatch(&constants::initialize_analog_output_evt, ao->m_prio);
 }
 
 void FSP::AnalogOutput_initialize(QHsm * const hsm, QEvt const * e)
@@ -293,7 +298,7 @@ void FSP::AnalogOutput_initializeOutput(QHsm * const hsm, QEvt const * e)
   bool analog_output_initialized = BSP::initializeAnalogOutput();
   if(analog_output_initialized)
   {
-    AO_Arena->POST(&analogOutputInitializedEvt, hsm);
+    AO_Arena->POST(&constants::analog_output_initialized_evt, hsm);
   }
   else
   {
@@ -348,7 +353,7 @@ void FSP::Display_setRefreshRate(QActive * const ao, QEvt const * e)
 
 void postRefreshTimeout()
 {
-  AO_Display->POST(&refreshTimeoutEvt, &l_FSP_ID);
+  AO_Display->POST(&constants::refresh_timeout_evt, &constants::fsp_id);
 }
 
 void FSP::Display_armRefreshTimer(QActive * const ao, QEvt const * e)
@@ -371,7 +376,7 @@ void FSP::Display_disarmRefreshTimer(QActive * const ao, QEvt const * e)
 
 void FSP::Display_transferFrame(QActive * const ao, QEvt const * e)
 {
-  AO_Frame->POST(&transferFrameEvt, ao);
+  AO_Frame->POST(&constants::transfer_frame_evt, ao);
 }
 
 void FSP::Display_defer(QP::QActive * const ao, QP::QEvt const * e)
@@ -436,7 +441,7 @@ void FSP::SerialCommandInterface_initializeSerial(QActive * const ao, QEvt const
   bool serial_ready = BSP::initializeSerial();
   if (serial_ready)
   {
-    AO_SerialCommandInterface->POST(&serialInitializedEvt, ao);
+    AO_SerialCommandInterface->POST(&constants::serial_initialized_evt, ao);
   }
 }
 
@@ -445,7 +450,7 @@ void FSP::SerialCommandInterface_pollSerial(QActive * const ao, QEvt const * e)
   bool bytes_available = BSP::pollSerial();
   if (bytes_available)
   {
-    QF::PUBLISH(&serialCommandAvailableEvt, ao);
+    QF::PUBLISH(&constants::serial_command_available_evt, ao);
   }
 }
 
@@ -463,7 +468,7 @@ void FSP::SerialCommandInterface_analyzeCommand(QActive * const ao, QEvt const *
     QS_BEGIN_ID(USER_COMMENT, AO_SerialCommandInterface->m_prio)
       QS_STR("string command");
     QS_END()
-    QF::PUBLISH(&processStringCommandEvt, ao);
+    QF::PUBLISH(&constants::process_string_command_evt, ao);
   }
   else if (first_command_byte == STREAM_FRAME_CMD)
   {
@@ -478,14 +483,14 @@ void FSP::SerialCommandInterface_analyzeCommand(QActive * const ao, QEvt const *
       QS_STR("stream command");
       QS_U32(8, sci->binary_command_byte_count_claim_);
     QS_END()
-    QF::PUBLISH(&processStreamCommandEvt, ao);
+    QF::PUBLISH(&constants::process_stream_command_evt, ao);
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT, AO_SerialCommandInterface->m_prio)
       QS_STR("binary command");
     QS_END()
-    QF::PUBLISH(&processBinaryCommandEvt, ao);
+    QF::PUBLISH(&constants::process_binary_command_evt, ao);
   }
 }
 
@@ -500,7 +505,7 @@ void FSP::SerialCommandInterface_processBinaryCommand(QActive * const ao, QEvt c
   sci->binary_response_byte_count_ = FSP::processBinaryCommand(sci->binary_command_,
     sci->binary_command_byte_count_,
     sci->binary_response_);
-  QF::PUBLISH(&commandProcessedEvt, ao);
+  QF::PUBLISH(&constants::command_processed_evt, ao);
 }
 
 void FSP::SerialCommandInterface_writeBinaryResponse(QActive * const ao, QEvt const * e)
@@ -538,7 +543,7 @@ void FSP::SerialCommandInterface_processStreamCommand(QActive * const ao, QEvt c
   sci->binary_response_[1] = 0;
   sci->binary_response_[2] = STREAM_FRAME_CMD;
   FSP::processStreamCommand(sci->binary_command_, sci->binary_command_byte_count_);
-  QF::PUBLISH(&commandProcessedEvt, ao);
+  QF::PUBLISH(&constants::command_processed_evt, ao);
 }
 
 void FSP::SerialCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
@@ -632,7 +637,7 @@ void FSP::EthernetCommandInterface_initializeEthernet(QActive * const ao, QEvt c
   bool ethernet_initialized = BSP::initializeEthernet();
   if (ethernet_initialized)
   {
-    AO_EthernetCommandInterface->POST(&ethernetInitializedEvt, ao);
+    AO_EthernetCommandInterface->POST(&constants::ethernet_initialized_evt, ao);
   }
 }
 
@@ -646,7 +651,7 @@ void FSP::EthernetCommandInterface_createServerConnection(QActive * const ao, QE
   bool server_connected = BSP::createEthernetServerConnection();
   if (server_connected)
   {
-    AO_EthernetCommandInterface->POST(&ethernetServerConnectedEvt, ao);
+    AO_EthernetCommandInterface->POST(&constants::ethernet_server_connected_evt, ao);
   }
 }
 
@@ -667,7 +672,7 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("string command");
     QS_END()
-    QF::PUBLISH(&processStringCommandEvt, ao);
+    QF::PUBLISH(&constants::process_string_command_evt, ao);
   }
   else if (first_command_byte == STREAM_FRAME_CMD)
   {
@@ -678,14 +683,14 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
       QS_STR("stream command");
       QS_U32(8, eci->binary_command_byte_count_claim_);
     QS_END()
-    QF::PUBLISH(&processStreamCommandEvt, ao);
+    QF::PUBLISH(&constants::process_stream_command_evt, ao);
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR("binary command");
     QS_END()
-    QF::PUBLISH(&processBinaryCommandEvt, ao);
+    QF::PUBLISH(&constants::process_binary_command_evt, ao);
   }
 }
 
@@ -695,7 +700,7 @@ void FSP::EthernetCommandInterface_processBinaryCommand(QActive * const ao, QEvt
   eci->binary_response_byte_count_ = FSP::processBinaryCommand(eci->binary_command_,
     eci->binary_command_byte_count_,
     eci->binary_response_);
-  QF::PUBLISH(&commandProcessedEvt, ao);
+  QF::PUBLISH(&constants::command_processed_evt, ao);
 }
 
 void FSP::EthernetCommandInterface_writeBinaryResponse(QActive * const ao, QEvt const * e)
@@ -726,7 +731,7 @@ void FSP::EthernetCommandInterface_processStreamCommand(QActive * const ao, QEvt
   eci->binary_response_[1] = 0;
   eci->binary_response_[2] = STREAM_FRAME_CMD;
   FSP::processStreamCommand(eci->binary_command_, eci->binary_command_byte_count_);
-  QF::PUBLISH(&commandProcessedEvt, ao);
+  QF::PUBLISH(&constants::command_processed_evt, ao);
 }
 
 void FSP::EthernetCommandInterface_storeRuntimeDuration(QActive * const ao, QEvt const * e)
@@ -891,7 +896,7 @@ bool FSP::Frame_ifFrameNotTransferred(QActive * const ao, QEvt const * e)
 
 void FSP::Frame_publishFrameTransferred(QActive * const ao, QEvt const * e)
 {
-  QF::PUBLISH(&frameTransferredEvt, ao);
+  QF::PUBLISH(&constants::frame_transferred_evt, ao);
 }
 
 void FSP::Frame_setGrayscale(QActive * const ao, QEvt const * e)
@@ -1007,7 +1012,7 @@ void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
     QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
       QS_STR("invalid frame rate");
     QS_END()
-    AO_Arena->POST(&allOffEvt, ao);
+    AO_Arena->POST(&constants::all_off_evt, ao);
     return;
   }
   else if (ppev->frame_rate < 0)
@@ -1035,7 +1040,7 @@ void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
   // QS_U16(5, pattern->runtime_duration_ms_);
   // QS_END()
   pattern->card_->dispatch(e, ao->m_prio);
-  AO_Pattern->POST(&beginPlayingPatternEvt, ao);
+  AO_Pattern->POST(&constants::begin_playing_pattern_evt, ao);
 }
 
 void FSP::Pattern_initializeShowPatternFrame(QActive * const ao, QEvt const * e)
@@ -1044,7 +1049,7 @@ void FSP::Pattern_initializeShowPatternFrame(QActive * const ao, QEvt const * e)
   ShowPatternFrameEvt const * spfev = static_cast<ShowPatternFrameEvt const *>(e);
   pattern->frame_index_ = spfev->frame_index;
   pattern->card_->dispatch(e, ao->m_prio);
-  AO_Pattern->POST(&beginShowingPatternFrameEvt, ao);
+  AO_Pattern->POST(&constants::begin_showing_pattern_frame_evt, ao);
 }
 
 void FSP::Pattern_armFindCardTimer(QActive * const ao, QEvt const * e)
@@ -1058,8 +1063,8 @@ void FSP::Pattern_armFindCardTimer(QActive * const ao, QEvt const * e)
 
 void FSP::Pattern_endRuntimeDuration(QActive * const ao, QEvt const * e)
 {
-  QF::PUBLISH(&patternFinishedPlayingEvt, ao);
-  AO_Arena->POST(&allOffEvt, ao);
+  QF::PUBLISH(&constants::pattern_finished_playing_evt, ao);
+  AO_Arena->POST(&constants::all_off_evt, ao);
 }
 
 void FSP::Pattern_armTimers(QActive * const ao, QEvt const * e)
@@ -1101,7 +1106,7 @@ void FSP::Pattern_deactivateDisplay(QActive * const ao, QEvt const * e)
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("deactivating display");
   // QS_END()
-  QF::PUBLISH(&deactivateDisplayEvt, ao);
+  QF::PUBLISH(&constants::deactivate_display_evt, ao);
 }
 
 void FSP::Pattern_readFrameFromFile(QP::QActive * const ao, QP::QEvt const * e)
@@ -1160,7 +1165,7 @@ void FSP::Pattern_setupNextFrame(QP::QActive * const ao, QP::QEvt const * e)
 
 void FSP::Pattern_updatePatternFrame(QP::QActive * const ao, QP::QEvt const * e)
 {
-  QF::PUBLISH(&deactivateDisplayEvt, ao);
+  QF::PUBLISH(&constants::deactivate_display_evt, ao);
 
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   if (pattern->frame_)
@@ -1185,7 +1190,7 @@ void FSP::Pattern_decodeFrame(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   BSP::decodePatternFrameBuffer(pattern->frame_->buffer, pattern->grayscale_);
-  AO_Pattern->POST(&frameDecodedEvt, ao);
+  AO_Pattern->POST(&constants::frame_decoded_evt, ao);
 }
 
 void FSP::Pattern_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const * e)
@@ -1193,7 +1198,7 @@ void FSP::Pattern_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("filling frame buffer with decoded frame");
   // QS_END()
-  AO_Frame->POST(&fillFrameBufferWithDecodedFrameEvt, ao);
+  AO_Frame->POST(&constants::fill_frame_buffer_with_decoded_frame_evt, ao);
 }
 
 void FSP::Pattern_deferBeginPattern(QP::QActive * const ao, QP::QEvt const * e)
@@ -1232,7 +1237,7 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
   SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
   spev->value = frameIndexToAnalogOutputValue(pattern->frame_index_, pattern->frame_count_per_pattern_);
   AO_Arena->POST(spev, ao);
-  AO_Display->POST(&displayFrameEvt, ao);
+  AO_Display->POST(&constants::display_frame_evt, ao);
 }
 
 void FSP::Pattern_initializeFrameIndex(QActive * const ao, QEvt const * e)
@@ -1271,20 +1276,20 @@ void FSP::Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt
 void FSP::Pattern_handleErrorAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  QF::PUBLISH(&playPatternErrorEvt, ao);
+  QF::PUBLISH(&constants::play_pattern_error_evt, ao);
   pattern->card_->dispatch(e, pattern->m_prio);
 }
 
 void FSP::Pattern_dispatchFindPatternToCard(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->card_->dispatch(&findPatternEvt, pattern->m_prio);
+  pattern->card_->dispatch(&constants::find_pattern_evt, pattern->m_prio);
 }
 
 void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
 {
   Card * const card = static_cast<Card * const>(hsm);
-  card->pattern_index_ = 0;
+  card->pattern_id_ = 0;
   card->file_size_ = 0;
 
   QS_SIG_DICTIONARY(FIND_PATTERN_SIG, hsm);
@@ -1293,6 +1298,8 @@ void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
   QS_SIG_DICTIONARY(CARD_NOT_FOUND_SIG, hsm);
   QS_SIG_DICTIONARY(DIRECTORY_OPEN_SUCCESS_SIG, hsm);
   QS_SIG_DICTIONARY(DIRECTORY_OPEN_FAILURE_SIG, hsm);
+  QS_SIG_DICTIONARY(FILENAME_SORT_SUCCESS_SIG, hsm);
+  QS_SIG_DICTIONARY(FILENAME_SORT_FAILURE_SIG, hsm);
   QS_SIG_DICTIONARY(FILE_VALID_SIG, hsm);
   QS_SIG_DICTIONARY(FILE_NOT_VALID_SIG, hsm);
   QS_SIG_DICTIONARY(PATTERN_VALID_SIG, hsm);
@@ -1304,10 +1311,10 @@ void FSP::Card_storePlayPatternParameters(QHsm * const hsm, QEvt const * e)
   Card * const card = static_cast<Card * const>(hsm);
   PlayPatternEvt const * ppev = static_cast<PlayPatternEvt const *>(e);
 
-  card->pattern_index_ = ppev->pattern_index;
+  card->pattern_id_ = ppev->pattern_id;
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-    QS_STR("play pattern store pattern index");
-    QS_U32(8, card->pattern_index_);
+    QS_STR("play pattern store pattern id");
+    QS_U32(8, card->pattern_id_);
   QS_END()
 }
 
@@ -1316,10 +1323,10 @@ void FSP::Card_storeShowPatternFrameParameters(QHsm * const hsm, QEvt const * e)
   Card * const card = static_cast<Card * const>(hsm);
   ShowPatternFrameEvt const * spfev = static_cast<ShowPatternFrameEvt const *>(e);
 
-  card->pattern_index_ = spfev->pattern_index;
+  card->pattern_id_ = spfev->pattern_id;
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-    QS_STR("show pattern frame store pattern index");
-    QS_U32(8, card->pattern_index_);
+    QS_STR("show pattern frame store pattern id");
+    QS_U32(8, card->pattern_id_);
   QS_END()
 }
 
@@ -1333,14 +1340,14 @@ void FSP::Card_findCard(QHsm * const hsm, QEvt const * e)
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
       QS_STR("pattern card found");
     QS_END()
-    AO_Pattern->POST(&cardFoundEvt, hsm);
+    AO_Pattern->POST(&constants::card_found_evt, hsm);
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT,AO_Pattern->m_prio)
       QS_STR("pattern card not found");
     QS_END()
-    AO_Pattern->POST(&cardNotFoundEvt, hsm);
+    AO_Pattern->POST(&constants::card_not_found_evt, hsm);
   }
 }
 
@@ -1353,30 +1360,51 @@ void FSP::Card_openDirectory(QHsm * const hsm, QEvt const * e)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
       QS_STR("pattern directory open success");
-      QS_STR(constants::base_dir_str);
+      QS_STR(constants::pattern_dir_str);
     QS_END()
-    AO_Pattern->POST(&directoryOpenSuccessEvt, hsm);
+    AO_Pattern->POST(&constants::directory_open_success_evt, hsm);
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT,AO_Pattern->m_prio)
       QS_STR("pattern directory open failure");
-      QS_STR(constants::base_dir_str);
+      QS_STR(constants::pattern_dir_str);
     QS_END()
-    AO_Pattern->POST(&directoryOpenFailureEvt, hsm);
+    AO_Pattern->POST(&constants::directory_open_failure_evt, hsm);
+  }
+}
+
+void FSP::Card_sortFilenames(QHsm * const hsm, QEvt const * e)
+{
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("Card_sortFilenames");
+  QS_END()
+  if (BSP::sortPatternFilenames())
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern filename sort success");
+    QS_END()
+    AO_Pattern->POST(&constants::filename_sort_success_evt, hsm);
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT,AO_Pattern->m_prio)
+      QS_STR("pattern filename sort failure");
+    QS_END()
+    AO_Pattern->POST(&constants::filename_sort_failure_evt, hsm);
   }
 }
 
 void FSP::Card_postAllOff(QHsm * const hsm, QEvt const * e)
 {
-  AO_Arena->POST(&allOffEvt, hsm);
+  AO_Arena->POST(&constants::all_off_evt, hsm);
 }
 
 void FSP::Card_openFile(QHsm * const hsm, QEvt const * e)
 {
   Card * const card = static_cast<Card * const>(hsm);
 
-  card->file_size_ = BSP::openPatternFileForReading(card->pattern_index_);
+  card->file_size_ = BSP::openPatternFileForReading(card->pattern_id_);
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
     QS_STR("file opened");
   QS_END()
@@ -1397,18 +1425,18 @@ void FSP::Card_checkFile(QHsm * const hsm, QEvt const * e)
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
       QS_STR("file valid");
-      QS_U32(8, card->pattern_index_);
+      QS_U32(8, card->pattern_id_);
       QS_U32(8, card->file_size_);
     QS_END()
-    AO_Pattern->POST(&fileValidEvt, AO_Pattern);
+    AO_Pattern->POST(&constants::file_valid_evt, AO_Pattern);
   }
   else
   {
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
       QS_STR("file not valid");
-      QS_U32(8, card->pattern_index_);
+      QS_U32(8, card->pattern_id_);
     QS_END()
-    AO_Pattern->POST(&fileNotValidEvt, AO_Pattern);
+    AO_Pattern->POST(&constants::file_not_valid_evt, AO_Pattern);
   }
 }
 
@@ -1439,7 +1467,7 @@ void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
       QS_STR("bsp row count");
       QS_U8(0, BSP::getPanelCountPerRegionRow());
     QS_END()
-    AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+    AO_Pattern->POST(&constants::pattern_not_valid_evt, AO_Pattern);
     return;
   }
   if (pattern_header.panel_count_per_frame_col != BSP::getPanelCountPerFrameCol())
@@ -1451,7 +1479,7 @@ void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
       QS_STR("bsp col count");
       QS_U8(0, BSP::getPanelCountPerRegionCol() * BSP::getRegionCountPerFrame());
     QS_END()
-    AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+    AO_Pattern->POST(&constants::pattern_not_valid_evt, AO_Pattern);
     return;
   }
 
@@ -1475,7 +1503,7 @@ void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
       QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
         QS_STR("pattern has invalid grayscale value");
       QS_END()
-      AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+      AO_Pattern->POST(&constants::pattern_not_valid_evt, AO_Pattern);
       return;
   }
 
@@ -1484,7 +1512,7 @@ void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
       QS_STR("pattern frame has incorrect file size");
     QS_END()
-    AO_Pattern->POST(&patternNotValidEvt, AO_Pattern);
+    AO_Pattern->POST(&constants::pattern_not_valid_evt, AO_Pattern);
     return;
   }
 
@@ -1582,7 +1610,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
   {
     case ALL_OFF_CMD:
     {
-      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+      AO_Arena->POST(&constants::all_off_evt, &constants::fsp_id);
       appendMessage(response, response_byte_count, "All-Off Received");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("all-off command");
@@ -1591,7 +1619,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case DISPLAY_RESET_CMD:
     {
-      AO_Watchdog->POST(&resetEvt, &l_FSP_ID);
+      AO_Watchdog->POST(&constants::reset_evt, &constants::fsp_id);
       appendMessage(response, response_byte_count, "Reset Command Sent to FPGA");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("display-reset command");
@@ -1603,11 +1631,11 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       uint8_t grayscale_index;
       memcpy(&grayscale_index, command_buffer + command_buffer_position, sizeof(grayscale_index));
 
-      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+      AO_Arena->POST(&constants::all_off_evt, &constants::fsp_id);
 
       SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_GRAYSCALE_SIG);
       spev->value = grayscale_index;
-      AO_Frame->POST(spev, &l_FSP_ID);
+      AO_Frame->POST(spev, &constants::fsp_id);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1621,9 +1649,9 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       memcpy(&control_mode, command_buffer + command_buffer_position, sizeof(control_mode));
       command_buffer_position += sizeof(control_mode);
 
-      uint16_t pattern_index;
-      memcpy(&pattern_index, command_buffer + command_buffer_position, sizeof(pattern_index));
-      command_buffer_position += sizeof(pattern_index);
+      uint16_t pattern_id;
+      memcpy(&pattern_id, command_buffer + command_buffer_position, sizeof(pattern_id));
+      command_buffer_position += sizeof(pattern_id);
 
       int16_t frame_rate;
       memcpy(&frame_rate, command_buffer + command_buffer_position, sizeof(frame_rate));
@@ -1649,15 +1677,15 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
         case PLAY_PATTERN_MODE:
         {
           PlayPatternEvt *ppev = Q_NEW(PlayPatternEvt, PLAY_PATTERN_SIG);
-          ppev->pattern_index = pattern_index;
+          ppev->pattern_id = pattern_id;
           ppev->frame_rate = frame_rate;
           ppev->runtime_duration = runtime_duration;
-          QF::PUBLISH(ppev, &l_FSP_ID);
+          QF::PUBLISH(ppev, &constants::fsp_id);
 
           appendMessage(response, response_byte_count, "");
           QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
             QS_STR("play pattern mode");
-            QS_U16(5, pattern_index);
+            QS_U16(5, pattern_id);
             QS_U16(5, frame_rate);
             QS_U16(5, runtime_duration);
           QS_END()
@@ -1666,14 +1694,14 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
         case SHOW_PATTERN_FRAME_MODE:
         {
           ShowPatternFrameEvt *spfev = Q_NEW(ShowPatternFrameEvt, SHOW_PATTERN_FRAME_SIG);
-          spfev->pattern_index = pattern_index;
+          spfev->pattern_id = pattern_id;
           spfev->frame_index = frame_index;
-          QF::PUBLISH(spfev, &l_FSP_ID);
+          QF::PUBLISH(spfev, &constants::fsp_id);
 
           appendMessage(response, response_byte_count, "");
           QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
             QS_STR("showing pattern frame mode");
-            QS_U16(5, pattern_index);
+            QS_U16(5, pattern_id);
             QS_U16(5, frame_index);
           QS_END()
           break;
@@ -1690,7 +1718,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 
       SetParameterEvt *spev = Q_NEW(SetParameterEvt, SET_REFRESH_RATE_SIG);
       spev->value = refresh_rate;
-      AO_Display->POST(spev, &l_FSP_ID);
+      AO_Display->POST(spev, &constants::fsp_id);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1700,7 +1728,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case STOP_DISPLAY_CMD:
     {
-      AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+      AO_Arena->POST(&constants::all_off_evt, &constants::fsp_id);
       appendMessage(response, response_byte_count, "Display has been stopped");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("stop-display command");
@@ -1714,7 +1742,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 
       SetParameterEvt *spev = Q_NEW(SetParameterEvt, UPDATE_PATTERN_FRAME_SIG);
       spev->value = frame_index;
-      AO_Pattern->POST(spev, &l_FSP_ID);
+      AO_Pattern->POST(spev, &constants::fsp_id);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1724,7 +1752,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
     }
     case ALL_ON_CMD:
     {
-      AO_Arena->POST(&allOnEvt, &l_FSP_ID);
+      AO_Arena->POST(&constants::all_on_evt, &constants::fsp_id);
       appendMessage(response, response_byte_count, "All-On Received");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
         QS_STR("all-on command");
@@ -1765,12 +1793,12 @@ void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_by
       QS_U32(8, BSP::getByteCountPerPatternFrameGrayscale());
       QS_U32(8, BSP::getByteCountPerPatternFrameBinary());
     QS_END()
-    AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+    AO_Arena->POST(&constants::all_off_evt, &constants::fsp_id);
     return;
   }
   SetParameterEvt *set_grayscale_ev = Q_NEW(SetParameterEvt, SET_GRAYSCALE_SIG);
   set_grayscale_ev->value = grayscale;
-  AO_Frame->POST(set_grayscale_ev, &l_FSP_ID);
+  AO_Frame->POST(set_grayscale_ev, &constants::fsp_id);
 
   // skip byte 0 (command byte) and bytes 1 and 2 (data length)
   uint8_t stream_buffer_position = 3;
@@ -1782,7 +1810,7 @@ void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_by
   stream_buffer_position += sizeof(analog_output_value_y);
   SetParameterEvt *set_analog_output_ev = Q_NEW(SetParameterEvt, SET_ANALOG_OUTPUT_SIG);
   set_analog_output_ev->value = analog_output_value_x;
-  AO_Arena->POST(set_analog_output_ev, &l_FSP_ID);
+  AO_Arena->POST(set_analog_output_ev, &constants::fsp_id);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
     QS_STR("analog_output_value_x");
     QS_U32(8, analog_output_value_x);
@@ -1791,7 +1819,7 @@ void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_by
   QS_END()
 
   uint16_t bytes_decoded = BSP::decodePatternFrameBuffer(frame_buffer, grayscale);
-  AO_Arena->POST(&streamFrameEvt, &l_FSP_ID);
+  AO_Arena->POST(&constants::stream_frame_evt, &constants::fsp_id);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
     QS_STR("processed stream command");
     QS_U32(8, bytes_decoded);
@@ -1803,7 +1831,7 @@ void FSP::processStringCommand(const char * command, char * response)
   strcpy(response, command);
   if (strcmp(command, "RESET") == 0)
   {
-    AO_Watchdog->POST(&resetEvt, &l_FSP_ID);
+    AO_Watchdog->POST(&constants::reset_evt, &constants::fsp_id);
   }
   if (strcmp(command, "LED_ON") == 0)
   {
@@ -1815,11 +1843,11 @@ void FSP::processStringCommand(const char * command, char * response)
   }
   else if (strcmp(command, "ALL_ON") == 0)
   {
-    AO_Arena->POST(&allOnEvt, &l_FSP_ID);
+    AO_Arena->POST(&constants::all_on_evt, &constants::fsp_id);
   }
   else if (strcmp(command, "ALL_OFF") == 0)
   {
-    AO_Arena->POST(&allOffEvt, &l_FSP_ID);
+    AO_Arena->POST(&constants::all_off_evt, &constants::fsp_id);
   }
   else if (strcmp(command, "EHS") == 0)
   {

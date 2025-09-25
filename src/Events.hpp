@@ -54,7 +54,7 @@ public:
 //${Events::PlayPatternEvt} ..................................................
 class PlayPatternEvt : public QP::QEvt {
 public:
-    std::uint16_t pattern_index;
+    std::uint16_t pattern_id;
     std::int16_t frame_rate;
     std::uint16_t runtime_duration;
 }; // class PlayPatternEvt
@@ -68,7 +68,7 @@ public:
 //${Events::ShowPatternFrameEvt} .............................................
 class ShowPatternFrameEvt : public QP::QEvt {
 public:
-    std::uint16_t pattern_index;
+    std::uint16_t pattern_id;
     std::uint16_t frame_index;
 }; // class ShowPatternFrameEvt
 //$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -177,6 +177,18 @@ Q_STATE_DEF(Pattern, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Pattern::SM::Initialized::DIRECTORY_OPEN_SUCCESS}
+        case DIRECTORY_OPEN_SUCCESS_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Pattern::SM::Initialized::FILENAME_SORT_FAILURE}
+        case FILENAME_SORT_FAILURE_SIG: {
+            dispatchToCard(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;
@@ -580,8 +592,8 @@ Q_STATE_DEF(Pattern, AnalyzingCard) {
             status_ = tran(&Inactive);
             break;
         }
-        //${AOs::Pattern::SM::Initialized::AnalyzingCard::DIRECTORY_OPEN_SUCCESS}
-        case DIRECTORY_OPEN_SUCCESS_SIG: {
+        //${AOs::Pattern::SM::Initialized::AnalyzingCard::FILENAME_SORT_SUCCESS}
+        case FILENAME_SORT_SUCCESS_SIG: {
             dispatchToCard(e);
             status_ = tran(&CardAnalyzed);
             break;
