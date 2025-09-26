@@ -134,6 +134,9 @@ static uint16_t pattern_file_count;
 
 // Analog Output
 static Adafruit_MCP4728 analog_output_chip;
+
+// Analog Input
+static Adafruit_ADS1015 analog_input_chip;
 }
 
 //----------------------------------------------------------------------------

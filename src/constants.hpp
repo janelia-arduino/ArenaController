@@ -27,7 +27,7 @@ constexpr uint32_t watchdog_timeout_seconds = 2;
 constexpr uint32_t qs_serial_baud_rate = 115200;
 
 // Arena
-constexpr uint32_t initialize_analog_output_duration_ms = 500;
+constexpr uint32_t initialize_analog_duration_ms = 500;
 
 // Serial Communication Interface
 constexpr uint32_t serial_baud_rate = 115200;

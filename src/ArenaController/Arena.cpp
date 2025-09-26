@@ -62,14 +62,20 @@ Arena Arena::instance;
 //${AOs::Arena::Arena} .......................................................
 Arena::Arena()
 : QActive(Q_STATE_CAST(&Arena::initial)),
-    initialize_analog_output_time_evt_(this, INITIALIZE_ANALOG_OUTPUT_TIMEOUT_SIG, 0U)
+    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U)
 {
     analog_output_ = AnalogOutput_getInstance();
+    analog_input_ = AnalogInput_getInstance();
 }
 
 //${AOs::Arena::dispatchToAnalogOutput} ......................................
 void Arena::dispatchToAnalogOutput(QP::QEvt const * e) {
     analog_output_->dispatch(e, m_prio);
+}
+
+//${AOs::Arena::dispatchToAnalogInput} .......................................
+void Arena::dispatchToAnalogInput(QP::QEvt const * e) {
+    analog_input_->dispatch(e, m_prio);
 }
 
 //${AOs::Arena::SM} ..........................................................
@@ -132,9 +138,9 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = tran(&PlayingPattern);
             break;
         }
-        //${AOs::Arena::SM::ArenaOn::INITIALIZE_ANALOG_OUTPUT_TIMEOUT}
-        case INITIALIZE_ANALOG_OUTPUT_TIMEOUT_SIG: {
-            FSP::Arena_initializeAnalogOutput(this, e);
+        //${AOs::Arena::SM::ArenaOn::INITIALIZE_ANALOG_TIMEOUT}
+        case INITIALIZE_ANALOG_TIMEOUT_SIG: {
+            FSP::Arena_initializeAnalog(this, e);
             status_ = Q_RET_HANDLED;
             break;
         }
@@ -154,6 +160,18 @@ Q_STATE_DEF(Arena, ArenaOn) {
         case SHOW_PATTERN_FRAME_SIG: {
             FSP::Arena_showPatternFrameTransition(this, e);
             status_ = tran(&ShowingPatternFrame);
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::ANALOG_INPUT_INITIALIZED}
+        case ANALOG_INPUT_INITIALIZED_SIG: {
+            dispatchToAnalogInput(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::GET_ANALOG_INPUT}
+        case GET_ANALOG_INPUT_SIG: {
+            dispatchToAnalogInput(e);
+            status_ = Q_RET_HANDLED;
             break;
         }
         default: {

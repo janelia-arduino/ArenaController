@@ -64,6 +64,9 @@ static QEvt const frame_decoded_evt = {FRAME_DECODED_SIG, 0U, 0U};
 
 static QEvt const initialize_analog_output_evt = {INITIALIZE_ANALOG_OUTPUT_SIG, 0U, 0U};
 static QEvt const analog_output_initialized_evt = {ANALOG_OUTPUT_INITIALIZED_SIG, 0U, 0U};
+
+static QEvt const initialize_analog_input_evt = {INITIALIZE_ANALOG_INPUT_SIG, 0U, 0U};
+static QEvt const analog_input_initialized_evt = {ANALOG_INPUT_INITIALIZED_SIG, 0U, 0U};
 }
 }
 //----------------------------------------------------------------------------
@@ -187,16 +190,21 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
   QS_SIG_DICTIONARY(STREAM_FRAME_SIG, ao);
-  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_OUTPUT_TIMEOUT_SIG, ao);
+  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_TIMEOUT_SIG, ao);
 
   QS_SIG_DICTIONARY(INITIALIZE_ANALOG_OUTPUT_SIG, ao);
   QS_SIG_DICTIONARY(ANALOG_OUTPUT_INITIALIZED_SIG, ao);
   QS_SIG_DICTIONARY(SET_ANALOG_OUTPUT_SIG, ao);
 
+  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_INPUT_SIG, ao);
+  QS_SIG_DICTIONARY(ANALOG_INPUT_INITIALIZED_SIG, ao);
+  QS_SIG_DICTIONARY(GET_ANALOG_INPUT_SIG, ao);
+
   Arena * const arena = static_cast<Arena * const>(ao);
-  arena->initialize_analog_output_time_evt_.armX(constants::ticks_per_second/constants::milliseconds_per_second * constants::initialize_analog_output_duration_ms);
+  arena->initialize_analog_time_evt_.armX(constants::ticks_per_second/constants::milliseconds_per_second * constants::initialize_analog_duration_ms);
 
   arena->analog_output_->init(ao->m_prio);
+  arena->analog_input_->init(ao->m_prio);
 }
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
@@ -274,13 +282,14 @@ void FSP::Arena_endShowPatternFrame(QActive * const ao, QEvt const * e)
   AO_Pattern->POST(&constants::end_showing_pattern_frame_evt, ao);
 }
 
-void FSP::Arena_initializeAnalogOutput(QP::QActive * const ao, QP::QEvt const * e)
+void FSP::Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e)
 {
   QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("Arena_initializeAnalogOutput");
+    QS_STR("Arena_initializeAnalog");
   QS_END()
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->analog_output_->dispatch(&constants::initialize_analog_output_evt, ao->m_prio);
+  arena->analog_input_->dispatch(&constants::initialize_analog_input_evt, ao->m_prio);
 }
 
 void FSP::AnalogOutput_initialize(QHsm * const hsm, QEvt const * e)
