@@ -70,6 +70,7 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
 
 // pattern files
 constexpr uint8_t pattern_filename_str_len_max = 255;
+constexpr uint8_t pattern_filename_log_str_len_max = 25;
 constexpr uint16_t pattern_file_count_max = 20;
 } // namespace constants
 } // namespace AC
@@ -646,17 +647,22 @@ bool BSP::sortPatternFilenames()
   for (uint16_t pattern_index = 0; pattern_index<bsp_global::pattern_file_count; ++pattern_index)
   {
     bsp_global::pattern_filenames_sorted[pattern_index] = bsp_global::pattern_filename_array[pattern_index];
-    QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-      QS_STR("pattern filename presort");
-      QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
-    QS_END()
+    // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    //   QS_STR("pattern filename presort");
+    //   QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
+    // QS_END()
   }
   sortArray(bsp_global::pattern_filenames_sorted, bsp_global::pattern_file_count);
   for (uint16_t pattern_index = 0; pattern_index<bsp_global::pattern_file_count; ++pattern_index)
   {
+    char pattern_filename_log_str[constants::pattern_filename_log_str_len_max];
+    strncpy(pattern_filename_log_str, bsp_global::pattern_filenames_sorted[pattern_index], constants::pattern_filename_log_str_len_max - 2);
+    pattern_filename_log_str[constants::pattern_filename_log_str_len_max - 1] = '\0';
     QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR("pattern_id");
+      QS_U16(5, pattern_index+1);
       QS_STR("pattern filename sorted");
-      QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
+      QS_STR(pattern_filename_log_str);
     QS_END()
   }
   if (bsp_global::pattern_dir.getError())
@@ -674,9 +680,12 @@ uint64_t BSP::openPatternFileForReading(uint16_t pattern_id)
     return 0;
   }
   uint16_t pattern_index = pattern_id - 1;
+  char pattern_filename_log_str[constants::pattern_filename_log_str_len_max];
+  strncpy(pattern_filename_log_str, bsp_global::pattern_filenames_sorted[pattern_index], constants::pattern_filename_log_str_len_max - 2);
+  pattern_filename_log_str[constants::pattern_filename_log_str_len_max - 1] = '\0';
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
     QS_STR("opening pattern filename");
-    QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
+    QS_STR(pattern_filename_log_str);
   QS_END()
   bsp_global::pattern_file.open(bsp_global::pattern_filenames_sorted[pattern_index], O_RDONLY);
   return bsp_global::pattern_file.fileSize();
