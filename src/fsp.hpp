@@ -47,6 +47,11 @@ struct FSP
   static void AnalogOutput_enterInitialized(QP::QHsm * const hsm, QP::QEvt const * e);
   static void AnalogOutput_setOutput(QP::QHsm * const hsm, QP::QEvt const * e);
 
+  static void AnalogInput_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void AnalogInput_initializeInput(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void AnalogInput_enterInitialized(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void AnalogInput_getInput(QP::QHsm * const hsm, QP::QEvt const * e);
+
   static void Display_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_setRefreshRate(QP::QActive * const ao, QP::QEvt const * e);
   static void Display_armRefreshTimer(QP::QActive * const ao, QP::QEvt const * e);

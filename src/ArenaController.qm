@@ -1360,6 +1360,47 @@ card_ = Card_getInstance();</code>
     <state_diagram size="111,143"/>
    </statechart>
   </class>
+  <class name="AnalogInput" superclass="qpcpp::QHsm">
+   <attribute name="instance" type="AnalogInput" visibility="0x00" properties="0x01"/>
+   <operation name="AnalogInput" type="" visibility="0x00" properties="0x00">
+    <code>  : QHsm(&amp;initial)</code>
+   </operation>
+   <statechart properties="0x02">
+    <initial target="../1">
+     <action brief="initialize()">FSP::AnalogInput_initialize(this, e);</action>
+     <initial_glyph conn="37,11,4,0,5">
+      <action box="1,1,10,2"/>
+     </initial_glyph>
+    </initial>
+    <state name="Uninitialized">
+     <tran trig="ANALOG_INPUT_INITIALIZED" target="../../2">
+      <tran_glyph conn="37,32,2,0,9">
+       <action box="1,3,24,2"/>
+      </tran_glyph>
+     </tran>
+     <tran trig="INITIALIZE_ANALOG_INPUT">
+      <action brief="initializeInput()">FSP::AnalogInput_initializeInput(this, e);</action>
+      <tran_glyph conn="28,25,3,-1,25">
+       <action box="0,-2,23,4"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="28,16,28,16"/>
+    </state>
+    <state name="Initialized">
+     <entry brief="enterInitialized()">FSP::AnalogInput_enterInitialized(this, e);</entry>
+     <tran trig="GET_ANALOG_INPUT">
+      <action brief="getInput()">FSP::AnalogInput_getInput(this, e);</action>
+      <tran_glyph conn="28,49,3,-1,19">
+       <action box="0,-2,18,5"/>
+      </tran_glyph>
+     </tran>
+     <state_glyph node="28,41,28,14">
+      <entry box="1,2,17,2"/>
+     </state_glyph>
+    </state>
+    <state_diagram size="93,85"/>
+   </statechart>
+  </class>
  </package>
  <package name="Shared" stereotype="0x00" namespace="AC::">
   <attribute name="AO_Arena" type="QP::QActive * const" visibility="0x00" properties="0x00">
@@ -1389,9 +1430,12 @@ card_ = Card_getInstance();</code>
   <operation name="Card_getInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
    <code>return &amp;Card::instance;</code>
   </operation>
+  <operation name="AnalogInput_getInstance" type="QP::QHsm *" visibility="0x00" properties="0x00">
+   <code>return &amp;AnalogInput::instance;</code>
+  </operation>
  </package>
  <package name="Events" stereotype="0x01">
-  <class name="SetParameterEvt" superclass="qpcpp::QEvt">
+  <class name="ChangeValueEvt" superclass="qpcpp::QEvt">
    <attribute name="value" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="CommandEvt" superclass="qpcpp::QEvt">
@@ -1587,6 +1631,21 @@ $declare${AOs::Card}
 
 #endif</text>
   </file>
+  <file name="AnalogInput.hpp">
+   <text>#ifndef ANALOG_INPUT_HPP
+#define ANALOG_INPUT_HPP
+
+#include &quot;Shared.hpp&quot;
+#include &quot;Events.hpp&quot;
+#include &quot;fsp.hpp&quot;
+
+
+//============================================================================
+// generate declaration of the hsm
+$declare${AOs::AnalogInput}
+
+#endif</text>
+  </file>
  </directory>
  <directory name="./ArenaController">
   <file name="Arena.cpp">
@@ -1730,6 +1789,19 @@ $define${Shared::Card_getInstance}
 //============================================================================
 // generate definition of the HSM
 $define${AOs::Card}</text>
+  </file>
+  <file name="AnalogInput.cpp">
+   <text>#include &quot;AnalogInput.hpp&quot;
+
+
+using namespace QP;
+
+//============================================================================
+$define${Shared::AnalogInput_getInstance}
+
+//============================================================================
+// generate definition of the HSM
+$define${AOs::AnalogInput}</text>
   </file>
  </directory>
 </model>

@@ -64,6 +64,9 @@ QP::QHsm * AnalogOutput_getInstance();
 //${Shared::Card_getInstance} ................................................
 QP::QHsm * Card_getInstance();
 
+//${Shared::AnalogInput_getInstance} .........................................
+QP::QHsm * AnalogInput_getInstance();
+
 } // namespace AC
 //$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
