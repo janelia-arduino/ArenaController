@@ -1453,7 +1453,7 @@ card_ = Card_getInstance();</code>
   </operation>
  </package>
  <package name="Events" stereotype="0x01">
-  <class name="ChangeValueEvt" superclass="qpcpp::QEvt">
+  <class name="ValueEvt" superclass="qpcpp::QEvt">
    <attribute name="value" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="CommandEvt" superclass="qpcpp::QEvt">

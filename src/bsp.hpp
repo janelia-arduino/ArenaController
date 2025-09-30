@@ -69,6 +69,8 @@ struct BSP {
   static uint64_t getByteCountPerPatternFrameBinary();
   static bool initializeAnalogOutput();
   static void setAnalogOutput(uint16_t value);
+  static bool initializeAnalogInput();
+  static int16_t getAnalogInput();
 };
 
 #endif // BSP_HPP

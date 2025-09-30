@@ -74,7 +74,7 @@ static QEvt const analog_input_initialized_evt = {ANALOG_INPUT_INITIALIZED_SIG, 
 
 void FSP::ArenaController_setup()
 {
-  static QF_MPOOL_EL(ChangeValueEvt) smlPoolSto[constants::set_parameter_event_pool_count];
+  static QF_MPOOL_EL(ValueEvt) smlPoolSto[constants::set_parameter_event_pool_count];
   static QF_MPOOL_EL(CommandEvt) medPoolSto[constants::command_event_pool_count];
   static QF_MPOOL_EL(FrameEvt) lrgPoolSto[constants::frame_event_pool_count];
 
@@ -244,7 +244,7 @@ void FSP::Arena_fillFrameBufferWithDecodedFrame(QActive * const ao, QEvt const *
 
 void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
-  ChangeValueEvt *set_analog_output_ev = Q_NEW(ChangeValueEvt, SET_ANALOG_OUTPUT_SIG);
+  ValueEvt *set_analog_output_ev = Q_NEW(ValueEvt, SET_ANALOG_OUTPUT_SIG);
   set_analog_output_ev->value = constants::analog_output_zero;
   AO_Arena->POST(set_analog_output_ev, ao);
 }
@@ -252,7 +252,7 @@ void FSP::Arena_allOffTransition(QP::QActive * const ao, QP::QEvt const * e)
 void FSP::Arena_allOnTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
   Arena_deactivateDisplay(ao, e);
-  ChangeValueEvt *set_analog_output_ev = Q_NEW(ChangeValueEvt, SET_ANALOG_OUTPUT_SIG);
+  ValueEvt *set_analog_output_ev = Q_NEW(ValueEvt, SET_ANALOG_OUTPUT_SIG);
   set_analog_output_ev->value = constants::analog_output_zero;
   AO_Arena->POST(set_analog_output_ev, ao);
 }
@@ -308,6 +308,9 @@ void FSP::AnalogOutput_initializeOutput(QHsm * const hsm, QEvt const * e)
   if(analog_output_initialized)
   {
     AO_Arena->POST(&constants::analog_output_initialized_evt, hsm);
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("analog output initialized");
+    QS_END()
   }
   else
   {
@@ -319,60 +322,63 @@ void FSP::AnalogOutput_initializeOutput(QHsm * const hsm, QEvt const * e)
 
 void FSP::AnalogOutput_enterInitialized(QHsm * const hsm, QEvt const * e)
 {
-  ChangeValueEvt *cvev = Q_NEW(ChangeValueEvt, SET_ANALOG_OUTPUT_SIG);
-  cvev->value = constants::analog_output_zero;
-  AO_Arena->POST(cvev, hsm);
+  ValueEvt *vev = Q_NEW(ValueEvt, SET_ANALOG_OUTPUT_SIG);
+  vev->value = constants::analog_output_zero;
+  AO_Arena->POST(vev, hsm);
 }
 
 void FSP::AnalogOutput_setOutput(QHsm * const hsm, QEvt const * e)
 {
-  ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
-  BSP::setAnalogOutput(cvev->value);
+  ValueEvt const * vev = static_cast<ValueEvt const *>(e);
+  BSP::setAnalogOutput(vev->value);
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
   //   QS_STR("AnalogOutput_setOutput");
-  //   QS_U16(5, cvev->value);
+  //   QS_U16(5, vev->value);
   // QS_END()
 }
 
 void FSP::AnalogInput_initialize(QHsm * const hsm, QEvt const * e)
 {
-  // QS_SIG_DICTIONARY(INITIALIZE_ANALOG_INPUT_SIG, hsm);
-  // QS_SIG_DICTIONARY(ANALOG_INPUT_INITIALIZED_SIG, hsm);
-  // QS_SIG_DICTIONARY(SET_ANALOG_INPUT_SIG, hsm);
+  QS_SIG_DICTIONARY(INITIALIZE_ANALOG_INPUT_SIG, hsm);
+  QS_SIG_DICTIONARY(ANALOG_INPUT_INITIALIZED_SIG, hsm);
+  QS_SIG_DICTIONARY(GET_ANALOG_INPUT_SIG, hsm);
 }
 
 void FSP::AnalogInput_initializeInput(QHsm * const hsm, QEvt const * e)
 {
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("initializing analog input");
-  // QS_END()
-  // bool analog_input_initialized = BSP::initializeAnalogInput();
-  // if(analog_input_initialized)
-  // {
-  //   AO_Arena->POST(&constants::analog_input_initialized_evt, hsm);
-  // }
-  // else
-  // {
-  //   QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //     QS_STR("analog input not initialized!");
-  //   QS_END()
-  // }
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("initializing analog input");
+  QS_END()
+  bool analog_input_initialized = BSP::initializeAnalogInput();
+  if(analog_input_initialized)
+  {
+    AO_Arena->POST(&constants::analog_input_initialized_evt, hsm);
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("analog input initialized");
+    QS_END()
+  }
+  else
+  {
+    QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+      QS_STR("analog input not initialized!");
+    QS_END()
+  }
 }
 
 void FSP::AnalogInput_enterInitialized(QHsm * const hsm, QEvt const * e)
 {
-  // ChangeValueEvt *cvev = Q_NEW(ChangeValueEvt, SET_ANALOG_INPUT_SIG);
-  // cvev->value = constants::analog_input_zero;
-  // AO_Arena->POST(cvev, hsm);
+  // ValueEvt *vev = Q_NEW(ValueEvt, SET_ANALOG_INPUT_SIG);
+  // vev->value = constants::analog_input_zero;
+  // AO_Arena->POST(vev, hsm);
 }
 
 void FSP::AnalogInput_getInput(QHsm * const hsm, QEvt const * e)
 {
-  // ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
-  // BSP::setAnalogInput(cvev->value);
+  // ValueEvt const * vev = static_cast<ValueEvt const *>(e);
+  // BSP::setAnalogInput(vev->value);
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
   //   QS_STR("AnalogInput_setInput");
-  //   QS_U16(5, cvev->value);
+  //   QS_U16(5, vev->value);
   // QS_END()
 }
 
@@ -394,8 +400,8 @@ void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 void FSP::Display_setRefreshRate(QActive * const ao, QEvt const * e)
 {
   Display * const display = static_cast<Display * const>(ao);
-  ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
-  display->refresh_rate_hz_ = cvev->value;
+  ValueEvt const * vev = static_cast<ValueEvt const *>(e);
+  display->refresh_rate_hz_ = vev->value;
   QS_BEGIN_ID(USER_COMMENT, AO_Display->m_prio)
     QS_STR("set refresh rate");
     QS_U16(5, display->refresh_rate_hz_);
@@ -953,9 +959,9 @@ void FSP::Frame_publishFrameTransferred(QActive * const ao, QEvt const * e)
 void FSP::Frame_setGrayscale(QActive * const ao, QEvt const * e)
 {
   Frame * const frame = static_cast<Frame * const>(ao);
-  ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
+  ValueEvt const * vev = static_cast<ValueEvt const *>(e);
 
-  uint8_t grayscale_index = cvev->value;
+  uint8_t grayscale_index = vev->value;
 
   if (grayscale_index == constants::set_grayscale_command_value_grayscale)
   {
@@ -1141,9 +1147,9 @@ void FSP::Pattern_disarmTimersAndCleanup(QActive * const ao, QEvt const * e)
   pattern->frame_rate_time_evt_.disarm();
   pattern->runtime_duration_time_evt_.disarm();
 
-  ChangeValueEvt *cvev = Q_NEW(ChangeValueEvt, SET_ANALOG_OUTPUT_SIG);
-  cvev->value = constants::analog_output_zero;
-  AO_Arena->POST(cvev, ao);
+  ValueEvt *vev = Q_NEW(ValueEvt, SET_ANALOG_OUTPUT_SIG);
+  vev->value = constants::analog_output_zero;
+  AO_Arena->POST(vev, ao);
 
   if (pattern->frame_)
   {
@@ -1225,8 +1231,8 @@ void FSP::Pattern_updatePatternFrame(QP::QActive * const ao, QP::QEvt const * e)
     pattern->frame_ = nullptr;
   }
 
-  ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
-  pattern->frame_index_ = cvev->value;
+  ValueEvt const * vev = static_cast<ValueEvt const *>(e);
+  pattern->frame_index_ = vev->value;
   if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
   {
     pattern->frame_index_ = 0;
@@ -1285,9 +1291,9 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
   //   QS_STR("displaying pattern frame");
   // QS_END()
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  ChangeValueEvt *cvev = Q_NEW(ChangeValueEvt, SET_ANALOG_OUTPUT_SIG);
-  cvev->value = frameIndexToAnalogOutputValue(pattern->frame_index_, pattern->frame_count_per_pattern_);
-  AO_Arena->POST(cvev, ao);
+  ValueEvt *vev = Q_NEW(ValueEvt, SET_ANALOG_OUTPUT_SIG);
+  vev->value = frameIndexToAnalogOutputValue(pattern->frame_index_, pattern->frame_count_per_pattern_);
+  AO_Arena->POST(vev, ao);
   AO_Display->POST(&constants::display_frame_evt, ao);
 }
 
@@ -1300,8 +1306,8 @@ void FSP::Pattern_initializeFrameIndex(QActive * const ao, QEvt const * e)
 void FSP::Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
-  pattern->frame_count_per_pattern_ = cvev->value;
+  ValueEvt const * vev = static_cast<ValueEvt const *>(e);
+  pattern->frame_count_per_pattern_ = vev->value;
   if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
   {
     pattern->frame_index_ = 0;
@@ -1311,15 +1317,15 @@ void FSP::Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const
 void FSP::Pattern_setByteCountPerFrame(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
-  pattern->byte_count_per_frame_ = cvev->value;
+  ValueEvt const * vev = static_cast<ValueEvt const *>(e);
+  pattern->byte_count_per_frame_ = vev->value;
 }
 
 void FSP::Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  ChangeValueEvt const * cvev = static_cast<ChangeValueEvt const *>(e);
-  pattern->grayscale_ = cvev->value;
+  ValueEvt const * vev = static_cast<ValueEvt const *>(e);
+  pattern->grayscale_ = vev->value;
 
   pattern->card_->dispatch(e, pattern->m_prio);
 }
@@ -1567,15 +1573,15 @@ void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
     return;
   }
 
-  ChangeValueEvt *set_grayscale_ev = Q_NEW(ChangeValueEvt, SET_GRAYSCALE_SIG);
+  ValueEvt *set_grayscale_ev = Q_NEW(ValueEvt, SET_GRAYSCALE_SIG);
   set_grayscale_ev->value = grayscale;
   AO_Frame->POST(set_grayscale_ev, AO_Pattern);
 
-  ChangeValueEvt *set_frame_count_ev = Q_NEW(ChangeValueEvt, SET_FRAME_COUNT_PER_PATTERN_SIG);
+  ValueEvt *set_frame_count_ev = Q_NEW(ValueEvt, SET_FRAME_COUNT_PER_PATTERN_SIG);
   set_frame_count_ev->value = pattern_header.frame_count_x;
   AO_Pattern->POST(set_frame_count_ev, AO_Pattern);
 
-  ChangeValueEvt *set_byte_count_ev = Q_NEW(ChangeValueEvt, SET_BYTE_COUNT_PER_FRAME_SIG);
+  ValueEvt *set_byte_count_ev = Q_NEW(ValueEvt, SET_BYTE_COUNT_PER_FRAME_SIG);
   set_byte_count_ev->value = byte_count_per_frame;
   AO_Pattern->POST(set_byte_count_ev, AO_Pattern);
 
@@ -1584,7 +1590,7 @@ void FSP::Card_checkPattern(QHsm * const hsm, QEvt const * e)
     QS_U16(5, byte_count_per_frame);
   QS_END()
 
-  ChangeValueEvt *pattern_valid_ev = Q_NEW(ChangeValueEvt, PATTERN_VALID_SIG);
+  ValueEvt *pattern_valid_ev = Q_NEW(ValueEvt, PATTERN_VALID_SIG);
   pattern_valid_ev->value = grayscale;
   AO_Pattern->POST(pattern_valid_ev, AO_Pattern);
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
@@ -1684,9 +1690,9 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
 
       AO_Arena->POST(&constants::all_off_evt, &constants::fsp_id);
 
-      ChangeValueEvt *cvev = Q_NEW(ChangeValueEvt, SET_GRAYSCALE_SIG);
-      cvev->value = grayscale_index;
-      AO_Frame->POST(cvev, &constants::fsp_id);
+      ValueEvt *vev = Q_NEW(ValueEvt, SET_GRAYSCALE_SIG);
+      vev->value = grayscale_index;
+      AO_Frame->POST(vev, &constants::fsp_id);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1767,9 +1773,9 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       uint16_t refresh_rate;
       memcpy(&refresh_rate, command_buffer + command_buffer_position, sizeof(refresh_rate));
 
-      ChangeValueEvt *cvev = Q_NEW(ChangeValueEvt, SET_REFRESH_RATE_SIG);
-      cvev->value = refresh_rate;
-      AO_Display->POST(cvev, &constants::fsp_id);
+      ValueEvt *vev = Q_NEW(ValueEvt, SET_REFRESH_RATE_SIG);
+      vev->value = refresh_rate;
+      AO_Display->POST(vev, &constants::fsp_id);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1791,9 +1797,9 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       uint16_t frame_index;
       memcpy(&frame_index, command_buffer + command_buffer_position, sizeof(frame_index));
 
-      ChangeValueEvt *cvev = Q_NEW(ChangeValueEvt, UPDATE_PATTERN_FRAME_SIG);
-      cvev->value = frame_index;
-      AO_Pattern->POST(cvev, &constants::fsp_id);
+      ValueEvt *vev = Q_NEW(ValueEvt, UPDATE_PATTERN_FRAME_SIG);
+      vev->value = frame_index;
+      AO_Pattern->POST(vev, &constants::fsp_id);
 
       appendMessage(response, response_byte_count, "");
       QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1847,7 +1853,7 @@ void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_by
     AO_Arena->POST(&constants::all_off_evt, &constants::fsp_id);
     return;
   }
-  ChangeValueEvt *set_grayscale_ev = Q_NEW(ChangeValueEvt, SET_GRAYSCALE_SIG);
+  ValueEvt *set_grayscale_ev = Q_NEW(ValueEvt, SET_GRAYSCALE_SIG);
   set_grayscale_ev->value = grayscale;
   AO_Frame->POST(set_grayscale_ev, &constants::fsp_id);
 
@@ -1859,7 +1865,7 @@ void FSP::processStreamCommand(uint8_t const * stream_buffer, uint32_t stream_by
   uint16_t analog_output_value_y;
   memcpy(&analog_output_value_y, stream_buffer + stream_buffer_position, sizeof(analog_output_value_y));
   stream_buffer_position += sizeof(analog_output_value_y);
-  ChangeValueEvt *set_analog_output_ev = Q_NEW(ChangeValueEvt, SET_ANALOG_OUTPUT_SIG);
+  ValueEvt *set_analog_output_ev = Q_NEW(ValueEvt, SET_ANALOG_OUTPUT_SIG);
   set_analog_output_ev->value = analog_output_value_x;
   AO_Arena->POST(set_analog_output_ev, &constants::fsp_id);
   QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)

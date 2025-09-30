@@ -753,6 +753,17 @@ void BSP::setAnalogOutput(uint16_t value)
     MCP4728_GAIN_1X);
 }
 
+bool BSP::initializeAnalogInput()
+{
+  return bsp_global::analog_input_chip.begin();
+}
+
+int16_t BSP::getAnalogInput()
+{
+  return 0;
+}
+
+
 //----------------------------------------------------------------------------
 // QF callbacks...
 
