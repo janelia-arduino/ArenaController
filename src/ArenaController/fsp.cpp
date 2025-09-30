@@ -4,7 +4,7 @@
 
 
 using namespace QP;
- 
+
 using namespace AC;
 
 namespace AC
@@ -1772,6 +1772,23 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
             QS_U16(5, pattern_id);
             QS_U16(5, frame_index);
           QS_END()
+          break;
+        }
+        case ANALOG_CLOSED_LOOP_MODE
+        {
+          // PlayPatternEvt *ppev = Q_NEW(PlayPatternEvt, PLAY_PATTERN_SIG);
+          // ppev->pattern_id = pattern_id;
+          // ppev->frame_rate = frame_rate;
+          // ppev->runtime_duration = runtime_duration;
+          // QF::PUBLISH(ppev, &constants::fsp_id);
+
+          // appendMessage(response, response_byte_count, "");
+          // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+          //   QS_STR("play pattern mode");
+          //   QS_U16(5, pattern_id);
+          //   QS_U16(5, frame_rate);
+          //   QS_U16(5, runtime_duration);
+          // QS_END()
           break;
         }
         default:
