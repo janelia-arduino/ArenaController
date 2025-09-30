@@ -37,11 +37,11 @@
 
 //$declare${Events} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-//${Events::ValueEvt} ........................................................
-class ValueEvt : public QP::QEvt {
+//${Events::UnsignedValueEvt} ................................................
+class UnsignedValueEvt : public QP::QEvt {
 public:
     std::uint32_t value;
-}; // class ValueEvt
+}; // class UnsignedValueEvt
 
 //${Events::CommandEvt} ......................................................
 class CommandEvt : public QP::QEvt {

@@ -41,6 +41,7 @@ struct FSP
   static void Arena_showPatternFrameTransition(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_endShowPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
   static void Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e);
+  static void Arena_armAnalogInputTimerAndDispatch(QP::QActive * const ao, QP::QEvt const * e);
 
   static void AnalogOutput_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
   static void AnalogOutput_initializeOutput(QP::QHsm * const hsm, QP::QEvt const * e);

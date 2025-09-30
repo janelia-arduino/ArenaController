@@ -48,6 +48,7 @@ public:
     QP::QTimeEvt initialize_analog_time_evt_;
     QP::QHsm * analog_output_;
     QP::QHsm * analog_input_;
+    QP::QTimeEvt analog_input_time_evt_;
 
 public:
     Arena();

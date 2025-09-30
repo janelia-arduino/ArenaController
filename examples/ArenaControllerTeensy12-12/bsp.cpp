@@ -72,6 +72,12 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
 constexpr uint8_t pattern_filename_str_len_max = 255;
 constexpr uint8_t pattern_filename_log_str_len_max = 25;
 constexpr uint16_t pattern_file_count_max = 20;
+
+// analog
+constexpr adsGain_t analog_input_gain = GAIN_TWOTHIRDS;
+// constexpr uint16_t analog_input_mux = ADS1X15_REG_CONFIG_MUX_DIFF_0_1;
+constexpr uint16_t analog_input_mux = ADS1X15_REG_CONFIG_MUX_SINGLE_0;
+constexpr bool analog_input_continuous = false;
 } // namespace constants
 } // namespace AC
 
@@ -758,9 +764,23 @@ bool BSP::initializeAnalogInput()
   return bsp_global::analog_input_chip.begin();
 }
 
+void BSP::setAnalogInputGainAndStartReading()
+{
+  bsp_global::analog_input_chip.setGain(constants::analog_input_gain);
+  bsp_global::analog_input_chip.startADCReading(constants::analog_input_mux, constants::analog_input_continuous);
+}
+
+bool BSP::analogInputDataAvailable()
+{
+  return bsp_global::analog_input_chip.conversionComplete();
+}
+
 int16_t BSP::getAnalogInput()
 {
-  return 0;
+  int16_t analog_input_value = bsp_global::analog_input_chip.getLastConversionResults();
+  bsp_global::analog_input_chip.startADCReading(constants::analog_input_mux, constants::analog_input_continuous);
+  // return bsp_global::analog_input_chip.computeVolts(analog_input_value);
+  return analog_input_value;
 }
 
 

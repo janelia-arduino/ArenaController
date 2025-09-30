@@ -41,7 +41,7 @@ enum ArenaControllerSignals
   // dispatched to AnalogInput
   INITIALIZE_ANALOG_INPUT_SIG,
   ANALOG_INPUT_INITIALIZED_SIG,
-  GET_ANALOG_INPUT_SIG,
+  GET_ANALOG_INPUT_TIMEOUT_SIG,
 
   // POST to SerialCommandInterface
   SERIAL_TIMEOUT_SIG,

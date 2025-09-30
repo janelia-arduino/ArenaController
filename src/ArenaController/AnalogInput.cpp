@@ -109,8 +109,8 @@ Q_STATE_DEF(AnalogInput, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::AnalogInput::SM::Initialized::GET_ANALOG_INPUT}
-        case GET_ANALOG_INPUT_SIG: {
+        //${AOs::AnalogInput::SM::Initialized::GET_ANALOG_INPUT_TIMEOUT}
+        case GET_ANALOG_INPUT_TIMEOUT_SIG: {
             FSP::AnalogInput_getInput(this, e);
             status_ = Q_RET_HANDLED;
             break;

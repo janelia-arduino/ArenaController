@@ -70,6 +70,8 @@ struct BSP {
   static bool initializeAnalogOutput();
   static void setAnalogOutput(uint16_t value);
   static bool initializeAnalogInput();
+  static void setAnalogInputGainAndStartReading();
+  static bool analogInputDataAvailable();
   static int16_t getAnalogInput();
 };
 

@@ -26,9 +26,11 @@ This structure of the code is recommended for applications with only one active 
    <attribute name="initialize_analog_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="analog_output_" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
    <attribute name="analog_input_" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
+   <attribute name="analog_input_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <operation name="Arena" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Arena::initial)),
-    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U)
+    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U),
+    analog_input_time_evt_(this, GET_ANALOG_INPUT_TIMEOUT_SIG, 0U)
 
 analog_output_ = AnalogOutput_getInstance();
 analog_input_ = AnalogInput_getInstance();</code>
@@ -110,10 +112,10 @@ analog_input_ = AnalogInput_getInstance();</code>
        <action box="0,-2,26,4"/>
       </tran_glyph>
      </tran>
-     <tran trig="GET_ANALOG_INPUT">
+     <tran trig="GET_ANALOG_INPUT_TIMEOUT">
       <action brief="dispatchToAnalogInput()">dispatchToAnalogInput(e);</action>
       <tran_glyph conn="10,34,3,-1,34">
-       <action box="0,-2,21,5"/>
+       <action box="0,-2,26,4"/>
       </tran_glyph>
      </tran>
      <state name="AllOn">
@@ -1406,10 +1408,10 @@ card_ = Card_getInstance();</code>
     </state>
     <state name="Initialized">
      <entry brief="enterInitialized()">FSP::AnalogInput_enterInitialized(this, e);</entry>
-     <tran trig="GET_ANALOG_INPUT">
+     <tran trig="GET_ANALOG_INPUT_TIMEOUT">
       <action brief="getInput()">FSP::AnalogInput_getInput(this, e);</action>
-      <tran_glyph conn="28,49,3,-1,19">
-       <action box="0,-2,18,5"/>
+      <tran_glyph conn="28,49,3,-1,26">
+       <action box="0,-2,25,6"/>
       </tran_glyph>
      </tran>
      <state_glyph node="28,41,28,14">
@@ -1453,7 +1455,7 @@ card_ = Card_getInstance();</code>
   </operation>
  </package>
  <package name="Events" stereotype="0x01">
-  <class name="ValueEvt" superclass="qpcpp::QEvt">
+  <class name="UnsignedValueEvt" superclass="qpcpp::QEvt">
    <attribute name="value" type="std::uint32_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="CommandEvt" superclass="qpcpp::QEvt">

@@ -62,7 +62,8 @@ Arena Arena::instance;
 //${AOs::Arena::Arena} .......................................................
 Arena::Arena()
 : QActive(Q_STATE_CAST(&Arena::initial)),
-    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U)
+    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U),
+    analog_input_time_evt_(this, GET_ANALOG_INPUT_TIMEOUT_SIG, 0U)
 {
     analog_output_ = AnalogOutput_getInstance();
     analog_input_ = AnalogInput_getInstance();
@@ -168,8 +169,8 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Arena::SM::ArenaOn::GET_ANALOG_INPUT}
-        case GET_ANALOG_INPUT_SIG: {
+        //${AOs::Arena::SM::ArenaOn::GET_ANALOG_INPUT_TIMEOUT}
+        case GET_ANALOG_INPUT_TIMEOUT_SIG: {
             dispatchToAnalogInput(e);
             status_ = Q_RET_HANDLED;
             break;

@@ -144,6 +144,7 @@ constexpr uint16_t byte_count_per_pattern_frame_max = byte_count_per_frame_max +
 constexpr uint16_t analog_output_zero = 0;
 constexpr uint16_t analog_output_min = 100;
 constexpr uint16_t analog_output_max = 4095;
+constexpr uint32_t analog_input_frequency_hz = 10;
 }
 }
 #endif
