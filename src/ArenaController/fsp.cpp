@@ -105,6 +105,7 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_TRANSFERRED_SIG, nullptr);
   QS_SIG_DICTIONARY(PLAY_PATTERN_SIG, nullptr);
+  QS_SIG_DICTIONARY(ANALOG_CLOSED_LOOP_SIG, nullptr);
   QS_SIG_DICTIONARY(SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(PROCESS_BINARY_COMMAND_SIG, nullptr);
@@ -177,6 +178,15 @@ void FSP::ArenaController_setup()
   // QS_LOC_FILTER(-AO_Frame->m_prio);
   // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
   // QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio);
+
+  QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+    QS_STR("sizeof(smlPoolSto[0])");
+    QS_U16(5, sizeof(smlPoolSto[0]));
+    QS_STR("sizeof(medPoolSto[0])");
+    QS_U16(5, sizeof(medPoolSto[0]));
+    QS_STR("sizeof(lrgPoolSto[0])");
+    QS_U16(5, sizeof(lrgPoolSto[0]));
+  QS_END()
 }
 
 void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -186,6 +196,7 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(PLAY_PATTERN_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
   ao->subscribe(SHOW_PATTERN_FRAME_SIG);
+  ao->subscribe(ANALOG_CLOSED_LOOP_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
@@ -1774,21 +1785,21 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
           QS_END()
           break;
         }
-        case ANALOG_CLOSED_LOOP_MODE
+        case ANALOG_CLOSED_LOOP_MODE:
         {
-          // PlayPatternEvt *ppev = Q_NEW(PlayPatternEvt, PLAY_PATTERN_SIG);
-          // ppev->pattern_id = pattern_id;
-          // ppev->frame_rate = frame_rate;
-          // ppev->runtime_duration = runtime_duration;
-          // QF::PUBLISH(ppev, &constants::fsp_id);
+          AnalogClosedLoopEvt *aclev = Q_NEW(AnalogClosedLoopEvt, ANALOG_CLOSED_LOOP_SIG);
+          aclev->pattern_id = pattern_id;
+          aclev->gain = gain;
+          aclev->runtime_duration = runtime_duration;
+          QF::PUBLISH(aclev, &constants::fsp_id);
 
-          // appendMessage(response, response_byte_count, "");
-          // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-          //   QS_STR("play pattern mode");
-          //   QS_U16(5, pattern_id);
-          //   QS_U16(5, frame_rate);
-          //   QS_U16(5, runtime_duration);
-          // QS_END()
+          appendMessage(response, response_byte_count, "");
+          QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+            QS_STR("analog closed loop mode");
+            QS_U16(5, pattern_id);
+            QS_U16(5, gain);
+            QS_U16(5, runtime_duration);
+          QS_END()
           break;
         }
         default:
