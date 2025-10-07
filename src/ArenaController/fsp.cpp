@@ -105,7 +105,6 @@ void FSP::ArenaController_setup()
   QS_SIG_DICTIONARY(FRAME_FILLED_SIG, nullptr);
   QS_SIG_DICTIONARY(FRAME_TRANSFERRED_SIG, nullptr);
   QS_SIG_DICTIONARY(PLAY_PATTERN_SIG, nullptr);
-  QS_SIG_DICTIONARY(ANALOG_CLOSED_LOOP_SIG, nullptr);
   QS_SIG_DICTIONARY(SERIAL_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(ETHERNET_COMMAND_AVAILABLE_SIG, nullptr);
   QS_SIG_DICTIONARY(PROCESS_BINARY_COMMAND_SIG, nullptr);
@@ -196,7 +195,6 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   ao->subscribe(PLAY_PATTERN_SIG);
   ao->subscribe(FRAME_FILLED_SIG);
   ao->subscribe(SHOW_PATTERN_FRAME_SIG);
-  ao->subscribe(ANALOG_CLOSED_LOOP_SIG);
 
   QS_SIG_DICTIONARY(ALL_ON_SIG, ao);
   QS_SIG_DICTIONARY(ALL_OFF_SIG, ao);
@@ -216,6 +214,16 @@ void FSP::Arena_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 
   arena->analog_output_->init(ao->m_prio);
   arena->analog_input_->init(ao->m_prio);
+}
+
+void FSP::Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e)
+{
+  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+    QS_STR("Arena_initializeAnalog");
+  QS_END()
+  Arena * const arena = static_cast<Arena * const>(ao);
+  arena->analog_output_->dispatch(&constants::initialize_analog_output_evt, ao->m_prio);
+  arena->analog_input_->dispatch(&constants::initialize_analog_input_evt, ao->m_prio);
 }
 
 void FSP::Arena_activateCommandInterfaces(QActive * const ao, QEvt const * e)
@@ -293,22 +301,21 @@ void FSP::Arena_endShowPatternFrame(QActive * const ao, QEvt const * e)
   AO_Pattern->POST(&constants::end_showing_pattern_frame_evt, ao);
 }
 
-void FSP::Arena_initializeAnalog(QP::QActive * const ao, QP::QEvt const * e)
+void FSP::Arena_analogClosedLoopTransition(QP::QActive * const ao, QP::QEvt const * e)
 {
-  QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
-    QS_STR("Arena_initializeAnalog");
-  QS_END()
-  Arena * const arena = static_cast<Arena * const>(ao);
-  arena->analog_output_->dispatch(&constants::initialize_analog_output_evt, ao->m_prio);
-  arena->analog_input_->dispatch(&constants::initialize_analog_input_evt, ao->m_prio);
+  Arena_deactivateDisplay(ao, e);
 }
 
-void FSP::Arena_armAnalogInputTimerAndDispatch(QP::QActive * const ao, QP::QEvt const * e)
+void FSP::Arena_beginAnalogClosedLoop(QP::QActive * const ao, QP::QEvt const * e)
 {
   Arena * const arena = static_cast<Arena * const>(ao);
   arena->analog_input_time_evt_.armX(constants::ticks_per_second/constants::analog_input_frequency_hz,
     constants::ticks_per_second/constants::analog_input_frequency_hz);
-  arena->analog_input_->dispatch(e, ao->m_prio);
+}
+
+void FSP::Arena_endAnalogClosedLoop(QActive * const ao, QEvt const * e)
+{
+  AO_Pattern->POST(&constants::end_showing_pattern_frame_evt, ao);
 }
 
 void FSP::AnalogOutput_initialize(QHsm * const hsm, QEvt const * e)
@@ -1791,7 +1798,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
           aclev->pattern_id = pattern_id;
           aclev->gain = gain;
           aclev->runtime_duration = runtime_duration;
-          QF::PUBLISH(aclev, &constants::fsp_id);
+          AO_Arena->POST(aclev, &constants::fsp_id);
 
           appendMessage(response, response_byte_count, "");
           QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)

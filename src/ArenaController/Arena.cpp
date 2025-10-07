@@ -90,6 +90,7 @@ Q_STATE_DEF(Arena, initial) {
     QS_FUN_DICTIONARY(&Arena::StreamingFrame);
     QS_FUN_DICTIONARY(&Arena::PlayingPattern);
     QS_FUN_DICTIONARY(&Arena::ShowingPatternFrame);
+    QS_FUN_DICTIONARY(&Arena::AnalogClosedLoop);
 
     return tran(&ArenaOn);
 }
@@ -169,10 +170,10 @@ Q_STATE_DEF(Arena, ArenaOn) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Arena::SM::ArenaOn::GET_ANALOG_INPUT_TIMEOUT}
-        case GET_ANALOG_INPUT_TIMEOUT_SIG: {
-            dispatchToAnalogInput(e);
-            status_ = Q_RET_HANDLED;
+        //${AOs::Arena::SM::ArenaOn::ANALOG_CLOSED_LOOP}
+        case ANALOG_CLOSED_LOOP_SIG: {
+            FSP::Arena_analogClosedLoopTransition(this, e);
+            status_ = tran(&AnalogClosedLoop);
             break;
         }
         default: {
@@ -274,6 +275,41 @@ Q_STATE_DEF(Arena, ShowingPatternFrame) {
         //${AOs::Arena::SM::ArenaOn::ShowingPatternFrame}
         case Q_EXIT_SIG: {
             FSP::Arena_endShowPatternFrame(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        default: {
+            status_ = super(&ArenaOn);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Arena::SM::ArenaOn::AnalogClosedLoop} ...............................
+Q_STATE_DEF(Arena, AnalogClosedLoop) {
+    QP::QState status_;
+    switch (e->sig) {
+        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop}
+        case Q_ENTRY_SIG: {
+            FSP::Arena_beginAnalogClosedLoop(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop}
+        case Q_EXIT_SIG: {
+            FSP::Arena_endAnalogClosedLoop(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop::GET_ANALOG_INPUT_TIMEOUT}
+        case GET_ANALOG_INPUT_TIMEOUT_SIG: {
+            dispatchToAnalogInput(e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
+        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop::PLAY_PATTERN}
+        case PLAY_PATTERN_SIG: {
             status_ = Q_RET_HANDLED;
             break;
         }

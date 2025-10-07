@@ -53,30 +53,30 @@ analog_input_ = AnalogInput_getInstance();</code>
     <state name="ArenaOn">
      <entry brief="activateCommandInterfaces()">FSP::Arena_activateCommandInterfaces(this, e);</entry>
      <exit brief="deactivateCommandInterfaces()">FSP::Arena_deactivateCommandInterfaces(this, e);</exit>
-     <initial target="../13">
+     <initial target="../12">
       <initial_glyph conn="51,39,4,0,3">
        <action box="1,-1,18,3"/>
       </initial_glyph>
      </initial>
-     <tran trig="ALL_OFF" target="../13">
+     <tran trig="ALL_OFF" target="../12">
       <action brief="allOffTransition()">FSP::Arena_allOffTransition(this, e);</action>
       <tran_glyph conn="10,45,3,3,23">
        <action box="1,-2,12,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="STREAM_FRAME" target="../14">
+     <tran trig="STREAM_FRAME" target="../13">
       <action brief="streamFrameTransition()">FSP::Arena_streamFrameTransition(this, e);</action>
       <tran_glyph conn="10,69,3,3,23">
        <action box="0,-2,17,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="ALL_ON" target="../12">
+     <tran trig="ALL_ON" target="../11">
       <action brief="allOnTransition()">FSP::Arena_allOnTransition(this, e);</action>
       <tran_glyph conn="10,55,3,3,23">
        <action box="1,-2,16,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="PLAY_PATTERN" target="../15">
+     <tran trig="PLAY_PATTERN" target="../14">
       <action brief="playPatternTransition()">FSP::Arena_playPatternTransition(this, e);</action>
       <tran_glyph conn="10,85,3,3,23">
        <action box="0,-2,21,4"/>
@@ -100,7 +100,7 @@ analog_input_ = AnalogInput_getInstance();</code>
        <action box="0,-2,21,5"/>
       </tran_glyph>
      </tran>
-     <tran trig="SHOW_PATTERN_FRAME" target="../16">
+     <tran trig="SHOW_PATTERN_FRAME" target="../15">
       <action brief="showPatternFrameTransition()">FSP::Arena_showPatternFrameTransition(this, e);</action>
       <tran_glyph conn="10,96,3,3,23">
        <action box="0,-2,24,4"/>
@@ -112,15 +112,9 @@ analog_input_ = AnalogInput_getInstance();</code>
        <action box="0,-2,26,4"/>
       </tran_glyph>
      </tran>
-     <tran trig="GET_ANALOG_INPUT_TIMEOUT">
-      <action brief="dispatchToAnalogInput()">dispatchToAnalogInput(e);</action>
-      <tran_glyph conn="10,34,3,-1,34">
-       <action box="0,-2,26,4"/>
-      </tran_glyph>
-     </tran>
-     <tran trig="ANALOG_CLOSED_LOOP" target="../17">
+     <tran trig="ANALOG_CLOSED_LOOP" target="../16">
       <action brief="analogClosedLoopTransition()">FSP::Arena_analogClosedLoopTransition(this, e);</action>
-      <tran_glyph conn="10,112,3,3,23">
+      <tran_glyph conn="10,107,3,3,23">
        <action box="0,-2,21,4"/>
       </tran_glyph>
      </tran>
@@ -167,9 +161,22 @@ analog_input_ = AnalogInput_getInstance();</code>
       </state_glyph>
      </state>
      <state name="AnalogClosedLoop">
+      <entry brief="beginAnalogClosedLoop()">FSP::Arena_beginAnalogClosedLoop(this, e);</entry>
       <exit brief="endAnalogClosedLoop()">FSP::Arena_endAnalogClosedLoop(this, e);</exit>
-      <state_glyph node="33,107,35,11">
-       <exit box="1,2,25,2"/>
+      <tran trig="GET_ANALOG_INPUT_TIMEOUT">
+       <action brief="dispatchToAnalogInput()">dispatchToAnalogInput(e);</action>
+       <tran_glyph conn="33,117,3,-1,26">
+        <action box="0,-2,26,4"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="PLAY_PATTERN">
+       <tran_glyph conn="33,111,3,-1,26">
+        <action box="0,-2,13,5"/>
+       </tran_glyph>
+      </tran>
+      <state_glyph node="33,102,35,25">
+       <entry box="1,2,24,2"/>
+       <exit box="1,4,25,2"/>
       </state_glyph>
      </state>
      <state_glyph node="10,7,91,134">
