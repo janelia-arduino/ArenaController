@@ -57,6 +57,7 @@ public:
     std::uint16_t pattern_id;
     std::int16_t frame_rate;
     std::uint16_t runtime_duration;
+    std::uint16_t frame_index;
 }; // class PlayPatternEvt
 
 //${Events::FrameEvt} ........................................................
@@ -78,6 +79,7 @@ public:
     std::uint16_t pattern_id;
     std::int16_t gain;
     std::uint16_t runtime_duration;
+    std::uint16_t frame_index;
 }; // class AnalogClosedLoopEvt
 //$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

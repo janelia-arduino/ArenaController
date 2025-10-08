@@ -1117,6 +1117,7 @@ void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
   }
   pattern->frame_rate_hz_ = abs(ppev->frame_rate);
   pattern->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
+  pattern->frame_index_ = ppev->frame_index;
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
   //   QS_STR("check and store parameters");
   // QS_U8(0, control_mode);
@@ -1329,7 +1330,10 @@ void FSP::Pattern_displayFrame(QActive * const ao, QEvt const * e)
 void FSP::Pattern_initializeFrameIndex(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->frame_index_ = 0;
+  if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
+  {
+    pattern->frame_index_ = 0;
+  }
 }
 
 void FSP::Pattern_setFrameCountPerPattern(QP::QActive * const ao, QP::QEvt const * e)
@@ -1766,6 +1770,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
           ppev->pattern_id = pattern_id;
           ppev->frame_rate = frame_rate;
           ppev->runtime_duration = runtime_duration;
+          ppev->frame_index = frame_index;
           QF::PUBLISH(ppev, &constants::fsp_id);
 
           appendMessage(response, response_byte_count, "");
@@ -1774,6 +1779,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
             QS_U16(5, pattern_id);
             QS_U16(5, frame_rate);
             QS_U16(5, runtime_duration);
+            QS_U16(5, frame_index);
           QS_END()
           break;
         }
@@ -1798,6 +1804,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
           aclev->pattern_id = pattern_id;
           aclev->gain = gain;
           aclev->runtime_duration = runtime_duration;
+          aclev->frame_index = frame_index;
           AO_Arena->POST(aclev, &constants::fsp_id);
 
           appendMessage(response, response_byte_count, "");
@@ -1806,6 +1813,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
             QS_U16(5, pattern_id);
             QS_U16(5, gain);
             QS_U16(5, runtime_duration);
+            QS_U16(5, frame_index);
           QS_END()
           break;
         }

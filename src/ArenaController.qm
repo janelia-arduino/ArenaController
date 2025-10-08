@@ -1486,6 +1486,7 @@ card_ = Card_getInstance();</code>
    <attribute name="pattern_id" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate" type="std::int16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_index" type="std::uint16_t" visibility="0x00" properties="0x00"/>
   </class>
   <class name="FrameEvt" superclass="qpcpp::QEvt">
    <attribute name="buffer[AC::constants::byte_count_per_pattern_frame_max]" type="std::uint8_t" visibility="0x00" properties="0x00"/>
@@ -1498,6 +1499,7 @@ card_ = Card_getInstance();</code>
    <attribute name="pattern_id" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="gain" type="std::int16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="frame_index" type="std::uint16_t" visibility="0x00" properties="0x00"/>
   </class>
  </package>
  <directory name=".">
