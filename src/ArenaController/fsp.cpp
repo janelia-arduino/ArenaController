@@ -318,7 +318,9 @@ void FSP::Arena_beginAnalogClosedLoop(QP::QActive * const ao, QP::QEvt const * e
 
 void FSP::Arena_endAnalogClosedLoop(QActive * const ao, QEvt const * e)
 {
-  AO_Pattern->POST(&constants::end_showing_pattern_frame_evt, ao);
+  Arena * const arena = static_cast<Arena * const>(ao);
+  AO_Pattern->POST(&constants::end_playing_pattern_evt, ao);
+  arena->analog_input_time_evt_.disarm();
 }
 
 void FSP::AnalogOutput_initialize(QHsm * const hsm, QEvt const * e)
@@ -406,12 +408,10 @@ void FSP::AnalogInput_getInput(QHsm * const hsm, QEvt const * e)
     return;
   }
   int16_t analog_input_millivolts = BSP::getAnalogInputMillivolts();
-  // UnsignedValueEvt const * uvev = static_cast<UnsignedValueEvt const *>(e);
-  // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
-  //   QS_STR("AnalogInput_getInput millivolts");
-  //   QS_I16(0, analog_input_millivolts);
-  //   // QS_I16(0, uvev->value);
-  // QS_END()
+
+  SignedValueEvt *svev = Q_NEW(SignedValueEvt, GOT_ANALOG_INPUT_SIG);
+  svev->value = analog_input_millivolts;
+  AO_Pattern->POST(svev, hsm);
 }
 
 void FSP::Display_initializeAndSubscribe(QActive * const ao, QEvt const * e)
@@ -547,6 +547,10 @@ void FSP::SerialCommandInterface_pollSerial(QActive * const ao, QEvt const * e)
 void FSP::SerialCommandInterface_analyzeCommand(QActive * const ao, QEvt const * e)
 {
   SerialCommandInterface * const sci = static_cast<SerialCommandInterface * const>(ao);
+
+  QS_BEGIN_ID(USER_COMMENT, AO_SerialCommandInterface->m_prio)
+    QS_STR("------------------------------------------------");
+  QS_END()
 
   uint8_t first_command_byte = BSP::readSerialByte();
   uint8_t command_buffer_position = 0;
@@ -761,6 +765,10 @@ void FSP::EthernetCommandInterface_analyzeCommand(QActive * const ao, QEvt const
   eci->connection_ = cev->connection;
   eci->binary_command_ = cev->binary_command;
   eci->binary_command_byte_count_ = cev->binary_command_byte_count;
+
+  QS_BEGIN_ID(USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+    QS_STR("------------------------------------------------");
+  QS_END()
 
   uint8_t command_buffer_position = 0;
   uint8_t first_command_byte;
@@ -1106,6 +1114,7 @@ void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
   QS_SIG_DICTIONARY(SET_FRAME_COUNT_PER_PATTERN_SIG, ao);
   QS_SIG_DICTIONARY(SET_BYTE_COUNT_PER_FRAME_SIG, ao);
   QS_SIG_DICTIONARY(UPDATE_PATTERN_FRAME_SIG, ao);
+  QS_SIG_DICTIONARY(GOT_ANALOG_INPUT_SIG, ao);
 
   pattern->card_->init(ao->m_prio);
 }
@@ -1138,6 +1147,7 @@ void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
     QS_END()
   }
   pattern->frame_rate_hz_ = abs(ppev->frame_rate);
+  pattern->constant_frame_rate_ = true;
   pattern->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
   pattern->frame_index_ = ppev->frame_index;
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1166,7 +1176,8 @@ void FSP::Pattern_initializeAnalogClosedLoop(QActive * const ao, QEvt const * e)
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   AnalogClosedLoopEvt const * aclev = static_cast<AnalogClosedLoopEvt const *>(e);
 
-  pattern->positive_direction_ = true;
+  pattern->constant_frame_rate_ = false;
+  pattern->gain_ = aclev->gain;
   pattern->frame_rate_hz_ = constants::analog_closed_loop_frequency_hz;
   pattern->runtime_duration_ms_ = aclev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
   pattern->frame_index_ = aclev->frame_index;
@@ -1419,6 +1430,27 @@ void FSP::Pattern_dispatchFindPatternToCard(QP::QActive * const ao, QP::QEvt con
   pattern->card_->dispatch(&constants::find_pattern_evt, pattern->m_prio);
 }
 
+void FSP::Pattern_updateAnalogClosedLoopValues(QP::QActive * const ao, QP::QEvt const * e)
+{
+  Pattern * const pattern = static_cast<Pattern * const>(ao);
+  SignedValueEvt const * svev = static_cast<SignedValueEvt const *>(e);
+  int32_t analog_input_millivolts = svev->value;
+  int32_t frame_rate = ((int32_t)pattern->gain_ * (analog_input_millivolts + constants::analog_closed_loop_offset)) / constants::analog_closed_loop_scale_factor;
+  if (frame_rate < 0)
+  {
+    pattern->positive_direction_ = false;
+  }
+  else
+  {
+    pattern->positive_direction_ = true;
+  }
+  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+    QS_STR("Pattern_updateAnalogClosedLoopValues");
+    QS_STR("frame_rate");
+    QS_I32(0, frame_rate);
+  QS_END()
+}
+
 void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
 {
   Card * const card = static_cast<Card * const>(hsm);
@@ -1437,6 +1469,9 @@ void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)
   QS_SIG_DICTIONARY(FILE_NOT_VALID_SIG, hsm);
   QS_SIG_DICTIONARY(PATTERN_VALID_SIG, hsm);
   QS_SIG_DICTIONARY(PATTERN_NOT_VALID_SIG, hsm);
+  QS_SIG_DICTIONARY(PLAY_PATTERN_SIG, hsm);
+  QS_SIG_DICTIONARY(SHOW_PATTERN_FRAME_SIG, hsm);
+  QS_SIG_DICTIONARY(ANALOG_CLOSED_LOOP_SIG, hsm);
 }
 
 void FSP::Card_storePlayPatternParameters(QHsm * const hsm, QEvt const * e)
@@ -1860,7 +1895,7 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
           aclev->gain = gain;
           aclev->runtime_duration = runtime_duration;
           aclev->frame_index = frame_index;
-          AO_Arena->POST(aclev, &constants::fsp_id);
+          QF::PUBLISH(aclev, &constants::fsp_id);
 
           appendMessage(response, response_byte_count, "");
           QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)

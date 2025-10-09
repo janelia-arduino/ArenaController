@@ -81,6 +81,12 @@ public:
     std::uint16_t runtime_duration;
     std::uint16_t frame_index;
 }; // class AnalogClosedLoopEvt
+
+//${Events::SignedValueEvt} ..................................................
+class SignedValueEvt : public QP::QEvt {
+public:
+    std::int32_t value;
+}; // class SignedValueEvt
 //$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

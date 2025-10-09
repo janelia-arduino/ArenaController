@@ -146,6 +146,10 @@ constexpr uint16_t analog_output_min = 100;
 constexpr uint16_t analog_output_max = 4095;
 constexpr uint32_t analog_input_frequency_hz = 10;
 constexpr uint32_t analog_closed_loop_frequency_hz = 100;
+// frame_rate = (gain * (voltage + offset)) / scale_factor
+// 20fps = (10 * (1000mv + 0)) / 500
+constexpr int32_t analog_closed_loop_offset = 0;
+constexpr int32_t analog_closed_loop_scale_factor = 500;
 }
 }
 #endif

@@ -144,6 +144,7 @@ struct FSP
   static void Pattern_setGrayscaleAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_handleErrorAndDispatchToCard(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_dispatchFindPatternToCard(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_updateAnalogClosedLoopValues(QP::QActive * const ao, QP::QEvt const * e);
 
   static void Card_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_storePlayPatternParameters(QP::QHsm * const hsm, QP::QEvt const * e);

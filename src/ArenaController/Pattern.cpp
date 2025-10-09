@@ -462,6 +462,12 @@ Q_STATE_DEF(Pattern, PlayingPattern) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::GOT_ANALOG_INPUT}
+        case GOT_ANALOG_INPUT_SIG: {
+            FSP::Pattern_updateAnalogClosedLoopValues(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&DisplayingPattern);
             break;

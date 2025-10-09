@@ -59,6 +59,8 @@ public:
     QP::QHsm * card_;
     std::uint8_t grayscale_;
     QP::QEQueue begin_pattern_queue_;
+    std::int16_t gain_;
+    std::uint8_t constant_frame_rate_;
 
 public:
     Pattern();

@@ -861,6 +861,8 @@ analog_input_ = AnalogInput_getInstance();</code>
    <attribute name="card_" type="QP::QHsm *" visibility="0x00" properties="0x00"/>
    <attribute name="grayscale_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="begin_pattern_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
+   <attribute name="gain_" type="std::int16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="constant_frame_rate_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
@@ -1088,7 +1090,7 @@ card_ = Card_getInstance();</code>
       <state name="PlayingPattern">
        <entry brief="armTimers()">FSP::Pattern_armTimers(this, e);</entry>
        <exit brief="disarmTimersAndCleanup()">FSP::Pattern_disarmTimersAndCleanup(this, e);</exit>
-       <initial target="../7">
+       <initial target="../8">
         <action brief="initializeFrameIndex()">FSP::Pattern_initializeFrameIndex(this, e);</action>
         <initial_glyph conn="42,91,4,0,4">
          <action box="0,1,19,2"/>
@@ -1106,9 +1108,15 @@ card_ = Card_getInstance();</code>
          <action box="0,-2,25,6"/>
         </tran_glyph>
        </tran>
+       <tran trig="GOT_ANALOG_INPUT">
+        <action brief="updateAnalogClosedLoopValues()">FSP::Pattern_updateAnalogClosedLoopValues(this, e);</action>
+        <tran_glyph conn="3,110,3,-1,27">
+         <action box="0,-2,24,5"/>
+        </tran_glyph>
+       </tran>
        <state name="PP_DecodingFrame">
         <entry brief="decodeFrame()">FSP::Pattern_decodeFrame(this, e);</entry>
-        <tran trig="FRAME_DECODED" target="../../6">
+        <tran trig="FRAME_DECODED" target="../../7">
          <tran_glyph conn="42,129,2,0,5">
           <action box="1,1,16,2"/>
          </tran_glyph>
@@ -1119,7 +1127,7 @@ card_ = Card_getInstance();</code>
        </state>
        <state name="PP_DisplayingFrame">
         <entry brief="displayFrame()">FSP::Pattern_displayFrame(this, e);</entry>
-        <tran trig="FRAME_TRANSFERRED" target="../../7">
+        <tran trig="FRAME_TRANSFERRED" target="../../8">
          <action brief="setupNextFrame()">FSP::Pattern_setupNextFrame(this, e);</action>
          <tran_glyph conn="38,150,3,3,-6,-50,6">
           <action box="-25,-28,20,5"/>
@@ -1131,7 +1139,7 @@ card_ = Card_getInstance();</code>
        </state>
        <state name="WaitingToDisplayFrame">
         <entry brief="recallFrameRate()">FSP::Pattern_recallFrameRate(this, e);</entry>
-        <tran trig="FRAME_RATE_TIMEOUT" target="../../3">
+        <tran trig="FRAME_RATE_TIMEOUT" target="../../4">
          <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
          <tran_glyph conn="42,116,2,0,7">
           <action box="1,1,20,4"/>
@@ -1143,7 +1151,7 @@ card_ = Card_getInstance();</code>
        </state>
        <state name="PP_FillingFrameBufferWithDecodedFrame">
         <entry brief="fillFrameBufferWithDecodedFrame()">FSP::Pattern_fillFrameBufferWithDecodedFrame(this, e);</entry>
-        <tran trig="FRAME_FILLED" target="../../4">
+        <tran trig="FRAME_FILLED" target="../../5">
          <tran_glyph conn="42,140,2,0,5">
           <action box="1,1,14,2"/>
          </tran_glyph>
@@ -1154,7 +1162,7 @@ card_ = Card_getInstance();</code>
        </state>
        <state name="PP_ReadingFrameFromFile">
         <entry brief="readFrameFromFile()">FSP::Pattern_readFrameFromFile(this, e);</entry>
-        <tran trig="FRAME_READ_FROM_FILE" target="../../5">
+        <tran trig="FRAME_READ_FROM_FILE" target="../../6">
          <action brief="saveFrameReference()">FSP::Pattern_saveFrameReference(this, e);</action>
          <tran_glyph conn="42,104,2,0,6">
           <action box="1,1,21,4"/>
@@ -1519,6 +1527,9 @@ card_ = Card_getInstance();</code>
    <attribute name="gain" type="std::int16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_index" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+  </class>
+  <class name="SignedValueEvt" superclass="qpcpp::QEvt">
+   <attribute name="value" type="std::int32_t" visibility="0x00" properties="0x00"/>
   </class>
  </package>
  <directory name=".">
