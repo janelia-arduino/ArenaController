@@ -105,6 +105,12 @@ Q_STATE_DEF(Card, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Card::SM::Initialized::ANALOG_CLOSED_LOOP}
+        case ANALOG_CLOSED_LOOP_SIG: {
+            FSP::Card_storeAnalogClosedLoopParameters(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;

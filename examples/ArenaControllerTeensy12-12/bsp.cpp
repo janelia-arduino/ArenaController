@@ -75,8 +75,7 @@ constexpr uint16_t pattern_file_count_max = 20;
 
 // analog
 constexpr adsGain_t analog_input_gain = GAIN_TWOTHIRDS;
-// constexpr uint16_t analog_input_mux = ADS1X15_REG_CONFIG_MUX_DIFF_0_1;
-constexpr uint16_t analog_input_mux = ADS1X15_REG_CONFIG_MUX_SINGLE_0;
+constexpr uint16_t analog_input_mux = ADS1X15_REG_CONFIG_MUX_DIFF_0_1;
 constexpr bool analog_input_continuous = false;
 } // namespace constants
 } // namespace AC
@@ -775,12 +774,12 @@ bool BSP::analogInputDataAvailable()
   return bsp_global::analog_input_chip.conversionComplete();
 }
 
-int16_t BSP::getAnalogInput()
+int16_t BSP::getAnalogInputMillivolts()
 {
   int16_t analog_input_value = bsp_global::analog_input_chip.getLastConversionResults();
   bsp_global::analog_input_chip.startADCReading(constants::analog_input_mux, constants::analog_input_continuous);
-  // return bsp_global::analog_input_chip.computeVolts(analog_input_value);
-  return analog_input_value;
+  int16_t analog_input_millivolts = 1000 * bsp_global::analog_input_chip.computeVolts(analog_input_value);
+  return analog_input_millivolts;
 }
 
 

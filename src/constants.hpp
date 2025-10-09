@@ -145,6 +145,7 @@ constexpr uint16_t analog_output_zero = 0;
 constexpr uint16_t analog_output_min = 100;
 constexpr uint16_t analog_output_max = 4095;
 constexpr uint32_t analog_input_frequency_hz = 10;
+constexpr uint32_t analog_closed_loop_frequency_hz = 100;
 }
 }
 #endif

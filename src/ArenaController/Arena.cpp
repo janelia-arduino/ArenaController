@@ -308,11 +308,6 @@ Q_STATE_DEF(Arena, AnalogClosedLoop) {
             status_ = Q_RET_HANDLED;
             break;
         }
-        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop::PLAY_PATTERN}
-        case PLAY_PATTERN_SIG: {
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         default: {
             status_ = super(&ArenaOn);
             break;

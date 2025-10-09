@@ -240,7 +240,13 @@ Q_STATE_DEF(SerialCommandInterface, ProcessingBinaryCommand) {
         }
         //${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::PLAY_PATTERN}
         case PLAY_PATTERN_SIG: {
-            FSP::SerialCommandInterface_storeRuntimeDuration(this, e);
+            FSP::SerialCommandInterface_storePlayPatternParameters(this, e);
+            status_ = tran(&PlayingPattern);
+            break;
+        }
+        //${AOs::SerialCommandInt~::SM::Active::ProcessingBinary~::ANALOG_CLOSED_LOOP}
+        case ANALOG_CLOSED_LOOP_SIG: {
+            FSP::SerialCommandInterface_storeAnalogClosedLoopParameters(this, e);
             status_ = tran(&PlayingPattern);
             break;
         }

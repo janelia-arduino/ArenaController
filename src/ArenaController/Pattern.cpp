@@ -189,6 +189,12 @@ Q_STATE_DEF(Pattern, Initialized) {
             status_ = Q_RET_HANDLED;
             break;
         }
+        //${AOs::Pattern::SM::Initialized::ANALOG_CLOSED_LOOP}
+        case ANALOG_CLOSED_LOOP_SIG: {
+            FSP::Pattern_initializeAnalogClosedLoop(this, e);
+            status_ = Q_RET_HANDLED;
+            break;
+        }
         default: {
             status_ = super(&top);
             break;

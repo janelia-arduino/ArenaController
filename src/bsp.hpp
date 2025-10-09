@@ -72,7 +72,7 @@ struct BSP {
   static bool initializeAnalogInput();
   static void setAnalogInputGainAndStartReading();
   static bool analogInputDataAvailable();
-  static int16_t getAnalogInput();
+  static int16_t getAnalogInputMillivolts();
 };
 
 #endif // BSP_HPP

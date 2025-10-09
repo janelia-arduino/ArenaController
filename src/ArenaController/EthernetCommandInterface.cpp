@@ -275,7 +275,13 @@ Q_STATE_DEF(EthernetCommandInterface, ProcessingBinaryCommand) {
         }
         //${AOs::EthernetCommandI~::SM::Active::ProcessingBinary~::PLAY_PATTERN}
         case PLAY_PATTERN_SIG: {
-            FSP::EthernetCommandInterface_storeRuntimeDuration(this, e);
+            FSP::EthernetCommandInterface_storePlayPatternParameters(this, e);
+            status_ = tran(&PlayingPattern);
+            break;
+        }
+        //${AOs::EthernetCommandI~::SM::Active::ProcessingBinary~::ANALOG_CLOSED_LOOP}
+        case ANALOG_CLOSED_LOOP_SIG: {
+            FSP::EthernetCommandInterface_storeAnalogClosedLoopParameters(this, e);
             status_ = tran(&PlayingPattern);
             break;
         }

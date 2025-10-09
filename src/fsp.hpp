@@ -75,7 +75,8 @@ struct FSP
   static void SerialCommandInterface_updateStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
   static bool SerialCommandInterface_ifStreamCommandComplete(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void SerialCommandInterface_storeRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_storePlayPatternParameters(QP::QActive * const ao, QP::QEvt const * e);
+  static void SerialCommandInterface_storeAnalogClosedLoopParameters(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
   static void SerialCommandInterface_writePatternErrorResponse(QP::QActive * const ao, QP::QEvt const * e);
 
@@ -92,7 +93,8 @@ struct FSP
   static void EthernetCommandInterface_updateStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
   static bool EthernetCommandInterface_ifStreamCommandComplete(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_processStreamCommand(QP::QActive * const ao, QP::QEvt const * e);
-  static void EthernetCommandInterface_storeRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_storePlayPatternParameters(QP::QActive * const ao, QP::QEvt const * e);
+  static void EthernetCommandInterface_storeAnalogClosedLoopParameters(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_writePatternFinishedResponse(QP::QActive * const ao, QP::QEvt const * e);
   static void EthernetCommandInterface_writePatternErrorResponse(QP::QActive * const ao, QP::QEvt const * e);
 
@@ -118,6 +120,7 @@ struct FSP
   static void Pattern_initializeAndSubscribe(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializePlayPattern(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_initializeShowPatternFrame(QP::QActive * const ao, QP::QEvt const * e);
+  static void Pattern_initializeAnalogClosedLoop(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armFindCardTimer(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_endRuntimeDuration(QP::QActive * const ao, QP::QEvt const * e);
   static void Pattern_armTimers(QP::QActive * const ao, QP::QEvt const * e);
@@ -145,6 +148,7 @@ struct FSP
   static void Card_initialize(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_storePlayPatternParameters(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_storeShowPatternFrameParameters(QP::QHsm * const hsm, QP::QEvt const * e);
+  static void Card_storeAnalogClosedLoopParameters(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_findCard(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_openDirectory(QP::QHsm * const hsm, QP::QEvt const * e);
   static void Card_sortFilenames(QP::QHsm * const hsm, QP::QEvt const * e);
