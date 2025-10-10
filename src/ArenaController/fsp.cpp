@@ -1088,9 +1088,17 @@ void FSP::Watchdog_feedWatchdog(QActive * const ao, QEvt const * e)
 void FSP::Pattern_initializeAndSubscribe(QActive * const ao, QEvt const * e)
 {
   Pattern * const pattern = static_cast<Pattern * const>(ao);
-  pattern->frame_ = nullptr;
+  pattern->frame_rate_hz_ = 0;
+  pattern->runtime_duration_ms_ = 0;
   pattern->byte_count_per_frame_ = 0;
   pattern->positive_direction_ = true;
+  pattern->frame_ = nullptr;
+  pattern->frame_count_per_pattern_ = 0;
+  pattern->frame_index_ = 0;
+  pattern->grayscale_ = true;
+  pattern->gain_ = 10;
+  pattern->timeout_count_ = 0;
+  pattern->timeout_counts_per_frame_index_ = 1;
 
   static QEvt const * pattern_begin_pattern_queue_store[constants::pattern_begin_pattern_queue_size];
   pattern->begin_pattern_queue_.init(pattern_begin_pattern_queue_store, Q_DIM(pattern_begin_pattern_queue_store));
@@ -1147,7 +1155,6 @@ void FSP::Pattern_initializePlayPattern(QActive * const ao, QEvt const * e)
     QS_END()
   }
   pattern->frame_rate_hz_ = abs(ppev->frame_rate);
-  pattern->constant_frame_rate_ = true;
   pattern->runtime_duration_ms_ = ppev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
   pattern->frame_index_ = ppev->frame_index;
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
@@ -1176,7 +1183,6 @@ void FSP::Pattern_initializeAnalogClosedLoop(QActive * const ao, QEvt const * e)
   Pattern * const pattern = static_cast<Pattern * const>(ao);
   AnalogClosedLoopEvt const * aclev = static_cast<AnalogClosedLoopEvt const *>(e);
 
-  pattern->constant_frame_rate_ = false;
   pattern->gain_ = aclev->gain;
   pattern->frame_rate_hz_ = constants::analog_closed_loop_frequency_hz;
   pattern->runtime_duration_ms_ = aclev->runtime_duration * constants::milliseconds_per_runtime_duration_unit;
@@ -1284,24 +1290,40 @@ void FSP::Pattern_setupNextFrame(QP::QActive * const ao, QP::QEvt const * e)
     Q_DELETE_REF(pattern->frame_);
     pattern->frame_ = nullptr;
   }
+  pattern->timeout_count_ = pattern->timeout_count_ + 1;
+  if (pattern->timeout_counts_per_frame_index_ == 0)
+  {
+    return;
+  }
+  if ((pattern->timeout_count_ % pattern->timeout_counts_per_frame_index_) != 0)
+  {
+    return;
+  }
+  uint16_t frame_index_inc = 1;
   if (pattern->positive_direction_)
   {
-    if (++pattern->frame_index_ >= pattern->frame_count_per_pattern_)
+    pattern->frame_index_ = pattern->frame_index_ + frame_index_inc;
+    if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
     {
-      pattern->frame_index_ = 0;
+      pattern->frame_index_ = pattern->frame_index_ - pattern->frame_count_per_pattern_;
     }
   }
   else
   {
-    if (pattern->frame_index_ > 0)
+    if (pattern->frame_index_ >= frame_index_inc)
     {
-      pattern->frame_index_ = pattern->frame_index_ - 1;
+      pattern->frame_index_ = pattern->frame_index_ - frame_index_inc;
     }
     else
     {
-      pattern->frame_index_ = pattern->frame_count_per_pattern_ - 1;
+      pattern->frame_index_ = pattern->frame_count_per_pattern_ - (frame_index_inc - pattern->frame_index_);
     }
   }
+  // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
+  //   QS_STR("Pattern_setupNextFrame");
+  //   QS_STR("frame_index");
+  //   QS_U32(8, pattern->frame_index_);
+  // QS_END()
 }
 
 void FSP::Pattern_updatePatternFrame(QP::QActive * const ao, QP::QEvt const * e)
@@ -1387,6 +1409,8 @@ void FSP::Pattern_initializeFrameIndex(QActive * const ao, QEvt const * e)
   if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
   {
     pattern->frame_index_ = 0;
+    pattern->timeout_count_ = 0;
+    pattern->timeout_counts_per_frame_index_ = 1;
   }
 }
 
@@ -1444,11 +1468,22 @@ void FSP::Pattern_updateAnalogClosedLoopValues(QP::QActive * const ao, QP::QEvt 
   {
     pattern->positive_direction_ = true;
   }
-  QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-    QS_STR("Pattern_updateAnalogClosedLoopValues");
-    QS_STR("frame_rate");
-    QS_I32(0, frame_rate);
-  QS_END()
+  frame_rate = abs(frame_rate);
+  if (frame_rate > 0)
+  {
+    pattern->timeout_counts_per_frame_index_ = constants::analog_closed_loop_frequency_hz / frame_rate;
+  }
+  else
+  {
+    pattern->timeout_counts_per_frame_index_ = 0;
+  }
+  // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
+  //   QS_STR("Pattern_updateAnalogClosedLoopValues");
+  //   QS_STR("frame_rate");
+  //   QS_I32(0, frame_rate);
+  //   QS_STR("timeout_counts_per_frame_index");
+  //   QS_U32(8, pattern->timeout_counts_per_frame_index_);
+  // QS_END()
 }
 
 void FSP::Card_initialize(QHsm * const hsm, QEvt const * e)

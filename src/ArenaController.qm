@@ -862,7 +862,8 @@ analog_input_ = AnalogInput_getInstance();</code>
    <attribute name="grayscale_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <attribute name="begin_pattern_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
    <attribute name="gain_" type="std::int16_t" visibility="0x00" properties="0x00"/>
-   <attribute name="constant_frame_rate_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
+   <attribute name="timeout_counts_per_frame_index_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="timeout_count_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),

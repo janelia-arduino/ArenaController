@@ -60,7 +60,8 @@ public:
     std::uint8_t grayscale_;
     QP::QEQueue begin_pattern_queue_;
     std::int16_t gain_;
-    std::uint8_t constant_frame_rate_;
+    std::uint16_t timeout_counts_per_frame_index_;
+    std::uint16_t timeout_count_;
 
 public:
     Pattern();
