@@ -146,11 +146,72 @@ Panel update order for each panel in an display:
 
 ** Firmware
 
-*** Active Object State Machines
+*** Active Objects
+
+| name                     | priority | event-queue-count | state-machines                   |
+|--------------------------+----------+-------------------+----------------------------------|
+| Watchdog                 |        1 |                 2 | Watchdog                         |
+| SerialCommandInterface   |        2 |                10 | SerialCommandInterface           |
+| EthernetCommandInterface |        3 |                10 | EthernetCommandInterface         |
+| Pattern                  |        4 |                20 | Pattern, Card                    |
+| Arena                    |        5 |                20 | Arena, AnalogOutput, AnalogInput |
+| Display                  |        6 |                20 | Display                          |
+| Frame                    |        7 |                20 | Frame                            |
+
+*** State Diagrams
+
+**** Watchdog
+
+#+BEGIN_SRC plantuml :file ./images/watchdog-state-diagram.svg
+@startuml
+!theme spacelab
+[*] --> Feeding : initializeAndSubscribe()
+state Feeding {
+  Feeding : entry / armWatchdogTimer()
+  Feeding : exit / disarmWatchdogTimer()
+  [*] --> Initialized
+  state Initialized {
+    Initialized : on WATCHDOG_TIMEOUT / feedWatchdog()
+  }
+}
+Feeding --> Resetting : RESET
+state Resetting {
+}
+@enduml
+#+END_SRC
+
+#+RESULTS:
+[[file:./images/watchdog-state-diagram.svg]]
+
+#+html: <img src="./images/watchdog-state-diagram.png" width="1200px">
+
+**** SerialCommandInterface
+
+#+html: <img src="./images/SM_of_SerialCommandInterface.png" width="1200px">
+
+**** EthernetCommandInterface
+
+#+html: <img src="./images/SM_of_EthernetCommandInterface.png" width="1200px">
+
+**** Pattern
+
+#+html: <img src="./images/SM_of_Pattern.png" width="1200px">
+
+**** Card
+
+#+html: <img src="./images/SM_of_Card.png" width="1200px">
 
 **** Arena
 
 #+html: <img src="./images/SM_of_Arena.png" width="1200px">
+
+**** AnalogOutput
+
+#+html: <img src="./images/SM_of_AnalogOutput.png" width="1200px">
+
+**** AnalogInput
+
+#+html: <img src="./images/SM_of_AnalogInput.png" width="1200px">
 
 **** Display
 
@@ -159,14 +220,6 @@ Panel update order for each panel in an display:
 **** Frame
 
 #+html: <img src="./images/SM_of_Frame.png" width="1200px">
-
-**** Watchdog
-
-#+html: <img src="./images/SM_of_Watchdog.png" width="1200px">
-
-**** EthernetCommandInterface
-
-#+html: <img src="./images/SM_of_EthernetCommandInterface.png" width="1200px">
 
 
 ** Command Set
