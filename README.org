@@ -180,7 +180,6 @@ Feeding --> Resetting : RESET
 @enduml
 #+END_SRC
 
-# #+html: <img src="./documentation/images/state-diagram-watchdog.png" width="1200px">
 #+html: <img src="./documentation/images/state-diagram-watchdog.png">
 
 **** SerialCommandInterface
@@ -200,7 +199,6 @@ state Active {
   }
   [*] --> Uninitialized
   state WaitingForNewCommand {
-    WaitingForNewCommand : on SERIAL_TIMEOUT / pollSerial()
     state PlayingPattern {
       PlayingPattern : on COMMAND_PROCESSED / writeBinaryResponse()
       PlayingPattern : on PATTERN_FINISHED_PLAYING / writePatternFinishedResponse()
@@ -240,40 +238,97 @@ Active --> Inactive : DEACTIVATE_SERIAL_COMMAND_INTERFACE
 @enduml
 #+END_SRC
 
-# #+html: <img src="./documentation/images/state-diagram-serial-command-interface.png" width="1200px">
 #+html: <img src="./documentation/images/state-diagram-serial-command-interface.png">
 
 **** EthernetCommandInterface
 
-#+html: <img src="./documentation/images/state-diagram-ethernet-command-interface.svg" width="1200px">
+#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-ethernet-command-interface.png :results none
+@startuml
+!theme spacelab
+state Inactive {
+}
+[*] --> Inactive : initializeAndSubscribe()
+state Active {
+  Active : entry / armEthernetTimerLowSpeed()
+  Active : exit / disarmEthernetTimer()
+  Active : on ETHERNET_TIMEOUT / pollEthernet()
+  state Uninitialized {
+    Uninitialized : on ETHERNET_TIMEOUT / initializeEthernet()
+  }
+  [*] --> Uninitialized
+  state CreatingServerConnection {
+    CreatingServerConnection : on ETHERNET_TIMEOUT / createServerConnection()
+  }
+  Uninitialized --> CreatingServerConnection : ETHERNET_INITIALIZED
+  state WaitingForNewCommand {
+    state PlayingPattern {
+      PlayingPattern : on COMMAND_PROCESSED / writeBinaryResponse()
+      PlayingPattern : on PATTERN_FINISHED_PLAYING / writePatternFinishedResponse()
+      PlayingPattern : on PLAY_PATTERN_ERROR / writePatternErrorResponse()
+    }
+  }
+  CreatingServerConnection --> WaitingForNewCommand : ETHERNET_SERVER_CONNECTED
+  state Waiting {
+  }
+  WaitingForNewCommand --> Waiting : SERIAL_COMMAND_AVAILABLE
+  Waiting --> WaitingForNewCommand : COMMAND_PROCESSED
+  state ChoosingCommandProcessor {
+  }
+  WaitingForNewCommand --> ChoosingCommandProcessor : ETHERNET_COMMAND_AVAILABLE /\nanalyzeCommand()
+  state ProcessingBinaryCommand {
+    ProcessingBinaryCommand : entry / processBinaryCommand()
+  }
+  ChoosingCommandProcessor --> ProcessingBinaryCommand : PROCESS_BINARY_COMMAND
+  ProcessingBinaryCommand --> PlayingPattern : PLAY_PATTERN /\nstorePlayPatternParameters()
+  ProcessingBinaryCommand --> PlayingPattern : ANALOG_CLOSED_LOOP /\nstoreAnalogClosedLoopParameters()
+  ProcessingBinaryCommand --> WaitingForNewCommand : COMMAND_PROCESSED /\nwriteBinaryResponse()
+  state ProcessingStreamCommand {
+    ProcessingStreamCommand : entry / armEthernetTimerHighSpeed()
+    ProcessingStreamCommand : exit / armEthernetTimerLowSpeed()
+    state c <<choice>>
+    ProcessingStreamCommand --> c : ETHERNET_COMMAND_AVAILABLE /\nupdateStreamCommand()
+    state MidStreamCommand {
+    }
+    c --> MidStreamCommand : [ifStreamCommandComplete()] /\nprocessStreamCommand()
+    c --> MidStreamCommand : [else]
+  }
+  ChoosingCommandProcessor --> ProcessingStreamCommand : PROCESS_STREAM_COMMAND
+  ProcessingStreamCommand --> WaitingForNewCommand : COMMAND_PROCESSED /\nwriteBinaryResponse()
+}
+Inactive --> Active : ACTIVATE_ETHERNET_COMMAND_INTERFACE
+Active --> Inactive : DEACTIVATE_ETHERNET_COMMAND_INTERFACE
+@enduml
+#+END_SRC
+
+#+html: <img src="./documentation/images/state-diagram-ethernet-command-interface.png">
 
 **** Pattern
 
-#+html: <img src="./documentation/images/state-diagram-pattern.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-pattern.png">
 
 **** Card
 
-#+html: <img src="./documentation/images/state-diagram-card.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-card.png">
 
 **** Arena
 
-#+html: <img src="./documentation/images/state-diagram-arena.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-arena.png">
 
 **** AnalogOutput
 
-#+html: <img src="./documentation/images/state-diagram-analog-output.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-analog-output.png">
 
 **** AnalogInput
 
-#+html: <img src="./documentation/images/state-diagram-analog-input.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-analog-input.png">
 
 **** Display
 
-#+html: <img src="./documentation/images/state-diagram-display.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-display.png">
 
 **** Frame
 
-#+html: <img src="./documentation/images/state-diagram-frame.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-frame.png">
 
 
 ** Command Set

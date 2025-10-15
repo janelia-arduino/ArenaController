@@ -245,12 +245,6 @@ analog_input_ = AnalogInput_getInstance();</code>
         <action box="1,4,25,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="SERIAL_TIMEOUT">
-       <action brief="pollSerial()">FSP::SerialCommandInterface_pollSerial(this, e);</action>
-       <tran_glyph conn="7,49,3,-1,20">
-        <action box="1,-2,19,4"/>
-       </tran_glyph>
-      </tran>
       <state name="PlayingPattern">
        <tran trig="COMMAND_PROCESSED">
         <action brief="writeBinaryResponse()">FSP::SerialCommandInterface_writeBinaryResponse(this, e);</action>
@@ -290,13 +284,13 @@ analog_input_ = AnalogInput_getInstance();</code>
         <action box="-1,-22,22,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="PLAY_PATTERN" target="../../4/3">
+      <tran trig="PLAY_PATTERN" target="../../4/2">
        <action brief="storePlayPatternParameters()">FSP::SerialCommandInterface_storePlayPatternParameters(this, e);</action>
        <tran_glyph conn="67,85,0,1,-31,-17">
         <action box="-21,-5,23,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="ANALOG_CLOSED_LOOP" target="../../4/3">
+      <tran trig="ANALOG_CLOSED_LOOP" target="../../4/2">
        <action brief="storeAnalogClosedLoopParameters()">FSP::SerialCommandInterface_storeAnalogClosedLoopParameters(this, e);</action>
        <tran_glyph conn="44,89,3,2,-6,-21">
         <action box="-5,-16,26,7"/>

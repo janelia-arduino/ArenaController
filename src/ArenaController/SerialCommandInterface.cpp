@@ -161,12 +161,6 @@ Q_STATE_DEF(SerialCommandInterface, WaitingForNewCommand) {
             status_ = tran(&ChoosingCommandProcessor);
             break;
         }
-        //${AOs::SerialCommandInt~::SM::Active::WaitingForNewCom~::SERIAL_TIMEOUT}
-        case SERIAL_TIMEOUT_SIG: {
-            FSP::SerialCommandInterface_pollSerial(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
         default: {
             status_ = super(&Active);
             break;
