@@ -28,7 +28,7 @@
 
 * Modular LED Display
 
-#+html: <img src="./images/arena.png" width="1200px">
+#+html: <img src="./documentation/images/arena.png" width="1200px">
 
 Abstract from https://doi.org/10.1101/2022.08.02.502550 :
 
@@ -62,25 +62,25 @@ vision experiments and is thoroughly documented for replicability."
 
 A quarter panel is a set of LED pixels arranged in rows and columns.
 
-#+html: <img src="./images/quarter_panel.png" width="96px">
+#+html: <img src="./documentation/images/quarter_panel.png" width="96px">
 
 *** Panel
 
 A panel is a set of quarter panels arranged in rows and columns.
 
-#+html: <img src="./images/panel.png" width="192px">
+#+html: <img src="./documentation/images/panel.png" width="192px">
 
 *** Region
 
 A region is a set of panels arranged in rows and columns with a common communication interface.
 
-#+html: <img src="./images/region.png" width="607px">
+#+html: <img src="./documentation/images/region.png" width="607px">
 
 *** Display
 
 An display is a set of regions arranged in rows and columns.
 
-#+html: <img src="./images/display.png" width="1214px">
+#+html: <img src="./documentation/images/display.png" width="1214px">
 
 ** Display Messages
 
@@ -90,23 +90,23 @@ An display is a set of regions arranged in rows and columns.
 
 Pixel numbering for each pixel in a quarter panel:
 
-#+html: <img src="./images/quarter_panel_pixels.png" width="1200px">
+#+html: <img src="./documentation/images/quarter_panel_pixels.png" width="1200px">
 
 **** Grayscale
 
 In grayscale mode, each LED can be one of sixteen brightness levels.
 
-#+html: <img src="./images/grayscale.png" width="420px">
+#+html: <img src="./documentation/images/grayscale.png" width="420px">
 
-#+html: <img src="./images/quarter_panel_grayscale.png" width="1200px">
+#+html: <img src="./documentation/images/quarter_panel_grayscale.png" width="1200px">
 
 **** Binary
 
 In binary mode, each LED can be one of two brightness levels, on or off.
 
-#+html: <img src="./images/binary.png" width="420px">
+#+html: <img src="./documentation/images/binary.png" width="420px">
 
-#+html: <img src="./images/quarter_panel_binary.png" width="1200px">
+#+html: <img src="./documentation/images/quarter_panel_binary.png" width="1200px">
 
 *** Panel
 
@@ -114,7 +114,7 @@ In binary mode, each LED can be one of two brightness levels, on or off.
 
 Quarter panel numbering for each quarter panel in a panel plus pixel numbering for select pixels in a panel:
 
-#+html: <img src="./images/panel_quarter_panels.png" width="1200px">
+#+html: <img src="./documentation/images/panel_quarter_panels.png" width="1200px">
 
 *** Region
 
@@ -122,13 +122,13 @@ Quarter panel numbering for each quarter panel in a panel plus pixel numbering f
 
 Region numbering for each region in an display:
 
-#+html: <img src="./images/display_regions.png" width="1200px">
+#+html: <img src="./documentation/images/display_regions.png" width="1200px">
 
 **** Panels in Region
 
 Panel numbering for each panel in an region:
 
-#+html: <img src="./images/region_panels.png" width="600px">
+#+html: <img src="./documentation/images/region_panels.png" width="600px">
 
 *** Display
 
@@ -138,11 +138,11 @@ Panel update order for each panel in an display:
 
 ***** Synchronous
 
-#+html: <img src="./images/display_panels_synchronous.png" width="1200px">
+#+html: <img src="./documentation/images/display_panels_synchronous.png" width="1200px">
 
 ***** Asynchronous
 
-#+html: <img src="./images/display_panels_asynchronous.png" width="1200px">
+#+html: <img src="./documentation/images/display_panels_asynchronous.png" width="1200px">
 
 ** Firmware
 
@@ -162,7 +162,7 @@ Panel update order for each panel in an display:
 
 **** Watchdog
 
-#+BEGIN_SRC plantuml :file ./images/watchdog-state-diagram.svg
+#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-watchdog.svg :results none
 @startuml
 !theme spacelab
 [*] --> Feeding : initializeAndSubscribe()
@@ -180,46 +180,43 @@ state Resetting {
 @enduml
 #+END_SRC
 
-#+RESULTS:
-[[file:./images/watchdog-state-diagram.svg]]
-
-#+html: <img src="./images/watchdog-state-diagram.png" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-watchdog.png" width="1200px">
 
 **** SerialCommandInterface
 
-#+html: <img src="./images/SM_of_SerialCommandInterface.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_SerialCommandInterface.png" width="1200px">
 
 **** EthernetCommandInterface
 
-#+html: <img src="./images/SM_of_EthernetCommandInterface.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_EthernetCommandInterface.png" width="1200px">
 
 **** Pattern
 
-#+html: <img src="./images/SM_of_Pattern.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_Pattern.png" width="1200px">
 
 **** Card
 
-#+html: <img src="./images/SM_of_Card.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_Card.png" width="1200px">
 
 **** Arena
 
-#+html: <img src="./images/SM_of_Arena.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_Arena.png" width="1200px">
 
 **** AnalogOutput
 
-#+html: <img src="./images/SM_of_AnalogOutput.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_AnalogOutput.png" width="1200px">
 
 **** AnalogInput
 
-#+html: <img src="./images/SM_of_AnalogInput.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_AnalogInput.png" width="1200px">
 
 **** Display
 
-#+html: <img src="./images/SM_of_Display.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_Display.png" width="1200px">
 
 **** Frame
 
-#+html: <img src="./images/SM_of_Frame.png" width="1200px">
+#+html: <img src="./documentation/images/SM_of_Frame.png" width="1200px">
 
 
 ** Command Set
