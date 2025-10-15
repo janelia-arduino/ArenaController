@@ -165,24 +165,79 @@ Panel update order for each panel in an display:
 #+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-watchdog.svg :results none
 @startuml
 !theme spacelab
-[*] --> Feeding : initializeAndSubscribe()
 state Feeding {
   Feeding : entry / armWatchdogTimer()
   Feeding : exit / disarmWatchdogTimer()
-  [*] --> Initialized
   state Initialized {
     Initialized : on WATCHDOG_TIMEOUT / feedWatchdog()
   }
+  [*] --> Initialized
 }
-Feeding --> Resetting : RESET
+[*] --> Feeding : initializeAndSubscribe()
 state Resetting {
 }
+Feeding --> Resetting : RESET
 @enduml
 #+END_SRC
 
 #+html: <img src="./documentation/images/state-diagram-watchdog.svg" width="1200px">
 
 **** SerialCommandInterface
+
+#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-serial-command-interface.svg :results none
+@startuml
+!theme spacelab
+state Inactive {
+}
+[*] --> Inactive : initializeAndSubscribe()
+state Active {
+  Active : entry / armSerialTimerLowSpeed()
+  Active : exit / disarmSerialTimer()
+  Active : on SERIAL_TIMEOUT / pollSerial()
+  state Uninitialized {
+    Uninitialized : entry / initializeSerial()
+  }
+  [*] --> Uninitialized
+  state WaitingForNewCommand {
+    WaitingForNewCommand : on SERIAL_TIMEOUT / pollSerial()
+    state PlayingPattern {
+      PlayingPattern : on COMMAND_PROCESSED / writeBinaryResponse()
+      PlayingPattern : on PATTERN_FINISHED_PLAYING / writePatternFinishedResponse()
+      PlayingPattern : on PLAY_PATTERN_ERROR / writePatternErrorResponse()
+    }
+  }
+  Uninitialized --> WaitingForNewCommand : SERIAL_INITIALIZED
+  state Waiting {
+  }
+  WaitingForNewCommand --> Waiting : ETHERNET_COMMAND_AVAILABLE
+  Waiting --> WaitingForNewCommand : COMMAND_PROCESSED
+  state ChoosingCommandProcessor {
+  }
+  WaitingForNewCommand --> ChoosingCommandProcessor : SERIAL_COMMAND_AVAILABLE
+  state ProcessingBinaryCommand {
+    ProcessingBinaryCommand : entry / processBinaryCommand()
+  }
+  ChoosingCommandProcessor --> ProcessingBinaryCommand : PROCESS_BINARY_COMMAND
+  ProcessingBinaryCommand --> PlayingPattern : PLAY_PATTERN /\nstorePlayPatternParameters()
+  ProcessingBinaryCommand --> PlayingPattern : ANALOG_CLOSED_LOOP /\nstoreAnalogClosedLoopParameters()
+  ProcessingBinaryCommand --> WaitingForNewCommand : COMMAND_PROCESSED /\nwriteBinaryResponse()
+  state ProcessingStreamCommand {
+    ProcessingStreamCommand : entry / armSerialTimerHighSpeed()
+    ProcessingStreamCommand : exit / armSerialTimerLowSpeed()
+    state c <<choice>>
+    ProcessingStreamCommand --> c : SERIAL_COMMAND_AVAILABLE /\nupdateStreamCommand()
+    state MidStreamCommand {
+    }
+    c --> MidStreamCommand : [ifStreamCommandComplete()] /\nprocessStreamCommand()
+    c --> MidStreamCommand : [else]
+  }
+  ChoosingCommandProcessor --> ProcessingStreamCommand : PROCESS_STREAM_COMMAND
+  ProcessingStreamCommand --> WaitingForNewCommand : COMMAND_PROCESSED /\nwriteBinaryResponse()
+}
+Inactive --> Active : ACTIVATE_SERIAL_COMMAND_INTERFACE
+Active --> Inactive : DEACTIVATE_SERIAL_COMMAND_INTERFACE
+@enduml
+#+END_SRC
 
 #+html: <img src="./documentation/images/state-diagram-serial-command-interface.svg" width="1200px">
 
@@ -192,31 +247,31 @@ state Resetting {
 
 **** Pattern
 
-#+html: <img src="./documentation/images/state-diagram-Pattern.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-pattern.svg" width="1200px">
 
 **** Card
 
-#+html: <img src="./documentation/images/state-diagram-Card.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-card.svg" width="1200px">
 
 **** Arena
 
-#+html: <img src="./documentation/images/state-diagram-Arena.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-arena.svg" width="1200px">
 
 **** AnalogOutput
 
-#+html: <img src="./documentation/images/state-diagram-AnalogOutput.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-analog-output.svg" width="1200px">
 
 **** AnalogInput
 
-#+html: <img src="./documentation/images/state-diagram-AnalogInput.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-analog-input.svg" width="1200px">
 
 **** Display
 
-#+html: <img src="./documentation/images/state-diagram-Display.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-display.svg" width="1200px">
 
 **** Frame
 
-#+html: <img src="./documentation/images/state-diagram-Frame.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-frame.svg" width="1200px">
 
 
 ** Command Set
