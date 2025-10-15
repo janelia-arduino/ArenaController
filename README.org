@@ -162,7 +162,7 @@ Panel update order for each panel in an display:
 
 **** Watchdog
 
-#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-watchdog.svg :results none
+#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-watchdog.png :results none
 @startuml
 !theme spacelab
 state Feeding {
@@ -180,11 +180,11 @@ Feeding --> Resetting : RESET
 @enduml
 #+END_SRC
 
-#+html: <img src="./documentation/images/state-diagram-watchdog.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-watchdog.png" width="1200px">
 
 **** SerialCommandInterface
 
-#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-serial-command-interface.svg :results none
+#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-serial-command-interface.png :results none
 @startuml
 !theme spacelab
 state Inactive {
@@ -239,7 +239,7 @@ Active --> Inactive : DEACTIVATE_SERIAL_COMMAND_INTERFACE
 @enduml
 #+END_SRC
 
-#+html: <img src="./documentation/images/state-diagram-serial-command-interface.svg" width="1200px">
+#+html: <img src="./documentation/images/state-diagram-serial-command-interface.png" width="1200px">
 
 **** EthernetCommandInterface
 
