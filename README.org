@@ -165,8 +165,15 @@ Panel update order for each panel in an display:
 #+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-watchdog.png :results none
 @startuml
 !theme spacelab
-skinparam backgroundColor #808080
-state Feeding {
+skinparam backgroundColor #9F9F9F
+<style>
+.nested0 {
+  stateBody {
+    BackGroundColor #7F7F7F;
+  }
+}
+</style>
+state Feeding <<nested0>> {
   Feeding : entry / armWatchdogTimer()
   Feeding : exit / disarmWatchdogTimer()
   state Initialized {
@@ -188,11 +195,23 @@ Feeding --> Resetting : RESET
 #+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-serial-command-interface.png :results none
 @startuml
 !theme spacelab
-skinparam backgroundColor #808080
+skinparam backgroundColor #9F9F9F
+<style>
+.nested0 {
+  stateBody {
+    BackGroundColor #7F7F7F;
+  }
+}
+.nested1 {
+  stateBody {
+    BackGroundColor #5F5F5F;
+  }
+}
+</style>
 state Inactive {
 }
 [*] --> Inactive : initializeAndSubscribe()
-state Active {
+state Active <<nested0>> {
   Active : entry / armSerialTimerLowSpeed()
   Active : exit / disarmSerialTimer()
   Active : on SERIAL_TIMEOUT / pollSerial()
@@ -200,7 +219,7 @@ state Active {
     Uninitialized : entry / initializeSerial()
   }
   [*] --> Uninitialized
-  state WaitingForNewCommand {
+  state WaitingForNewCommand <<nested1>> {
     state PlayingPattern {
       PlayingPattern : on COMMAND_PROCESSED / writeBinaryResponse()
       PlayingPattern : on PATTERN_FINISHED_PLAYING / writePatternFinishedResponse()
@@ -222,7 +241,7 @@ state Active {
   ProcessingBinaryCommand --> PlayingPattern : PLAY_PATTERN /\nstorePlayPatternParameters()
   ProcessingBinaryCommand --> PlayingPattern : ANALOG_CLOSED_LOOP /\nstoreAnalogClosedLoopParameters()
   ProcessingBinaryCommand --> WaitingForNewCommand : COMMAND_PROCESSED /\nwriteBinaryResponse()
-  state ProcessingStreamCommand {
+  state ProcessingStreamCommand <<nested1>> {
     ProcessingStreamCommand : entry / armSerialTimerHighSpeed()
     ProcessingStreamCommand : exit / armSerialTimerLowSpeed()
     state c <<choice>>
@@ -247,11 +266,23 @@ Active --> Inactive : DEACTIVATE_SERIAL_COMMAND_INTERFACE
 #+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-ethernet-command-interface.png :results none
 @startuml
 !theme spacelab
-skinparam backgroundColor #808080
+skinparam backgroundColor #9F9F9F
+<style>
+.nested0 {
+  stateBody {
+    BackGroundColor #7F7F7F;
+  }
+}
+.nested1 {
+  stateBody {
+    BackGroundColor #5F5F5F;
+  }
+}
+</style>
 state Inactive {
 }
 [*] --> Inactive : initializeAndSubscribe()
-state Active {
+state Active <<nested0>> {
   Active : entry / armEthernetTimerLowSpeed()
   Active : exit / disarmEthernetTimer()
   Active : on ETHERNET_TIMEOUT / pollEthernet()
@@ -263,7 +294,7 @@ state Active {
     CreatingServerConnection : on ETHERNET_TIMEOUT / createServerConnection()
   }
   Uninitialized --> CreatingServerConnection : ETHERNET_INITIALIZED
-  state WaitingForNewCommand {
+  state WaitingForNewCommand <<nested1>> {
     state PlayingPattern {
       PlayingPattern : on COMMAND_PROCESSED / writeBinaryResponse()
       PlayingPattern : on PATTERN_FINISHED_PLAYING / writePatternFinishedResponse()
@@ -285,7 +316,7 @@ state Active {
   ProcessingBinaryCommand --> PlayingPattern : PLAY_PATTERN /\nstorePlayPatternParameters()
   ProcessingBinaryCommand --> PlayingPattern : ANALOG_CLOSED_LOOP /\nstoreAnalogClosedLoopParameters()
   ProcessingBinaryCommand --> WaitingForNewCommand : COMMAND_PROCESSED /\nwriteBinaryResponse()
-  state ProcessingStreamCommand {
+  state ProcessingStreamCommand <<nested1>> {
     ProcessingStreamCommand : entry / armEthernetTimerHighSpeed()
     ProcessingStreamCommand : exit / armEthernetTimerLowSpeed()
     state c <<choice>>
@@ -307,6 +338,111 @@ Active --> Inactive : DEACTIVATE_ETHERNET_COMMAND_INTERFACE
 
 **** Pattern
 
+#+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-pattern.png :results none
+@startuml
+!theme spacelab
+skinparam backgroundColor #9F9F9F
+<style>
+.nested0 {
+  stateBody {
+    BackGroundColor #7F7F7F;
+  }
+}
+.nested1 {
+  stateBody {
+    BackGroundColor #5F5F5F;
+  }
+}
+.nested2 {
+  stateBody {
+    BackGroundColor #3F3F3F;
+  }
+}
+</style>
+state Initialized <<nested0>> {
+  Initialized : on PLAY_PATTERN / initializePlayPattern()
+  Initialized : on SHOW_PATTERN_FRAME / initializeShowPatternFrame()
+  Initialized : on FIND_PATTERN / dispatchToCard()
+  Initialized : on FIND_CARD / dispatchToCard()
+  Initialized : on CARD_FOUND / dispatchToCard()
+  Initialized : on DIRECTORY_OPEN_SUCCESS / dispatchToCard()
+  Initialized : on DIRECTORY_OPEN_FAILURE / dispatchToCard()
+  Initialized : on ANALOG_CLOSED_LOOP / initializeAnalogClosedLoop()
+  Initialized : on FILENAME_SORT_FAILURE / dispatchToCard()
+  Initialized : on FILE_VALID / dispatchToCard()
+  Initialized : on FILE_NOT_VALID / handleErrorAndDispatchToCard()
+  Initialized : on PATTERN_NOT_VALID / handleErrorAndDispatchToCard()
+  Initialized : on SET_FRAME_COUNT_PER_PATTERN / setFrameCountPerPattern()
+  Initialized : on SET_BYTE_COUNT_PER_FRAME / setByteCountPerFrame()
+  state Inactive {
+    Inactive : exit / armFindCardTimer()
+  }
+  [*] --> Inactive
+  state AnalyzingCard {
+  }
+  Inactive --> AnalyzingCard : BEGIN_PLAYING_PATTERN /\ndeferBeginPattern()
+  Inactive --> AnalyzingCard : BEGIN_SHOWING_PATTERN_FRAME /\ndeferBeginPattern()
+  AnalyzingCard --> Inactive : CARD_NOT_FOUND /\nhandleErrorAndDispatchToCard()
+  state CardAnalyzed {
+    CardAnalyzed : entry / recallBeginPattern()
+    CardAnalyzed : exit / dispatchFindPatternToCard()
+  }
+  AnalyzingCard --> CardAnalyzed : FILENAME_SORT_SUCCESS /\ndispatchToCard()
+  state DisplayingPattern <<nested1>> {
+    state WaitingToPlayPattern {
+    }
+    state PlayingPattern <<nested2>> {
+      PlayingPattern : entry / armTimers()
+      PlayingPattern : exit / disarmTimersAndCleanup()
+      PlayingPattern : on FRAME_RATE_TIMEOUT / deferFrameRate()
+      PlayingPattern : on RUNTIME_DURATION_TIMEOUT / endRuntimeDuration()
+      PlayingPattern : on GOT_ANALOG_INPUT / updateAnalogClosedLoopValues()
+      state PP_ReadingFrameFromFile {
+        PP_ReadingFrameFromFile : entry / readFrameFromFile()
+      }
+      [*] --> PP_ReadingFrameFromFile : / initializeFrameIndex()
+      state WaitingToDisplayFrame {
+        WaitingToDisplayFrame : entry / recallFrameRate()
+      }
+      PP_ReadingFrameFromFile --> WaitingToDisplayFrame : FRAME_READ_FROM_FILE /\nsaveFrameReference()
+      state PP_DecodingFrame {
+        PP_DecodingFrame : entry / decodeFrame()
+      }
+      WaitingToDisplayFrame --> PP_DecodingFrame : FRAME_RATE_TIMEOUT /\ndeactivateDisplay()
+      state PP_FillingFrameBufferWithDecodedFrame {
+        PP_FillingFrameBufferWithDecodedFrame : entry / fillFrameBufferWithDecodedFrame()
+      }
+      PP_DecodingFrame --> PP_FillingFrameBufferWithDecodedFrame : FRAME_DECODED
+      state PP_DisplayingFrame {
+        PP_DisplayingFrame : entry / displayFrame()
+      }
+      PP_FillingFrameBufferWithDecodedFrame --> PP_DisplayingFrame : FRAME_FILLED
+      PP_DisplayingFrame --> PP_ReadingFrameFromFile : FRAME_TRANSFERRED /\nsetupNextFrame()
+    }
+    WaitingToPlayPattern --> PlayingPattern : PATTERN_VALID /\nsetGrayscaleAndDispatchToCard()
+    state WaitingToShowPatternFrame {
+    }
+    state ShowingPatternFrame <<nested2>> {
+      ShowingPatternFrame : exit / deleteFrameReference()
+      state SPF_ReadingFrameFromFile {
+        SPF_ReadingFrameFromFile : entry / readFrameFromFile()
+      }
+      [*] --> SPF_ReadingFrameFromFile : / deactivateDisplay()
+      state SPF_DecodingFrame {
+        SPF_DecodingFrame : entry / decodeFrame()
+      }
+      SPF_ReadingFrameFromFile --> SPF_DecodingFrame : FRAME_READ_FROM_FILE /\nsaveFrameReference()
+    }
+    WaitingToShowPatternFrame --> ShowingPatternFrame : PATTERN_VALID /\nsetGrayscaleAndDispatchToCard()
+  }
+  CardAnalyzed --> WaitingToPlayPattern : BEGIN_PLAYING_PATTERN
+  CardAnalyzed --> WaitingToShowPatternFrame : BEGIN_SHOWING_PATTERN_FRAME
+  DisplayingPattern --> CardAnalyzed : END_PLAYING_PATTERN /\ndispatchToCard()
+  DisplayingPattern --> CardAnalyzed : END_SHOWING_PATTERN_FRAME /\ndispatchToCard()
+}
+[*] --> Initialized : initializeAndSubscribe()
+@enduml
+#+END_SRC
 #+html: <img src="./documentation/images/state-diagram-pattern.png">
 
 **** Card
