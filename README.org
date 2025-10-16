@@ -165,6 +165,7 @@ Panel update order for each panel in an display:
 #+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-watchdog.png :results none
 @startuml
 !theme spacelab
+skinparam backgroundColor #808080
 state Feeding {
   Feeding : entry / armWatchdogTimer()
   Feeding : exit / disarmWatchdogTimer()
@@ -187,6 +188,7 @@ Feeding --> Resetting : RESET
 #+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-serial-command-interface.png :results none
 @startuml
 !theme spacelab
+skinparam backgroundColor #808080
 state Inactive {
 }
 [*] --> Inactive : initializeAndSubscribe()
@@ -245,6 +247,7 @@ Active --> Inactive : DEACTIVATE_SERIAL_COMMAND_INTERFACE
 #+BEGIN_SRC plantuml :file ./documentation/images/state-diagram-ethernet-command-interface.png :results none
 @startuml
 !theme spacelab
+skinparam backgroundColor #808080
 state Inactive {
 }
 [*] --> Inactive : initializeAndSubscribe()
