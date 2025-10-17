@@ -614,6 +614,18 @@ state Initialized <<nested0>> {
         SPF_DecodingFrame : entry / decodeFrame()
       }
       SPF_ReadingFrameFromFile --> SPF_DecodingFrame : FRAME_READ_FROM_FILE /\nsaveFrameReference()
+      state SPF_FillingFrameBufferWithDecodedFrame {
+        SPF_FillingFrameBufferWithDecodedFrame : entry / fillFrameBufferWithDecodedFrame()
+      }
+      SPF_DecodingFrame --> SPF_FillingFrameBufferWithDecodedFrame : FRAME_DECODED
+      state SPF_DisplayingFrame {
+        SPF_DisplayingFrame : entry / displayFrame()
+      }
+      SPF_FillingFrameBufferWithDecodedFrame --> SPF_DisplayingFrame : FRAME_FILLLED
+      state WaitingToDisplayNextFrame {
+      }
+      SPF_DisplayingFrame --> WaitingToDisplayNextFrame : FRAME_TRANSFERRED
+      WaitingToDisplayNextFrame --> SPF_ReadingFrameFromFile : UPDATE_PATTERN_FRAME /\nupdatePatternFrame()
     }
     WaitingToShowPatternFrame --> ShowingPatternFrame : PATTERN_VALID /\nsetGrayscaleAndDispatchToCard()
   }
@@ -625,9 +637,53 @@ state Initialized <<nested0>> {
 [*] --> Initialized : initializeAndSubscribe()
 @enduml
 #+END_SRC
+
 #+html: <img src="./documentation/images/state-diagram-pattern.png">
 
 **** Card
+
+#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-card.png :results none :exports none
+@startuml
+!theme spacelab
+skinparam backgroundColor #9F9F9F
+<style>
+.nested0 {
+  stateBody {
+    BackGroundColor #7F7F7F;
+  }
+}
+.nested1 {
+  stateBody {
+    BackGroundColor #5F5F5F;
+  }
+}
+.nested2 {
+  stateBody {
+    BackGroundColor #3F3F3F;
+  }
+}
+</style>
+state Initialized <<nested0>> {
+  Initialized : on PLAY_PATTERN / storePlayPatternParameters()
+  Initialized : on SHOW_PATTERN_FRAME / storeShowPatternParameters()
+  Initialized : on ANALOG_CLOSED_LOOP / storeAnalogClosedLoopParameters()
+  state WaitingToFindCard {
+  }
+  [*] --> WaitingToFindCard
+  state FindingCard {
+    FindingCard : entry / findCard()
+  }
+  WaitingToFindCard --> FindingCard : FIND_CARD
+  FindingCard --> WaitingToFindCard : CARD_NOT_FOUND /\npostAllOff()
+  state OpeningDirectory {
+    OpeningDirectory : entry / openDirectory()
+  }
+  FindingCard --> OpeningDirectory : CARD_FOUND
+  OpeningDirectory --> FindingCard : DIRECTORY_OPEN_FAILURE
+}
+[*] --> Initialized : initialize()
+@enduml
+#+END_SRC
 
 #+html: <img src="./documentation/images/state-diagram-card.png">
 
