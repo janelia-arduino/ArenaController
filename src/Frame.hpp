@@ -61,6 +61,7 @@ protected:
     Q_STATE_DECL(Initialized);
     Q_STATE_DECL(TransferringFrame);
     Q_STATE_DECL(TransferringPanelSet);
+    Q_STATE_DECL(FrameTransferred);
     Q_STATE_DECL(Inactive);
 }; // class Frame
 

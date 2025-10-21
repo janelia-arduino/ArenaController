@@ -234,6 +234,11 @@ analog_input_ = AnalogInput_getInstance();</code>
       </state_glyph>
      </state>
      <state name="WaitingForNewCommand">
+      <initial target="../4">
+       <initial_glyph conn="14,55,4,0,3">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../5">
        <tran_glyph conn="70,54,1,3,34">
         <action box="1,-2,32,3"/>
@@ -248,23 +253,26 @@ analog_input_ = AnalogInput_getInstance();</code>
       <state name="PlayingPattern">
        <tran trig="COMMAND_PROCESSED">
         <action brief="writeBinaryResponse()">FSP::SerialCommandInterface_writeBinaryResponse(this, e);</action>
-        <tran_glyph conn="17,56,3,-1,28">
+        <tran_glyph conn="26,56,3,-1,28">
          <action box="0,-2,21,4"/>
         </tran_glyph>
        </tran>
        <tran trig="PATTERN_FINISHED_PLAYING">
         <action brief="writePatternFinishedResponse()">FSP::SerialCommandInterface_writePatternFinishedResponse(this, e);</action>
-        <tran_glyph conn="17,60,3,-1,28">
+        <tran_glyph conn="26,60,3,-1,28">
          <action box="0,-2,29,4"/>
         </tran_glyph>
        </tran>
        <tran trig="PLAY_PATTERN_ERROR">
         <action brief="writePatternErrorResponse()">FSP::SerialCommandInterface_writePatternErrorResponse(this, e);</action>
-        <tran_glyph conn="17,64,3,-1,28">
+        <tran_glyph conn="26,64,3,-1,28">
          <action box="0,-2,24,4"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="17,51,33,17"/>
+       <state_glyph node="26,51,33,17"/>
+      </state>
+      <state name="Waiting">
+       <state_glyph node="10,58,8,6"/>
       </state>
       <state_glyph node="7,44,63,28"/>
      </state>
@@ -284,13 +292,13 @@ analog_input_ = AnalogInput_getInstance();</code>
         <action box="-1,-22,22,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="PLAY_PATTERN" target="../../4/2">
+      <tran trig="PLAY_PATTERN" target="../../4/3">
        <action brief="storePlayPatternParameters()">FSP::SerialCommandInterface_storePlayPatternParameters(this, e);</action>
-       <tran_glyph conn="67,85,0,1,-31,-17">
+       <tran_glyph conn="67,85,0,1,-31,-8">
         <action box="-21,-5,23,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="ANALOG_CLOSED_LOOP" target="../../4/2">
+      <tran trig="ANALOG_CLOSED_LOOP" target="../../4/3">
        <action brief="storeAnalogClosedLoopParameters()">FSP::SerialCommandInterface_storeAnalogClosedLoopParameters(this, e);</action>
        <tran_glyph conn="44,89,3,2,-6,-21">
         <action box="-5,-16,26,7"/>
@@ -303,6 +311,11 @@ analog_input_ = AnalogInput_getInstance();</code>
      <state name="ProcessingStreamCommand">
       <entry brief="armSerialTimerHighSpeed()">FSP::SerialCommandInterface_armSerialTimerHighSpeed(this, e);</entry>
       <exit brief="armSerialTimerLowSpeed()">FSP::SerialCommandInterface_armSerialTimerLowSpeed(this, e);</exit>
+      <initial target="../4">
+       <initial_glyph conn="88,101,4,0,3">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeBinaryResponse()">FSP::SerialCommandInterface_writeBinaryResponse(this, e);</action>
        <tran_glyph conn="102,80,0,1,-20,-32">
@@ -311,16 +324,16 @@ analog_input_ = AnalogInput_getInstance();</code>
       </tran>
       <tran trig="SERIAL_COMMAND_AVAILABLE">
        <action brief="updateStreamCommand()">FSP::SerialCommandInterface_updateStreamCommand(this, e);</action>
-       <choice>
+       <choice target="../../3">
         <guard brief="ifStreamCommandComplete()">FSP::SerialCommandInterface_ifStreamCommandComplete(this, e)</guard>
         <action brief="processStreamCommand()">FSP::SerialCommandInterface_processStreamCommand(this, e);</action>
-        <choice_glyph conn="101,94,5,-1,25">
+        <choice_glyph conn="101,94,5,0,24,14">
          <action box="1,0,23,4"/>
         </choice_glyph>
        </choice>
-       <choice>
+       <choice target="../../3">
         <guard brief="else"/>
-        <choice_glyph conn="101,94,4,-1,13">
+        <choice_glyph conn="101,94,4,3,19,3">
          <action box="1,9,10,2"/>
         </choice_glyph>
        </choice>
@@ -328,6 +341,12 @@ analog_input_ = AnalogInput_getInstance();</code>
         <action box="0,-2,25,5"/>
        </tran_glyph>
       </tran>
+      <state name="MidStreamCommand">
+       <state_glyph node="104,108,24,9"/>
+      </state>
+      <state name="WaitingForCommand">
+       <state_glyph node="81,104,17,8"/>
+      </state>
       <state_glyph node="77,80,54,40">
        <entry box="1,2,27,2"/>
        <exit box="1,4,30,4"/>
@@ -389,7 +408,7 @@ analog_input_ = AnalogInput_getInstance();</code>
       </tran_glyph>
      </tran>
      <state name="Inactive">
-      <tran trig="DISPLAY_FRAME" target="../../3/1">
+      <tran trig="DISPLAY_FRAME" target="../../3/2">
        <tran_glyph conn="41,20,2,0,10">
         <action box="1,1,34,2"/>
        </tran_glyph>
@@ -397,6 +416,11 @@ analog_input_ = AnalogInput_getInstance();</code>
       <state_glyph node="35,13,12,7"/>
      </state>
      <state name="Active">
+      <initial target="../2">
+       <initial_glyph conn="79,34,5,1,-4">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="DEACTIVATE_DISPLAY" target="../../2">
        <tran_glyph conn="7,29,3,3,-2,-14,30">
         <action box="5,-16,18,3"/>
@@ -519,6 +543,11 @@ analog_input_ = AnalogInput_getInstance();</code>
       <state_glyph node="21,39,28,10"/>
      </state>
      <state name="WaitingForNewCommand">
+      <initial target="../4">
+       <initial_glyph conn="30,64,4,0,2">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="SERIAL_COMMAND_AVAILABLE" target="../../6">
        <tran_glyph conn="77,73,1,3,28">
         <action box="2,-2,32,2"/>
@@ -533,23 +562,26 @@ analog_input_ = AnalogInput_getInstance();</code>
       <state name="PlayingPattern">
        <tran trig="COMMAND_PROCESSED">
         <action brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeBinaryResponse(this, e);</action>
-        <tran_glyph conn="27,64,3,-1,28">
+        <tran_glyph conn="43,64,3,-1,28">
          <action box="0,-2,22,4"/>
         </tran_glyph>
        </tran>
        <tran trig="PATTERN_FINISHED_PLAYING">
         <action brief="writePatternFinishedResponse()">FSP::EthernetCommandInterface_writePatternFinishedResponse(this, e);</action>
-        <tran_glyph conn="27,68,3,-1,28">
+        <tran_glyph conn="43,68,3,-1,28">
          <action box="0,-2,29,4"/>
         </tran_glyph>
        </tran>
        <tran trig="PLAY_PATTERN_ERROR">
         <action brief="writePatternErrorResponse()">FSP::EthernetCommandInterface_writePatternErrorResponse(this, e);</action>
-        <tran_glyph conn="27,72,3,-1,28">
+        <tran_glyph conn="43,72,3,-1,28">
          <action box="0,-2,25,4"/>
         </tran_glyph>
        </tran>
-       <state_glyph node="27,59,31,18"/>
+       <state_glyph node="43,59,31,18"/>
+      </state>
+      <state name="Waiting">
+       <state_glyph node="26,66,10,6"/>
       </state>
       <state_glyph node="21,55,56,24"/>
      </state>
@@ -583,15 +615,15 @@ analog_input_ = AnalogInput_getInstance();</code>
         <action box="-26,-2,21,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="PLAY_PATTERN" target="../../4/2">
+      <tran trig="PLAY_PATTERN" target="../../4/3">
        <action brief="storePlayPatternParameters()">FSP::EthernetCommandInterface_storePlayPatternParameters(this, e);</action>
-       <tran_glyph conn="79,87,0,1,-25,-21">
+       <tran_glyph conn="79,87,0,1,-25,-5">
         <action box="-21,-6,20,6"/>
        </tran_glyph>
       </tran>
-      <tran trig="ANALOG_CLOSED_LOOP" target="../../4/2">
+      <tran trig="ANALOG_CLOSED_LOOP" target="../../4/3">
        <action brief="storeAnalogClosedLoopParameters()">FSP::EthernetCommandInterface_storeAnalogClosedLoopParameters(this, e);</action>
-       <tran_glyph conn="58,90,3,2,-28,-13">
+       <tran_glyph conn="58,90,3,2,-2,-13">
         <action box="-27,-9,25,5"/>
        </tran_glyph>
       </tran>
@@ -615,6 +647,11 @@ analog_input_ = AnalogInput_getInstance();</code>
      <state name="ProcessingStreamCommand">
       <entry brief="armEthernetTimerHighSpeed()">FSP::EthernetCommandInterface_armEthernetTimerHighSpeed(this, e);</entry>
       <exit brief="armEthernetTimerLowSpeed()">FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(this, e);</exit>
+      <initial target="../3">
+       <initial_glyph conn="94,105,4,0,2">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeBinaryResponse(this, e);</action>
        <tran_glyph conn="89,85,0,1,-9,-12">
@@ -623,16 +660,16 @@ analog_input_ = AnalogInput_getInstance();</code>
       </tran>
       <tran trig="ETHERNET_COMMAND_AVAILABLE">
        <action brief="updateStreamCommand()">FSP::EthernetCommandInterface_updateStreamCommand(this, e);</action>
-       <choice>
+       <choice target="../../4">
         <guard brief="ifStreamCommandComplete()">FSP::EthernetCommandInterface_ifStreamCommandComplete(this, e)</guard>
         <action brief="processStreamCommand()">FSP::EthernetCommandInterface_processStreamCommand(this, e);</action>
-        <choice_glyph conn="107,100,5,-1,24">
+        <choice_glyph conn="107,100,5,0,24,12">
          <action box="2,-2,24,5"/>
         </choice_glyph>
        </choice>
-       <choice>
+       <choice target="../../4">
         <guard brief="else"/>
-        <choice_glyph conn="107,100,4,-1,8">
+        <choice_glyph conn="107,100,4,0,10,6,2">
          <action box="1,5,10,2"/>
         </choice_glyph>
        </choice>
@@ -640,17 +677,23 @@ analog_input_ = AnalogInput_getInstance();</code>
         <action box="0,-2,28,5"/>
        </tran_glyph>
       </tran>
-      <state_glyph node="87,85,48,29">
+      <state name="WaitingForCommand">
+       <state_glyph node="89,107,16,7"/>
+      </state>
+      <state name="MidStreamCommand">
+       <state_glyph node="108,112,25,10"/>
+      </state>
+      <state_glyph node="87,85,48,39">
        <entry box="1,2,27,2"/>
        <exit box="1,4,27,5"/>
       </state_glyph>
      </state>
-     <state_glyph node="15,28,126,94">
+     <state_glyph node="15,28,126,98">
       <entry box="1,2,24,2"/>
       <exit box="1,4,24,2"/>
      </state_glyph>
     </state>
-    <state_diagram size="154,127"/>
+    <state_diagram size="154,135"/>
    </statechart>
   </class>
   <class name="Frame" superclass="qpcpp::QActive">
@@ -732,11 +775,11 @@ analog_input_ = AnalogInput_getInstance();</code>
           <action box="1,0,26,2"/>
          </choice_glyph>
         </choice>
-        <choice>
+        <choice target="../../../4">
          <guard brief="else"/>
          <action brief="publishFrameTransferred()">FSP::Frame_publishFrameTransferred(this, e);</action>
-         <choice_glyph conn="43,104,4,-1,4,5">
-          <action box="6,3,18,6"/>
+         <choice_glyph conn="43,104,4,0,9">
+          <action box="1,3,18,6"/>
          </choice_glyph>
         </choice>
         <tran_glyph conn="38,99,2,-1,5,5">
@@ -748,7 +791,10 @@ analog_input_ = AnalogInput_getInstance();</code>
         <exit box="1,4,48,2"/>
        </state_glyph>
       </state>
-      <state_glyph node="10,76,71,38">
+      <state name="FrameTransferred">
+       <state_glyph node="38,113,16,7"/>
+      </state>
+      <state_glyph node="10,76,71,47">
        <entry box="1,2,10,2"/>
       </state_glyph>
      </state>
@@ -787,7 +833,7 @@ analog_input_ = AnalogInput_getInstance();</code>
        <entry box="1,2,9,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="6,5,85,115"/>
+     <state_glyph node="6,5,85,123"/>
     </state>
     <state_diagram size="97,129"/>
    </statechart>
@@ -986,6 +1032,11 @@ card_ = Card_getInstance();</code>
       </state_glyph>
      </state>
      <state name="DisplayingPattern">
+      <initial target="../3">
+       <initial_glyph conn="36,80,5,3,4">
+        <action box="0,-2,10,2"/>
+       </initial_glyph>
+      </initial>
       <tran trig="END_PLAYING_PATTERN" target="../../18">
        <action brief="dispatchToCard()">dispatchToCard(e);</action>
        <tran_glyph conn="58,73,0,2,-27">
@@ -999,7 +1050,7 @@ card_ = Card_getInstance();</code>
        </tran_glyph>
       </tran>
       <state name="WaitingToPlayPattern">
-       <tran trig="PATTERN_VALID" target="../../5">
+       <tran trig="PATTERN_VALID" target="../../6">
         <action brief="setGrayscaleAndDispatchToCard()">FSP::Pattern_setGrayscaleAndDispatchToCard(this, e);</action>
         <tran_glyph conn="50,83,2,0,4">
          <action box="1,0,26,4"/>
@@ -1074,7 +1125,7 @@ card_ = Card_getInstance();</code>
        </state_glyph>
       </state>
       <state name="WaitingToShowPatternFrame">
-       <tran trig="PATTERN_VALID" target="../../3">
+       <tran trig="PATTERN_VALID" target="../../4">
         <action brief="setGrayscaleAndDispatchToCard()">FSP::Pattern_setGrayscaleAndDispatchToCard(this, e);</action>
         <tran_glyph conn="85,83,2,0,4">
          <action box="1,0,25,4"/>
@@ -1192,12 +1243,12 @@ card_ = Card_getInstance();</code>
      <state name="CardAnalyzed">
       <entry brief="recallBeginPattern()">FSP::Pattern_recallBeginPattern(this, e);</entry>
       <exit brief="dispatchFindPatternToCard()">FSP::Pattern_dispatchFindPatternToCard(this, e);</exit>
-      <tran trig="BEGIN_PLAYING_PATTERN" target="../../16/2">
+      <tran trig="BEGIN_PLAYING_PATTERN" target="../../16/3">
        <tran_glyph conn="60,46,2,0,31">
         <action box="1,6,27,4"/>
        </tran_glyph>
       </tran>
-      <tran trig="BEGIN_SHOWING_PATTERN_FRAME" target="../../16/4">
+      <tran trig="BEGIN_SHOWING_PATTERN_FRAME" target="../../16/5">
        <tran_glyph conn="104,46,2,0,31">
         <action box="-28,2,31,5"/>
        </tran_glyph>

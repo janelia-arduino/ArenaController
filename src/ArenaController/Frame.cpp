@@ -72,6 +72,7 @@ Q_STATE_DEF(Frame, initial) {
     QS_FUN_DICTIONARY(&Frame::Initialized);
     QS_FUN_DICTIONARY(&Frame::TransferringFrame);
     QS_FUN_DICTIONARY(&Frame::TransferringPanelSet);
+    QS_FUN_DICTIONARY(&Frame::FrameTransferred);
     QS_FUN_DICTIONARY(&Frame::Inactive);
 
     return tran(&Initialized);
@@ -177,10 +178,22 @@ Q_STATE_DEF(Frame, TransferringPanelSet) {
             //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[else]}
             else {
                 FSP::Frame_publishFrameTransferred(this, e);
-                status_ = Q_RET_HANDLED;
+                status_ = tran(&FrameTransferred);
             }
             break;
         }
+        default: {
+            status_ = super(&TransferringFrame);
+            break;
+        }
+    }
+    return status_;
+}
+
+//${AOs::Frame::SM::Initialized::TransferringFram~::FrameTransferred} ........
+Q_STATE_DEF(Frame, FrameTransferred) {
+    QP::QState status_;
+    switch (e->sig) {
         default: {
             status_ = super(&TransferringFrame);
             break;

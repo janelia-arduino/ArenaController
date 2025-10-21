@@ -123,6 +123,11 @@ Q_STATE_DEF(Display, Inactive) {
 Q_STATE_DEF(Display, Active) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Display::SM::Initialized::Active::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&DisplayingFrame);
+            break;
+        }
         //${AOs::Display::SM::Initialized::Active::DEACTIVATE_DISPLAY}
         case DEACTIVATE_DISPLAY_SIG: {
             status_ = tran(&Inactive);

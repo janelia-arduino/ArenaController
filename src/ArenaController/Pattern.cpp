@@ -237,6 +237,11 @@ Q_STATE_DEF(Pattern, Inactive) {
 Q_STATE_DEF(Pattern, DisplayingPattern) {
     QP::QState status_;
     switch (e->sig) {
+        //${AOs::Pattern::SM::Initialized::DisplayingPatter~::initial}
+        case Q_INIT_SIG: {
+            status_ = tran(&WaitingToPlayPattern);
+            break;
+        }
         //${AOs::Pattern::SM::Initialized::DisplayingPatter~::END_PLAYING_PATTERN}
         case END_PLAYING_PATTERN_SIG: {
             dispatchToCard(e);
