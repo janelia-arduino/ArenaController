@@ -66,7 +66,7 @@ protected:
     Q_STATE_DECL(PlayingPattern);
     Q_STATE_DECL(Waiting);
     Q_STATE_DECL(CreatingServerConnection);
-    Q_STATE_DECL(Waiting);
+    Q_STATE_DECL(WaitingForSerialCommand);
     Q_STATE_DECL(ProcessingBinaryCommand);
     Q_STATE_DECL(ChoosingCommandProcessor);
     Q_STATE_DECL(ProcessingStreamCommand);

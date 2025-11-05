@@ -1971,6 +1971,14 @@ uint8_t FSP::processBinaryCommand(uint8_t const * command_buffer,
       QS_END()
       break;
     }
+    case GET_ETHERNET_IP_ADDRESS_CMD:
+    {
+      appendMessage(response, response_byte_count, BSP::getEthernetIpAddress());
+      QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
+        QS_STR("get-ethernet-ip-address command");
+      QS_END()
+      break;
+    }
     case SET_FRAME_POSITION_CMD:
     {
       uint16_t frame_index;

@@ -41,6 +41,10 @@ constexpr uint32_t spi_clock_speed = 4000000;
 
 constexpr uint8_t reset_pin = 34;
 
+// Ethernet Communication Interface
+// static const char *ethernet_static_url = "tcp://192.168.10.62:62222";
+const char *ethernet_dhcp_url = "tcp://0.0.0.0:62222";
+
 // frame
 constexpr uint8_t panel_count_per_frame_row_max_bsp = 5;
 constexpr uint8_t panel_count_per_frame_col_max_bsp = 12;
@@ -98,7 +102,8 @@ static usb_serial_class & serial_communication_interface_stream = Serial;
 static HardwareSerialIMXRT & qs_serial_stream = Serial1;
 
 // Ethernet Communication Interface
-static const char *s_lsn = "tcp://192.168.10.62:62222";
+static char ethernet_ip_address[constants::ethernet_ip_address_length_max] = "";
+static bool ip_announced = false;
 
 // Log
 static char log_str[constants::string_log_length_max];
@@ -274,49 +279,63 @@ void BSP::pollEthernet()
 
 void sfn(struct mg_connection *c, int ev, void *ev_data)
 {
-  if (ev == MG_EV_OPEN && c->is_listening == 1)
+  switch (ev)
   {
-    MG_INFO(("SERVER is listening"));
-  }
-  else if (ev == MG_EV_ACCEPT)
-  {
-    MG_INFO(("SERVER accepted a connection"));
-  }
-  else if (ev == MG_EV_READ)
-  {
-    struct mg_iobuf *r = &c->recv;
-    MG_INFO(("SERVER got data: %lu bytes", r->len));
+    case MG_EV_OPEN:
+      if (c->is_listening == 1)
+      {
+        MG_INFO(("SERVER is listening"));
+      }
+      break;
 
-    CommandEvt *cev = Q_NEW(CommandEvt, ETHERNET_COMMAND_AVAILABLE_SIG);
-    cev->connection = c;
-    cev->binary_command = r->buf;
-    cev->binary_command_byte_count = r->len;
-    QF::PUBLISH(cev, &constants::bsp_id);
-  }
-  else if (ev == MG_EV_WRITE)
-  {
-    MG_INFO(("MG_EV_WRITE"));
-  }
-  else if (ev == MG_EV_CLOSE)
-  {
-    MG_INFO(("SERVER disconnected"));
-  }
-  else if (ev == MG_EV_ERROR)
-  {
-    MG_INFO(("SERVER error: %s", (char *) ev_data));
-  }
-  else if (ev == MG_EV_POLL)
-  {
-  }
-  else
-  {
-    MG_INFO(("event %lu", ev));
+    case MG_EV_ACCEPT:
+      MG_INFO(("SERVER accepted a connection"));
+      break;
+
+    case MG_EV_READ:
+    {
+      struct mg_iobuf *r = &c->recv;
+      MG_INFO(("SERVER got data: %lu bytes", r->len));
+
+      CommandEvt *cev = Q_NEW(CommandEvt, ETHERNET_COMMAND_AVAILABLE_SIG);
+      cev->connection = c;
+      cev->binary_command = r->buf;
+      cev->binary_command_byte_count = r->len;
+      QF::PUBLISH(cev, &constants::bsp_id);
+      break;
+    }
+
+    case MG_EV_WRITE:
+      MG_INFO(("MG_EV_WRITE"));
+      break;
+
+    case MG_EV_CLOSE:
+      MG_INFO(("SERVER disconnected"));
+      break;
+
+    case MG_EV_ERROR:
+      MG_INFO(("SERVER error: %s", (char *) ev_data));
+      break;
+
+    case MG_EV_POLL:
+      // DHCP done? g_mgr.ifp points to struct mg_tcpip_if
+      if (!bsp_global::ip_announced && g_mgr.ifp && g_mgr.ifp->ip != 0)
+      {
+        mg_snprintf(bsp_global::ethernet_ip_address, sizeof(bsp_global::ethernet_ip_address), "%M", mg_print_ip, &g_mgr.ifp->ip);
+        MG_INFO(("DHCP IP: %s", bsp_global::ethernet_ip_address));
+        bsp_global::ip_announced = true;
+      }
+      break;
+
+    default:
+      MG_INFO(("event %lu", ev));
+      break;
   }
 }
 
 bool BSP::createEthernetServerConnection()
 {
-  struct mg_connection *c = mg_listen(&g_mgr, bsp_global::s_lsn, sfn, NULL);
+  struct mg_connection *c = mg_listen(&g_mgr, constants::ethernet_dhcp_url, sfn, NULL);
   if (c == NULL)
   {
     MG_INFO(("SERVER cannot open a connection"));
@@ -333,6 +352,11 @@ void BSP::writeEthernetBinaryResponse(void * const connection,
   struct mg_iobuf *r = &c->recv;
   mg_send(c, response, response_byte_count);
   r->len = 0;
+}
+
+const char * BSP::getEthernetIpAddress()
+{
+  return bsp_global::ethernet_ip_address;
 }
 
 void transferPanelCompleteCallback(EventResponderRef event_responder)

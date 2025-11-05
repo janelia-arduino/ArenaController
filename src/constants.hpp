@@ -36,6 +36,8 @@ constexpr uint32_t serial_timer_frequency_low_speed_hz = 100;
 constexpr uint32_t serial_timer_frequency_high_speed_hz = 500;
 
 // Ethernet Communication Interface
+constexpr uint8_t mac_address_size = 6;
+constexpr uint8_t ethernet_ip_address_length_max = 32;
 constexpr uint16_t ethernet_server_port = 62222;
 constexpr uint32_t ethernet_timer_frequency_low_speed_hz = 100;
 constexpr uint32_t ethernet_timer_frequency_high_speed_hz = 1000;
@@ -60,9 +62,6 @@ constexpr uint16_t char_count_runtime_duration_str = 20;
 
 // Log
 constexpr uint16_t string_log_length_max = 512;
-
-// Ethernet Settings
-constexpr uint8_t mac_address_size = 6;
 
 // Conversions
 constexpr uint32_t milliseconds_per_second = 1000;

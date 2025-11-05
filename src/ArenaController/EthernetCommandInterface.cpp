@@ -77,7 +77,7 @@ Q_STATE_DEF(EthernetCommandInterface, initial) {
     QS_FUN_DICTIONARY(&EthernetCommandInterface::PlayingPattern);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::CreatingServerConnection);
-    QS_FUN_DICTIONARY(&EthernetCommandInterface::Waiting);
+    QS_FUN_DICTIONARY(&EthernetCommandInterface::WaitingForSerialCommand);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingBinaryCommand);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ChoosingCommandProcessor);
     QS_FUN_DICTIONARY(&EthernetCommandInterface::ProcessingStreamCommand);
@@ -178,7 +178,7 @@ Q_STATE_DEF(EthernetCommandInterface, WaitingForNewCommand) {
         }
         //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::SERIAL_COMMAND_AVAILABLE}
         case SERIAL_COMMAND_AVAILABLE_SIG: {
-            status_ = tran(&Waiting);
+            status_ = tran(&WaitingForSerialCommand);
             break;
         }
         //${AOs::EthernetCommandI~::SM::Active::WaitingForNewCom~::ETHERNET_COMMAND_AVAILABLE}
@@ -260,11 +260,11 @@ Q_STATE_DEF(EthernetCommandInterface, CreatingServerConnection) {
     return status_;
 }
 
-//${AOs::EthernetCommandI~::SM::Active::Waiting} .............................
-Q_STATE_DEF(EthernetCommandInterface, Waiting) {
+//${AOs::EthernetCommandI~::SM::Active::WaitingForSerialCommand} .............
+Q_STATE_DEF(EthernetCommandInterface, WaitingForSerialCommand) {
     QP::QState status_;
     switch (e->sig) {
-        //${AOs::EthernetCommandI~::SM::Active::Waiting::COMMAND_PROCESSED}
+        //${AOs::EthernetCommandI~::SM::Active::WaitingForSerial~::COMMAND_PROCESSED}
         case COMMAND_PROCESSED_SIG: {
             status_ = tran(&WaitingForNewCommand);
             break;

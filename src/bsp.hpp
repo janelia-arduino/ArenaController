@@ -30,6 +30,7 @@ struct BSP {
   static void writeEthernetBinaryResponse(void * const connection,
     uint8_t response[AC::constants::byte_count_per_response_max],
     uint8_t response_byte_count);
+  static const char * getEthernetIpAddress();
 
   static void armRefreshTimer(uint32_t frequency_hz,
     void (*isr)());
