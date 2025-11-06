@@ -1,25 +1,27 @@
-- [Repository Information](#orge0da812)
-- [Modular LED Display](#orgd90d016)
-- [Development](#org1c5b0e8)
+- [Repository Information](#org316a5a3)
+- [Modular LED Display](#orgcfd698a)
+- [Development](#org15bf9fd)
 
     <!-- This file is generated automatically from metadata -->
     <!-- File edits may be overwritten! -->
 
 
-<a id="orge0da812"></a>
+<a id="org316a5a3"></a>
 
 # Repository Information
 
 -   Library Name: ArenaController
 -   Description: Arduino library for communicating with the Reiser Lab Modular LED panels display arena.
--   Version: 5.0.0
+-   Version: 5.0.1
 -   Panel Version: G4 v1.9
--   Release Date: 2025-10-17
+-   Release Date: 2025-11-06
 -   Creation Date: 2023-08-16
 -   License: GPL-3.0
 -   URL: <https://github.com/janelia-arduino/ArenaController>
 -   Author: Peter Polidoro
--   Email: peter@polidoro.io
+-   Author Email: peter@polidoro.io
+-   Maintainer: Peter Polidoro
+-   Maintainer Email: peter@polidoro.io
 -   Copyright: 2025 Howard Hughes Medical Institute
 -   References:
     -   <https://github.com/janelia-python/arena_interface_python>
@@ -34,7 +36,7 @@
     -   <https://www.adafruit.com/product/1083>
 
 
-<a id="orgd90d016"></a>
+<a id="orgcfd698a"></a>
 
 # Modular LED Display
 
@@ -217,7 +219,7 @@ An display is a set of regions arranged in rows and columns.
 ## Command Set
 
 
-<a id="org1c5b0e8"></a>
+<a id="org15bf9fd"></a>
 
 # Development
 
