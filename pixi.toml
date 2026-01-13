@@ -1,10 +1,10 @@
-[project]
+[workspace]
 authors = ["Frank Loesche <loeschef@janelia.hhmi.org>"]
 channels = ["conda-forge"]
 description = "Add a short description here"
 name = "G4.1-ArenaController"
 platforms = ["linux-64"]
-version = "0.1.0"
+version = "5.0.1"
 
 [tasks]
 

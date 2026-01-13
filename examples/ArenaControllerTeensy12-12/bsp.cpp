@@ -666,7 +666,7 @@ bool BSP::sortPatternFilenames()
     if (bsp_global::pattern_file.isDir())
     {
       bsp_global::pattern_file.close();
-      break;
+      continue;
     }
     char * pattern_filename_buffer = bsp_global::pattern_filename_array[bsp_global::pattern_file_count++];
     bsp_global::pattern_file.getName(pattern_filename_buffer, constants::pattern_filename_str_len_max);
