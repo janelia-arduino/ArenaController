@@ -12,9 +12,9 @@
 
 -   Library Name: ArenaController
 -   Description: Arduino library for communicating with the Reiser Lab Modular LED panels display arena.
--   Version: 5.0.1
+-   Version: 5.0.2
 -   Panel Version: G4 v1.9
--   Release Date: 2025-11-06
+-   Release Date: 2025-01-13
 -   Creation Date: 2023-08-16
 -   License: GPL-3.0
 -   URL: <https://github.com/janelia-arduino/ArenaController>
@@ -22,7 +22,7 @@
 -   Author Email: peter@polidoro.io
 -   Maintainer: Peter Polidoro
 -   Maintainer Email: peter@polidoro.io
--   Copyright: 2025 Howard Hughes Medical Institute
+-   Copyright: 2026 Howard Hughes Medical Institute
 -   References:
     -   <https://github.com/janelia-python/arena_interface_python>
     -   <https://reiserlab.github.io/Modular-LED-Display/>

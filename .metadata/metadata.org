@@ -21,7 +21,7 @@ ArenaController
 
 #+NAME: library-version
 #+BEGIN_SRC text :exports none :noweb yes
-5.0.1
+5.0.2
 #+END_SRC
 
 #+NAME: panel-version
