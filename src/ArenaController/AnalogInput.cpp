@@ -35,88 +35,106 @@ using namespace QP;
 //============================================================================
 //$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Check for the minimum required QP version
-#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
+#if (QP_VERSION < 690U)                                                       \
+    || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
 #error qpcpp version 6.9.0 or higher required
 #endif
 //$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //$define${Shared::AnalogInput_getInstance} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${Shared::AnalogInput_getInstance} .........................................
-QP::QHsm* AnalogInput_getInstance() { return &AnalogInput::instance; }
+QP::QHsm *
+AnalogInput_getInstance ()
+{
+  return &AnalogInput::instance;
+}
 
-}  // namespace AC
+} // namespace AC
 //$enddef${Shared::AnalogInput_getInstance} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of the HSM
 //$define${AOs::AnalogInput} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::AnalogInput} ........................................................
 AnalogInput AnalogInput::instance;
 
 //${AOs::AnalogInput::AnalogInput} ...........................................
-AnalogInput::AnalogInput() : QHsm(&initial) {}
+AnalogInput::AnalogInput () : QHsm (&initial) {}
 
 //${AOs::AnalogInput::SM} ....................................................
-Q_STATE_DEF(AnalogInput, initial) {
+Q_STATE_DEF (AnalogInput, initial)
+{
   //${AOs::AnalogInput::SM::initial}
-  FSP::AnalogInput_initialize(this, e);
+  FSP::AnalogInput_initialize (this, e);
 
-  QS_FUN_DICTIONARY(&AnalogInput::Uninitialized);
-  QS_FUN_DICTIONARY(&AnalogInput::Initialized);
+  QS_FUN_DICTIONARY (&AnalogInput::Uninitialized);
+  QS_FUN_DICTIONARY (&AnalogInput::Initialized);
 
-  return tran(&Uninitialized);
+  return tran (&Uninitialized);
 }
 
 //${AOs::AnalogInput::SM::Uninitialized} .....................................
-Q_STATE_DEF(AnalogInput, Uninitialized) {
+Q_STATE_DEF (AnalogInput, Uninitialized)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::AnalogInput::SM::Uninitialized::ANALOG_INPUT_INITIALIZED}
-    case ANALOG_INPUT_INITIALIZED_SIG: {
-      status_ = tran(&Initialized);
-      break;
-    }
+    case ANALOG_INPUT_INITIALIZED_SIG:
+      {
+        status_ = tran (&Initialized);
+        break;
+      }
     //${AOs::AnalogInput::SM::Uninitialized::INITIALIZE_ANALOG_INPUT}
-    case INITIALIZE_ANALOG_INPUT_SIG: {
-      FSP::AnalogInput_initializeInput(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
+    case INITIALIZE_ANALOG_INPUT_SIG:
+      {
+        FSP::AnalogInput_initializeInput (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    default:
+      {
+        status_ = super (&top);
+        break;
+      }
     }
-    default: {
-      status_ = super(&top);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::AnalogInput::SM::Initialized} .......................................
-Q_STATE_DEF(AnalogInput, Initialized) {
+Q_STATE_DEF (AnalogInput, Initialized)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::AnalogInput::SM::Initialized}
-    case Q_ENTRY_SIG: {
-      FSP::AnalogInput_enterInitialized(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::AnalogInput_enterInitialized (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::AnalogInput::SM::Initialized::GET_ANALOG_INPUT_TIMEOUT}
-    case GET_ANALOG_INPUT_TIMEOUT_SIG: {
-      FSP::AnalogInput_getInput(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
+    case GET_ANALOG_INPUT_TIMEOUT_SIG:
+      {
+        FSP::AnalogInput_getInput (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    default:
+      {
+        status_ = super (&top);
+        break;
+      }
     }
-    default: {
-      status_ = super(&top);
-      break;
-    }
-  }
   return status_;
 }
 
-}  // namespace AC
+} // namespace AC
 //$enddef${AOs::AnalogInput} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

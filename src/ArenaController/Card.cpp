@@ -35,312 +35,376 @@ using namespace QP;
 //============================================================================
 //$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Check for the minimum required QP version
-#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
+#if (QP_VERSION < 690U)                                                       \
+    || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
 #error qpcpp version 6.9.0 or higher required
 #endif
 //$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //$define${Shared::Card_getInstance} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${Shared::Card_getInstance} ................................................
-QP::QHsm* Card_getInstance() { return &Card::instance; }
+QP::QHsm *
+Card_getInstance ()
+{
+  return &Card::instance;
+}
 
-}  // namespace AC
+} // namespace AC
 //$enddef${Shared::Card_getInstance} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of the HSM
 //$define${AOs::Card} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::Card} ...............................................................
 Card Card::instance;
 
 //${AOs::Card::Card} .........................................................
-Card::Card() : QHsm(&initial) {}
+Card::Card () : QHsm (&initial) {}
 
 //${AOs::Card::SM} ...........................................................
-Q_STATE_DEF(Card, initial) {
+Q_STATE_DEF (Card, initial)
+{
   //${AOs::Card::SM::initial}
-  FSP::Card_initialize(this, e);
+  FSP::Card_initialize (this, e);
 
-  QS_FUN_DICTIONARY(&Card::Initialized);
-  QS_FUN_DICTIONARY(&Card::WaitingToFindCard);
-  QS_FUN_DICTIONARY(&Card::FindingCard);
-  QS_FUN_DICTIONARY(&Card::FileOpened);
-  QS_FUN_DICTIONARY(&Card::CheckingFile);
-  QS_FUN_DICTIONARY(&Card::CheckingPattern);
-  QS_FUN_DICTIONARY(&Card::DisplayingPattern);
-  QS_FUN_DICTIONARY(&Card::WaitingToFindPattern);
-  QS_FUN_DICTIONARY(&Card::OpeningDirectory);
-  QS_FUN_DICTIONARY(&Card::SortingFilenames);
+  QS_FUN_DICTIONARY (&Card::Initialized);
+  QS_FUN_DICTIONARY (&Card::WaitingToFindCard);
+  QS_FUN_DICTIONARY (&Card::FindingCard);
+  QS_FUN_DICTIONARY (&Card::FileOpened);
+  QS_FUN_DICTIONARY (&Card::CheckingFile);
+  QS_FUN_DICTIONARY (&Card::CheckingPattern);
+  QS_FUN_DICTIONARY (&Card::DisplayingPattern);
+  QS_FUN_DICTIONARY (&Card::WaitingToFindPattern);
+  QS_FUN_DICTIONARY (&Card::OpeningDirectory);
+  QS_FUN_DICTIONARY (&Card::SortingFilenames);
 
-  return tran(&Initialized);
+  return tran (&Initialized);
 }
 
 //${AOs::Card::SM::Initialized} ..............................................
-Q_STATE_DEF(Card, Initialized) {
+Q_STATE_DEF (Card, Initialized)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::initial}
-    case Q_INIT_SIG: {
-      status_ = tran(&WaitingToFindCard);
-      break;
-    }
+    case Q_INIT_SIG:
+      {
+        status_ = tran (&WaitingToFindCard);
+        break;
+      }
     //${AOs::Card::SM::Initialized::PLAY_PATTERN}
-    case PLAY_PATTERN_SIG: {
-      FSP::Card_storePlayPatternParameters(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case PLAY_PATTERN_SIG:
+      {
+        FSP::Card_storePlayPatternParameters (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::SHOW_PATTERN_FRAME}
-    case SHOW_PATTERN_FRAME_SIG: {
-      FSP::Card_storeShowPatternFrameParameters(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case SHOW_PATTERN_FRAME_SIG:
+      {
+        FSP::Card_storeShowPatternFrameParameters (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::ANALOG_CLOSED_LOOP}
-    case ANALOG_CLOSED_LOOP_SIG: {
-      FSP::Card_storeAnalogClosedLoopParameters(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
+    case ANALOG_CLOSED_LOOP_SIG:
+      {
+        FSP::Card_storeAnalogClosedLoopParameters (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    default:
+      {
+        status_ = super (&top);
+        break;
+      }
     }
-    default: {
-      status_ = super(&top);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::WaitingToFindCard} ...........................
-Q_STATE_DEF(Card, WaitingToFindCard) {
+Q_STATE_DEF (Card, WaitingToFindCard)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::WaitingToFindCar~::FIND_CARD}
-    case FIND_CARD_SIG: {
-      status_ = tran(&FindingCard);
-      break;
+    case FIND_CARD_SIG:
+      {
+        status_ = tran (&FindingCard);
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::FindingCard} .................................
-Q_STATE_DEF(Card, FindingCard) {
+Q_STATE_DEF (Card, FindingCard)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::FindingCard}
-    case Q_ENTRY_SIG: {
-      FSP::Card_findCard(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Card_findCard (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::FindingCard::CARD_NOT_FOUND}
-    case CARD_NOT_FOUND_SIG: {
-      FSP::Card_postAllOff(this, e);
-      status_ = tran(&WaitingToFindCard);
-      break;
-    }
+    case CARD_NOT_FOUND_SIG:
+      {
+        FSP::Card_postAllOff (this, e);
+        status_ = tran (&WaitingToFindCard);
+        break;
+      }
     //${AOs::Card::SM::Initialized::FindingCard::CARD_FOUND}
-    case CARD_FOUND_SIG: {
-      status_ = tran(&OpeningDirectory);
-      break;
+    case CARD_FOUND_SIG:
+      {
+        status_ = tran (&OpeningDirectory);
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::FileOpened} ..................................
-Q_STATE_DEF(Card, FileOpened) {
+Q_STATE_DEF (Card, FileOpened)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::FileOpened}
-    case Q_ENTRY_SIG: {
-      FSP::Card_openFile(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Card_openFile (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened}
-    case Q_EXIT_SIG: {
-      FSP::Card_closeFile(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_EXIT_SIG:
+      {
+        FSP::Card_closeFile (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened::initial}
-    case Q_INIT_SIG: {
-      status_ = tran(&CheckingFile);
-      break;
-    }
+    case Q_INIT_SIG:
+      {
+        status_ = tran (&CheckingFile);
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened::END_PLAYING_PATTERN}
-    case END_PLAYING_PATTERN_SIG: {
-      status_ = tran(&WaitingToFindPattern);
-      break;
-    }
+    case END_PLAYING_PATTERN_SIG:
+      {
+        status_ = tran (&WaitingToFindPattern);
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened::END_SHOWING_PATTERN_FRAME}
-    case END_SHOWING_PATTERN_FRAME_SIG: {
-      status_ = tran(&WaitingToFindPattern);
-      break;
+    case END_SHOWING_PATTERN_FRAME_SIG:
+      {
+        status_ = tran (&WaitingToFindPattern);
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::FileOpened::CheckingFile} ....................
-Q_STATE_DEF(Card, CheckingFile) {
+Q_STATE_DEF (Card, CheckingFile)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::FileOpened::CheckingFile}
-    case Q_ENTRY_SIG: {
-      FSP::Card_checkFile(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Card_checkFile (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened::CheckingFile::FILE_NOT_VALID}
-    case FILE_NOT_VALID_SIG: {
-      FSP::Card_postAllOff(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case FILE_NOT_VALID_SIG:
+      {
+        FSP::Card_postAllOff (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened::CheckingFile::FILE_VALID}
-    case FILE_VALID_SIG: {
-      status_ = tran(&CheckingPattern);
-      break;
+    case FILE_VALID_SIG:
+      {
+        status_ = tran (&CheckingPattern);
+        break;
+      }
+    default:
+      {
+        status_ = super (&FileOpened);
+        break;
+      }
     }
-    default: {
-      status_ = super(&FileOpened);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::FileOpened::CheckingPattern} .................
-Q_STATE_DEF(Card, CheckingPattern) {
+Q_STATE_DEF (Card, CheckingPattern)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::FileOpened::CheckingPattern}
-    case Q_ENTRY_SIG: {
-      FSP::Card_checkPattern(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Card_checkPattern (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened::CheckingPattern::PATTERN_NOT_VALID}
-    case PATTERN_NOT_VALID_SIG: {
-      FSP::Card_postAllOff(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case PATTERN_NOT_VALID_SIG:
+      {
+        FSP::Card_postAllOff (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::FileOpened::CheckingPattern::PATTERN_VALID}
-    case PATTERN_VALID_SIG: {
-      status_ = tran(&DisplayingPattern);
-      break;
+    case PATTERN_VALID_SIG:
+      {
+        status_ = tran (&DisplayingPattern);
+        break;
+      }
+    default:
+      {
+        status_ = super (&FileOpened);
+        break;
+      }
     }
-    default: {
-      status_ = super(&FileOpened);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::FileOpened::DisplayingPattern} ...............
-Q_STATE_DEF(Card, DisplayingPattern) {
+Q_STATE_DEF (Card, DisplayingPattern)
+{
   QP::QState status_;
-  switch (e->sig) {
-    default: {
-      status_ = super(&FileOpened);
-      break;
+  switch (e->sig)
+    {
+    default:
+      {
+        status_ = super (&FileOpened);
+        break;
+      }
     }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::WaitingToFindPattern} ........................
-Q_STATE_DEF(Card, WaitingToFindPattern) {
+Q_STATE_DEF (Card, WaitingToFindPattern)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::WaitingToFindPat~::FIND_PATTERN}
-    case FIND_PATTERN_SIG: {
-      status_ = tran(&FileOpened);
-      break;
+    case FIND_PATTERN_SIG:
+      {
+        status_ = tran (&FileOpened);
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::OpeningDirectory} ............................
-Q_STATE_DEF(Card, OpeningDirectory) {
+Q_STATE_DEF (Card, OpeningDirectory)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::OpeningDirectory}
-    case Q_ENTRY_SIG: {
-      FSP::Card_openDirectory(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Card_openDirectory (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::OpeningDirectory::DIRECTORY_OPEN_FAILURE}
-    case DIRECTORY_OPEN_FAILURE_SIG: {
-      status_ = tran(&FindingCard);
-      break;
-    }
+    case DIRECTORY_OPEN_FAILURE_SIG:
+      {
+        status_ = tran (&FindingCard);
+        break;
+      }
     //${AOs::Card::SM::Initialized::OpeningDirectory::DIRECTORY_OPEN_SUCCESS}
-    case DIRECTORY_OPEN_SUCCESS_SIG: {
-      status_ = tran(&SortingFilenames);
-      break;
+    case DIRECTORY_OPEN_SUCCESS_SIG:
+      {
+        status_ = tran (&SortingFilenames);
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Card::SM::Initialized::SortingFilenames} ............................
-Q_STATE_DEF(Card, SortingFilenames) {
+Q_STATE_DEF (Card, SortingFilenames)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Card::SM::Initialized::SortingFilenames}
-    case Q_ENTRY_SIG: {
-      FSP::Card_sortFilenames(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Card_sortFilenames (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::SortingFilenames::FILENAME_SORT_SUCCESS}
-    case FILENAME_SORT_SUCCESS_SIG: {
-      status_ = tran(&WaitingToFindPattern);
-      break;
-    }
+    case FILENAME_SORT_SUCCESS_SIG:
+      {
+        status_ = tran (&WaitingToFindPattern);
+        break;
+      }
     //${AOs::Card::SM::Initialized::SortingFilenames::FILENAME_SORT_FAILURE}
-    case FILENAME_SORT_FAILURE_SIG: {
-      status_ = tran(&FindingCard);
-      break;
+    case FILENAME_SORT_FAILURE_SIG:
+      {
+        status_ = tran (&FindingCard);
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
-}  // namespace AC
+} // namespace AC
 //$enddef${AOs::Card} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

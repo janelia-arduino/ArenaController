@@ -38,23 +38,25 @@
 //============================================================================
 // generate declaration of the hsm
 //$declare${AOs::AnalogOutput} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::AnalogOutput} .......................................................
-class AnalogOutput : public QP::QHsm {
- public:
+class AnalogOutput : public QP::QHsm
+{
+public:
   static AnalogOutput instance;
 
- public:
-  AnalogOutput();
+public:
+  AnalogOutput ();
 
- protected:
-  Q_STATE_DECL(initial);
-  Q_STATE_DECL(Uninitialized);
-  Q_STATE_DECL(Initialized);
-};  // class AnalogOutput
+protected:
+  Q_STATE_DECL (initial);
+  Q_STATE_DECL (Uninitialized);
+  Q_STATE_DECL (Initialized);
+}; // class AnalogOutput
 
-}  // namespace AC
+} // namespace AC
 //$enddecl${AOs::AnalogOutput} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

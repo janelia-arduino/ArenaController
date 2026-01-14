@@ -38,25 +38,27 @@
 //============================================================================
 // generate declaration of the active object
 //$declare${AOs::Watchdog} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::Watchdog} ...........................................................
-class Watchdog : public QP::QActive {
- public:
+class Watchdog : public QP::QActive
+{
+public:
   static Watchdog instance;
   QP::QTimeEvt watchdog_time_evt_;
 
- public:
-  Watchdog();
+public:
+  Watchdog ();
 
- protected:
-  Q_STATE_DECL(initial);
-  Q_STATE_DECL(Feeding);
-  Q_STATE_DECL(Initialized);
-  Q_STATE_DECL(Resetting);
-};  // class Watchdog
+protected:
+  Q_STATE_DECL (initial);
+  Q_STATE_DECL (Feeding);
+  Q_STATE_DECL (Initialized);
+  Q_STATE_DECL (Resetting);
+}; // class Watchdog
 
-}  // namespace AC
+} // namespace AC
 //$enddecl${AOs::Watchdog} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

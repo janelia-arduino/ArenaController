@@ -37,55 +37,62 @@
 //$declare${Events} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 //${Events::UnsignedValueEvt} ................................................
-class UnsignedValueEvt : public QP::QEvt {
- public:
+class UnsignedValueEvt : public QP::QEvt
+{
+public:
   std::uint32_t value;
-};  // class UnsignedValueEvt
+}; // class UnsignedValueEvt
 
 //${Events::CommandEvt} ......................................................
-class CommandEvt : public QP::QEvt {
- public:
-  void* connection;
-  std::uint8_t const* binary_command;
+class CommandEvt : public QP::QEvt
+{
+public:
+  void *connection;
+  std::uint8_t const *binary_command;
   std::uint32_t binary_command_byte_count;
-};  // class CommandEvt
+}; // class CommandEvt
 
 //${Events::PlayPatternEvt} ..................................................
-class PlayPatternEvt : public QP::QEvt {
- public:
+class PlayPatternEvt : public QP::QEvt
+{
+public:
   std::uint16_t pattern_id;
   std::int16_t frame_rate;
   std::uint16_t runtime_duration;
   std::uint16_t frame_index;
-};  // class PlayPatternEvt
+}; // class PlayPatternEvt
 
 //${Events::FrameEvt} ........................................................
-class FrameEvt : public QP::QEvt {
- public:
+class FrameEvt : public QP::QEvt
+{
+public:
   std::uint8_t buffer[AC::constants::byte_count_per_pattern_frame_max];
-};  // class FrameEvt
+}; // class FrameEvt
 
 //${Events::ShowPatternFrameEvt} .............................................
-class ShowPatternFrameEvt : public QP::QEvt {
- public:
+class ShowPatternFrameEvt : public QP::QEvt
+{
+public:
   std::uint16_t pattern_id;
   std::uint16_t frame_index;
-};  // class ShowPatternFrameEvt
+}; // class ShowPatternFrameEvt
 
 //${Events::AnalogClosedLoopEvt} .............................................
-class AnalogClosedLoopEvt : public QP::QEvt {
- public:
+class AnalogClosedLoopEvt : public QP::QEvt
+{
+public:
   std::uint16_t pattern_id;
   std::int16_t gain;
   std::uint16_t runtime_duration;
   std::uint16_t frame_index;
-};  // class AnalogClosedLoopEvt
+}; // class AnalogClosedLoopEvt
 
 //${Events::SignedValueEvt} ..................................................
-class SignedValueEvt : public QP::QEvt {
- public:
+class SignedValueEvt : public QP::QEvt
+{
+public:
   std::int32_t value;
-};  // class SignedValueEvt
+}; // class SignedValueEvt
 //$enddecl${Events} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

@@ -38,11 +38,13 @@
 //============================================================================
 // generate declaration of the active object
 //$declare${AOs::Frame} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::Frame} ..............................................................
-class Frame : public QP::QActive {
- public:
+class Frame : public QP::QActive
+{
+public:
   static Frame instance;
   std::uint8_t panel_set_row_index_;
   std::uint8_t panel_set_col_index_;
@@ -50,21 +52,21 @@ class Frame : public QP::QActive {
   std::uint16_t buffer_position_;
   bool grayscale_;
   QP::QEQueue event_queue_;
-  FrameEvt const* frame_;
+  FrameEvt const *frame_;
 
- public:
-  Frame();
+public:
+  Frame ();
 
- protected:
-  Q_STATE_DECL(initial);
-  Q_STATE_DECL(Initialized);
-  Q_STATE_DECL(TransferringFrame);
-  Q_STATE_DECL(TransferringPanelSet);
-  Q_STATE_DECL(FrameTransferred);
-  Q_STATE_DECL(Inactive);
-};  // class Frame
+protected:
+  Q_STATE_DECL (initial);
+  Q_STATE_DECL (Initialized);
+  Q_STATE_DECL (TransferringFrame);
+  Q_STATE_DECL (TransferringPanelSet);
+  Q_STATE_DECL (FrameTransferred);
+  Q_STATE_DECL (Inactive);
+}; // class Frame
 
-}  // namespace AC
+} // namespace AC
 //$enddecl${AOs::Frame} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

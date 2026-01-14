@@ -38,36 +38,38 @@
 //============================================================================
 // generate declaration of the active object
 //$declare${AOs::Arena} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::Arena} ..............................................................
-class Arena : public QP::QActive {
- public:
+class Arena : public QP::QActive
+{
+public:
   static Arena instance;
   QP::QTimeEvt initialize_analog_time_evt_;
-  QP::QHsm* analog_output_;
-  QP::QHsm* analog_input_;
+  QP::QHsm *analog_output_;
+  QP::QHsm *analog_input_;
   QP::QTimeEvt analog_input_time_evt_;
 
- public:
-  Arena();
+public:
+  Arena ();
 
- private:
-  void dispatchToAnalogOutput(QP::QEvt const* e);
-  void dispatchToAnalogInput(QP::QEvt const* e);
+private:
+  void dispatchToAnalogOutput (QP::QEvt const *e);
+  void dispatchToAnalogInput (QP::QEvt const *e);
 
- protected:
-  Q_STATE_DECL(initial);
-  Q_STATE_DECL(ArenaOn);
-  Q_STATE_DECL(AllOn);
-  Q_STATE_DECL(AllOff);
-  Q_STATE_DECL(StreamingFrame);
-  Q_STATE_DECL(PlayingPattern);
-  Q_STATE_DECL(ShowingPatternFrame);
-  Q_STATE_DECL(AnalogClosedLoop);
-};  // class Arena
+protected:
+  Q_STATE_DECL (initial);
+  Q_STATE_DECL (ArenaOn);
+  Q_STATE_DECL (AllOn);
+  Q_STATE_DECL (AllOff);
+  Q_STATE_DECL (StreamingFrame);
+  Q_STATE_DECL (PlayingPattern);
+  Q_STATE_DECL (ShowingPatternFrame);
+  Q_STATE_DECL (AnalogClosedLoop);
+}; // class Arena
 
-}  // namespace AC
+} // namespace AC
 //$enddecl${AOs::Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

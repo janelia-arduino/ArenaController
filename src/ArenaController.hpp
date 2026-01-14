@@ -34,9 +34,10 @@
 #include "fsp.hpp"
 #include "qpcpp.hpp"
 
-namespace ArduinoInterface {
-void setup();
-void loop();
-}  // namespace ArduinoInterface
+namespace ArduinoInterface
+{
+void setup ();
+void loop ();
+} // namespace ArduinoInterface
 
 #endif

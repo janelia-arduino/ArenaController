@@ -38,42 +38,44 @@
 //============================================================================
 // generate declaration of the active object
 //$declare${AOs::EthernetCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::EthernetCommandInterface} ...........................................
-class EthernetCommandInterface : public QP::QActive {
- public:
+class EthernetCommandInterface : public QP::QActive
+{
+public:
   static EthernetCommandInterface instance;
   QP::QTimeEvt ethernet_time_evt_;
   std::uint8_t binary_response_[constants::byte_count_per_response_max];
   std::uint8_t binary_response_byte_count_;
-  void* connection_;
-  std::uint8_t const* binary_command_;
+  void *connection_;
+  std::uint8_t const *binary_command_;
   std::uint32_t binary_command_byte_count_;
   std::uint32_t binary_command_byte_count_claim_;
   std::uint16_t runtime_duration_ms_;
 
- public:
-  EthernetCommandInterface();
+public:
+  EthernetCommandInterface ();
 
- protected:
-  Q_STATE_DECL(initial);
-  Q_STATE_DECL(Inactive);
-  Q_STATE_DECL(Active);
-  Q_STATE_DECL(Unintitalized);
-  Q_STATE_DECL(WaitingForNewCommand);
-  Q_STATE_DECL(PlayingPattern);
-  Q_STATE_DECL(Waiting);
-  Q_STATE_DECL(CreatingServerConnection);
-  Q_STATE_DECL(WaitingForSerialCommand);
-  Q_STATE_DECL(ProcessingBinaryCommand);
-  Q_STATE_DECL(ChoosingCommandProcessor);
-  Q_STATE_DECL(ProcessingStreamCommand);
-  Q_STATE_DECL(WaitingForCommand);
-  Q_STATE_DECL(MidStreamCommand);
-};  // class EthernetCommandInterface
+protected:
+  Q_STATE_DECL (initial);
+  Q_STATE_DECL (Inactive);
+  Q_STATE_DECL (Active);
+  Q_STATE_DECL (Unintitalized);
+  Q_STATE_DECL (WaitingForNewCommand);
+  Q_STATE_DECL (PlayingPattern);
+  Q_STATE_DECL (Waiting);
+  Q_STATE_DECL (CreatingServerConnection);
+  Q_STATE_DECL (WaitingForSerialCommand);
+  Q_STATE_DECL (ProcessingBinaryCommand);
+  Q_STATE_DECL (ChoosingCommandProcessor);
+  Q_STATE_DECL (ProcessingStreamCommand);
+  Q_STATE_DECL (WaitingForCommand);
+  Q_STATE_DECL (MidStreamCommand);
+}; // class EthernetCommandInterface
 
-}  // namespace AC
+} // namespace AC
 //$enddecl${AOs::EthernetCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

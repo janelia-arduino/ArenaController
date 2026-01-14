@@ -38,41 +38,44 @@
 //============================================================================
 // generate declaration of the active object
 //$declare${AOs::SerialCommandInterface} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::SerialCommandInterface} .............................................
-class SerialCommandInterface : public QP::QActive {
- public:
+class SerialCommandInterface : public QP::QActive
+{
+public:
   QP::QTimeEvt serial_time_evt_;
   static SerialCommandInterface instance;
   char string_response_[constants::string_response_length_max];
   std::uint8_t binary_response_[constants::byte_count_per_response_max];
   std::uint8_t binary_response_byte_count_;
-  std::uint8_t binary_command_[AC::constants::byte_count_per_pattern_frame_max];
+  std::uint8_t
+      binary_command_[AC::constants::byte_count_per_pattern_frame_max];
   std::uint32_t binary_command_byte_count_;
   std::uint32_t binary_command_byte_count_claim_;
   std::uint16_t runtime_duration_ms_;
 
- public:
-  SerialCommandInterface();
+public:
+  SerialCommandInterface ();
 
- protected:
-  Q_STATE_DECL(initial);
-  Q_STATE_DECL(Active);
-  Q_STATE_DECL(Unitialized);
-  Q_STATE_DECL(WaitingForNewCommand);
-  Q_STATE_DECL(PlayingPattern);
-  Q_STATE_DECL(Waiting);
-  Q_STATE_DECL(WaitingForEthernetCommand);
-  Q_STATE_DECL(ProcessingBinaryCommand);
-  Q_STATE_DECL(ProcessingStreamCommand);
-  Q_STATE_DECL(MidStreamCommand);
-  Q_STATE_DECL(WaitingForCommand);
-  Q_STATE_DECL(ChoosingCommandProcessor);
-  Q_STATE_DECL(Inactive);
-};  // class SerialCommandInterface
+protected:
+  Q_STATE_DECL (initial);
+  Q_STATE_DECL (Active);
+  Q_STATE_DECL (Unitialized);
+  Q_STATE_DECL (WaitingForNewCommand);
+  Q_STATE_DECL (PlayingPattern);
+  Q_STATE_DECL (Waiting);
+  Q_STATE_DECL (WaitingForEthernetCommand);
+  Q_STATE_DECL (ProcessingBinaryCommand);
+  Q_STATE_DECL (ProcessingStreamCommand);
+  Q_STATE_DECL (MidStreamCommand);
+  Q_STATE_DECL (WaitingForCommand);
+  Q_STATE_DECL (ChoosingCommandProcessor);
+  Q_STATE_DECL (Inactive);
+}; // class SerialCommandInterface
 
-}  // namespace AC
+} // namespace AC
 //$enddecl${AOs::SerialCommandInterface} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

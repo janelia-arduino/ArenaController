@@ -36,215 +36,254 @@ using namespace QP;
 // generate definition of to opaque pointer to the AO
 //$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Check for the minimum required QP version
-#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
+#if (QP_VERSION < 690U)                                                       \
+    || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
 #error qpcpp version 6.9.0 or higher required
 #endif
 //$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //$define${Shared::AO_Frame} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${Shared::AO_Frame} ........................................................
-QP::QActive* const AO_Frame = &Frame::instance;
+QP::QActive *const AO_Frame = &Frame::instance;
 
-}  // namespace AC
+} // namespace AC
 //$enddef${Shared::AO_Frame} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
 // generate definition of the AO
 //$define${AOs::Frame} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::Frame} ..............................................................
 Frame Frame::instance;
 
 //${AOs::Frame::Frame} .......................................................
-Frame::Frame() : QActive(Q_STATE_CAST(&Frame::initial)) {}
+Frame::Frame () : QActive (Q_STATE_CAST (&Frame::initial)) {}
 
 //${AOs::Frame::SM} ..........................................................
-Q_STATE_DEF(Frame, initial) {
+Q_STATE_DEF (Frame, initial)
+{
   //${AOs::Frame::SM::initial}
-  FSP::Frame_initializeAndSubscribe(this, e);
+  FSP::Frame_initializeAndSubscribe (this, e);
 
-  QS_FUN_DICTIONARY(&Frame::Initialized);
-  QS_FUN_DICTIONARY(&Frame::TransferringFrame);
-  QS_FUN_DICTIONARY(&Frame::TransferringPanelSet);
-  QS_FUN_DICTIONARY(&Frame::FrameTransferred);
-  QS_FUN_DICTIONARY(&Frame::Inactive);
+  QS_FUN_DICTIONARY (&Frame::Initialized);
+  QS_FUN_DICTIONARY (&Frame::TransferringFrame);
+  QS_FUN_DICTIONARY (&Frame::TransferringPanelSet);
+  QS_FUN_DICTIONARY (&Frame::FrameTransferred);
+  QS_FUN_DICTIONARY (&Frame::Inactive);
 
-  return tran(&Initialized);
+  return tran (&Initialized);
 }
 
 //${AOs::Frame::SM::Initialized} .............................................
-Q_STATE_DEF(Frame, Initialized) {
+Q_STATE_DEF (Frame, Initialized)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Frame::SM::Initialized::initial}
-    case Q_INIT_SIG: {
-      status_ = tran(&Inactive);
-      break;
-    }
+    case Q_INIT_SIG:
+      {
+        status_ = tran (&Inactive);
+        break;
+      }
     //${AOs::Frame::SM::Initialized::FILL_FRAME_BUFFER_WITH_ALL_ON}
-    case FILL_FRAME_BUFFER_WITH_ALL_ON_SIG: {
-      FSP::Frame_defer(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case FILL_FRAME_BUFFER_WITH_ALL_ON_SIG:
+      {
+        FSP::Frame_defer (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::FILL_FRAME_BUFFER_WITH_DECODED_F~}
-    case FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG: {
-      FSP::Frame_defer(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG:
+      {
+        FSP::Frame_defer (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::SET_GRAYSCALE}
-    case SET_GRAYSCALE_SIG: {
-      FSP::Frame_defer(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case SET_GRAYSCALE_SIG:
+      {
+        FSP::Frame_defer (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::DEACTIVATE_DISPLAY}
-    case DEACTIVATE_DISPLAY_SIG: {
-      FSP::Frame_deleteFrameReference(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
+    case DEACTIVATE_DISPLAY_SIG:
+      {
+        FSP::Frame_deleteFrameReference (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    default:
+      {
+        status_ = super (&top);
+        break;
+      }
     }
-    default: {
-      status_ = super(&top);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Frame::SM::Initialized::TransferringFrame} ..........................
-Q_STATE_DEF(Frame, TransferringFrame) {
+Q_STATE_DEF (Frame, TransferringFrame)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Frame::SM::Initialized::TransferringFrame}
-    case Q_ENTRY_SIG: {
-      FSP::Frame_reset(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Frame_reset (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::TransferringFram~::initial}
-    case Q_INIT_SIG: {
-      status_ = tran(&TransferringPanelSet);
-      break;
-    }
+    case Q_INIT_SIG:
+      {
+        status_ = tran (&TransferringPanelSet);
+        break;
+      }
     //${AOs::Frame::SM::Initialized::TransferringFram~::FRAME_TRANSFERRED}
-    case FRAME_TRANSFERRED_SIG: {
-      status_ = tran(&Inactive);
-      break;
-    }
+    case FRAME_TRANSFERRED_SIG:
+      {
+        status_ = tran (&Inactive);
+        break;
+      }
     //${AOs::Frame::SM::Initialized::TransferringFram~::DEACTIVATE_DISPLAY}
-    case DEACTIVATE_DISPLAY_SIG: {
-      FSP::Frame_deleteFrameReference(this, e);
-      status_ = tran(&Inactive);
-      break;
+    case DEACTIVATE_DISPLAY_SIG:
+      {
+        FSP::Frame_deleteFrameReference (this, e);
+        status_ = tran (&Inactive);
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPanelSet} ....
-Q_STATE_DEF(Frame, TransferringPanelSet) {
+Q_STATE_DEF (Frame, TransferringPanelSet)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPanelSet}
-    case Q_ENTRY_SIG: {
-      FSP::Frame_beginTransferPanelSet(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Frame_beginTransferPanelSet (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPanelSet}
-    case Q_EXIT_SIG: {
-      FSP::Frame_endTransferPanelSet(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_EXIT_SIG:
+      {
+        FSP::Frame_endTransferPanelSet (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPane~::PANEL_SET_TRANSFERRED}
-    case PANEL_SET_TRANSFERRED_SIG: {
-      //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[ifFrameNotTransferred()]}
-      if (FSP::Frame_ifFrameNotTransferred(this, e)) {
-        status_ = tran(&TransferringPanelSet);
+    case PANEL_SET_TRANSFERRED_SIG:
+      {
+        //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[ifFrameNotTransferred()]}
+        if (FSP::Frame_ifFrameNotTransferred (this, e))
+          {
+            status_ = tran (&TransferringPanelSet);
+          }
+        //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[else]}
+        else
+          {
+            FSP::Frame_publishFrameTransferred (this, e);
+            status_ = tran (&FrameTransferred);
+          }
+        break;
       }
-      //${AOs::Frame::SM::Initialized::TransferringFram~::TransferringPane~::PANEL_SET_TRANSF~::[else]}
-      else {
-        FSP::Frame_publishFrameTransferred(this, e);
-        status_ = tran(&FrameTransferred);
+    default:
+      {
+        status_ = super (&TransferringFrame);
+        break;
       }
-      break;
     }
-    default: {
-      status_ = super(&TransferringFrame);
-      break;
-    }
-  }
   return status_;
 }
 
 //${AOs::Frame::SM::Initialized::TransferringFram~::FrameTransferred} ........
-Q_STATE_DEF(Frame, FrameTransferred) {
+Q_STATE_DEF (Frame, FrameTransferred)
+{
   QP::QState status_;
-  switch (e->sig) {
-    default: {
-      status_ = super(&TransferringFrame);
-      break;
+  switch (e->sig)
+    {
+    default:
+      {
+        status_ = super (&TransferringFrame);
+        break;
+      }
     }
-  }
   return status_;
 }
 
 //${AOs::Frame::SM::Initialized::Inactive} ...................................
-Q_STATE_DEF(Frame, Inactive) {
+Q_STATE_DEF (Frame, Inactive)
+{
   QP::QState status_;
-  switch (e->sig) {
+  switch (e->sig)
+    {
     //${AOs::Frame::SM::Initialized::Inactive}
-    case Q_ENTRY_SIG: {
-      FSP::Frame_recall(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case Q_ENTRY_SIG:
+      {
+        FSP::Frame_recall (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::Inactive::TRANSFER_FRAME}
-    case TRANSFER_FRAME_SIG: {
-      status_ = tran(&TransferringFrame);
-      break;
-    }
+    case TRANSFER_FRAME_SIG:
+      {
+        status_ = tran (&TransferringFrame);
+        break;
+      }
     //${AOs::Frame::SM::Initialized::Inactive::FILL_FRAME_BUFFER_WITH_ALL_ON}
-    case FILL_FRAME_BUFFER_WITH_ALL_ON_SIG: {
-      FSP::Frame_fillFrameBufferWithAllOn(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case FILL_FRAME_BUFFER_WITH_ALL_ON_SIG:
+      {
+        FSP::Frame_fillFrameBufferWithAllOn (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::Inactive::FILL_FRAME_BUFFER_WITH_DECODED_F~}
-    case FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG: {
-      FSP::Frame_fillFrameBufferWithDecodedFrame(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case FILL_FRAME_BUFFER_WITH_DECODED_FRAME_SIG:
+      {
+        FSP::Frame_fillFrameBufferWithDecodedFrame (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::Inactive::SET_GRAYSCALE}
-    case SET_GRAYSCALE_SIG: {
-      FSP::Frame_setGrayscale(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
-    }
+    case SET_GRAYSCALE_SIG:
+      {
+        FSP::Frame_setGrayscale (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Frame::SM::Initialized::Inactive::FRAME_FILLED}
-    case FRAME_FILLED_SIG: {
-      FSP::Frame_saveFrameReference(this, e);
-      status_ = Q_RET_HANDLED;
-      break;
+    case FRAME_FILLED_SIG:
+      {
+        FSP::Frame_saveFrameReference (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    default:
+      {
+        status_ = super (&Initialized);
+        break;
+      }
     }
-    default: {
-      status_ = super(&Initialized);
-      break;
-    }
-  }
   return status_;
 }
 
-}  // namespace AC
+} // namespace AC
 //$enddef${AOs::Frame} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

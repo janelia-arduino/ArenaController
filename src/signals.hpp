@@ -3,9 +3,11 @@
 
 #include "qpcpp.hpp"
 
-namespace AC {
+namespace AC
+{
 
-enum ArenaControllerSignals {
+enum ArenaControllerSignals
+{
   // commands from serial or ethernet interface
   DEACTIVATE_DISPLAY_SIG = QP::Q_USER_SIG,
   FRAME_FILLED_SIG,
@@ -23,7 +25,7 @@ enum ArenaControllerSignals {
   PATTERN_FINISHED_PLAYING_SIG,
   PLAY_PATTERN_ERROR_SIG,
 
-  MAX_PUB_SIG,  // the last published signal
+  MAX_PUB_SIG, // the last published signal
 
   // POST to Arena
   ALL_ON_SIG,
@@ -98,9 +100,9 @@ enum ArenaControllerSignals {
   PATTERN_VALID_SIG,
   PATTERN_NOT_VALID_SIG,
 
-  MAX_SIG  // the last signal
+  MAX_SIG // the last signal
 };
 
-}  // namespace AC
+} // namespace AC
 
-#endif  // SIGNALS_HPP
+#endif // SIGNALS_HPP

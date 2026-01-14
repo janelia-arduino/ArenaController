@@ -38,11 +38,13 @@
 //============================================================================
 // generate declaration of the active object
 //$declare${AOs::Pattern} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-namespace AC {
+namespace AC
+{
 
 //${AOs::Pattern} ............................................................
-class Pattern : public QP::QActive {
- public:
+class Pattern : public QP::QActive
+{
+public:
   static Pattern instance;
   QP::QTimeEvt frame_rate_time_evt_;
   std::uint16_t frame_rate_hz_;
@@ -52,46 +54,46 @@ class Pattern : public QP::QActive {
   QP::QEQueue frame_rate_queue_;
   bool positive_direction_;
   QP::QTimeEvt find_card_time_evt_;
-  FrameEvt const* frame_;
+  FrameEvt const *frame_;
   std::uint16_t frame_count_per_pattern_;
   std::uint16_t frame_index_;
-  QP::QHsm* card_;
+  QP::QHsm *card_;
   std::uint8_t grayscale_;
   QP::QEQueue begin_pattern_queue_;
   std::int16_t gain_;
   std::uint16_t timeout_counts_per_frame_index_;
   std::uint16_t timeout_count_;
 
- public:
-  Pattern();
+public:
+  Pattern ();
 
- private:
-  void dispatchToCard(QP::QEvt const* e);
+private:
+  void dispatchToCard (QP::QEvt const *e);
 
- protected:
-  Q_STATE_DECL(initial);
-  Q_STATE_DECL(Initialized);
-  Q_STATE_DECL(Inactive);
-  Q_STATE_DECL(DisplayingPattern);
-  Q_STATE_DECL(WaitingToPlayPattern);
-  Q_STATE_DECL(ShowingPatternFrame);
-  Q_STATE_DECL(SPF_ReadingFrameFromFile);
-  Q_STATE_DECL(SPF_DecodingFrame);
-  Q_STATE_DECL(SPF_FillingFrameBufferWithDecodedFrame);
-  Q_STATE_DECL(SPF_DisplayingFrame);
-  Q_STATE_DECL(WaitingToDisplayNextFrame);
-  Q_STATE_DECL(WaitingToShowPatternFrame);
-  Q_STATE_DECL(PlayingPattern);
-  Q_STATE_DECL(PP_DecodingFrame);
-  Q_STATE_DECL(PP_DisplayingFrame);
-  Q_STATE_DECL(WaitingToDisplayFrame);
-  Q_STATE_DECL(PP_FillingFrameBufferWithDecodedFrame);
-  Q_STATE_DECL(PP_ReadingFrameFromFile);
-  Q_STATE_DECL(AnalyzingCard);
-  Q_STATE_DECL(CardAnalyzed);
-};  // class Pattern
+protected:
+  Q_STATE_DECL (initial);
+  Q_STATE_DECL (Initialized);
+  Q_STATE_DECL (Inactive);
+  Q_STATE_DECL (DisplayingPattern);
+  Q_STATE_DECL (WaitingToPlayPattern);
+  Q_STATE_DECL (ShowingPatternFrame);
+  Q_STATE_DECL (SPF_ReadingFrameFromFile);
+  Q_STATE_DECL (SPF_DecodingFrame);
+  Q_STATE_DECL (SPF_FillingFrameBufferWithDecodedFrame);
+  Q_STATE_DECL (SPF_DisplayingFrame);
+  Q_STATE_DECL (WaitingToDisplayNextFrame);
+  Q_STATE_DECL (WaitingToShowPatternFrame);
+  Q_STATE_DECL (PlayingPattern);
+  Q_STATE_DECL (PP_DecodingFrame);
+  Q_STATE_DECL (PP_DisplayingFrame);
+  Q_STATE_DECL (WaitingToDisplayFrame);
+  Q_STATE_DECL (PP_FillingFrameBufferWithDecodedFrame);
+  Q_STATE_DECL (PP_ReadingFrameFromFile);
+  Q_STATE_DECL (AnalyzingCard);
+  Q_STATE_DECL (CardAnalyzed);
+}; // class Pattern
 
-}  // namespace AC
+} // namespace AC
 //$enddecl${AOs::Pattern} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif
