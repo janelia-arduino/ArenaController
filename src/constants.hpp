@@ -1,6 +1,8 @@
 #ifndef ARENA_CONTROLLER_CONSTANTS_HPP
 #define ARENA_CONTROLLER_CONSTANTS_HPP
 
+#include <Arduino.h>
+
 namespace AC {
 namespace constants {
 constexpr uint32_t ticks_per_second = 1000;
