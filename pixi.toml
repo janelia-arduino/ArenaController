@@ -1,10 +1,10 @@
 [workspace]
 authors = ["Peter Polidoro <peter@polidoro.io>"]
 channels = ["conda-forge"]
-description = "Add a short description here"
+description = "Arduino library for communicating with the Reiser Lab Modular LED panels display arena."
 name = "G4.1-ArenaController"
 platforms = ["linux-64"]
-version = "5.0.2"
+version = "5.1.0"
 
 [tasks]
 

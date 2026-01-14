@@ -832,15 +832,6 @@ BSP::openPatternDirectory ()
   return bsp_global::pattern_dir.open (constants::pattern_dir_str);
 }
 
-static bool
-isIgnoredName (const char *name)
-{
-  ￼ if (!strcmp (name, "System Volume Information")) return true;
-  if (name[0] == '.')
-    return true;
-  return false;
-}
-
 bool
 BSP::sortPatternFilenames ()
 {
