@@ -75,7 +75,7 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max][panel_co
 // pattern files
 constexpr uint8_t pattern_filename_str_len_max = 255;
 constexpr uint8_t pattern_filename_log_str_len_max = 25;
-constexpr uint16_t pattern_file_count_max = 20;
+constexpr uint16_t pattern_file_count_max = 1000;
 
 // analog
 constexpr adsGain_t analog_input_gain = GAIN_TWOTHIRDS;
@@ -657,19 +657,33 @@ bool BSP::openPatternDirectory()
   return bsp_global::pattern_dir.open(constants::pattern_dir_str);
 }
 
+static bool isIgnoredName(const char *name)
+{
+  if (!strcmp(name, "System Volume Information")) return true;
+  if (name[0] == '.') return true;
+  return false;
+}
+
 bool BSP::sortPatternFilenames()
 {
   bsp_global::pattern_dir.rewind();
   bsp_global::pattern_file_count = 0;
   while (bsp_global::pattern_file.openNext(&bsp_global::pattern_dir, O_RDONLY))
   {
-    if (bsp_global::pattern_file.isDir())
+    if ((bsp_global::pattern_file.isDir()) ||
+        (bsp_global::pattern_file_count >=
+         (constants::pattern_file_count_max - 1)))
     {
       bsp_global::pattern_file.close();
       continue;
     }
     char * pattern_filename_buffer = bsp_global::pattern_filename_array[bsp_global::pattern_file_count++];
-    bsp_global::pattern_file.getName(pattern_filename_buffer, constants::pattern_filename_str_len_max);
+    bsp_global::pattern_file.getName(pattern_filename_buffer,
+                                     constants::pattern_filename_str_len_max);
+    if (isIgnoredName(pattern_filename_buffer))
+      {
+      
+    }
     bsp_global::pattern_file.close();
   }
   QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
