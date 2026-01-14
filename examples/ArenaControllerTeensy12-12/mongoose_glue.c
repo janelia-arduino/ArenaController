@@ -5,23 +5,21 @@
 // Default mock implementation of the API callbacks
 
 #include "mongoose_glue.h"
+
 #include <Arduino.h>
 
-
 static struct leds s_leds = {false};
-void glue_get_leds(struct leds *data) {
+void glue_get_leds(struct leds* data) {
   *data = s_leds;  // Sync with your device
 }
-void glue_set_leds(struct leds *data) {
-  s_leds = *data; // Sync with your device
+void glue_set_leds(struct leds* data) {
+  s_leds = *data;  // Sync with your device
 }
 
 #define TRNG_ENT_COUNT 16
 void ENET_IRQHandler(void);
-uint64_t mg_millis(void) {
-  return millis();
-}
-bool mg_random(void *buf, size_t len) {
+uint64_t mg_millis(void) { return millis(); }
+bool mg_random(void* buf, size_t len) {
   static bool initialised;
   static uint32_t rng_index = TRNG_ENT_COUNT;
   uint32_t r, i;
@@ -41,7 +39,7 @@ bool mg_random(void *buf, size_t len) {
              (TRNG_MCTL & TRNG_MCTL_ERR) == 0);  // wait for entropy ready
     }
     r = *(&TRNG_ENT0 + rng_index++);
-    ((uint8_t *) buf)[i] = (uint8_t) (r & 255);
+    ((uint8_t*)buf)[i] = (uint8_t)(r & 255);
   }
   return true;
 }
@@ -51,8 +49,7 @@ bool mg_random(void *buf, size_t len) {
 #define RMII_PAD_INPUT_PULLUP 0xB0E9
 #define RMII_PAD_CLOCK 0x0031
 
-void trng_init() {
-}
+void trng_init() {}
 
 // initialize the ethernet hardware
 void ethernet_init(void) {

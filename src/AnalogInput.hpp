@@ -31,10 +31,9 @@
 #ifndef ANALOG_INPUT_HPP
 #define ANALOG_INPUT_HPP
 
-#include "Shared.hpp"
 #include "Events.hpp"
+#include "Shared.hpp"
 #include "fsp.hpp"
-
 
 //============================================================================
 // generate declaration of the hsm
@@ -43,19 +42,19 @@ namespace AC {
 
 //${AOs::AnalogInput} ........................................................
 class AnalogInput : public QP::QHsm {
-public:
-    static AnalogInput instance;
+ public:
+  static AnalogInput instance;
 
-public:
-    AnalogInput();
+ public:
+  AnalogInput();
 
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Uninitialized);
-    Q_STATE_DECL(Initialized);
-}; // class AnalogInput
+ protected:
+  Q_STATE_DECL(initial);
+  Q_STATE_DECL(Uninitialized);
+  Q_STATE_DECL(Initialized);
+};  // class AnalogInput
 
-} // namespace AC
+}  // namespace AC
 //$enddecl${AOs::AnalogInput} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

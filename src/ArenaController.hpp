@@ -31,14 +31,12 @@
 #ifndef ARENA_CONTROLLER_HPP
 #define ARENA_CONTROLLER_HPP
 
-#include "qpcpp.hpp"
 #include "fsp.hpp"
+#include "qpcpp.hpp"
 
-
-namespace ArduinoInterface
-{
+namespace ArduinoInterface {
 void setup();
 void loop();
-}
+}  // namespace ArduinoInterface
 
 #endif

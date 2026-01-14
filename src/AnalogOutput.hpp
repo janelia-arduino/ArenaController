@@ -31,10 +31,9 @@
 #ifndef ANALOG_OUTPUT_HPP
 #define ANALOG_OUTPUT_HPP
 
-#include "Shared.hpp"
 #include "Events.hpp"
+#include "Shared.hpp"
 #include "fsp.hpp"
-
 
 //============================================================================
 // generate declaration of the hsm
@@ -43,19 +42,19 @@ namespace AC {
 
 //${AOs::AnalogOutput} .......................................................
 class AnalogOutput : public QP::QHsm {
-public:
-    static AnalogOutput instance;
+ public:
+  static AnalogOutput instance;
 
-public:
-    AnalogOutput();
+ public:
+  AnalogOutput();
 
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Uninitialized);
-    Q_STATE_DECL(Initialized);
-}; // class AnalogOutput
+ protected:
+  Q_STATE_DECL(initial);
+  Q_STATE_DECL(Uninitialized);
+  Q_STATE_DECL(Initialized);
+};  // class AnalogOutput
 
-} // namespace AC
+}  // namespace AC
 //$enddecl${AOs::AnalogOutput} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

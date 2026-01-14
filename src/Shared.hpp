@@ -33,41 +33,40 @@
 
 #include "qpcpp.hpp"
 
-
 //$declare${Shared} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 namespace AC {
 
 //${Shared::AO_Arena} ........................................................
-extern QP::QActive * const AO_Arena;
+extern QP::QActive* const AO_Arena;
 
 //${Shared::AO_Display} ......................................................
-extern QP::QActive * const AO_Display;
+extern QP::QActive* const AO_Display;
 
 //${Shared::AO_SerialCommandInterface} .......................................
-extern QP::QActive * const AO_SerialCommandInterface;
+extern QP::QActive* const AO_SerialCommandInterface;
 
 //${Shared::AO_EthernetCommandInterface} .....................................
-extern QP::QActive * const AO_EthernetCommandInterface;
+extern QP::QActive* const AO_EthernetCommandInterface;
 
 //${Shared::AO_Frame} ........................................................
-extern QP::QActive * const AO_Frame;
+extern QP::QActive* const AO_Frame;
 
 //${Shared::AO_Watchdog} .....................................................
-extern QP::QActive * const AO_Watchdog;
+extern QP::QActive* const AO_Watchdog;
 
 //${Shared::AO_Pattern} ......................................................
-extern QP::QActive * const AO_Pattern;
+extern QP::QActive* const AO_Pattern;
 
 //${Shared::AnalogOutput_getInstance} ........................................
-QP::QHsm * AnalogOutput_getInstance();
+QP::QHsm* AnalogOutput_getInstance();
 
 //${Shared::Card_getInstance} ................................................
-QP::QHsm * Card_getInstance();
+QP::QHsm* Card_getInstance();
 
 //${Shared::AnalogInput_getInstance} .........................................
-QP::QHsm * AnalogInput_getInstance();
+QP::QHsm* AnalogInput_getInstance();
 
-} // namespace AC
+}  // namespace AC
 //$enddecl${Shared} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

@@ -3,16 +3,13 @@
 
 #include "qpcpp.hpp"
 
+namespace AC {
 
-namespace AC
-{
-
-enum ArenaControllerRecords
-{
+enum ArenaControllerRecords {
   ETHERNET_LOG = QP::QS_USER,
-  USER_COMMENT = QP::QS_USER+5,
+  USER_COMMENT = QP::QS_USER + 5,
 };
 
-} // namespace AC
+}  // namespace AC
 
-#endif // RECORDS_HPP
+#endif  // RECORDS_HPP

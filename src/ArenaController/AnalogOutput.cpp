@@ -30,13 +30,12 @@
 //$endhead${./ArenaControlle~::AnalogOutput.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #include "AnalogOutput.hpp"
 
-
 using namespace QP;
 
 //============================================================================
 //$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Check for the minimum required QP version
-#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
+#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
 #error qpcpp version 6.9.0 or higher required
 #endif
 //$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,11 +44,9 @@ using namespace QP;
 namespace AC {
 
 //${Shared::AnalogOutput_getInstance} ........................................
-QP::QHsm * AnalogOutput_getInstance() {
-    return &AnalogOutput::instance;
-}
+QP::QHsm* AnalogOutput_getInstance() { return &AnalogOutput::instance; }
 
-} // namespace AC
+}  // namespace AC
 //$enddef${Shared::AnalogOutput_getInstance} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
@@ -61,67 +58,65 @@ namespace AC {
 AnalogOutput AnalogOutput::instance;
 
 //${AOs::AnalogOutput::AnalogOutput} .........................................
-AnalogOutput::AnalogOutput()
-  : QHsm(&initial)
-{}
+AnalogOutput::AnalogOutput() : QHsm(&initial) {}
 
 //${AOs::AnalogOutput::SM} ...................................................
 Q_STATE_DEF(AnalogOutput, initial) {
-    //${AOs::AnalogOutput::SM::initial}
-    FSP::AnalogOutput_initialize(this, e);
+  //${AOs::AnalogOutput::SM::initial}
+  FSP::AnalogOutput_initialize(this, e);
 
-    QS_FUN_DICTIONARY(&AnalogOutput::Uninitialized);
-    QS_FUN_DICTIONARY(&AnalogOutput::Initialized);
+  QS_FUN_DICTIONARY(&AnalogOutput::Uninitialized);
+  QS_FUN_DICTIONARY(&AnalogOutput::Initialized);
 
-    return tran(&Uninitialized);
+  return tran(&Uninitialized);
 }
 
 //${AOs::AnalogOutput::SM::Uninitialized} ....................................
 Q_STATE_DEF(AnalogOutput, Uninitialized) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::AnalogOutput::SM::Uninitialized::ANALOG_OUTPUT_INITIALIZED}
-        case ANALOG_OUTPUT_INITIALIZED_SIG: {
-            status_ = tran(&Initialized);
-            break;
-        }
-        //${AOs::AnalogOutput::SM::Uninitialized::INITIALIZE_ANALOG_OUTPUT}
-        case INITIALIZE_ANALOG_OUTPUT_SIG: {
-            FSP::AnalogOutput_initializeOutput(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&top);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::AnalogOutput::SM::Uninitialized::ANALOG_OUTPUT_INITIALIZED}
+    case ANALOG_OUTPUT_INITIALIZED_SIG: {
+      status_ = tran(&Initialized);
+      break;
     }
-    return status_;
+    //${AOs::AnalogOutput::SM::Uninitialized::INITIALIZE_ANALOG_OUTPUT}
+    case INITIALIZE_ANALOG_OUTPUT_SIG: {
+      FSP::AnalogOutput_initializeOutput(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    default: {
+      status_ = super(&top);
+      break;
+    }
+  }
+  return status_;
 }
 
 //${AOs::AnalogOutput::SM::Initialized} ......................................
 Q_STATE_DEF(AnalogOutput, Initialized) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::AnalogOutput::SM::Initialized}
-        case Q_ENTRY_SIG: {
-            FSP::AnalogOutput_enterInitialized(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::AnalogOutput::SM::Initialized::SET_ANALOG_OUTPUT}
-        case SET_ANALOG_OUTPUT_SIG: {
-            FSP::AnalogOutput_setOutput(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&top);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::AnalogOutput::SM::Initialized}
+    case Q_ENTRY_SIG: {
+      FSP::AnalogOutput_enterInitialized(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    //${AOs::AnalogOutput::SM::Initialized::SET_ANALOG_OUTPUT}
+    case SET_ANALOG_OUTPUT_SIG: {
+      FSP::AnalogOutput_setOutput(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    default: {
+      status_ = super(&top);
+      break;
+    }
+  }
+  return status_;
 }
 
-} // namespace AC
+}  // namespace AC
 //$enddef${AOs::AnalogOutput} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

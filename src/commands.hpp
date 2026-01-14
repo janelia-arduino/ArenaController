@@ -1,12 +1,9 @@
 #ifndef COMMANDS_HPP
 #define COMMANDS_HPP
 
+namespace AC {
 
-namespace AC
-{
-
-enum ArenaCommands
-{
+enum ArenaCommands {
   ALL_OFF_CMD = 0x00,
   DISPLAY_RESET_CMD = 0x01,
   SWITCH_GRAYSCALE_CMD = 0x06,
@@ -19,6 +16,6 @@ enum ArenaCommands
   ALL_ON_CMD = 0xFF,
 };
 
-} // namespace AC
+}  // namespace AC
 
-#endif // COMMANDS_HPP
+#endif  // COMMANDS_HPP

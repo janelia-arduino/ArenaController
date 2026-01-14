@@ -30,14 +30,13 @@
 //$endhead${./ArenaControlle~::Arena.cpp} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #include "Arena.hpp"
 
-
 using namespace QP;
 
 //============================================================================
 // generate definition of to opaque pointer to the AO
 //$skip${QP_VERSION} vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Check for the minimum required QP version
-#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE^4294967295U) % 0x3E8U))
+#if (QP_VERSION < 690U) || (QP_VERSION != ((QP_RELEASE ^ 4294967295U) % 0x3E8U))
 #error qpcpp version 6.9.0 or higher required
 #endif
 //$endskip${QP_VERSION} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,9 +45,9 @@ using namespace QP;
 namespace AC {
 
 //${Shared::AO_Arena} ........................................................
-QP::QActive * const AO_Arena = &Arena::instance;
+QP::QActive* const AO_Arena = &Arena::instance;
 
-} // namespace AC
+}  // namespace AC
 //$enddef${Shared::AO_Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 //============================================================================
@@ -61,260 +60,259 @@ Arena Arena::instance;
 
 //${AOs::Arena::Arena} .......................................................
 Arena::Arena()
-: QActive(Q_STATE_CAST(&Arena::initial)),
-    initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U),
-    analog_input_time_evt_(this, GET_ANALOG_INPUT_TIMEOUT_SIG, 0U)
-{
-    analog_output_ = AnalogOutput_getInstance();
-    analog_input_ = AnalogInput_getInstance();
+    : QActive(Q_STATE_CAST(&Arena::initial)),
+      initialize_analog_time_evt_(this, INITIALIZE_ANALOG_TIMEOUT_SIG, 0U),
+      analog_input_time_evt_(this, GET_ANALOG_INPUT_TIMEOUT_SIG, 0U) {
+  analog_output_ = AnalogOutput_getInstance();
+  analog_input_ = AnalogInput_getInstance();
 }
 
 //${AOs::Arena::dispatchToAnalogOutput} ......................................
-void Arena::dispatchToAnalogOutput(QP::QEvt const * e) {
-    analog_output_->dispatch(e, m_prio);
+void Arena::dispatchToAnalogOutput(QP::QEvt const* e) {
+  analog_output_->dispatch(e, m_prio);
 }
 
 //${AOs::Arena::dispatchToAnalogInput} .......................................
-void Arena::dispatchToAnalogInput(QP::QEvt const * e) {
-    analog_input_->dispatch(e, m_prio);
+void Arena::dispatchToAnalogInput(QP::QEvt const* e) {
+  analog_input_->dispatch(e, m_prio);
 }
 
 //${AOs::Arena::SM} ..........................................................
 Q_STATE_DEF(Arena, initial) {
-    //${AOs::Arena::SM::initial}
-    FSP::Arena_initializeAndSubscribe(this, e);
+  //${AOs::Arena::SM::initial}
+  FSP::Arena_initializeAndSubscribe(this, e);
 
-    QS_FUN_DICTIONARY(&Arena::ArenaOn);
-    QS_FUN_DICTIONARY(&Arena::AllOn);
-    QS_FUN_DICTIONARY(&Arena::AllOff);
-    QS_FUN_DICTIONARY(&Arena::StreamingFrame);
-    QS_FUN_DICTIONARY(&Arena::PlayingPattern);
-    QS_FUN_DICTIONARY(&Arena::ShowingPatternFrame);
-    QS_FUN_DICTIONARY(&Arena::AnalogClosedLoop);
+  QS_FUN_DICTIONARY(&Arena::ArenaOn);
+  QS_FUN_DICTIONARY(&Arena::AllOn);
+  QS_FUN_DICTIONARY(&Arena::AllOff);
+  QS_FUN_DICTIONARY(&Arena::StreamingFrame);
+  QS_FUN_DICTIONARY(&Arena::PlayingPattern);
+  QS_FUN_DICTIONARY(&Arena::ShowingPatternFrame);
+  QS_FUN_DICTIONARY(&Arena::AnalogClosedLoop);
 
-    return tran(&ArenaOn);
+  return tran(&ArenaOn);
 }
 
 //${AOs::Arena::SM::ArenaOn} .................................................
 Q_STATE_DEF(Arena, ArenaOn) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_activateCommandInterfaces(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn}
-        case Q_EXIT_SIG: {
-            FSP::Arena_deactivateCommandInterfaces(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::initial}
-        case Q_INIT_SIG: {
-            status_ = tran(&AllOff);
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::ALL_OFF}
-        case ALL_OFF_SIG: {
-            FSP::Arena_allOffTransition(this, e);
-            status_ = tran(&AllOff);
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::STREAM_FRAME}
-        case STREAM_FRAME_SIG: {
-            FSP::Arena_streamFrameTransition(this, e);
-            status_ = tran(&StreamingFrame);
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::ALL_ON}
-        case ALL_ON_SIG: {
-            FSP::Arena_allOnTransition(this, e);
-            status_ = tran(&AllOn);
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::PLAY_PATTERN}
-        case PLAY_PATTERN_SIG: {
-            FSP::Arena_playPatternTransition(this, e);
-            status_ = tran(&PlayingPattern);
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::INITIALIZE_ANALOG_TIMEOUT}
-        case INITIALIZE_ANALOG_TIMEOUT_SIG: {
-            FSP::Arena_initializeAnalog(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::ANALOG_OUTPUT_INITIALIZED}
-        case ANALOG_OUTPUT_INITIALIZED_SIG: {
-            dispatchToAnalogOutput(e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::SET_ANALOG_OUTPUT}
-        case SET_ANALOG_OUTPUT_SIG: {
-            dispatchToAnalogOutput(e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::SHOW_PATTERN_FRAME}
-        case SHOW_PATTERN_FRAME_SIG: {
-            FSP::Arena_showPatternFrameTransition(this, e);
-            status_ = tran(&ShowingPatternFrame);
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::ANALOG_INPUT_INITIALIZED}
-        case ANALOG_INPUT_INITIALIZED_SIG: {
-            dispatchToAnalogInput(e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::ANALOG_CLOSED_LOOP}
-        case ANALOG_CLOSED_LOOP_SIG: {
-            FSP::Arena_analogClosedLoopTransition(this, e);
-            status_ = tran(&AnalogClosedLoop);
-            break;
-        }
-        default: {
-            status_ = super(&top);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::Arena::SM::ArenaOn}
+    case Q_ENTRY_SIG: {
+      FSP::Arena_activateCommandInterfaces(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    //${AOs::Arena::SM::ArenaOn}
+    case Q_EXIT_SIG: {
+      FSP::Arena_deactivateCommandInterfaces(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::initial}
+    case Q_INIT_SIG: {
+      status_ = tran(&AllOff);
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::ALL_OFF}
+    case ALL_OFF_SIG: {
+      FSP::Arena_allOffTransition(this, e);
+      status_ = tran(&AllOff);
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::STREAM_FRAME}
+    case STREAM_FRAME_SIG: {
+      FSP::Arena_streamFrameTransition(this, e);
+      status_ = tran(&StreamingFrame);
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::ALL_ON}
+    case ALL_ON_SIG: {
+      FSP::Arena_allOnTransition(this, e);
+      status_ = tran(&AllOn);
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::PLAY_PATTERN}
+    case PLAY_PATTERN_SIG: {
+      FSP::Arena_playPatternTransition(this, e);
+      status_ = tran(&PlayingPattern);
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::INITIALIZE_ANALOG_TIMEOUT}
+    case INITIALIZE_ANALOG_TIMEOUT_SIG: {
+      FSP::Arena_initializeAnalog(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::ANALOG_OUTPUT_INITIALIZED}
+    case ANALOG_OUTPUT_INITIALIZED_SIG: {
+      dispatchToAnalogOutput(e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::SET_ANALOG_OUTPUT}
+    case SET_ANALOG_OUTPUT_SIG: {
+      dispatchToAnalogOutput(e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::SHOW_PATTERN_FRAME}
+    case SHOW_PATTERN_FRAME_SIG: {
+      FSP::Arena_showPatternFrameTransition(this, e);
+      status_ = tran(&ShowingPatternFrame);
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::ANALOG_INPUT_INITIALIZED}
+    case ANALOG_INPUT_INITIALIZED_SIG: {
+      dispatchToAnalogInput(e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::ANALOG_CLOSED_LOOP}
+    case ANALOG_CLOSED_LOOP_SIG: {
+      FSP::Arena_analogClosedLoopTransition(this, e);
+      status_ = tran(&AnalogClosedLoop);
+      break;
+    }
+    default: {
+      status_ = super(&top);
+      break;
+    }
+  }
+  return status_;
 }
 
 //${AOs::Arena::SM::ArenaOn::AllOn} ..........................................
 Q_STATE_DEF(Arena, AllOn) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn::AllOn}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_fillFrameBufferWithAllOn(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::AllOn::FRAME_FILLED}
-        case FRAME_FILLED_SIG: {
-            FSP::Arena_displayFrame(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::Arena::SM::ArenaOn::AllOn}
+    case Q_ENTRY_SIG: {
+      FSP::Arena_fillFrameBufferWithAllOn(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    //${AOs::Arena::SM::ArenaOn::AllOn::FRAME_FILLED}
+    case FRAME_FILLED_SIG: {
+      FSP::Arena_displayFrame(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    default: {
+      status_ = super(&ArenaOn);
+      break;
+    }
+  }
+  return status_;
 }
 
 //${AOs::Arena::SM::ArenaOn::AllOff} .........................................
 Q_STATE_DEF(Arena, AllOff) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn::AllOff}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_deactivateDisplay(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::Arena::SM::ArenaOn::AllOff}
+    case Q_ENTRY_SIG: {
+      FSP::Arena_deactivateDisplay(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    default: {
+      status_ = super(&ArenaOn);
+      break;
+    }
+  }
+  return status_;
 }
 
 //${AOs::Arena::SM::ArenaOn::StreamingFrame} .................................
 Q_STATE_DEF(Arena, StreamingFrame) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn::StreamingFrame}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_fillFrameBufferWithDecodedFrame(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_FILLED}
-        case FRAME_FILLED_SIG: {
-            FSP::Arena_displayFrame(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::Arena::SM::ArenaOn::StreamingFrame}
+    case Q_ENTRY_SIG: {
+      FSP::Arena_fillFrameBufferWithDecodedFrame(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    //${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_FILLED}
+    case FRAME_FILLED_SIG: {
+      FSP::Arena_displayFrame(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    default: {
+      status_ = super(&ArenaOn);
+      break;
+    }
+  }
+  return status_;
 }
 
 //${AOs::Arena::SM::ArenaOn::PlayingPattern} .................................
 Q_STATE_DEF(Arena, PlayingPattern) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn::PlayingPattern}
-        case Q_EXIT_SIG: {
-            FSP::Arena_endPlayingPattern(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::Arena::SM::ArenaOn::PlayingPattern}
+    case Q_EXIT_SIG: {
+      FSP::Arena_endPlayingPattern(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    default: {
+      status_ = super(&ArenaOn);
+      break;
+    }
+  }
+  return status_;
 }
 
 //${AOs::Arena::SM::ArenaOn::ShowingPatternFrame} ............................
 Q_STATE_DEF(Arena, ShowingPatternFrame) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn::ShowingPatternFrame}
-        case Q_EXIT_SIG: {
-            FSP::Arena_endShowPatternFrame(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::Arena::SM::ArenaOn::ShowingPatternFrame}
+    case Q_EXIT_SIG: {
+      FSP::Arena_endShowPatternFrame(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    default: {
+      status_ = super(&ArenaOn);
+      break;
+    }
+  }
+  return status_;
 }
 
 //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop} ...............................
 Q_STATE_DEF(Arena, AnalogClosedLoop) {
-    QP::QState status_;
-    switch (e->sig) {
-        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop}
-        case Q_ENTRY_SIG: {
-            FSP::Arena_beginAnalogClosedLoop(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop}
-        case Q_EXIT_SIG: {
-            FSP::Arena_endAnalogClosedLoop(this, e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop::GET_ANALOG_INPUT_TIMEOUT}
-        case GET_ANALOG_INPUT_TIMEOUT_SIG: {
-            dispatchToAnalogInput(e);
-            status_ = Q_RET_HANDLED;
-            break;
-        }
-        default: {
-            status_ = super(&ArenaOn);
-            break;
-        }
+  QP::QState status_;
+  switch (e->sig) {
+    //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop}
+    case Q_ENTRY_SIG: {
+      FSP::Arena_beginAnalogClosedLoop(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
     }
-    return status_;
+    //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop}
+    case Q_EXIT_SIG: {
+      FSP::Arena_endAnalogClosedLoop(this, e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    //${AOs::Arena::SM::ArenaOn::AnalogClosedLoop::GET_ANALOG_INPUT_TIMEOUT}
+    case GET_ANALOG_INPUT_TIMEOUT_SIG: {
+      dispatchToAnalogInput(e);
+      status_ = Q_RET_HANDLED;
+      break;
+    }
+    default: {
+      status_ = super(&ArenaOn);
+      break;
+    }
+  }
+  return status_;
 }
 
-} // namespace AC
+}  // namespace AC
 //$enddef${AOs::Arena} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

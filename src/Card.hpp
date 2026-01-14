@@ -31,10 +31,9 @@
 #ifndef CARD_HPP
 #define CARD_HPP
 
-#include "Shared.hpp"
 #include "Events.hpp"
+#include "Shared.hpp"
 #include "fsp.hpp"
-
 
 //============================================================================
 // generate declaration of the hsm
@@ -43,29 +42,29 @@ namespace AC {
 
 //${AOs::Card} ...............................................................
 class Card : public QP::QHsm {
-public:
-    static Card instance;
-    std::uint16_t pattern_id_;
-    std::uint64_t file_size_;
+ public:
+  static Card instance;
+  std::uint16_t pattern_id_;
+  std::uint64_t file_size_;
 
-public:
-    Card();
+ public:
+  Card();
 
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Initialized);
-    Q_STATE_DECL(WaitingToFindCard);
-    Q_STATE_DECL(FindingCard);
-    Q_STATE_DECL(FileOpened);
-    Q_STATE_DECL(CheckingFile);
-    Q_STATE_DECL(CheckingPattern);
-    Q_STATE_DECL(DisplayingPattern);
-    Q_STATE_DECL(WaitingToFindPattern);
-    Q_STATE_DECL(OpeningDirectory);
-    Q_STATE_DECL(SortingFilenames);
-}; // class Card
+ protected:
+  Q_STATE_DECL(initial);
+  Q_STATE_DECL(Initialized);
+  Q_STATE_DECL(WaitingToFindCard);
+  Q_STATE_DECL(FindingCard);
+  Q_STATE_DECL(FileOpened);
+  Q_STATE_DECL(CheckingFile);
+  Q_STATE_DECL(CheckingPattern);
+  Q_STATE_DECL(DisplayingPattern);
+  Q_STATE_DECL(WaitingToFindPattern);
+  Q_STATE_DECL(OpeningDirectory);
+  Q_STATE_DECL(SortingFilenames);
+};  // class Card
 
-} // namespace AC
+}  // namespace AC
 //$enddecl${AOs::Card} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

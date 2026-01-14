@@ -32,15 +32,8 @@
 
 using namespace QP;
 
-namespace ArduinoInterface
-{
-void setup()
-{
-  FSP::ArenaController_setup();
-}
+namespace ArduinoInterface {
+void setup() { FSP::ArenaController_setup(); }
 
-void loop()
-{
-  QF::run();
-}
-}
+void loop() { QF::run(); }
+}  // namespace ArduinoInterface

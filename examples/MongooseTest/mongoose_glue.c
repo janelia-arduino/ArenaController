@@ -6,9 +6,5 @@
 
 #include "mongoose_glue.h"
 static struct leds s_leds = {false};
-void glue_get_leds(struct leds *data) {
-  data->led1 = digitalRead(LED_BUILTIN);
-}
-void glue_set_leds(struct leds *data) {
-  digitalWrite(LED_BUILTIN, data->led1);
-}
+void glue_get_leds(struct leds* data) { data->led1 = digitalRead(LED_BUILTIN); }
+void glue_set_leds(struct leds* data) { digitalWrite(LED_BUILTIN, data->led1); }

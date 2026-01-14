@@ -31,10 +31,9 @@
 #ifndef DISPLAY_HPP
 #define DISPLAY_HPP
 
-#include "Shared.hpp"
 #include "Events.hpp"
+#include "Shared.hpp"
 #include "fsp.hpp"
-
 
 //============================================================================
 // generate declaration of the active object
@@ -43,25 +42,25 @@ namespace AC {
 
 //${AOs::Display} ............................................................
 class Display : public QP::QActive {
-public:
-    static Display instance;
-    std::uint32_t refresh_rate_hz_;
-    QP::QEQueue refresh_queue_;
+ public:
+  static Display instance;
+  std::uint32_t refresh_rate_hz_;
+  QP::QEQueue refresh_queue_;
 
-public:
-    Display();
+ public:
+  Display();
 
-protected:
-    Q_STATE_DECL(initial);
-    Q_STATE_DECL(Initialized);
-    Q_STATE_DECL(Inactive);
-    Q_STATE_DECL(Active);
-    Q_STATE_DECL(DisplayingFrame);
-    Q_STATE_DECL(WaitingToTransferFrame);
-    Q_STATE_DECL(TransferringFrame);
-}; // class Display
+ protected:
+  Q_STATE_DECL(initial);
+  Q_STATE_DECL(Initialized);
+  Q_STATE_DECL(Inactive);
+  Q_STATE_DECL(Active);
+  Q_STATE_DECL(DisplayingFrame);
+  Q_STATE_DECL(WaitingToTransferFrame);
+  Q_STATE_DECL(TransferringFrame);
+};  // class Display
 
-} // namespace AC
+}  // namespace AC
 //$enddecl${AOs::Display} ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif
