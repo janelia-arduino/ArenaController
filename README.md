@@ -12,9 +12,9 @@
 
 -   Library Name: ArenaController
 -   Description: Arduino library for communicating with the Reiser Lab Modular LED panels display arena.
--   Version: 5.1.0
+-   Version: 5.1.1
 -   Panel Version: G4 v1.9
--   Release Date: 2025-01-14
+-   Release Date: 2025-01-15
 -   Creation Date: 2023-08-16
 -   License: GPL-3.0
 -   URL: <https://github.com/janelia-arduino/ArenaController>

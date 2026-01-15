@@ -4,7 +4,7 @@ channels = ["conda-forge"]
 description = "Arduino library for communicating with the Reiser Lab Modular LED panels display arena."
 name = "G4.1-ArenaController"
 platforms = ["linux-64"]
-version = "5.1.0"
+version = "5.1.1"
 
 [tasks]
 
