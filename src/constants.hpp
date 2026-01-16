@@ -134,7 +134,7 @@ constexpr uint8_t pattern_grayscale_value = 16;
 constexpr uint8_t pattern_binary_value = 2;
 constexpr uint8_t pattern_row_signifier_byte_count_per_row
     = quarter_panel_count_per_panel;
-constexpr char pattern_dir_str[] = "/";
+constexpr char pattern_dir_str[] = "/patterns/";
 constexpr uint8_t pattern_header_size = 7;
 constexpr uint8_t card_type_str_len = 16;
 constexpr uint32_t pattern_begin_pattern_queue_size = 1;

@@ -1,6 +1,13 @@
 #+EXPORT_FILE_NAME: ../README.md
 #+OPTIONS: toc:1 |:t ^:nil tags:nil
 
+# Avoid Org-Babel treating PlantUML stereotypes like <<nested0>> and <<choice>>
+# as Noweb references during export, and never evaluate shell/diagram blocks
+# during export.
+#+PROPERTY: header-args:plantuml :exports none :results none :eval never-export :noweb no
+#+PROPERTY: header-args:sh :eval never-export
+#+PROPERTY: header-args:text :eval never-export
+
 # Place warning at the top of the exported file
 #+BEGIN_EXAMPLE
 <!-- This file is generated automatically from metadata -->
@@ -56,14 +63,20 @@ https://www.adafruit.com/product/1083
 * General and Derived Variables                                    :noexport:
 
 #+NAME: release-month-day
-#+BEGIN_SRC emacs-lisp :exports none :noweb yes
+#+BEGIN_SRC emacs-lisp :exports none :noweb yes :eval yes
 (format-time-string "%m-%d")
 #+END_SRC
 
+#+RESULTS: release-month-day
+: 01-16
+
 #+NAME: release-year
-#+BEGIN_SRC emacs-lisp :exports none :noweb yes
+#+BEGIN_SRC emacs-lisp :exports none :noweb yes :eval yes
 (format-time-string "%Y")
 #+END_SRC
+
+#+RESULTS: release-year
+: 2026
 
 #+NAME: release-date
 #+BEGIN_SRC text :exports none :noweb yes
@@ -185,32 +198,32 @@ documentation
 <<documentation-dir>>/images
 #+END_SRC
 
-#+name: repository-info
-#+begin_src emacs-lisp :noweb yes :exports none :results raw
-  (let* ((refs (split-string "<<references>>" "\n" t))
-         (refs-org (mapconcat (lambda (s) (concat "  - " s)) refs "\n")))
-    (concat
-     "- Library Name: <<library-name>>\n"
-     "- Description: <<description>>\n"
-     "- Version: <<library-version>>\n"
-     "- Panel Version: <<panel-version>>\n"
-     "- Release Date: <<release-date>>\n"
-     "- Creation Date: <<creation-date>>\n"
-     "- License: <<license>>\n"
-     "- URL: <<repository-url>>\n"
-     "- Author: <<author>>\n"
-     "- Author Email: <<author-email>>\n"
-     "- Maintainer: <<maintainer>>\n"
-     "- Maintainer Email: <<maintainer-email>>\n"
-     "- Copyright: <<copyright>>\n"
-     "- References:\n"
-     refs-org
-     "\n"))
-#+end_src
+#+NAME: repository-info
+#+BEGIN_SRC emacs-lisp :noweb yes :exports none :results raw :eval yes
+(let* ((refs (split-string "<<references>>" "\n" t))
+       (refs-org (mapconcat (lambda (s) (concat "  - " s)) refs "\n")))
+  (concat
+   "- Library Name: <<library-name>>\n"
+   "- Description: <<description>>\n"
+   "- Version: <<library-version>>\n"
+   "- Panel Version: <<panel-version>>\n"
+   "- Release Date: <<release-date>>\n"
+   "- Creation Date: <<creation-date>>\n"
+   "- License: <<license>>\n"
+   "- URL: <<repository-url>>\n"
+   "- Author: <<author>>\n"
+   "- Author Email: <<author-email>>\n"
+   "- Maintainer: <<maintainer>>\n"
+   "- Maintainer Email: <<maintainer-email>>\n"
+   "- Copyright: <<copyright>>\n"
+   "- References:\n"
+   refs-org
+   "\n"))
+#+END_SRC
 
 * Repository Information
 
-#+call: repository-info():results raw
+#+CALL: repository-info()
 
 * Modular LED Display
 
@@ -348,7 +361,7 @@ Panel update order for each panel in an display:
 
 **** Watchdog
 
-#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-watchdog.png :results none :exports none
+#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-watchdog.png :results none :exports none :noweb no
 @startuml
 !theme spacelab
 skinparam backgroundColor #9F9F9F
@@ -378,7 +391,7 @@ Feeding --> Resetting : RESET
 
 **** SerialCommandInterface
 
-#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-serial-command-interface.png :results none :exports none
+#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-serial-command-interface.png :results none :exports none :noweb no
 @startuml
 !theme spacelab
 skinparam backgroundColor #9F9F9F
@@ -449,7 +462,7 @@ Active --> Inactive : DEACTIVATE_SERIAL_COMMAND_INTERFACE
 
 **** EthernetCommandInterface
 
-#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-ethernet-command-interface.png :results none :exports none
+#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-ethernet-command-interface.png :results none :exports none :noweb no
 @startuml
 !theme spacelab
 skinparam backgroundColor #9F9F9F
@@ -524,7 +537,7 @@ Active --> Inactive : DEACTIVATE_ETHERNET_COMMAND_INTERFACE
 
 **** Pattern
 
-#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-pattern.png :results none :exports none
+#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-pattern.png :results none :exports none :noweb no
 @startuml
 !theme spacelab
 skinparam backgroundColor #9F9F9F
@@ -646,7 +659,7 @@ state Initialized <<nested0>> {
 
 **** Card
 
-#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-card.png :results none :exports none
+#+BEGIN_SRC plantuml :file ../documentation/images/state-diagram-card.png :results none :exports none :noweb no
 @startuml
 !theme spacelab
 skinparam backgroundColor #9F9F9F

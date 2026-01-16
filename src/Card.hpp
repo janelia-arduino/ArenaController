@@ -63,7 +63,6 @@ protected:
   Q_STATE_DECL (DisplayingPattern);
   Q_STATE_DECL (WaitingToFindPattern);
   Q_STATE_DECL (OpeningDirectory);
-  Q_STATE_DECL (SortingFilenames);
 }; // class Card
 
 } // namespace AC

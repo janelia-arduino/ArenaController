@@ -73,10 +73,6 @@ static QEvt const directory_open_success_evt
     = { DIRECTORY_OPEN_SUCCESS_SIG, 0U, 0U };
 static QEvt const directory_open_failure_evt
     = { DIRECTORY_OPEN_FAILURE_SIG, 0U, 0U };
-static QEvt const filename_sort_success_evt
-    = { FILENAME_SORT_SUCCESS_SIG, 0U, 0U };
-static QEvt const filename_sort_failure_evt
-    = { FILENAME_SORT_FAILURE_SIG, 0U, 0U };
 static QEvt const find_pattern_evt = { FIND_PATTERN_SIG, 0U, 0U };
 static QEvt const file_valid_evt = { FILE_VALID_SIG, 0U, 0U };
 static QEvt const file_not_valid_evt = { FILE_NOT_VALID_SIG, 0U, 0U };
@@ -1791,8 +1787,6 @@ FSP::Card_initialize (QHsm *const hsm, QEvt const *e)
   QS_SIG_DICTIONARY (CARD_NOT_FOUND_SIG, hsm);
   QS_SIG_DICTIONARY (DIRECTORY_OPEN_SUCCESS_SIG, hsm);
   QS_SIG_DICTIONARY (DIRECTORY_OPEN_FAILURE_SIG, hsm);
-  QS_SIG_DICTIONARY (FILENAME_SORT_SUCCESS_SIG, hsm);
-  QS_SIG_DICTIONARY (FILENAME_SORT_FAILURE_SIG, hsm);
   QS_SIG_DICTIONARY (FILE_VALID_SIG, hsm);
   QS_SIG_DICTIONARY (FILE_NOT_VALID_SIG, hsm);
   QS_SIG_DICTIONARY (PATTERN_VALID_SIG, hsm);
@@ -1886,28 +1880,6 @@ FSP::Card_openDirectory (QHsm *const hsm, QEvt const *e)
       QS_STR (constants::pattern_dir_str);
       QS_END ()
       AO_Pattern->POST (&constants::directory_open_failure_evt, hsm);
-    }
-}
-
-void
-FSP::Card_sortFilenames (QHsm *const hsm, QEvt const *e)
-{
-  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-  QS_STR ("Card_sortFilenames");
-  QS_END ()
-  if (BSP::sortPatternFilenames ())
-    {
-      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-      QS_STR ("pattern filename sort success");
-      QS_END ()
-      AO_Pattern->POST (&constants::filename_sort_success_evt, hsm);
-    }
-  else
-    {
-      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-      QS_STR ("pattern filename sort failure");
-      QS_END ()
-      AO_Pattern->POST (&constants::filename_sort_failure_evt, hsm);
     }
 }
 

@@ -38,6 +38,6 @@ namespace ArduinoInterface
 {
 void setup ();
 void loop ();
-} // namespace ArduinoInterface
+}
 
 #endif

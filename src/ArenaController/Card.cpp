@@ -82,7 +82,6 @@ Q_STATE_DEF (Card, initial)
   QS_FUN_DICTIONARY (&Card::DisplayingPattern);
   QS_FUN_DICTIONARY (&Card::WaitingToFindPattern);
   QS_FUN_DICTIONARY (&Card::OpeningDirectory);
-  QS_FUN_DICTIONARY (&Card::SortingFilenames);
 
   return tran (&Initialized);
 }
@@ -360,41 +359,7 @@ Q_STATE_DEF (Card, OpeningDirectory)
     //${AOs::Card::SM::Initialized::OpeningDirectory::DIRECTORY_OPEN_SUCCESS}
     case DIRECTORY_OPEN_SUCCESS_SIG:
       {
-        status_ = tran (&SortingFilenames);
-        break;
-      }
-    default:
-      {
-        status_ = super (&Initialized);
-        break;
-      }
-    }
-  return status_;
-}
-
-//${AOs::Card::SM::Initialized::SortingFilenames} ............................
-Q_STATE_DEF (Card, SortingFilenames)
-{
-  QP::QState status_;
-  switch (e->sig)
-    {
-    //${AOs::Card::SM::Initialized::SortingFilenames}
-    case Q_ENTRY_SIG:
-      {
-        FSP::Card_sortFilenames (this, e);
-        status_ = Q_RET_HANDLED;
-        break;
-      }
-    //${AOs::Card::SM::Initialized::SortingFilenames::FILENAME_SORT_SUCCESS}
-    case FILENAME_SORT_SUCCESS_SIG:
-      {
         status_ = tran (&WaitingToFindPattern);
-        break;
-      }
-    //${AOs::Card::SM::Initialized::SortingFilenames::FILENAME_SORT_FAILURE}
-    case FILENAME_SORT_FAILURE_SIG:
-      {
-        status_ = tran (&FindingCard);
         break;
       }
     default:

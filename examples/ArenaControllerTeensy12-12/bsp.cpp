@@ -1,7 +1,6 @@
 #include <Adafruit_ADS1X15.h>
 #include <Adafruit_MCP4728.h>
 #include <Arduino.h>
-#include <ArduinoSort.h>
 #include <EventResponder.h>
 #include <SPI.h>
 #include <SdFat.h>
@@ -74,9 +73,7 @@ constexpr uint8_t panel_set_select_pins[panel_count_per_region_row_max]
         { 5, 10, 30, 21, 40, 35 } };
 
 // pattern files
-constexpr uint8_t pattern_filename_str_len_max = 255;
 constexpr uint8_t pattern_filename_log_str_len_max = 25;
-constexpr uint16_t pattern_file_count_max = 200;
 
 // analog
 constexpr adsGain_t analog_input_gain = GAIN_TWOTHIRDS;
@@ -143,9 +140,6 @@ static PatternHeader pattern_header;
 static SdFs pattern_sd;
 static FsFile pattern_dir;
 static FsFile pattern_file;
-static char pattern_filename_array[constants::pattern_file_count_max]
-                                  [constants::pattern_filename_str_len_max];
-static char *pattern_filenames_sorted[constants::pattern_file_count_max];
 static uint16_t pattern_file_count;
 
 // Analog Output
@@ -845,88 +839,69 @@ BSP::openPatternDirectory ()
   return bsp_global::pattern_dir.open (constants::pattern_dir_str);
 }
 
-bool
-BSP::sortPatternFilenames ()
-{
-  bsp_global::pattern_dir.rewind ();
-  bsp_global::pattern_file_count = 0;
-  while (
-      bsp_global::pattern_file.openNext (&bsp_global::pattern_dir, O_RDONLY))
-    {
-      if (bsp_global::pattern_file.isDir ()
-          || (bsp_global::pattern_file_count
-              >= (constants::pattern_file_count_max - 1)))
-        {
-          bsp_global::pattern_file.close ();
-          continue;
-        }
-      char *pattern_filename_buffer = bsp_global::pattern_filename_array
-          [bsp_global::pattern_file_count++];
-      bsp_global::pattern_file.getName (
-          pattern_filename_buffer, constants::pattern_filename_str_len_max);
-      bsp_global::pattern_file.close ();
-    }
-  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-  QS_STR ("pattern file count");
-  QS_U32 (8, bsp_global::pattern_file_count);
-  QS_END ()
-  for (uint16_t pattern_index = 0;
-       pattern_index < bsp_global::pattern_file_count; ++pattern_index)
-    {
-      bsp_global::pattern_filenames_sorted[pattern_index]
-          = bsp_global::pattern_filename_array[pattern_index];
-      // QS_BEGIN_ID(USER_COMMENT, AO_Pattern->m_prio)
-      //   QS_STR("pattern filename presort");
-      //   QS_STR(bsp_global::pattern_filenames_sorted[pattern_index]);
-      // QS_END()
-    }
-  sortArray (bsp_global::pattern_filenames_sorted,
-             bsp_global::pattern_file_count);
-  for (uint16_t pattern_index = 0;
-       pattern_index < bsp_global::pattern_file_count; ++pattern_index)
-    {
-      char pattern_filename_log_str
-          [constants::pattern_filename_log_str_len_max];
-      strncpy (pattern_filename_log_str,
-               bsp_global::pattern_filenames_sorted[pattern_index],
-               constants::pattern_filename_log_str_len_max - 2);
-      pattern_filename_log_str[constants::pattern_filename_log_str_len_max - 1]
-          = '\0';
-      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-      QS_STR ("pattern_id");
-      QS_U16 (5, pattern_index + 1);
-      QS_STR ("pattern filename sorted");
-      QS_STR (pattern_filename_log_str);
-      QS_END ()
-    }
-  if (bsp_global::pattern_dir.getError ())
-    {
-      return false;
-    }
-  return true;
-}
-
 uint64_t
 BSP::openPatternFileForReading (uint16_t pattern_id)
 {
-  // pattern_id uses one-based indexing
-  if ((pattern_id == 0) || (pattern_id > bsp_global::pattern_file_count))
+  // pattern_id is the SdFat directory entry index (FsFile::dirIndex())
+  // within bsp_global::pattern_dir (which must already be opened).
+
+  // If you want to keep 0 as "invalid / not set", uncomment this.
+  // NOTE: On exFAT the first file can have dirIndex()==0, so only do this
+  // if you also offset IDs elsewhere (dirIndex+1), or you accept that index 0
+  // can never be opened.
+  // if (pattern_id == 0) {
+  //   return 0;
+  // }
+
+  if (!bsp_global::pattern_dir || !bsp_global::pattern_dir.isDir ())
     {
+      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR ("openPatternFileForReading: pattern_dir not open");
+      QS_END ()
       return 0;
     }
-  uint16_t pattern_index = pattern_id - 1;
-  char pattern_filename_log_str[constants::pattern_filename_log_str_len_max];
-  strncpy (pattern_filename_log_str,
-           bsp_global::pattern_filenames_sorted[pattern_index],
-           constants::pattern_filename_log_str_len_max - 2);
-  pattern_filename_log_str[constants::pattern_filename_log_str_len_max - 1]
-      = '\0';
+
+  // Close any previously open pattern file.
+  bsp_global::pattern_file.close ();
+
+  // Open by directory entry index.
+  bool ok = bsp_global::pattern_file.open (
+      &bsp_global::pattern_dir, static_cast<uint32_t> (pattern_id), O_RDONLY);
+  if (!ok)
+    {
+      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR ("openPatternFileForReading: open by dirIndex failed");
+      QS_STR ("dirIndex");
+      QS_U16 (5, pattern_id);
+      QS_STR ("sdErrorCode");
+      QS_U8 (0, bsp_global::pattern_sd.sdErrorCode ());
+      QS_STR ("sdErrorData");
+      QS_U8 (0, bsp_global::pattern_sd.sdErrorData ());
+      QS_END ()
+      return 0;
+    }
+
+  // Reject directories (dirIndex can refer to a subdirectory too).
+  if (bsp_global::pattern_file.isDir ())
+    {
+      bsp_global::pattern_file.close ();
+      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR ("openPatternFileForReading: dirIndex is a directory");
+      QS_U16 (5, pattern_id);
+      QS_END ()
+      return 0;
+    }
+
+  // Optional: log the (possibly truncated) filename for debugging.
+  char name_log[constants::pattern_filename_log_str_len_max];
+  bsp_global::pattern_file.getName (name_log, sizeof (name_log));
   QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-  QS_STR ("opening pattern filename");
-  QS_STR (pattern_filename_log_str);
+  QS_STR ("opened pattern by dirIndex");
+  QS_U16 (5, pattern_id);
+  QS_STR ("name");
+  QS_STR (name_log);
   QS_END ()
-  bsp_global::pattern_file.open (
-      bsp_global::pattern_filenames_sorted[pattern_index], O_RDONLY);
+
   return bsp_global::pattern_file.fileSize ();
 }
 
