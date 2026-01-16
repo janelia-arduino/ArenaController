@@ -32,8 +32,8 @@ static QEvt const panel_set_transferred_evt
     = { PANEL_SET_TRANSFERRED_SIG, 0U, 0U };
 
 // QS Serial Pins
-constexpr uint8_t qs_serial_stream_tx_pin = 53;
-constexpr uint8_t qs_serial_stream_rx_pin = 52;
+// constexpr uint8_t qs_serial_stream_tx_pin = 53;
+// constexpr uint8_t qs_serial_stream_rx_pin = 52;
 
 // SPI Settings
 constexpr uint8_t spi_bit_order = MSBFIRST;
@@ -97,10 +97,10 @@ static EventResponder transfer_panel_complete_event;
 static uint8_t transfer_panel_complete_count;
 
 // Serial Communication Interface
-// static HardwareSerial & serial_communication_interface_stream = Serial1;
-// static usb_serial_class & qs_serial_stream = Serial;
-static usb_serial_class &serial_communication_interface_stream = Serial;
-static HardwareSerialIMXRT &qs_serial_stream = Serial1;
+static HardwareSerial &serial_communication_interface_stream = Serial1;
+static usb_serial_class &qs_serial_stream = Serial;
+// static usb_serial_class &serial_communication_interface_stream = Serial;
+// static HardwareSerialIMXRT &qs_serial_stream = Serial1;
 
 // Ethernet Communication Interface
 static char ethernet_ip_address[constants::ethernet_ip_address_length_max]
@@ -826,7 +826,7 @@ BSP::findPatternCard ()
   QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
   QS_STR ("Attempting to find pattern card");
   QS_END ()
-  QS_FLUSH();
+  QS_FLUSH ();
 
   bool result = bsp_global::pattern_sd.begin (SdioConfig (FIFO_SDIO));
 
@@ -834,7 +834,7 @@ BSP::findPatternCard ()
   QS_STR ("Pattern card found");
   QS_U8 (0, result);
   QS_END ()
-  QS_FLUSH();
+  QS_FLUSH ();
 
   return result;
 }
@@ -1127,8 +1127,8 @@ QP::QS::onStartup (void const *arg)
   static uint8_t qsRxBuf[1024]; // buffer for QS receive channel (QS-RX)
   initBuf (qsTxBuf, sizeof (qsTxBuf));
   rxInitBuf (qsRxBuf, sizeof (qsRxBuf));
-  bsp_global::qs_serial_stream.setTX (constants::qs_serial_stream_tx_pin);
-  bsp_global::qs_serial_stream.setRX (constants::qs_serial_stream_rx_pin);
+  // bsp_global::qs_serial_stream.setTX (constants::qs_serial_stream_tx_pin);
+  // bsp_global::qs_serial_stream.setRX (constants::qs_serial_stream_rx_pin);
   bsp_global::qs_serial_stream.begin (constants::qs_serial_baud_rate);
   return true; // return success
 }

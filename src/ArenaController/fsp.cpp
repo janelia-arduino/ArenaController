@@ -270,8 +270,9 @@ FSP::Arena_initializeAnalog (QP::QActive *const ao, QP::QEvt const *e)
 void
 FSP::Arena_activateCommandInterfaces (QActive *const ao, QEvt const *e)
 {
-  AO_SerialCommandInterface->POST (
-      &constants::activate_serial_command_interface_evt, &constants::fsp_id);
+  // AO_SerialCommandInterface->POST (
+  //     &constants::activate_serial_command_interface_evt,
+  //     &constants::fsp_id);
   AO_EthernetCommandInterface->POST (
       &constants::activate_ethernet_command_interface_evt, ao);
 }
@@ -279,8 +280,9 @@ FSP::Arena_activateCommandInterfaces (QActive *const ao, QEvt const *e)
 void
 FSP::Arena_deactivateCommandInterfaces (QActive *const ao, QEvt const *e)
 {
-  AO_SerialCommandInterface->POST (
-      &constants::deactivate_serial_command_interface_evt, &constants::fsp_id);
+  // AO_SerialCommandInterface->POST (
+  //     &constants::deactivate_serial_command_interface_evt,
+  //     &constants::fsp_id);
   AO_EthernetCommandInterface->POST (
       &constants::deactivate_ethernet_command_interface_evt, ao);
 }
