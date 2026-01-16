@@ -10,6 +10,10 @@ teensy-firmware: clean
 teensy-upload: clean
 	pio run -e teensy41 --target upload --upload-port /dev/ttyACM0
 
+.PHONY: teensy-upload-sdcard
+teensy-upload-sdcard: clean
+	pio run -d examples/SDCardDebugTest -e teensy41 --target upload --upload-port /dev/ttyACM0
+
 .PHONY: mega-firmware
 mega-firmware: clean
 	pio run -e mega

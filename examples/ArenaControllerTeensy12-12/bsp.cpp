@@ -823,7 +823,20 @@ BSP::transferPanelSet (const uint8_t *const buffer, uint16_t &buffer_position,
 bool
 BSP::findPatternCard ()
 {
-  return bsp_global::pattern_sd.begin (SdioConfig (FIFO_SDIO));
+  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+  QS_STR ("Attempting to find pattern card");
+  QS_END ()
+  QS_FLUSH();
+
+  bool result = bsp_global::pattern_sd.begin (SdioConfig (FIFO_SDIO));
+
+  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+  QS_STR ("Pattern card found");
+  QS_U8 (0, result);
+  QS_END ()
+  QS_FLUSH();
+
+  return result;
 }
 
 bool
