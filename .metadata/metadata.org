@@ -21,7 +21,7 @@ ArenaController
 
 #+NAME: library-version
 #+BEGIN_SRC text :exports none :noweb yes
-5.0.2
+6.0.0
 #+END_SRC
 
 #+NAME: panel-version
@@ -125,6 +125,16 @@ Polidoro
 peter@polidoro.io
 #+END_SRC
 
+#+NAME: lt
+#+BEGIN_SRC text :exports none
+<
+#+END_SRC
+
+#+NAME: gt
+#+BEGIN_SRC text :exports none
+>
+#+END_SRC
+
 #+NAME: maintainer-given-name
 #+BEGIN_SRC text :exports none :noweb yes
 Peter
@@ -175,38 +185,32 @@ documentation
 <<documentation-dir>>/images
 #+END_SRC
 
-#+name: org-hello
-#+begin_src org :var addressee=""
-Hello $addressee
-#+end_src
-
-#+name: print-org
-#+begin_src elisp :var x=org-hello[](addressee="World!")
-  (print x)
-#+end_src
-
 #+name: repository-info
-#+BEGIN_SRC org :noweb yes
-- Library Name: <<library-name>>
-- Description: <<description>>
-- Version: <<library-version>>
-- Panel Version: <<panel-version>>
-- Release Date: <<release-date>>
-- Creation Date: <<creation-date>>
-- License: <<license>>
-- URL: <<repository-url>>
-- Author: <<author>>
-- Author Email: <<author-email>>
-- Maintainer: <<maintainer>>
-- Maintainer Email: <<maintainer-email>>
-- Copyright: <<copyright>>
-- References:
-  - <<references>>
-#+END_SRC
+#+begin_src emacs-lisp :noweb yes :exports none :results raw
+  (let* ((refs (split-string "<<references>>" "\n" t))
+         (refs-org (mapconcat (lambda (s) (concat "  - " s)) refs "\n")))
+    (concat
+     "- Library Name: <<library-name>>\n"
+     "- Description: <<description>>\n"
+     "- Version: <<library-version>>\n"
+     "- Panel Version: <<panel-version>>\n"
+     "- Release Date: <<release-date>>\n"
+     "- Creation Date: <<creation-date>>\n"
+     "- License: <<license>>\n"
+     "- URL: <<repository-url>>\n"
+     "- Author: <<author>>\n"
+     "- Author Email: <<author-email>>\n"
+     "- Maintainer: <<maintainer>>\n"
+     "- Maintainer Email: <<maintainer-email>>\n"
+     "- Copyright: <<copyright>>\n"
+     "- References:\n"
+     refs-org
+     "\n"))
+#+end_src
 
 * Repository Information
 
-#+call: print-org(x=repository-info[:results raw]()):results raw
+#+call: repository-info():results raw
 
 * Modular LED Display
 
@@ -798,4 +802,21 @@ paragraph=Like this project? Please star it on GitHub!
 category=Device Control
 url=<<repository-url>>
 architectures=*
+#+END_SRC
+
+#+BEGIN_SRC text :tangle ../pixi.toml :exports none :noweb yes
+# This file is generated automatically from .metadata.org
+# File edits may be overwritten!
+[workspace]
+authors = ["<<author>> <<lt>><<author-email>><<gt>>"]
+channels = ["conda-forge"]
+description = "<<description>>"
+name = "G4.1-<<library-name>>"
+platforms = ["linux-64"]
+version = "<<library-version>>"
+
+[tasks]
+
+[dependencies]
+platformio = ">=6.1.16,<7"
 #+END_SRC
