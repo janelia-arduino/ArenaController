@@ -140,7 +140,6 @@ static PatternHeader pattern_header;
 static SdFs pattern_sd;
 static FsFile pattern_dir;
 static FsFile pattern_file;
-static uint16_t pattern_file_count;
 
 // Analog Output
 static Adafruit_MCP4728 analog_output_chip;
