@@ -156,6 +156,9 @@ watchdogCallback ()
 }
 
 //----------------------------------------------------------------------------
+bool BSP::qf_tick_enabled_ = true;
+
+//----------------------------------------------------------------------------
 // BSP functions
 
 void
@@ -188,6 +191,24 @@ void
 BSP::ledOn ()
 {
   digitalWriteFast (LED_BUILTIN, HIGH);
+}
+
+void
+BSP::enableQFTick ()
+{
+  qf_tick_enabled_ = true;
+}
+
+void
+BSP::disableQFTick ()
+{
+  qf_tick_enabled_ = false;
+}
+
+bool
+BSP::isQFTickEnabled ()
+{
+  return qf_tick_enabled_;
 }
 
 void
@@ -822,8 +843,9 @@ BSP::findPatternCard ()
   QS_STR ("Attempting to find pattern card");
   QS_END ()
   QS_FLUSH ();
-
+  BSP::disableQFTick();
   bool result = bsp_global::pattern_sd.begin (SdioConfig (FIFO_SDIO));
+  BSP::enableQFTick();
 
   QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
   QS_STR ("Pattern card found");
@@ -837,31 +859,7 @@ BSP::findPatternCard ()
 bool
 BSP::openPatternDirectory ()
 {
-  bool directory_opened
-      = bsp_global::pattern_dir.open (constants::pattern_dir_str);
-  if (!directory_opened)
-    {
-      return directory_opened;
-    }
-  FsFile f;
-  while (f.openNext (&bsp_global::pattern_dir, O_RDONLY))
-    {
-      uint32_t dir_index;
-      if (!f.isDir ())
-        {
-          dir_index = f.dirIndex ();
-        }
-      char name_log[constants::pattern_filename_log_str_len_max];
-      f.getName (name_log, sizeof (name_log));
-      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-      QS_STR ("dirIndex");
-      QS_U16 (5, dir_index);
-      QS_STR ("name");
-      QS_STR (name_log);
-      QS_END ()
-      f.close ();
-    }
-  return directory_opened;
+    return bsp_global::pattern_dir.open (constants::pattern_dir_str);
 }
 
 uint64_t
@@ -891,7 +889,7 @@ BSP::openPatternFileForReading (uint16_t pattern_id)
 
   // Open by directory entry index.
   bool ok = bsp_global::pattern_file.open (
-      &bsp_global::pattern_dir, static_cast<uint32_t> (pattern_id+1), O_RDONLY);
+      &bsp_global::pattern_dir, static_cast<uint32_t> ((pattern_id-1)*2+3), O_RDONLY);
   if (!ok)
     {
       QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
@@ -1050,7 +1048,10 @@ BSP::getAnalogInputMillivolts ()
 void
 TIMER_HANDLER ()
 {
-  QF::TICK_X (0, &constants::bsp_id); // process time events for tick rate 0
+  if (BSP::isQFTickEnabled ())
+    {
+      QF::TICK_X (0, &constants::bsp_id); // process time events for tick rate 0
+    }
 }
 //............................................................................
 void

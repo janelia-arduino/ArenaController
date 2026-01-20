@@ -7,6 +7,10 @@ struct BSP
 {
   static void init ();
 
+  static void enableQFTick ();
+  static void disableQFTick ();
+  static bool isQFTickEnabled ();
+
   static void ledOff ();
   static void ledOn ();
 
@@ -73,6 +77,9 @@ struct BSP
   static void setAnalogInputGainAndStartReading ();
   static bool analogInputDataAvailable ();
   static int16_t getAnalogInputMillivolts ();
+
+private:
+  static bool qf_tick_enabled_;
 };
 
 #endif // BSP_HPP
