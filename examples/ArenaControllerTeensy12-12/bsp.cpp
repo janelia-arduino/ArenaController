@@ -835,7 +835,31 @@ BSP::findPatternCard ()
 bool
 BSP::openPatternDirectory ()
 {
-  return bsp_global::pattern_dir.open (constants::pattern_dir_str);
+  bool directory_opened
+      = bsp_global::pattern_dir.open (constants::pattern_dir_str);
+  if (!directory_opened)
+    {
+      return directory_opened;
+    }
+  FsFile f;
+  while (f.openNext (&bsp_global::pattern_dir, O_RDONLY))
+    {
+      uint32_t dir_index;
+      if (!f.isDir ())
+        {
+          dir_index = f.dirIndex ();
+        }
+      char name_log[constants::pattern_filename_log_str_len_max];
+      f.getName (name_log, sizeof (name_log));
+      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+      QS_STR ("dirIndex");
+      QS_U16 (5, dir_index);
+      QS_STR ("name");
+      QS_STR (name_log);
+      QS_END ()
+      f.close ();
+    }
+  return directory_opened;
 }
 
 uint64_t
