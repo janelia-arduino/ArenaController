@@ -156,6 +156,9 @@ watchdogCallback ()
 }
 
 //----------------------------------------------------------------------------
+bool BSP::qf_tick_enabled_ = true;
+
+//----------------------------------------------------------------------------
 // BSP functions
 
 void
@@ -191,19 +194,39 @@ BSP::ledOn ()
 }
 
 void
+BSP::enableQFTick ()
+{
+  qf_tick_enabled_ = true;
+}
+
+void
+BSP::disableQFTick ()
+{
+  qf_tick_enabled_ = false;
+}
+
+bool
+BSP::isQFTickEnabled ()
+{
+  return qf_tick_enabled_;
+}
+
+void
 BSP::initializeWatchdog ()
 {
-  WDT_timings_t config;
-  config.trigger = constants::watchdog_trigger_seconds;
-  config.timeout = constants::watchdog_timeout_seconds;
-  config.callback = watchdogCallback;
-  bsp_global::wdt.begin (config);
+  // Watchdog disabled
+  // WDT_timings_t config;
+  // config.trigger = constants::watchdog_trigger_seconds;
+  // config.timeout = constants::watchdog_timeout_seconds;
+  // config.callback = watchdogCallback;
+  // bsp_global::wdt.begin (config);
 }
 
 void
 BSP::feedWatchdog ()
 {
-  bsp_global::wdt.feed ();
+  // Watchdog disabled
+  // bsp_global::wdt.feed ();
 }
 
 void
@@ -820,8 +843,9 @@ BSP::findPatternCard ()
   QS_STR ("Attempting to find pattern card");
   QS_END ()
   QS_FLUSH ();
-
+  BSP::disableQFTick();
   bool result = bsp_global::pattern_sd.begin (SdioConfig (FIFO_SDIO));
+  BSP::enableQFTick();
 
   QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
   QS_STR ("Pattern card found");
@@ -835,35 +859,7 @@ BSP::findPatternCard ()
 bool
 BSP::openPatternDirectory ()
 {
-  bool directory_opened
-      = bsp_global::pattern_dir.open (constants::pattern_dir_str);
-  return directory_opened;
-}
-
-void
-BSP::scanPatternDirectory ()
-{
-  // assumes pattern_dir is opened
-  FsFile f;
-  uint32_t dir_index;
-  while (f.openNext (&bsp_global::pattern_dir, O_RDONLY))
-    {
-      if (!f.isDir ())
-        {
-          dir_index = f.dirIndex ();
-          char name_log[constants::pattern_filename_log_str_len_max];
-          f.getName (name_log, sizeof (name_log));
-          QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-          QS_STR ("dir-index");
-          QS_U16 (5, dir_index);
-          QS_STR ("pattern-id");
-          QS_U16 (5, dir_index - 1);
-          QS_STR ("name");
-          QS_STR (name_log);
-          QS_END ()
-        }
-      f.close ();
-    }
+    return bsp_global::pattern_dir.open (constants::pattern_dir_str);
 }
 
 uint64_t
@@ -1053,7 +1049,10 @@ BSP::getAnalogInputMillivolts ()
 void
 TIMER_HANDLER ()
 {
-  QF::TICK_X (0, &constants::bsp_id); // process time events for tick rate 0
+  if (BSP::isQFTickEnabled ())
+    {
+      QF::TICK_X (0, &constants::bsp_id); // process time events for tick rate 0
+    }
 }
 //............................................................................
 void

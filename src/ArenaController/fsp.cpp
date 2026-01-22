@@ -119,7 +119,8 @@ FSP::ArenaController_setup ()
   QS_OBJ_DICTIONARY (AO_EthernetCommandInterface);
   QS_OBJ_DICTIONARY (AO_Display);
   QS_OBJ_DICTIONARY (AO_Frame);
-  QS_OBJ_DICTIONARY (AO_Watchdog);
+  // Watchdog disabled
+  // QS_OBJ_DICTIONARY (AO_Watchdog);
   QS_OBJ_DICTIONARY (AO_Pattern);
 
   QS_OBJ_DICTIONARY (&constants::fsp_id);
@@ -163,10 +164,11 @@ FSP::ArenaController_setup ()
   QF::psInit (subscrSto, Q_DIM (subscrSto));
 
   // statically allocate event queues for the AOs and start them...
-  static QEvt const *watchdog_queueSto[constants::watchdog_event_queue_count];
-  AO_Watchdog->start (1U, // priority
-                      watchdog_queueSto, Q_DIM (watchdog_queueSto), (void *)0,
-                      0U); // no stack
+  // Watchdog disabled
+  // static QEvt const *watchdog_queueSto[constants::watchdog_event_queue_count];
+  // AO_Watchdog->start (1U, // priority
+  //                     watchdog_queueSto, Q_DIM (watchdog_queueSto), (void *)0,
+  //                     0U); // no stack
 
   static QEvt const *serial_command_interface_queueSto
       [constants::serial_command_interface_event_queue_count];
@@ -202,7 +204,8 @@ FSP::ArenaController_setup ()
                    frame_queueSto, Q_DIM (frame_queueSto), (void *)0,
                    0U); // no stack
 
-  QS_LOC_FILTER (-AO_Watchdog->m_prio);
+  // Watchdog disabled
+  // QS_LOC_FILTER (-AO_Watchdog->m_prio);
   // QS_LOC_FILTER(-AO_Display->m_prio);
   // QS_LOC_FILTER(-AO_Frame->m_prio);
   // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
