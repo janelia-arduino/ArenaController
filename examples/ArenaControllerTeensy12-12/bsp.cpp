@@ -851,8 +851,10 @@ BSP::openPatternDirectory ()
           char name_log[constants::pattern_filename_log_str_len_max];
           f.getName (name_log, sizeof (name_log));
           QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
-          QS_STR ("dirIndex");
+          QS_STR ("dir-index");
           QS_U16 (5, dir_index);
+          QS_STR ("pattern-id");
+          QS_U16 (5, dir_index - 1);
           QS_STR ("name");
           QS_STR (name_log);
           QS_END ()
@@ -889,7 +891,8 @@ BSP::openPatternFileForReading (uint16_t pattern_id)
 
   // Open by directory entry index.
   bool ok = bsp_global::pattern_file.open (
-      &bsp_global::pattern_dir, static_cast<uint32_t> (pattern_id), O_RDONLY);
+      &bsp_global::pattern_dir, static_cast<uint32_t> (pattern_id + 1),
+      O_RDONLY);
   if (!ok)
     {
       QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
