@@ -837,10 +837,13 @@ BSP::openPatternDirectory ()
 {
   bool directory_opened
       = bsp_global::pattern_dir.open (constants::pattern_dir_str);
-  if (!directory_opened)
-    {
-      return directory_opened;
-    }
+  return directory_opened;
+}
+
+void
+BSP::scanPatternDirectory ()
+{
+  // assumes pattern_dir is opened
   FsFile f;
   uint32_t dir_index;
   while (f.openNext (&bsp_global::pattern_dir, O_RDONLY))
@@ -861,7 +864,6 @@ BSP::openPatternDirectory ()
         }
       f.close ();
     }
-  return directory_opened;
 }
 
 uint64_t

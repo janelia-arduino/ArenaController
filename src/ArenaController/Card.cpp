@@ -350,6 +350,13 @@ Q_STATE_DEF (Card, OpeningDirectory)
         status_ = Q_RET_HANDLED;
         break;
       }
+    //${AOs::Card::SM::Initialized::OpeningDirectory}
+    case Q_EXIT_SIG:
+      {
+        FSP::Card_scanDirectory (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Card::SM::Initialized::OpeningDirectory::DIRECTORY_OPEN_FAILURE}
     case DIRECTORY_OPEN_FAILURE_SIG:
       {

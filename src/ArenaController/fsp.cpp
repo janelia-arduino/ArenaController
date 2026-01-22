@@ -1884,6 +1884,12 @@ FSP::Card_openDirectory (QHsm *const hsm, QEvt const *e)
 }
 
 void
+FSP::Card_scanDirectory (QHsm *const hsm, QEvt const *e)
+{
+  BSP::scanPatternDirectory ();
+}
+
+void
 FSP::Card_postAllOff (QHsm *const hsm, QEvt const *e)
 {
   AO_Arena->POST (&constants::all_off_evt, hsm);
