@@ -889,7 +889,8 @@ BSP::openPatternFileForReading (uint16_t pattern_id)
 
   // Open by directory entry index.
   bool ok = bsp_global::pattern_file.open (
-      &bsp_global::pattern_dir, static_cast<uint32_t> ((pattern_id-1)*2+3), O_RDONLY);
+      &bsp_global::pattern_dir, static_cast<uint32_t> (pattern_id + 1),
+      O_RDONLY);
   if (!ok)
     {
       QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)

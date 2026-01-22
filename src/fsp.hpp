@@ -272,6 +272,7 @@ struct FSP
                                                     QP::QEvt const *e);
   static void Card_findCard (QP::QHsm *const hsm, QP::QEvt const *e);
   static void Card_openDirectory (QP::QHsm *const hsm, QP::QEvt const *e);
+  static void Card_scanDirectory (QP::QHsm *const hsm, QP::QEvt const *e);
   static void Card_sortFilenames (QP::QHsm *const hsm, QP::QEvt const *e);
   static void Card_postAllOff (QP::QHsm *const hsm, QP::QEvt const *e);
   static void Card_openFile (QP::QHsm *const hsm, QP::QEvt const *e);

@@ -62,7 +62,7 @@ struct BSP
 
   static bool findPatternCard ();
   static bool openPatternDirectory ();
-  static bool sortPatternFilenames ();
+  static void scanPatternDirectory ();
   static uint64_t openPatternFileForReading (uint16_t pattern_id);
   static void closePatternFile ();
   static AC::PatternHeader rewindPatternFileAndReadHeader ();
