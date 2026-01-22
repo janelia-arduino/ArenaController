@@ -395,8 +395,8 @@ transferPanelCompleteCallback (EventResponderRef event_responder)
   if (bsp_global::transfer_panel_complete_count
       == constants::region_count_per_frame)
     {
-      AO_Frame->POST (&constants::panel_set_transferred_evt,
-                      &constants::bsp_id);
+      AO_Frame->POST_X (&constants::panel_set_transferred_evt,
+                        &constants::bsp_id);
     }
 }
 
