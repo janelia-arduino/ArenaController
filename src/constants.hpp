@@ -22,7 +22,7 @@ constexpr uint8_t frame_event_queue_count = 20;
 // Duration before callback fires
 constexpr uint32_t watchdog_trigger_seconds = 1;
 // Duration before watchdog expires
-constexpr uint32_t watchdog_timeout_seconds = 2;
+constexpr uint32_t watchdog_timeout_seconds = 1;
 
 // QS
 constexpr uint32_t qs_serial_baud_rate = 115200;

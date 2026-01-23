@@ -203,6 +203,8 @@ struct FSP
 
   static void Watchdog_initializeAndSubscribe (QP::QActive *const ao,
                                                QP::QEvt const *e);
+  static void Watchdog_beginWatchdog (QP::QActive *const ao,
+                                      QP::QEvt const *e);
   static void Watchdog_armWatchdogTimer (QP::QActive *const ao,
                                          QP::QEvt const *e);
   static void Watchdog_disarmWatchdogTimer (QP::QActive *const ao,

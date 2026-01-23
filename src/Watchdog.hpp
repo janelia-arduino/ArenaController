@@ -53,8 +53,7 @@ public:
 
 protected:
   Q_STATE_DECL (initial);
-  Q_STATE_DECL (Feeding);
-  Q_STATE_DECL (Initialized);
+  Q_STATE_DECL (Idle);
   Q_STATE_DECL (Resetting);
 }; // class Watchdog
 

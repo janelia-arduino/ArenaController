@@ -852,35 +852,19 @@ analog_input_ = AnalogInput_getInstance();</code>
       <action box="1,0,21,3"/>
      </initial_glyph>
     </initial>
-    <state name="Feeding">
-     <entry brief="armWatchdogTimer()">FSP::Watchdog_armWatchdogTimer(this, e);</entry>
-     <exit brief="disarmWatchdogTimer()">FSP::Watchdog_disarmWatchdogTimer(this, e);</exit>
-     <initial target="../2">
-      <initial_glyph conn="49,22,5,1,-4">
-       <action box="0,-2,10,2"/>
-      </initial_glyph>
-     </initial>
+    <state name="Idle">
      <tran trig="RESET" target="../../2">
       <tran_glyph conn="24,30,2,0,7">
        <action box="1,2,10,2"/>
       </tran_glyph>
      </tran>
-     <state name="Initialized">
-      <tran trig="WATCHDOG_TIMEOUT">
-       <action brief="feedWatchdog()">FSP::Watchdog_feedWatchdog(this, e);</action>
-       <tran_glyph conn="17,22,3,-1,22">
-        <action box="0,-2,23,5"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="17,18,28,7"/>
-     </state>
-     <state_glyph node="14,8,45,22">
-      <entry box="1,2,23,2"/>
-      <exit box="1,4,23,2"/>
-     </state_glyph>
+     <state_glyph node="14,8,45,22"/>
     </state>
     <state name="Resetting">
-     <state_glyph node="14,37,28,13"/>
+     <entry brief="beginWatchdog()">FSP::Watchdog_beginWatchdog(this, e);</entry>
+     <state_glyph node="14,37,45,13">
+      <entry box="1,2,20,2"/>
+     </state_glyph>
     </state>
     <state_diagram size="80,70"/>
    </statechart>

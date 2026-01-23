@@ -74,40 +74,19 @@ Q_STATE_DEF (Watchdog, initial)
   //${AOs::Watchdog::SM::initial}
   FSP::Watchdog_initializeAndSubscribe (this, e);
 
-  QS_FUN_DICTIONARY (&Watchdog::Feeding);
-  QS_FUN_DICTIONARY (&Watchdog::Initialized);
+  QS_FUN_DICTIONARY (&Watchdog::Idle);
   QS_FUN_DICTIONARY (&Watchdog::Resetting);
 
-  return tran (&Feeding);
+  return tran (&Idle);
 }
 
-//${AOs::Watchdog::SM::Feeding} ..............................................
-Q_STATE_DEF (Watchdog, Feeding)
+//${AOs::Watchdog::SM::Idle} .................................................
+Q_STATE_DEF (Watchdog, Idle)
 {
   QP::QState status_;
   switch (e->sig)
     {
-    //${AOs::Watchdog::SM::Feeding}
-    case Q_ENTRY_SIG:
-      {
-        FSP::Watchdog_armWatchdogTimer (this, e);
-        status_ = Q_RET_HANDLED;
-        break;
-      }
-    //${AOs::Watchdog::SM::Feeding}
-    case Q_EXIT_SIG:
-      {
-        FSP::Watchdog_disarmWatchdogTimer (this, e);
-        status_ = Q_RET_HANDLED;
-        break;
-      }
-    //${AOs::Watchdog::SM::Feeding::initial}
-    case Q_INIT_SIG:
-      {
-        status_ = tran (&Initialized);
-        break;
-      }
-    //${AOs::Watchdog::SM::Feeding::RESET}
+    //${AOs::Watchdog::SM::Idle::RESET}
     case RESET_SIG:
       {
         status_ = tran (&Resetting);
@@ -122,34 +101,19 @@ Q_STATE_DEF (Watchdog, Feeding)
   return status_;
 }
 
-//${AOs::Watchdog::SM::Feeding::Initialized} .................................
-Q_STATE_DEF (Watchdog, Initialized)
-{
-  QP::QState status_;
-  switch (e->sig)
-    {
-    //${AOs::Watchdog::SM::Feeding::Initialized::WATCHDOG_TIMEOUT}
-    case WATCHDOG_TIMEOUT_SIG:
-      {
-        FSP::Watchdog_feedWatchdog (this, e);
-        status_ = Q_RET_HANDLED;
-        break;
-      }
-    default:
-      {
-        status_ = super (&Feeding);
-        break;
-      }
-    }
-  return status_;
-}
-
 //${AOs::Watchdog::SM::Resetting} ............................................
 Q_STATE_DEF (Watchdog, Resetting)
 {
   QP::QState status_;
   switch (e->sig)
     {
+    //${AOs::Watchdog::SM::Resetting}
+    case Q_ENTRY_SIG:
+      {
+        FSP::Watchdog_beginWatchdog (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     default:
       {
         status_ = super (&top);

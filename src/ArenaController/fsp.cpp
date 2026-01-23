@@ -1287,12 +1287,16 @@ FSP::Frame_recall (QP::QActive *const ao, QP::QEvt const *e)
 void
 FSP::Watchdog_initializeAndSubscribe (QActive *const ao, QEvt const *e)
 {
-  BSP::initializeWatchdog ();
-
   Watchdog *const watchdog = static_cast<Watchdog *const> (ao);
   QS_OBJ_DICTIONARY (&(watchdog->watchdog_time_evt_));
   QS_SIG_DICTIONARY (WATCHDOG_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY (RESET_SIG, ao);
+}
+
+void
+FSP::Watchdog_beginWatchdog (QActive *const ao, QEvt const *e)
+{
+  BSP::initializeWatchdog ();
 }
 
 void
