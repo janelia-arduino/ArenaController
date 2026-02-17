@@ -313,8 +313,20 @@ sudo apt-get purge --auto-remove modemmanager
 
 *** Build the firmware
 
+Pixi tasks select which example gets built by setting the =PLATFORMIO_SRC_DIR= environment variable (so you do not need to edit =platformio.ini=).
+
+Default example (=examples/ArenaControllerTeensy12-12=):
+
 #+BEGIN_SRC sh
 pixi run build
+#+END_SRC
+
+Other examples:
+
+#+BEGIN_SRC sh
+pixi run build-mongoose
+pixi run build-sdcard
+pixi run build-watchdog
 #+END_SRC
 
 *** Upload the firmware
@@ -325,21 +337,26 @@ List available devices/ports:
 pixi run ports
 #+END_SRC
 
-Upload (optionally specify a port):
+Upload (a port can be provided; default is =/dev/ttyACM0=):
 
 #+BEGIN_SRC sh
 pixi run upload
-
-# Examples:
-pixi run upload /dev/ttyACM0
+pixi run upload /dev/ttyACM1
 pixi run upload /dev/cu.usbmodem1234
 pixi run upload COM3
 #+END_SRC
 
-*** Monitor
+Upload other examples:
 
 #+BEGIN_SRC sh
-pixi run monitor /dev/ttyACM0
+pixi run upload-mongoose
+pixi run upload-mongoose /dev/ttyACM1
+
+pixi run upload-sdcard
+pixi run upload-sdcard /dev/ttyACM1
+
+pixi run upload-watchdog
+pixi run upload-watchdog /dev/ttyACM1
 #+END_SRC
 
 *** Version synchronization

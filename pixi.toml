@@ -8,16 +8,44 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tasks]
 ports = "pio device list"
-build = "pio run -e teensy41"
 check-version = "python tools/version_sync.py check"
 
-[tasks.upload]
-args = [{ arg = "port", default = "" }]
-cmd = """pio run -e teensy41 -t upload{% if port != "" %} --upload-port {{ port }}{% endif %}"""
+# Default example: examples/ArenaControllerTeensy12-12
+[tasks.build]
+cmd = "pio run -e teensy41"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/ArenaControllerTeensy12-12" }
 
-[tasks.monitor]
-args = [{ arg = "port", default = "" }]
-cmd = """pio device monitor --echo --eol=LF{% if port != "" %} --port {{ port }}{% endif %}"""
+[tasks.build-mongoose]
+cmd = "pio run -e teensy41"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/MongooseTest" }
+
+[tasks.build-sdcard]
+cmd = "pio run -e teensy41"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/SDCardDebugTest" }
+
+[tasks.build-watchdog]
+cmd = "pio run -e teensy41"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/WatchdogTest" }
+
+[tasks.upload]
+args = [{ arg = "port", default = "/dev/ttyACM0" }]
+cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/ArenaControllerTeensy12-12" }
+
+[tasks.upload-mongoose]
+args = [{ arg = "port", default = "/dev/ttyACM0" }]
+cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/MongooseTest" }
+
+[tasks.upload-sdcard]
+args = [{ arg = "port", default = "/dev/ttyACM0" }]
+cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/SDCardDebugTest" }
+
+[tasks.upload-watchdog]
+args = [{ arg = "port", default = "/dev/ttyACM0" }]
+cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
+env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/WatchdogTest" }
 
 [tasks.set-version]
 args = ["new_version"]
