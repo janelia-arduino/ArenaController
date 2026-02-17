@@ -1,14 +1,27 @@
-# This file is generated automatically from .metadata.org
-# File edits may be overwritten!
 [workspace]
+name = "G4.1-ArenaController"
+version = "6.0.0"
+description = "Arduino library for communicating with the Reiser Lab Modular LED panels display arena."
 authors = ["Peter Polidoro <peter@polidoro.io>"]
 channels = ["conda-forge"]
-description = "Arduino library for communicating with the Reiser Lab Modular LED panels display arena."
-name = "G4.1-ArenaController"
-platforms = ["linux-64"]
-version = "6.0.0"
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tasks]
+ports = "pio device list"
+build = "pio run -e teensy41"
+check-version = "python tools/version_sync.py check"
+
+[tasks.upload]
+args = [{ arg = "port", default = "" }]
+cmd = """pio run -e teensy41 -t upload{% if port != "" %} --upload-port {{ port }}{% endif %}"""
+
+[tasks.monitor]
+args = [{ arg = "port", default = "" }]
+cmd = """pio device monitor --echo --eol=LF{% if port != "" %} --port {{ port }}{% endif %}"""
+
+[tasks.set-version]
+args = ["new_version"]
+cmd = "python tools/version_sync.py set {{ new_version }}"
 
 [dependencies]
 platformio = ">=6.1.16,<7"

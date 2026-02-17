@@ -1,0 +1,352 @@
+#+TITLE: ArenaController
+#+PROPERTY: VERSION 6.0.0
+
+* Repository Information
+
+- Library Name: ArenaController
+- Description: Arduino library for communicating with the Reiser Lab Modular LED panels display arena.
+- Version: 6.0.0
+- Panel Version: G4 v1.9
+- Release Date: 2025-01-20
+- Creation Date: 2023-08-16
+- License: GPL-3.0
+- URL: https://github.com/janelia-arduino/ArenaController
+- Author: Peter Polidoro
+- Author Email: peter@polidoro.io
+- Maintainer: Peter Polidoro
+- Maintainer Email: peter@polidoro.io
+- Copyright: 2026 Howard Hughes Medical Institute
+- References:
+  - https://github.com/janelia-python/arena_interface_python
+  - https://reiserlab.github.io/Modular-LED-Display/
+  - https://github.com/floesche/LED-Display_G4_Hardware_Arena
+  - https://github.com/leburnett/G4_Display_Tools
+  - https://www.pjrc.com/store/teensy41.html
+  - https://www.pjrc.com/store/ethernet_kit.html
+  - https://github.com/QuantumLeaps/qp-arduino
+  - https://mongoose.ws/
+  - https://www.adafruit.com/product/4470
+  - https://www.adafruit.com/product/1083
+* Modular LED Display
+
+#+BEGIN_HTML
+<img src="./documentation/images/arena.png" width="1200px">
+#+END_HTML
+
+Abstract from https://doi.org/10.1101/2022.08.02.502550 :
+
+"Visual stimulation of animals in the laboratory is a powerful technique for
+studying sensory control of complex behaviors.
+
+Since commercial displays are optimized for human vision, we established a novel
+display system based on custom-built modular LED panels that provides
+millisecond refresh, precise synchronization, customizable color combinations,
+and varied display configurations.
+
+This system simplifies challenging experiments.
+
+With variants of this display, we probed the speed limits of motion vision and
+examined the role of color vision in behavioral experiments with tethered flying
+Drosophila.
+
+Using 2-photon calcium imaging, we comprehensively mapped the tuning of visual
+projection neurons across the fly’s field of view.
+
+Finally, using real-time behavior analysis, we developed low-latency interactive
+virtual environments and found that flying flies can independently control their
+navigation along two dimensions.
+
+This display system uniquely addresses most technical challenges of small animal
+vision experiments and is thoroughly documented for replicability."
+
+** System Components
+
+*** Quarter Panel
+
+A quarter panel is a set of LED pixels arranged in rows and columns.
+
+#+BEGIN_HTML
+<img src="./documentation/images/quarter_panel.png" width="96px">
+#+END_HTML
+
+*** Panel
+
+A panel is a set of quarter panels arranged in rows and columns.
+
+#+BEGIN_HTML
+<img src="./documentation/images/panel.png" width="192px">
+#+END_HTML
+
+*** Region
+
+A region is a set of panels arranged in rows and columns with a common communication interface.
+
+#+BEGIN_HTML
+<img src="./documentation/images/region.png" width="607px">
+#+END_HTML
+
+*** Display
+
+An display is a set of regions arranged in rows and columns.
+
+#+BEGIN_HTML
+<img src="./documentation/images/display.png" width="1214px">
+#+END_HTML
+
+** Display Messages
+
+*** Quarter Panel
+
+**** Pixels
+
+Pixel numbering for each pixel in a quarter panel:
+
+#+BEGIN_HTML
+<img src="./documentation/images/quarter_panel_pixels.png" width="1200px">
+#+END_HTML
+
+**** Grayscale
+
+In grayscale mode, each LED can be one of sixteen brightness levels.
+
+#+BEGIN_HTML
+<img src="./documentation/images/grayscale.png" width="420px">
+#+END_HTML
+
+#+BEGIN_HTML
+<img src="./documentation/images/quarter_panel_grayscale.png" width="1200px">
+#+END_HTML
+
+**** Binary
+
+In binary mode, each LED can be one of two brightness levels, on or off.
+
+#+BEGIN_HTML
+<img src="./documentation/images/binary.png" width="420px">
+#+END_HTML
+
+#+BEGIN_HTML
+<img src="./documentation/images/quarter_panel_binary.png" width="1200px">
+#+END_HTML
+
+*** Panel
+
+**** Quarter Panels in Panel
+
+Quarter panel numbering for each quarter panel in a panel plus pixel numbering for select pixels in a panel:
+
+#+BEGIN_HTML
+<img src="./documentation/images/panel_quarter_panels.png" width="1200px">
+#+END_HTML
+
+*** Region
+
+**** Regions in Display
+
+Region numbering for each region in an display:
+
+#+BEGIN_HTML
+<img src="./documentation/images/display_regions.png" width="1200px">
+#+END_HTML
+
+**** Panels in Region
+
+Panel numbering for each panel in an region:
+
+#+BEGIN_HTML
+<img src="./documentation/images/region_panels.png" width="600px">
+#+END_HTML
+
+*** Display
+
+**** Panels in Display
+
+Panel update order for each panel in an display:
+
+***** Synchronous
+
+#+BEGIN_HTML
+<img src="./documentation/images/display_panels_synchronous.png" width="1200px">
+#+END_HTML
+
+***** Asynchronous
+
+#+BEGIN_HTML
+<img src="./documentation/images/display_panels_asynchronous.png" width="1200px">
+#+END_HTML
+
+** Firmware
+
+*** Active Objects
+
+| name                     | priority | event-queue-count | state-machines                   |
+|--------------------------+----------+-------------------+----------------------------------|
+| Watchdog                 |        1 |                 2 | Watchdog                         |
+| SerialCommandInterface   |        2 |                10 | SerialCommandInterface           |
+| EthernetCommandInterface |        3 |                10 | EthernetCommandInterface         |
+| Pattern                  |        4 |                20 | Pattern, Card                    |
+| Arena                    |        5 |                20 | Arena, AnalogOutput, AnalogInput |
+| Display                  |        6 |                20 | Display                          |
+| Frame                    |        7 |                20 | Frame                            |
+
+*** State Diagrams
+
+**** Watchdog
+
+
+#+BEGIN_HTML
+<img src="./documentation/images/state-diagram-watchdog.png">
+#+END_HTML
+
+**** SerialCommandInterface
+
+
+#+BEGIN_HTML
+<img src="./documentation/images/state-diagram-serial-command-interface.png">
+#+END_HTML
+
+**** EthernetCommandInterface
+
+
+#+BEGIN_HTML
+<img src="./documentation/images/state-diagram-ethernet-command-interface.png">
+#+END_HTML
+
+**** Pattern
+
+
+#+BEGIN_HTML
+<img src="./documentation/images/state-diagram-pattern.png">
+#+END_HTML
+
+**** Card
+
+
+
+**** Arena
+
+
+**** AnalogOutput
+
+
+**** AnalogInput
+
+
+**** Display
+
+
+**** Frame
+
+
+
+** Command Set
+
+* Development
+
+** Download this repository
+
+[[https://github.com/janelia-arduino/ArenaController.git]]
+
+#+BEGIN_SRC sh
+sudo apt install -y git
+mkdir -p ~/tmp && cd ~/tmp && git clone https://github.com/janelia-arduino/ArenaController.git
+cd ArenaController
+#+END_SRC
+
+** PlatformIO via pixi
+
+*** Install pixi
+
+Linux & macOS:
+
+#+BEGIN_SRC sh
+curl -fsSL https://pixi.sh/install.sh | sh
+# or, if you do not have curl:
+wget -qO- https://pixi.sh/install.sh | sh
+#+END_SRC
+
+Windows (PowerShell):
+
+#+BEGIN_SRC sh
+powershell -ExecutionPolicy Bypass -c "irm -useb https://pixi.sh/install.ps1 | iex"
+#+END_SRC
+
+Restart your terminal so the updated PATH takes effect, then verify:
+
+#+BEGIN_SRC sh
+pixi --version
+#+END_SRC
+
+(Optional) Update pixi:
+
+#+BEGIN_SRC sh
+pixi self-update
+#+END_SRC
+
+*** Create the environment
+
+From the repository root:
+
+#+BEGIN_SRC sh
+pixi install
+#+END_SRC
+
+You can also run any task directly; pixi will install the environment automatically if needed.
+
+*** Linux USB/Serial permissions (udev rules)
+
+Linux users may need udev rules for PlatformIO supported boards/devices:
+
+#+BEGIN_SRC sh
+curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
+sudo service udev restart
+sudo usermod -a -G dialout $USER
+sudo usermod -a -G plugdev $USER
+# Log out/in (or reboot) so group changes take effect.
+#+END_SRC
+
+If uploads still fail due to port contention, you can remove ModemManager on Debian-based systems:
+
+#+BEGIN_SRC sh
+sudo apt-get purge --auto-remove modemmanager
+#+END_SRC
+
+*** Build the firmware
+
+#+BEGIN_SRC sh
+pixi run build
+#+END_SRC
+
+*** Upload the firmware
+
+List available devices/ports:
+
+#+BEGIN_SRC sh
+pixi run ports
+#+END_SRC
+
+Upload (optionally specify a port):
+
+#+BEGIN_SRC sh
+pixi run upload
+
+# Examples:
+pixi run upload /dev/ttyACM0
+pixi run upload /dev/cu.usbmodem1234
+pixi run upload COM3
+#+END_SRC
+
+*** Monitor
+
+#+BEGIN_SRC sh
+pixi run monitor /dev/ttyACM0
+#+END_SRC
+
+*** Version synchronization
+
+Keep the version number consistent across README.org, library.properties, and pixi.toml:
+
+#+BEGIN_SRC sh
+pixi run check-version
+pixi run set-version 6.0.1
+#+END_SRC
