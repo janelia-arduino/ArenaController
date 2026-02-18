@@ -13,3 +13,5 @@
 # pixi environments
 .pixi
 *.egg-info
+
+.tools/

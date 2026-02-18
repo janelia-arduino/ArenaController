@@ -367,3 +367,60 @@ Keep the version number consistent across README.org, library.properties, and pi
 pixi run check-version
 pixi run set-version 6.0.1
 #+END_SRC
+
+*** Quantum Leaps tools (QM 5.2.3, QTools/QSPY 6.9.3)
+
+This repository uses the =qp-arduino= ecosystem (QP/C++ + QM + QTools). The =qp-arduino= project pins the compatible tool versions to:
+
+- QM =5.2.3=
+- QTools (includes QSPY) =6.9.3=
+
+To make this easy for collaborators on Linux/macOS/Windows, this repository provides =pixi= tasks that:
+
+1. Download the correct versions of QM and QTools
+2. Install them into =.tools/quantum-leaps/=
+3. Run QM and/or QSPY from those local installs
+
+Note: the =.tools/= directory should be git-ignored (it contains downloaded binaries).
+
+**** Install QM + QTools
+
+#+BEGIN_SRC sh
+pixi run ql-install
+#+END_SRC
+
+To re-download and reinstall from scratch:
+
+#+BEGIN_SRC sh
+pixi run ql-install --force
+#+END_SRC
+
+**** Run QM
+
+#+BEGIN_SRC sh
+pixi run qm
+#+END_SRC
+
+**** Run QSPY
+
+Run with the default configuration (TCP port 6601 and UDP port 7701):
+
+#+BEGIN_SRC sh
+pixi run qspy
+#+END_SRC
+
+Connect to a serial port (examples):
+
+#+BEGIN_SRC sh
+# Linux
+pixi run qspy -c /dev/ttyACM0 -b 115200
+
+# macOS (example device name)
+pixi run qspy -c /dev/cu.usbmodem1234 -b 115200
+
+# Windows
+pixi run qspy -c COM3 -b 115200
+#+END_SRC
+
+See the QSPY documentation for more command-line options.
+

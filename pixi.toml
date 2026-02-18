@@ -51,5 +51,36 @@ env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/WatchdogTest" }
 args = ["new_version"]
 cmd = "python tools/version_sync.py set {{ new_version }}"
 
+# Quantum Leaps host tools (QM and QTools/QSPY) pinned for qp-arduino compatibility
+[tasks.ql-install]
+cmd = "python tools/quantum_leaps_tools.py install"
+
+[tasks.qm]
+cmd = "python tools/quantum_leaps_tools.py qm"
+
+[tasks.qm-install]
+cmd = "python tools/quantum_leaps_tools.py qm --install-only"
+
+[tasks.qtools-install]
+cmd = "python tools/quantum_leaps_tools.py qtools-install"
+
+# Run QSPY (extra CLI args are forwarded to qspy, e.g. `pixi run qspy -c /dev/ttyACM0 -b 115200`)
+[tasks.qspy]
+cmd = "python tools/quantum_leaps_tools.py qspy"
+
+
 [dependencies]
 platformio = ">=6.1.16,<7"
+
+[target.linux-64.dependencies]
+make = "*"
+c-compiler = "*"
+
+[target.osx-64.dependencies]
+make = "*"
+c-compiler = "*"
+
+[target.osx-arm64.dependencies]
+make = "*"
+c-compiler = "*"
+
