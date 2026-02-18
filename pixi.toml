@@ -4,11 +4,27 @@ version = "6.0.0"
 description = "Arduino library for communicating with the Reiser Lab Modular LED panels display arena."
 authors = ["Peter Polidoro <peter@polidoro.io>"]
 channels = ["conda-forge"]
+
+# Supported pixi platforms. Including these ensures pixi.lock can be solved
+# for each OS/arch (Linux/macOS/Windows).
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
+[dependencies]
+# PlatformIO CLI (conda-forge, noarch). This provides the `pio` command.
+platformio = ">=6.1.16,<7"
+# Explicit Python for repo helper scripts (version_sync.py, quantum_leaps_tools.py)
+python = ">=3.12,<3.13"
+
 [tasks]
+# General helpers
 ports = "pio device list"
 check-version = "python tools/version_sync.py check"
+
+# --------------------------------------------------------------------------------------
+# PlatformIO build/upload tasks
+# We select which example to build by setting PLATFORMIO_SRC_DIR (overrides src_dir)
+# and then run the configured PlatformIO environment (teensy41).
+# --------------------------------------------------------------------------------------
 
 # Default example: examples/ArenaControllerTeensy12-12
 [tasks.build]
@@ -27,6 +43,7 @@ env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/SDCardDebugTest" }
 cmd = "pio run -e teensy41"
 env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/WatchdogTest" }
 
+# Upload tasks (default port is /dev/ttyACM0; override as needed)
 [tasks.upload]
 args = [{ arg = "port", default = "/dev/ttyACM0" }]
 cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
@@ -47,31 +64,41 @@ args = [{ arg = "port", default = "/dev/ttyACM0" }]
 cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
 env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/WatchdogTest" }
 
+# Version synchronization (README.org, library.properties, pixi.toml)
 [tasks.set-version]
 args = ["new_version"]
 cmd = "python tools/version_sync.py set {{ new_version }}"
 
-# Quantum Leaps host tools (QM and QTools/QSPY) pinned for qp-arduino compatibility
+# --------------------------------------------------------------------------------------
+# Quantum Leaps host tools pinned for qp-arduino compatibility:
+#   QM     5.2.3
+#   QTools 6.9.3 (QSPY)
+#
+# Tools are installed into: ./.tools/quantum-leaps/
+# Suggestion: add ".tools/" to .gitignore to avoid committing downloads.
+# --------------------------------------------------------------------------------------
+
+# Install both QM and QTools
 [tasks.ql-install]
 cmd = "python tools/quantum_leaps_tools.py install"
 
+# Launch QM (installs if missing)
 [tasks.qm]
 cmd = "python tools/quantum_leaps_tools.py qm"
 
+# Install QM only
 [tasks.qm-install]
 cmd = "python tools/quantum_leaps_tools.py qm --install-only"
 
+# Install QTools (and build qspy on Linux/macOS if needed)
 [tasks.qtools-install]
 cmd = "python tools/quantum_leaps_tools.py qtools-install"
 
-# Run QSPY (extra CLI args are forwarded to qspy, e.g. `pixi run qspy -c /dev/ttyACM0 -b 115200`)
+# Run QSPY (any args after 'qspy' are forwarded to qspy, e.g. -c /dev/ttyACM0 -b 115200)
 [tasks.qspy]
 cmd = "python tools/quantum_leaps_tools.py qspy"
 
-
-[dependencies]
-platformio = ">=6.1.16,<7"
-
+# Build tooling for qspy on POSIX
 [target.linux-64.dependencies]
 make = "*"
 c-compiler = "*"
@@ -83,4 +110,3 @@ c-compiler = "*"
 [target.osx-arm64.dependencies]
 make = "*"
 c-compiler = "*"
-

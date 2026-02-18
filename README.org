@@ -368,59 +368,67 @@ pixi run check-version
 pixi run set-version 6.0.1
 #+END_SRC
 
-*** Quantum Leaps tools (QM 5.2.3, QTools/QSPY 6.9.3)
+*** Quantum Leaps host tools (QM and QTools/QSPY)
 
-This repository uses the =qp-arduino= ecosystem (QP/C++ + QM + QTools). The =qp-arduino= project pins the compatible tool versions to:
+This project uses the Quantum Leaps =qp-arduino= framework (qpcpp =6.9.3=), so the host tools must be pinned to compatible versions:
 
 - QM =5.2.3=
-- QTools (includes QSPY) =6.9.3=
+- QTools (QSPY) =6.9.3=
 
-To make this easy for collaborators on Linux/macOS/Windows, this repository provides =pixi= tasks that:
+The pixi tasks in this repository download and install these tools locally into:
 
-1. Download the correct versions of QM and QTools
-2. Install them into =.tools/quantum-leaps/=
-3. Run QM and/or QSPY from those local installs
+=./.tools/quantum-leaps/=
 
-Note: the =.tools/= directory should be git-ignored (it contains downloaded binaries).
+(Recommended) Add this directory to your =.gitignore= so downloads are not committed:
 
-**** Install QM + QTools
+#+BEGIN_SRC text
+.tools/
+#+END_SRC
+
+**** Install QM and QTools
 
 #+BEGIN_SRC sh
 pixi run ql-install
 #+END_SRC
 
-To re-download and reinstall from scratch:
-
-#+BEGIN_SRC sh
-pixi run ql-install --force
-#+END_SRC
-
-**** Run QM
+**** Launch QM
 
 #+BEGIN_SRC sh
 pixi run qm
 #+END_SRC
 
-**** Run QSPY
+**** Install QTools (and build QSPY on Linux/macOS)
 
-Run with the default configuration (TCP port 6601 and UDP port 7701):
+On Linux/macOS, QSPY is built from source using =make= and a C compiler (pixi installs these dependencies automatically for supported platforms).
 
 #+BEGIN_SRC sh
-pixi run qspy
+pixi run qtools-install
 #+END_SRC
 
-Connect to a serial port (examples):
+**** Run QSPY
+
+The QSPY output is binary, so do not use the Arduino serial monitor.
+
+Typical serial connection example (Linux):
 
 #+BEGIN_SRC sh
-# Linux
 pixi run qspy -c /dev/ttyACM0 -b 115200
+#+END_SRC
 
-# macOS (example device name)
+macOS example:
+
+#+BEGIN_SRC sh
 pixi run qspy -c /dev/cu.usbmodem1234 -b 115200
+#+END_SRC
 
-# Windows
+Windows example:
+
+#+BEGIN_SRC sh
 pixi run qspy -c COM3 -b 115200
 #+END_SRC
 
-See the QSPY documentation for more command-line options.
+To show QSPY's own help (not this wrapper's help), use the explicit separator:
 
+#+BEGIN_SRC sh
+pixi run qspy -- -h
+#+END_SRC

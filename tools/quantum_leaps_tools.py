@@ -24,6 +24,12 @@ Typical usage (via pixi tasks):
 
   # Run QSPY (arguments are forwarded to qspy)
   pixi run qspy -c /dev/ttyACM0 -b 115200
+
+Notes:
+  * This wrapper is intentionally self-contained (Python stdlib only).
+  * QSPY command-line options (like -c, -b, -u, -t, etc.) are passed through.
+    If you need QSPY's own help, use the explicit separator:
+        pixi run qspy -- -h
 """
 
 from __future__ import annotations
@@ -88,8 +94,7 @@ def _is_probably_html(path: Path) -> bool:
 
 
 def _download(urls: Iterable[str], dest: Path, *, force: bool = False, validate_zip: bool = False) -> Path:
-    """
-    Download from the first working URL into dest.
+    """Download from the first working URL into dest.
 
     validate_zip=True performs zipfile.is_zipfile() validation to avoid saving
     HTML redirect pages into a .zip file.
@@ -129,7 +134,10 @@ def _download(urls: Iterable[str], dest: Path, *, force: bool = False, validate_
             last_err = e
             _eprint(f"  failed: {e}")
             if tmp.exists():
-                tmp.unlink(missing_ok=True)  # type: ignore[attr-defined]
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
             continue
 
     raise SystemExit(f"ERROR: Unable to download {dest.name}. Last error: {last_err}")
@@ -142,12 +150,7 @@ def _extract_zip_move_top(
     expected_top_dir_name: Optional[str] = None,
     force: bool = False,
 ) -> Path:
-    """
-    Extract a zip archive and move a top-level directory into dest_dir.
-
-    Many Quantum Leaps archives contain a single directory at the zip root
-    (e.g., 'qm/' or 'qtools/'). We standardize installs into versioned folders.
-    """
+    """Extract a zip archive and move a top-level directory into dest_dir."""
     if dest_dir.exists() and any(dest_dir.iterdir()) and not force:
         return dest_dir
 
@@ -192,29 +195,29 @@ def _extract_zip_move_top(
 
 
 def _qm_candidate_urls(sysname: str, machine: str) -> list[str]:
+    """Return a list of candidate URLs for QM 5.2.3.
+
+    We prefer GitHub releases, but keep SourceForge as a fallback for older assets.
+    """
     tag = f"v{QM_VERSION}"
     gh_base = f"https://github.com/QuantumLeaps/qm/releases/download/{tag}/"
 
     urls: list[str] = []
 
     if sysname == "linux":
-        # Known-good for qp-arduino toolchain documentation:
+        # Known-good in qp-arduino README:
         urls.append(gh_base + f"qm_{QM_VERSION}-linux64.zip")
-        # Some newer releases switched naming (keep as fallback):
+        # Extra fallback naming variants:
         urls.append(gh_base + f"qm_{QM_VERSION}-linux.zip")
+        urls.append(f"https://sourceforge.net/projects/qpc/files/QM/{QM_VERSION}/qm_{QM_VERSION}-linux64.zip/download")
+        urls.append(f"https://sourceforge.net/projects/qpc/files/QM/{QM_VERSION}/qm_{QM_VERSION}-linux.zip/download")
 
     elif sysname == "windows":
-        # Try GitHub first
         urls.extend(
             [
                 gh_base + f"qm_{QM_VERSION}-windows.zip",
                 gh_base + f"qm_{QM_VERSION}-win64.zip",
                 gh_base + f"qm_{QM_VERSION}-win32.zip",
-            ]
-        )
-        # SourceForge fallbacks (older releases sometimes live here)
-        urls.extend(
-            [
                 f"https://sourceforge.net/projects/qpc/files/QM/{QM_VERSION}/qm_{QM_VERSION}-windows.zip/download",
                 f"https://sourceforge.net/projects/qpc/files/QM/{QM_VERSION}/qm_{QM_VERSION}-win64.zip/download",
                 f"https://sourceforge.net/projects/qpc/files/QM/{QM_VERSION}/qm_{QM_VERSION}-win32.zip/download",
@@ -222,7 +225,7 @@ def _qm_candidate_urls(sysname: str, machine: str) -> list[str]:
         )
 
     elif sysname == "darwin":
-        # Historical naming in qp-arduino docs uses macx64 for older QM versions.
+        # Historical naming in older QM versions:
         urls.extend(
             [
                 gh_base + f"qm_{QM_VERSION}-macx64.dmg",
@@ -239,6 +242,7 @@ def _qm_candidate_urls(sysname: str, machine: str) -> list[str]:
 
 
 def _qtools_candidate_urls(sysname: str) -> list[str]:
+    """Return candidate URLs for QTools 6.9.3."""
     tag = f"v{QTOOLS_VERSION}"
     gh_base = f"https://github.com/QuantumLeaps/qtools/releases/download/{tag}/"
 
@@ -274,7 +278,6 @@ def install_qm(*, force: bool = False) -> Path:
         install_dir.mkdir(parents=True, exist_ok=True)
 
         # Try to mount the DMG and copy the .app bundle into install_dir.
-        # This avoids requiring admin permissions for /Applications.
         mount_point = Path(tempfile.mkdtemp(prefix="qm_dmg_mount_"))
         try:
             # Clear quarantine bit on the dmg (best-effort)
@@ -285,9 +288,7 @@ def install_qm(*, force: bool = False) -> Path:
                 check=True,
             )
 
-            apps = list(mount_point.glob("*.app"))
-            if not apps:
-                apps = list(mount_point.rglob("*.app"))
+            apps = list(mount_point.glob("*.app")) or list(mount_point.rglob("*.app"))
             if not apps:
                 raise SystemExit(f"ERROR: Could not find a *.app inside mounted DMG at {mount_point}")
 
@@ -311,7 +312,7 @@ def install_qm(*, force: bool = False) -> Path:
         _download(_qm_candidate_urls(sysname, machine), zip_path, force=force, validate_zip=True)
         _extract_zip_move_top(zip_path, install_dir, expected_top_dir_name="qm", force=force)
 
-        # Ensure Linux executable bits
+        # Ensure executable bits on Linux (zip archives can lose them)
         if sysname == "linux":
             for exe in (install_dir / "bin" / "qm", install_dir / "bin" / "qm.sh"):
                 if exe.exists():
@@ -320,7 +321,19 @@ def install_qm(*, force: bool = False) -> Path:
         return install_dir
 
 
+def _is_file(p: Path) -> bool:
+    try:
+        return p.is_file()
+    except OSError:
+        return False
+
+
 def _find_qspy_binary(qtools_dir: Path) -> Optional[Path]:
+    """Locate the qspy executable (NOT the source directory).
+
+    Important: QTools ships the qspy *source* under qspy/, and after building on
+    POSIX, the qspy executable typically ends up in <qtools>/bin/qspy.
+    """
     sysname, _ = _sys_id()
     if sysname == "windows":
         candidates = [
@@ -332,18 +345,72 @@ def _find_qspy_binary(qtools_dir: Path) -> Optional[Path]:
     else:
         candidates = [
             qtools_dir / "bin" / "qspy",
+            qtools_dir / "qspy" / "posix" / "qspy",
             qtools_dir / "qspy" / "bin" / "qspy",
-            qtools_dir / "qspy",
         ]
         name = "qspy"
 
     for p in candidates:
-        if p.exists():
+        if _is_file(p):
             return p
 
-    # Fallback: search (can be slower, but tools dirs are not huge)
-    matches = list(qtools_dir.rglob(name))
+    # Fallback: search (filter out directories)
+    matches = [p for p in qtools_dir.rglob(name) if _is_file(p)]
     return matches[0] if matches else None
+
+
+def _ensure_executable(p: Path) -> None:
+    try:
+        p.chmod(p.stat().st_mode | 0o111)
+    except OSError:
+        # Best-effort: ignore chmod failures on some filesystems
+        pass
+
+
+def _build_qspy_posix(qtools_dir: Path) -> None:
+    """Build qspy from source on POSIX hosts."""
+    posix_dir = qtools_dir / "qspy" / "posix"
+    if not posix_dir.exists():
+        _eprint(f"WARNING: expected directory not found: {posix_dir}")
+        return
+
+    _print("Building qspy from source (make) ...")
+    try:
+        subprocess.run(["make"], cwd=str(posix_dir), check=True)
+    except FileNotFoundError:
+        _eprint("ERROR: 'make' not found. Ensure your pixi environment includes build tools and try again.")
+        return
+    except subprocess.CalledProcessError as e:
+        _eprint(f"ERROR: qspy build failed: {e}")
+        return
+
+    # After building, qspy is expected in <qtools>/bin/qspy (per qp-arduino docs),
+    # but keep a fallback copy if it's produced elsewhere.
+    qspy_bin = qtools_dir / "bin" / "qspy"
+    if _is_file(qspy_bin):
+        _ensure_executable(qspy_bin)
+        return
+
+    # Look for a freshly built qspy inside the build dir
+    built_candidates = [
+        posix_dir / "qspy",
+        posix_dir / "bin" / "qspy",
+        posix_dir / "../bin/qspy",
+    ]
+    for cand in built_candidates:
+        cand_path = cand.resolve()
+        if _is_file(cand_path):
+            (qtools_dir / "bin").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(cand_path, qspy_bin)
+            _ensure_executable(qspy_bin)
+            return
+
+    # As last resort, search within qspy/posix
+    matches = [p for p in posix_dir.rglob("qspy") if _is_file(p)]
+    if matches:
+        (qtools_dir / "bin").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(matches[0], qspy_bin)
+        _ensure_executable(qspy_bin)
 
 
 def install_qtools(*, force: bool = False, build_qspy: bool = True) -> Path:
@@ -363,26 +430,16 @@ def install_qtools(*, force: bool = False, build_qspy: bool = True) -> Path:
     _download(_qtools_candidate_urls(sysname), zip_path, force=force, validate_zip=True)
     _extract_zip_move_top(zip_path, install_dir, expected_top_dir_name="qtools", force=force)
 
-    # Try to build qspy on POSIX if it's not present.
+    # On POSIX, qspy typically needs to be built from source:
     if sysname != "windows" and build_qspy:
         qspy_bin = _find_qspy_binary(install_dir)
         if qspy_bin is None:
-            posix_dir = install_dir / "qspy" / "posix"
-            if posix_dir.exists():
-                _print("Building qspy from source (make) ...")
-                try:
-                    subprocess.run(["make"], cwd=str(posix_dir), check=True)
-                except FileNotFoundError:
-                    _eprint("ERROR: 'make' not found. Install build tools and re-run: pixi run qtools-install")
-                except subprocess.CalledProcessError as e:
-                    _eprint(f"ERROR: qspy build failed: {e}")
-            else:
-                _eprint(f"WARNING: expected directory not found: {posix_dir}")
+            _build_qspy_posix(install_dir)
 
     return install_dir
 
 
-def run_qm() -> None:
+def run_qm(qm_args: list[str]) -> int:
     sysname, _ = _sys_id()
     qm_dir = install_qm(force=False)
 
@@ -392,10 +449,11 @@ def run_qm() -> None:
             entry = qm_dir / "bin" / "qm"
         if not entry.exists():
             raise SystemExit(f"ERROR: QM executable not found under: {qm_dir}/bin")
-        entry.chmod(entry.stat().st_mode | 0o111)
-        subprocess.run([str(entry)], check=False)
+        _ensure_executable(entry)
+        proc = subprocess.run([str(entry)] + qm_args, check=False)
+        return proc.returncode
 
-    elif sysname == "windows":
+    if sysname == "windows":
         candidates = [
             qm_dir / "bin" / "qm.exe",
             qm_dir / "qm.exe",
@@ -404,45 +462,68 @@ def run_qm() -> None:
         ]
         entry = next((p for p in candidates if p.exists()), None)
         if entry is None:
-            # Fallback search
             matches = list(qm_dir.rglob("qm.exe")) + list(qm_dir.rglob("qm.bat"))
             entry = matches[0] if matches else None
         if entry is None:
             raise SystemExit(f"ERROR: QM executable not found under: {qm_dir}")
-        subprocess.run([str(entry)], check=False)
+        proc = subprocess.run([str(entry)] + qm_args, check=False)
+        return proc.returncode
 
-    elif sysname == "darwin":
-        apps = list(qm_dir.glob("*.app"))
-        if not apps:
-            apps = list(qm_dir.rglob("*.app"))
+    if sysname == "darwin":
+        apps = list(qm_dir.glob("*.app")) or list(qm_dir.rglob("*.app"))
         if not apps:
             raise SystemExit(f"ERROR: QM app bundle (*.app) not found under: {qm_dir}")
         app = apps[0]
-        subprocess.run(["open", "-a", str(app)], check=False)
+        # Pass args to the app via --args
+        cmd = ["open", "-a", str(app)]
+        if qm_args:
+            cmd += ["--args"] + qm_args
+        proc = subprocess.run(cmd, check=False)
+        return proc.returncode
 
-    else:
-        raise SystemExit(f"Unsupported OS: {sysname}")
+    raise SystemExit(f"Unsupported OS: {sysname}")
+
+
+def _augment_runtime_env(env: dict[str, str], qtools_dir: Path) -> dict[str, str]:
+    """Add qtools/bin to PATH and library search paths (best-effort)."""
+    sysname, _ = _sys_id()
+    bin_dir = qtools_dir / "bin"
+    if bin_dir.exists():
+        # PATH
+        old_path = env.get("PATH", "")
+        env["PATH"] = str(bin_dir) + (os.pathsep + old_path if old_path else "")
+
+        if sysname == "linux":
+            ld = env.get("LD_LIBRARY_PATH", "")
+            env["LD_LIBRARY_PATH"] = str(bin_dir) + (os.pathsep + ld if ld else "")
+        elif sysname == "darwin":
+            dyld = env.get("DYLD_LIBRARY_PATH", "")
+            env["DYLD_LIBRARY_PATH"] = str(bin_dir) + (os.pathsep + dyld if dyld else "")
+    return env
 
 
 def run_qspy(qspy_args: list[str]) -> int:
     sysname, _ = _sys_id()
     qtools_dir = install_qtools(force=False, build_qspy=True)
     qspy = _find_qspy_binary(qtools_dir)
+
     if qspy is None:
         raise SystemExit(
             "ERROR: qspy binary was not found after installing QTools.\n\n"
             "On Linux/macOS you may need build tools (make + a C compiler).\n"
             "Try:\n"
+            "  pixi install\n"
             "  pixi run qtools-install\n"
         )
 
     if sysname != "windows":
-        qspy.chmod(qspy.stat().st_mode | 0o111)
+        _ensure_executable(qspy)
 
     # Some QTools utilities look for QTOOLS/QTOOLS_HOME.
     env = os.environ.copy()
     env.setdefault("QTOOLS", str(qtools_dir))
     env.setdefault("QTOOLS_HOME", str(qtools_dir))
+    env = _augment_runtime_env(env, qtools_dir)
 
     cmd = [str(qspy)] + qspy_args
     _print("Running: " + " ".join(cmd))
@@ -454,6 +535,7 @@ def install_all(*, force: bool = False) -> None:
     install_qm(force=force)
     install_qtools(force=force, build_qspy=True)
     _print(f"Installed QM {QM_VERSION} and QTools {QTOOLS_VERSION} into: {_tools_base_dir()}")
+    _print("Consider adding '.tools/' (or '.tools/quantum-leaps/') to your .gitignore.")
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -474,6 +556,7 @@ def main(argv: Optional[list[str]] = None) -> int:
               python tools/quantum_leaps_tools.py install
               python tools/quantum_leaps_tools.py qm
               python tools/quantum_leaps_tools.py qspy -c /dev/ttyACM0 -b 115200
+              python tools/quantum_leaps_tools.py qspy -- -h    # show qspy help
             """
         ),
     )
@@ -492,32 +575,43 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     p_qspy = sub.add_parser("qspy", help="Run QSPY (installs QTools first if needed)")
     p_qspy.add_argument("--force", action="store_true", help="Re-download and reinstall QTools from scratch")
-    # Forward everything after 'qspy' to the qspy binary, verbatim.
-    p_qspy.add_argument("qspy_args", nargs=argparse.REMAINDER, help="Arguments forwarded to qspy")
+    # NOTE: We intentionally do NOT declare qspy's options here.
+    # We parse *known* wrapper args and forward everything else to qspy.
 
-    args = parser.parse_args(argv)
+    args, remainder = parser.parse_known_args(argv)
 
     if args.command == "install":
+        if remainder:
+            parser.error("unrecognized arguments: " + " ".join(remainder))
         install_all(force=args.force)
         return 0
 
     if args.command == "qm":
         install_qm(force=args.force)
+        if remainder:
+            # For qm, forward any extra args to the QM executable (best-effort)
+            qm_args = remainder
+            if qm_args and qm_args[0] == "--":
+                qm_args = qm_args[1:]
+        else:
+            qm_args = []
         if not args.install_only:
-            run_qm()
+            return run_qm(qm_args)
         return 0
 
     if args.command == "qtools-install":
+        if remainder:
+            parser.error("unrecognized arguments: " + " ".join(remainder))
         install_qtools(force=args.force, build_qspy=True)
         return 0
 
     if args.command == "qspy":
-        if args.force:
-            install_qtools(force=True, build_qspy=True)
-        qspy_args = list(args.qspy_args)
-        # Pixi users sometimes use '--' separators; tolerate it.
+        # remainder contains qspy flags like -c, -b, etc.
+        qspy_args = remainder
         if qspy_args and qspy_args[0] == "--":
             qspy_args = qspy_args[1:]
+        if args.force:
+            install_qtools(force=True, build_qspy=True)
         return run_qspy(qspy_args)
 
     raise SystemExit("unreachable")
