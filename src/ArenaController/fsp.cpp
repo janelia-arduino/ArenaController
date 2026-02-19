@@ -371,6 +371,7 @@ void
 FSP::Arena_beginAnalogClosedLoop (QP::QActive *const ao, QP::QEvt const *e)
 {
   Arena *const arena = static_cast<Arena *const> (ao);
+  // fix
   arena->analog_input_time_evt_.armX (
       constants::ticks_per_second / constants::analog_input_frequency_hz,
       constants::ticks_per_second / constants::analog_input_frequency_hz);
@@ -516,7 +517,14 @@ FSP::Display_setRefreshRate (QActive *const ao, QEvt const *e)
 void
 postRefreshTimeout ()
 {
-  AO_Display->POST (&constants::refresh_timeout_evt, &constants::fsp_id);
+  bool success = AO_Display->POST_X (&constants::refresh_timeout_evt, 0U,
+                                     &constants::fsp_id);
+  if (!success)
+    {
+      QS_BEGIN_ID (USER_COMMENT, AO_Display->m_prio)
+      QS_STR ("postRefreshTimeout failed");
+      QS_END ()
+    }
 }
 
 void
@@ -593,6 +601,7 @@ FSP::SerialCommandInterface_armSerialTimerLowSpeed (QActive *const ao,
   SerialCommandInterface *const sci
       = static_cast<SerialCommandInterface *const> (ao);
   sci->serial_time_evt_.disarm ();
+  // fix
   sci->serial_time_evt_.armX (
       constants::ticks_per_second
           / constants::serial_timer_frequency_low_speed_hz,
@@ -607,6 +616,7 @@ FSP::SerialCommandInterface_armSerialTimerHighSpeed (QActive *const ao,
   SerialCommandInterface *const sci
       = static_cast<SerialCommandInterface *const> (ao);
   sci->serial_time_evt_.disarm ();
+  // fix
   sci->serial_time_evt_.armX (
       constants::ticks_per_second
           / constants::serial_timer_frequency_high_speed_hz,
@@ -864,6 +874,7 @@ FSP::EthernetCommandInterface_armEthernetTimerLowSpeed (QActive *const ao,
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
   eci->ethernet_time_evt_.disarm ();
+  // fix
   eci->ethernet_time_evt_.armX (
       constants::ticks_per_second
           / constants::ethernet_timer_frequency_low_speed_hz,
@@ -878,6 +889,7 @@ FSP::EthernetCommandInterface_armEthernetTimerHighSpeed (QActive *const ao,
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
   eci->ethernet_time_evt_.disarm ();
+  // fix
   eci->ethernet_time_evt_.armX (
       constants::ticks_per_second
           / constants::ethernet_timer_frequency_high_speed_hz,
@@ -1303,6 +1315,7 @@ void
 FSP::Watchdog_armWatchdogTimer (QActive *const ao, QEvt const *e)
 {
   Watchdog *const watchdog = static_cast<Watchdog *const> (ao);
+  // fix
   watchdog->watchdog_time_evt_.armX (constants::ticks_per_second,
                                      constants::ticks_per_second);
 }
@@ -1472,6 +1485,7 @@ void
 FSP::Pattern_armTimers (QActive *const ao, QEvt const *e)
 {
   Pattern *const pattern = static_cast<Pattern *const> (ao);
+  // fix
   pattern->frame_rate_time_evt_.armX (
       constants::ticks_per_second / pattern->frame_rate_hz_,
       constants::ticks_per_second / pattern->frame_rate_hz_);
