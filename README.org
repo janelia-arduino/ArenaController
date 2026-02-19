@@ -324,9 +324,9 @@ pixi run build
 Other examples:
 
 #+BEGIN_SRC sh
-pixi run build-mongoose
-pixi run build-sdcard
-pixi run build-watchdog
+pixi run build examples/MongooseTest
+pixi run build examples/SDCardDebugTest
+pixi run build examples/WatchdogTest
 #+END_SRC
 
 *** Upload the firmware
@@ -341,22 +341,22 @@ Upload (a port can be provided; default is =/dev/ttyACM0=):
 
 #+BEGIN_SRC sh
 pixi run upload
-pixi run upload /dev/ttyACM1
-pixi run upload /dev/cu.usbmodem1234
-pixi run upload COM3
+pixi run upload examples/ArenaControllerTeensy12-12 /dev/ttyACM1
+pixi run upload examples/ArenaControllerTeensy12-12 /dev/cu.usbmodem1234
+pixi run upload examples/ArenaControllerTeensy12-12 COM3
 #+END_SRC
 
 Upload other examples:
 
 #+BEGIN_SRC sh
-pixi run upload-mongoose
-pixi run upload-mongoose /dev/ttyACM1
+pixi run upload examples/MongooseTest
+pixi run upload examples/MongooseTest /dev/ttyACM1
 
-pixi run upload-sdcard
-pixi run upload-sdcard /dev/ttyACM1
+pixi run upload examples/SDCardDebugTest
+pixi run upload examples/SDCardDebugTest /dev/ttyACM1
 
-pixi run upload-watchdog
-pixi run upload-watchdog /dev/ttyACM1
+pixi run upload examples/WatchdogTest
+pixi run upload examples/WatchdogTest /dev/ttyACM1
 #+END_SRC
 
 *** Version synchronization

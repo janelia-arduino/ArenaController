@@ -12,62 +12,88 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 [dependencies]
 # PlatformIO CLI (conda-forge, noarch). This provides the `pio` command.
 platformio = ">=6.1.16,<7"
-# Explicit Python for repo helper scripts (version_sync.py, quantum_leaps_tools.py)
+# Explicit Python for repo helper scripts (quantum_leaps_tools.py, version_sync.py)
 python = ">=3.12,<3.13"
 
 [tasks]
-# General helpers
+# List connected devices/ports (helps users discover COM3, /dev/ttyACM0, /dev/cu.usbmodem*, etc.)
 ports = "pio device list"
-check-version = "python tools/version_sync.py check"
 
 # --------------------------------------------------------------------------------------
 # PlatformIO build/upload tasks
-# We select which example to build by setting PLATFORMIO_SRC_DIR (overrides src_dir)
-# and then run the configured PlatformIO environment (teensy41).
+#
+# We select which example to build by setting PLATFORMIO_SRC_DIR (instead of editing
+# platformio.ini).
+#
+# We also set PLATFORMIO_BUILD_DIR per example to avoid cross-example cache collisions.
+# This dramatically reduces the need to run a clean when switching examples.
+#
+# Default example:
+#   examples/ArenaControllerTeensy12-12
 # --------------------------------------------------------------------------------------
 
-# Default example: examples/ArenaControllerTeensy12-12
 [tasks.build]
-cmd = "pio run -e teensy41"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/ArenaControllerTeensy12-12" }
+args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
+cmd = """
+export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+pio run -e teensy41
+"""
 
-[tasks.build-mongoose]
-cmd = "pio run -e teensy41"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/MongooseTest" }
+[tasks.clean]
+args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
+cmd = """
+export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+pio run -e teensy41 -t clean
+"""
 
-[tasks.build-sdcard]
-cmd = "pio run -e teensy41"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/SDCardDebugTest" }
-
-[tasks.build-watchdog]
-cmd = "pio run -e teensy41"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/WatchdogTest" }
-
-# Upload tasks (default port is /dev/ttyACM0; override as needed)
 [tasks.upload]
-args = [{ arg = "port", default = "/dev/ttyACM0" }]
-cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/ArenaControllerTeensy12-12" }
+args = [
+  { arg = "example", default = "examples/ArenaControllerTeensy12-12" },
+  { arg = "port", default = "/dev/ttyACM0" },
+]
+cmd = """
+export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+pio run -e teensy41 -t upload --upload-port {{ port }}
+"""
 
-[tasks.upload-mongoose]
-args = [{ arg = "port", default = "/dev/ttyACM0" }]
-cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/MongooseTest" }
+# Clean + Upload (upload implicitly builds)
+[tasks.flash]
+args = [
+  { arg = "example", default = "examples/ArenaControllerTeensy12-12" },
+  { arg = "port", default = "/dev/ttyACM0" },
+]
+cmd = """
+export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+pio run -e teensy41 -t clean &&
+pio run -e teensy41 -t upload --upload-port {{ port }}
+"""
 
-[tasks.upload-sdcard]
-args = [{ arg = "port", default = "/dev/ttyACM0" }]
-cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/SDCardDebugTest" }
+# Clean + Build (compile only)
+[tasks.rebuild]
+args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
+cmd = """
+export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+pio run -e teensy41 -t clean &&
+pio run -e teensy41
+"""
 
-[tasks.upload-watchdog]
-args = [{ arg = "port", default = "/dev/ttyACM0" }]
-cmd = "pio run -e teensy41 -t upload --upload-port {{ port }}"
-env = { PLATFORMIO_SRC_DIR = "$PIXI_PROJECT_ROOT/examples/WatchdogTest" }
+# --------------------------------------------------------------------------------------
+# Version synchronization helpers
+#
+# Keep README.org, library.properties, and pixi.toml in sync (mostly version numbers).
+# --------------------------------------------------------------------------------------
 
-# Version synchronization (README.org, library.properties, pixi.toml)
+[tasks.check-version]
+cmd = "python tools/version_sync.py check"
+
 [tasks.set-version]
-args = ["new_version"]
-cmd = "python tools/version_sync.py set {{ new_version }}"
+args = ["version"]
+cmd = "python tools/version_sync.py set {{ version }}"
 
 # --------------------------------------------------------------------------------------
 # Quantum Leaps host tools pinned for qp-arduino compatibility:
