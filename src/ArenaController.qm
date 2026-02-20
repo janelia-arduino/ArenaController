@@ -311,7 +311,7 @@ analog_input_ = AnalogInput_getInstance();</code>
      <state name="ProcessingStreamCommand">
       <entry brief="armSerialTimerHighSpeed()">FSP::SerialCommandInterface_armSerialTimerHighSpeed(this, e);</entry>
       <exit brief="armSerialTimerLowSpeed()">FSP::SerialCommandInterface_armSerialTimerLowSpeed(this, e);</exit>
-      <initial target="../4">
+      <initial target="../5">
        <initial_glyph conn="88,101,4,0,3">
         <action box="0,-2,10,2"/>
        </initial_glyph>
@@ -324,14 +324,14 @@ analog_input_ = AnalogInput_getInstance();</code>
       </tran>
       <tran trig="SERIAL_COMMAND_AVAILABLE">
        <action brief="updateStreamCommand()">FSP::SerialCommandInterface_updateStreamCommand(this, e);</action>
-       <choice target="../../3">
+       <choice target="../../4">
         <guard brief="ifStreamCommandComplete()">FSP::SerialCommandInterface_ifStreamCommandComplete(this, e)</guard>
         <action brief="processStreamCommand()">FSP::SerialCommandInterface_processStreamCommand(this, e);</action>
         <choice_glyph conn="101,94,5,0,24,14">
          <action box="1,0,23,4"/>
         </choice_glyph>
        </choice>
-       <choice target="../../3">
+       <choice target="../../4">
         <guard brief="else"/>
         <choice_glyph conn="101,94,4,3,19,3">
          <action box="1,9,10,2"/>
@@ -339,6 +339,12 @@ analog_input_ = AnalogInput_getInstance();</code>
        </choice>
        <tran_glyph conn="77,90,3,-1,24,4">
         <action box="0,-2,25,5"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="SERIAL_TIMEOUT">
+       <action brief="pollSerialHighSpeed()">FSP::SerialCommandInterface_pollSerialHighSpeed(this, e);</action>
+       <tran_glyph conn="77,115,3,-1,18">
+        <action box="0,-2,16,4"/>
        </tran_glyph>
       </tran>
       <state name="MidStreamCommand">
@@ -647,7 +653,7 @@ analog_input_ = AnalogInput_getInstance();</code>
      <state name="ProcessingStreamCommand">
       <entry brief="armEthernetTimerHighSpeed()">FSP::EthernetCommandInterface_armEthernetTimerHighSpeed(this, e);</entry>
       <exit brief="armEthernetTimerLowSpeed()">FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(this, e);</exit>
-      <initial target="../3">
+      <initial target="../4">
        <initial_glyph conn="94,105,4,0,2">
         <action box="0,-2,10,2"/>
        </initial_glyph>
@@ -660,28 +666,34 @@ analog_input_ = AnalogInput_getInstance();</code>
       </tran>
       <tran trig="ETHERNET_COMMAND_AVAILABLE">
        <action brief="updateStreamCommand()">FSP::EthernetCommandInterface_updateStreamCommand(this, e);</action>
-       <choice target="../../4">
+       <choice target="../../5">
         <guard brief="ifStreamCommandComplete()">FSP::EthernetCommandInterface_ifStreamCommandComplete(this, e)</guard>
         <action brief="processStreamCommand()">FSP::EthernetCommandInterface_processStreamCommand(this, e);</action>
-        <choice_glyph conn="107,100,5,0,24,12">
+        <choice_glyph conn="107,100,5,0,23,8">
          <action box="2,-2,24,5"/>
         </choice_glyph>
        </choice>
-       <choice target="../../4">
+       <choice target="../../5">
         <guard brief="else"/>
-        <choice_glyph conn="107,100,4,0,10,6,2">
-         <action box="1,5,10,2"/>
+        <choice_glyph conn="107,100,4,0,6,5,2">
+         <action box="1,3,10,2"/>
         </choice_glyph>
        </choice>
        <tran_glyph conn="87,95,3,-1,20,5">
         <action box="0,-2,28,5"/>
        </tran_glyph>
       </tran>
+      <tran trig="ETHERNET_TIMEOUT">
+       <action brief="pollEthernetHighSpeed()">FSP::EthernetCommandInterface_pollEthernetHighSpeed(this, e);</action>
+       <tran_glyph conn="87,119,3,-1,31">
+        <action box="0,-2,21,5"/>
+       </tran_glyph>
+      </tran>
       <state name="WaitingForCommand">
        <state_glyph node="89,107,16,7"/>
       </state>
       <state name="MidStreamCommand">
-       <state_glyph node="108,112,25,10"/>
+       <state_glyph node="107,108,25,6"/>
       </state>
       <state_glyph node="87,85,48,39">
        <entry box="1,2,27,2"/>

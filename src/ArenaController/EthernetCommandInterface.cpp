@@ -444,6 +444,13 @@ Q_STATE_DEF (EthernetCommandInterface, ProcessingStreamCommand)
           }
         break;
       }
+    //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_TIMEOUT}
+    case ETHERNET_TIMEOUT_SIG:
+      {
+        FSP::EthernetCommandInterface_pollEthernetHighSpeed (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     default:
       {
         status_ = super (&Active);

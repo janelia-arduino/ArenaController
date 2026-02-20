@@ -371,10 +371,8 @@ void
 FSP::Arena_beginAnalogClosedLoop (QP::QActive *const ao, QP::QEvt const *e)
 {
   Arena *const arena = static_cast<Arena *const> (ao);
-  // fix
-  arena->analog_input_time_evt_.armX (
-      constants::ticks_per_second / constants::analog_input_frequency_hz,
-      constants::ticks_per_second / constants::analog_input_frequency_hz);
+  arena->analog_input_time_evt_.armX (constants::ticks_per_second
+                                      / constants::analog_input_frequency_hz);
 }
 
 void
@@ -473,6 +471,9 @@ FSP::AnalogInput_enterInitialized (QHsm *const hsm, QEvt const *e)
 void
 FSP::AnalogInput_getInput (QHsm *const hsm, QEvt const *e)
 {
+  Arena *const arena = static_cast<Arena *const> (ao);
+  arena->analog_input_time_evt_.armX (constants::ticks_per_second
+                                      / constants::analog_input_frequency_hz);
   if (!BSP::analogInputDataAvailable ())
     {
       return;
@@ -601,12 +602,9 @@ FSP::SerialCommandInterface_armSerialTimerLowSpeed (QActive *const ao,
   SerialCommandInterface *const sci
       = static_cast<SerialCommandInterface *const> (ao);
   sci->serial_time_evt_.disarm ();
-  // fix
   sci->serial_time_evt_.armX (
       constants::ticks_per_second
-          / constants::serial_timer_frequency_low_speed_hz,
-      constants::ticks_per_second
-          / constants::serial_timer_frequency_low_speed_hz);
+      / constants::serial_timer_frequency_low_speed_hz);
 }
 
 void
@@ -616,12 +614,9 @@ FSP::SerialCommandInterface_armSerialTimerHighSpeed (QActive *const ao,
   SerialCommandInterface *const sci
       = static_cast<SerialCommandInterface *const> (ao);
   sci->serial_time_evt_.disarm ();
-  // fix
   sci->serial_time_evt_.armX (
       constants::ticks_per_second
-          / constants::serial_timer_frequency_high_speed_hz,
-      constants::ticks_per_second
-          / constants::serial_timer_frequency_high_speed_hz);
+      / constants::serial_timer_frequency_high_speed_hz);
 }
 
 void
@@ -646,6 +641,27 @@ FSP::SerialCommandInterface_initializeSerial (QActive *const ao, QEvt const *e)
 void
 FSP::SerialCommandInterface_pollSerial (QActive *const ao, QEvt const *e)
 {
+  SerialCommandInterface *const sci
+      = static_cast<SerialCommandInterface *const> (ao);
+  sci->serial_time_evt_.armX (
+      constants::ticks_per_second
+      / constants::serial_timer_frequency_low_speed_hz);
+  bool bytes_available = BSP::pollSerial ();
+  if (bytes_available)
+    {
+      QF::PUBLISH (&constants::serial_command_available_evt, ao);
+    }
+}
+
+void
+FSP::SerialCommandInterface_pollSerialHighSpeed (QActive *const ao,
+                                                 QEvt const *e)
+{
+  SerialCommandInterface *const sci
+      = static_cast<SerialCommandInterface *const> (ao);
+  sci->serial_time_evt_.armX (
+      constants::ticks_per_second
+      / constants::serial_timer_frequency_high_speed_hz);
   bool bytes_available = BSP::pollSerial ();
   if (bytes_available)
     {
@@ -874,12 +890,9 @@ FSP::EthernetCommandInterface_armEthernetTimerLowSpeed (QActive *const ao,
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
   eci->ethernet_time_evt_.disarm ();
-  // fix
   eci->ethernet_time_evt_.armX (
       constants::ticks_per_second
-          / constants::ethernet_timer_frequency_low_speed_hz,
-      constants::ticks_per_second
-          / constants::ethernet_timer_frequency_low_speed_hz);
+      / constants::ethernet_timer_frequency_low_speed_hz);
 }
 
 void
@@ -889,12 +902,9 @@ FSP::EthernetCommandInterface_armEthernetTimerHighSpeed (QActive *const ao,
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
   eci->ethernet_time_evt_.disarm ();
-  // fix
   eci->ethernet_time_evt_.armX (
       constants::ticks_per_second
-          / constants::ethernet_timer_frequency_high_speed_hz,
-      constants::ticks_per_second
-          / constants::ethernet_timer_frequency_high_speed_hz);
+      / constants::ethernet_timer_frequency_high_speed_hz);
 }
 
 void
@@ -921,6 +931,23 @@ FSP::EthernetCommandInterface_initializeEthernet (QActive *const ao,
 void
 FSP::EthernetCommandInterface_pollEthernet (QActive *const ao, QEvt const *e)
 {
+  EthernetCommandInterface *const eci
+      = static_cast<EthernetCommandInterface *const> (ao);
+  eci->ethernet_time_evt_.armX (
+      constants::ticks_per_second
+      / constants::ethernet_timer_frequency_low_speed_hz);
+  BSP::pollEthernet ();
+}
+
+void
+FSP::EthernetCommandInterface_pollEthernetHighSpeed (QActive *const ao,
+                                                     QEvt const *e)
+{
+  EthernetCommandInterface *const eci
+      = static_cast<EthernetCommandInterface *const> (ao);
+  eci->ethernet_time_evt_.armX (
+      constants::ticks_per_second
+      / constants::ethernet_timer_frequency_high_speed_hz);
   BSP::pollEthernet ();
 }
 
@@ -1315,9 +1342,7 @@ void
 FSP::Watchdog_armWatchdogTimer (QActive *const ao, QEvt const *e)
 {
   Watchdog *const watchdog = static_cast<Watchdog *const> (ao);
-  // fix
-  watchdog->watchdog_time_evt_.armX (constants::ticks_per_second,
-                                     constants::ticks_per_second);
+  watchdog->watchdog_time_evt_.armX (constants::ticks_per_second);
 }
 
 void
@@ -1330,6 +1355,8 @@ FSP::Watchdog_disarmWatchdogTimer (QActive *const ao, QEvt const *e)
 void
 FSP::Watchdog_feedWatchdog (QActive *const ao, QEvt const *e)
 {
+  Watchdog *const watchdog = static_cast<Watchdog *const> (ao);
+  watchdog->watchdog_time_evt_.armX (constants::ticks_per_second);
   BSP::feedWatchdog ();
 }
 
@@ -1485,10 +1512,8 @@ void
 FSP::Pattern_armTimers (QActive *const ao, QEvt const *e)
 {
   Pattern *const pattern = static_cast<Pattern *const> (ao);
-  // fix
-  pattern->frame_rate_time_evt_.armX (
-      constants::ticks_per_second / pattern->frame_rate_hz_,
-      constants::ticks_per_second / pattern->frame_rate_hz_);
+  pattern->frame_rate_time_evt_.armX (constants::ticks_per_second
+                                      / pattern->frame_rate_hz_);
   pattern->runtime_duration_time_evt_.armX (
       (constants::ticks_per_second * pattern->runtime_duration_ms_)
       / constants::milliseconds_per_second);
@@ -1526,6 +1551,12 @@ FSP::Pattern_disarmTimersAndCleanup (QActive *const ao, QEvt const *e)
 void
 FSP::Pattern_deactivateDisplay (QActive *const ao, QEvt const *e)
 {
+  if (e->sig == FRAME_RATE_TIMEOUT_SIG)
+    {
+      Pattern *const pattern = static_cast<Pattern *const> (ao);
+      pattern->frame_rate_time_evt_.armX (constants::ticks_per_second
+                                          / pattern->frame_rate_hz_);
+    }
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("deactivating display");
   // QS_END()

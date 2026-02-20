@@ -366,6 +366,13 @@ Q_STATE_DEF (SerialCommandInterface, ProcessingStreamCommand)
           }
         break;
       }
+    //${AOs::SerialCommandInt~::SM::Active::ProcessingStream~::SERIAL_TIMEOUT}
+    case SERIAL_TIMEOUT_SIG:
+      {
+        FSP::SerialCommandInterface_pollSerialHighSpeed (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     default:
       {
         status_ = super (&Active);

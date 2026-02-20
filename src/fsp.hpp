@@ -100,6 +100,9 @@ struct FSP
                                                        QP::QEvt const *e);
   static void SerialCommandInterface_pollSerial (QP::QActive *const ao,
                                                  QP::QEvt const *e);
+  static void
+  SerialCommandInterface_pollSerialHighSpeed (QP::QActive *const ao,
+                                              QP::QEvt const *e);
   static void SerialCommandInterface_analyzeCommand (QP::QActive *const ao,
                                                      QP::QEvt const *e);
   static void
@@ -146,6 +149,9 @@ struct FSP
                                                QP::QEvt const *e);
   static void EthernetCommandInterface_pollEthernet (QP::QActive *const ao,
                                                      QP::QEvt const *e);
+  static void
+  EthernetCommandInterface_pollEthernetHighSpeed (QP::QActive *const ao,
+                                                  QP::QEvt const *e);
   static void
   EthernetCommandInterface_createServerConnection (QP::QActive *const ao,
                                                    QP::QEvt const *e);

@@ -9,13 +9,13 @@
   <item name="backups">0</item>
  </group>
  <group name="windows">
-  <item id="AOs::SerialCommandInterface::SM">0,0,640,480</item>
-  <item id="AOs::EthernetCommandInterface::SM">0,32,1100,1096</item>
+  <item id="AOs::SerialCommandInterface::SM">0,0,1100,1096,*</item>
+  <item id="AOs::EthernetCommandInterface::SM">0,44,1100,1096</item>
   <item id="AOs::Pattern::SM">0,0,1100,1096</item>
-  <item id="AOs::Card::SM">0,32,1100,1096</item>
-  <item id="AOs::Arena::SM">0,480,640,480</item>
+  <item id="AOs::Card::SM">0,44,1100,1096</item>
+  <item id="AOs::Arena::SM">0,660,640,480</item>
   <item id="AOs::AnalogInput::SM">460,0,640,480</item>
-  <item id="AOs::Watchdog::SM">0,0,1100,1096,*</item>
+  <item id="AOs::Watchdog::SM">0,0,1100,1096</item>
  </group>
  <group name="search">
   <item name="options">2032128</item>
