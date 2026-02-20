@@ -12,9 +12,10 @@
 #include <TimeLib.h>
 
 // SD card object
-SdFs sd;
-FsFile root;
-FsFile file;
+constexpr char pattern_dir_str[] = "/patterns/";
+static SdFs pattern_sd;
+static FsFile pattern_dir;
+static FsFile pattern_file;
 
 // Configuration options to test
 struct SDTestConfig
@@ -149,7 +150,7 @@ testBasicInit ()
   Serial.println ("\n--- Test 1: Basic SD Card Init ---");
 
   uint32_t startTime = millis ();
-  bool success = sd.begin (SdioConfig (FIFO_SDIO));
+  bool success = pattern_sd.begin (SdioConfig (FIFO_SDIO));
   uint32_t elapsed = millis () - startTime;
 
   Serial.print ("Result: ");
@@ -161,15 +162,15 @@ testBasicInit ()
   if (!success)
     {
       Serial.print ("Error Code: 0x");
-      Serial.println (sd.sdErrorCode (), HEX);
+      Serial.println (pattern_sd.sdErrorCode (), HEX);
       Serial.print ("Error Data: 0x");
-      Serial.println (sd.sdErrorData (), HEX);
+      Serial.println (pattern_sd.sdErrorData (), HEX);
     }
   else
     {
       // Get card info
       Serial.print ("Card Type: ");
-      switch (sd.card ()->type ())
+      switch (pattern_sd.card ()->type ())
         {
         case SD_CARD_TYPE_SD1:
           Serial.println ("SD1");
@@ -182,10 +183,10 @@ testBasicInit ()
           break;
         default:
           Serial.print ("Unknown type: ");
-          Serial.println (sd.card ()->type ());
+          Serial.println (pattern_sd.card ()->type ());
         }
 
-      uint32_t cardSize = sd.card ()->sectorCount ();
+      uint32_t cardSize = pattern_sd.card ()->sectorCount ();
       if (cardSize > 0)
         {
           Serial.print ("Card Size: ");
@@ -193,7 +194,7 @@ testBasicInit ()
           Serial.println (" MB");
         }
 
-      sd.end ();
+      pattern_sd.end ();
     }
 }
 
@@ -204,14 +205,13 @@ testWithTimeout ()
 
   const uint32_t TIMEOUT_MS = 3000;
   uint32_t startTime = millis ();
-  bool timedOut = false;
 
   // Create a non-blocking init attempt
   Serial.print ("Attempting init with ");
   Serial.print (TIMEOUT_MS);
   Serial.println (" ms timeout...");
 
-  // Since sd.begin() can block, we'll use a different approach
+  // Since pattern_sd.begin() can block, we'll use a different approach
   // We'll try to detect a hang by using interrupts
 
   volatile bool initComplete = false;
@@ -232,7 +232,7 @@ testWithTimeout ()
       // Try init if not started
       if (!initComplete)
         {
-          initSuccess = sd.begin (SdioConfig (FIFO_SDIO));
+          initSuccess = pattern_sd.begin (SdioConfig (FIFO_SDIO));
           initComplete = true;
         }
     }
@@ -242,7 +242,6 @@ testWithTimeout ()
   if (!initComplete)
     {
       Serial.println ("TIMEOUT - Init did not complete!");
-      timedOut = true;
     }
   else
     {
@@ -255,7 +254,7 @@ testWithTimeout ()
 
       if (initSuccess)
         {
-          sd.end ();
+          pattern_sd.end ();
         }
     }
 }
@@ -282,7 +281,7 @@ testDifferentConfigs ()
 
       // Note: SdFat library doesn't support setClockSpeed on SdioConfig
       // We can only use the predefined configurations
-      success = sd.begin (configs[i].config);
+      success = pattern_sd.begin (configs[i].config);
 
       uint32_t elapsed = millis () - startTime;
 
@@ -295,11 +294,11 @@ testDifferentConfigs ()
       if (!success)
         {
           Serial.print ("  Error: 0x");
-          Serial.println (sd.sdErrorCode (), HEX);
+          Serial.println (pattern_sd.sdErrorCode (), HEX);
         }
       else
         {
-          sd.end ();
+          pattern_sd.end ();
         }
 
       delay (100);
@@ -312,7 +311,7 @@ testFileCount ()
   Serial.println ("\n--- Test 4: File Counting Performance ---");
 
   uint32_t startTime = millis ();
-  if (!sd.begin (SdioConfig (FIFO_SDIO)))
+  if (!pattern_sd.begin (SdioConfig (FIFO_SDIO)))
     {
       Serial.println ("Failed to initialize SD card!");
       return;
@@ -329,16 +328,16 @@ testFileCount ()
   uint32_t fileCount = 0;
   uint32_t dirCount = 0;
 
-  if (!root.open ("/"))
+  if (!pattern_dir.open (pattern_dir_str))
     {
-      Serial.println ("Failed to open root!");
-      sd.end ();
+      Serial.println ("Failed to open pattern_dir!");
+      pattern_sd.end ();
       return;
     }
 
-  while (file.openNext (&root, O_RDONLY))
+  while (pattern_file.openNext (&pattern_dir, O_RDONLY))
     {
-      if (file.isDir ())
+      if (pattern_file.isDir ())
         {
           dirCount++;
         }
@@ -346,7 +345,7 @@ testFileCount ()
         {
           fileCount++;
         }
-      file.close ();
+      pattern_file.close ();
 
       // Progress indicator
       if ((fileCount + dirCount) % 100 == 0)
@@ -369,7 +368,7 @@ testFileCount ()
     }
 
   uint32_t countTime = millis () - startTime;
-  root.close ();
+  pattern_dir.close ();
 
   Serial.println ();
   Serial.print ("Files: ");
@@ -389,25 +388,25 @@ testFileCount ()
 
   // Method 2: Count with rewindDirectory
   Serial.println ("\nMethod 2: Count with rewind");
-  root.open ("/");
+  pattern_dir.open (pattern_dir_str);
   startTime = millis ();
   uint32_t quickCount = 0;
 
-  root.rewindDirectory ();
-  while (file.openNext (&root, O_RDONLY) && quickCount < 10)
+  pattern_dir.rewindDirectory ();
+  while (pattern_file.openNext (&pattern_dir, O_RDONLY) && quickCount < 10)
     {
       quickCount++;
-      file.close ();
+      pattern_file.close ();
     }
 
   uint32_t quickTime = millis () - startTime;
-  root.close ();
+  pattern_dir.close ();
 
   Serial.print ("First 10 files time: ");
   Serial.print (quickTime);
   Serial.println (" ms");
 
-  sd.end ();
+  pattern_sd.end ();
 }
 
 void
@@ -419,7 +418,7 @@ testInterruptImpact ()
   Serial.println ("Testing with interrupts enabled:");
   interrupts ();
   uint32_t startTime = millis ();
-  bool success = sd.begin (SdioConfig (FIFO_SDIO));
+  bool success = pattern_sd.begin (SdioConfig (FIFO_SDIO));
   uint32_t withIntTime = millis () - startTime;
 
   Serial.print ("  Result: ");
@@ -430,7 +429,7 @@ testInterruptImpact ()
 
   if (success)
     {
-      sd.end ();
+      pattern_sd.end ();
     }
 
   delay (100);
@@ -445,7 +444,7 @@ testInterruptImpact ()
   delayMicroseconds (100);
   interrupts ();
 
-  success = sd.begin (SdioConfig (FIFO_SDIO));
+  success = pattern_sd.begin (SdioConfig (FIFO_SDIO));
   uint32_t mixedTime = millis () - startTime;
 
   Serial.print ("  Result: ");
@@ -457,20 +456,19 @@ testInterruptImpact ()
   if (success)
     {
       // Do a quick operation to verify card is responsive
-      FsFile testFile;
       startTime = millis ();
-      bool opSuccess = testFile.open ("/", O_RDONLY);
+      bool opSuccess = pattern_file.open (pattern_dir_str, O_RDONLY);
       uint32_t opTime = millis () - startTime;
 
-      Serial.print ("  Open root time: ");
+      Serial.print ("  Open pattern_dir time: ");
       Serial.print (opTime);
       Serial.println (" ms");
 
       if (opSuccess)
         {
-          testFile.close ();
+          pattern_file.close ();
         }
 
-      sd.end ();
+      pattern_sd.end ();
     }
 }

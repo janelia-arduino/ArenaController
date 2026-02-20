@@ -9,7 +9,6 @@ environments:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-2_gnu.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/aiofiles-24.1.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/ajsonrpc-1.2.0-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/anyio-4.8.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/binutils-2.43-h4852527_5.conda
@@ -27,7 +26,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/clang-format-21-21.1.8-default_h99862b1_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/clang-format-21.1.8-default_h99862b1_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/clang-tools-21.1.8-default_h99862b1_3.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/click-8.1.8-pyh707e725_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/click-8.1.7-unix_pyh707e725_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gcc-14.2.0-h96c4ede_2.conda
@@ -76,7 +75,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/packaging-24.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pcre2-10.47-haa7fec5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/perl-5.32.1-7_hd590300_perl5.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/platformio-6.1.16-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/platformio-6.1.19-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyelftools-0.31-py312h7900ff3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyserial-3.5-pyhd8ed1ab_1.conda
@@ -86,6 +85,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8228510_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.32.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/semantic_version-2.10.0-pyhd8ed1ab_0.tar.bz2
+      - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-79.0.0-pyhff2d567_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/sniffio-1.3.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.39.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/sysroot_linux-64-2.28-h4ee821c_9.conda
@@ -353,15 +353,6 @@ packages:
   license_family: BSD
   size: 23621
   timestamp: 1650670423406
-- conda: https://conda.anaconda.org/conda-forge/noarch/aiofiles-24.1.0-pyhd8ed1ab_1.conda
-  sha256: 8e18809f00b0bfe504bc6180b80d844016690925ddf0e61272111eec079774c3
-  md5: 7e8045a75e921648c082ba7cd7edd114
-  depends:
-  - python >=3.9
-  license: Apache-2.0
-  license_family: Apache
-  size: 19712
-  timestamp: 1733829125632
 - conda: https://conda.anaconda.org/conda-forge/noarch/ajsonrpc-1.2.0-pyhd8ed1ab_0.tar.bz2
   sha256: aca382399209b6394343ba0b2282969b6da59df4862907ab442bc8ffad59aeb1
   md5: b8bcea6e6561e2cfd0c3aaa899321496
@@ -1077,16 +1068,6 @@ packages:
   license_family: BSD
   size: 85069
   timestamp: 1733222030187
-- conda: https://conda.anaconda.org/conda-forge/noarch/click-8.1.8-pyh707e725_0.conda
-  sha256: c920d23cd1fcf565031c679adb62d848af60d6fbb0edc2d50ba475cea4f0d8ab
-  md5: f22f4d4970e09d68a10b922cbb0408d3
-  depends:
-  - __unix
-  - python >=3.9
-  license: BSD-3-Clause
-  license_family: BSD
-  size: 84705
-  timestamp: 1734858922844
 - conda: https://conda.anaconda.org/conda-forge/noarch/colorama-0.4.6-pyhd8ed1ab_1.conda
   sha256: ab29d57dc70786c1269633ba3dff20288b81664d3ff8d21af995742e2bb03287
   md5: 962b9857ee8e7018c22f2776ffa0b2d7
@@ -2634,29 +2615,6 @@ packages:
   license: GPL-1.0-or-later OR Artistic-1.0-Perl
   size: 14439531
   timestamp: 1703311335652
-- conda: https://conda.anaconda.org/conda-forge/noarch/platformio-6.1.16-pyhd8ed1ab_0.conda
-  sha256: 0f0056f7f62f33daa8623d39749a5ff122d2dd0e271865d718a81cb5d3c9539d
-  md5: f9d42e3c8c4741087b8306eb515a6604
-  depends:
-  - aiofiles >=0.8.0
-  - ajsonrpc 1.2.*
-  - bottle 0.13.*
-  - click >=8.0.4,<9.0.0a0
-  - colorama
-  - marshmallow 3.*
-  - pyelftools >0.27,<1.0a0
-  - pyserial 3.5.*
-  - python >=3.8
-  - requests 2.*
-  - semantic_version 2.10.*
-  - starlette >=0.19,<0.40a
-  - tabulate 0.*
-  - uvicorn >=0.16,<0.31
-  - wsproto 1.*
-  license: Apache-2.0
-  license_family: Apache
-  size: 210437
-  timestamp: 1727634446339
 - conda: https://conda.anaconda.org/conda-forge/noarch/platformio-6.1.19-pyhd8ed1ab_0.conda
   sha256: c67fa613979d9a31d3bf6f104e6a743515da6e840390af7c4f6da791b1e46d79
   md5: a1cf43f3b3fc301f166e3c4c2b23c5aa

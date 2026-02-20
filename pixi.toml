@@ -11,15 +11,11 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [dependencies]
 # PlatformIO CLI (conda-forge, noarch). This provides the `pio` command.
-platformio = ">=6.1.16,<7"
+platformio = ">=6.1.19,<7"
 # Explicit Python for repo helper scripts (quantum_leaps_tools.py, version_sync.py)
-python = ">=3.12,<3.13"
+python = ">=3.12,<=3.14"
 clang-tools = "*"
 git = "*"
-
-[tasks]
-# List connected devices/ports (helps users discover COM3, /dev/ttyACM0, /dev/cu.usbmodem*, etc.)
-ports = "pio device list"
 
 # --------------------------------------------------------------------------------------
 # clang-format
@@ -42,6 +38,32 @@ description = "CI-friendly check: fails if files are not formatted (no writes)."
 cmd = "python tools/clang_format_all.py --check"
 
 # --------------------------------------------------------------------------------------
+# pat tools
+#
+# copy-file <source_file> <copies> <start_number>
+#
+# Copies the source file into
+# the same directory, naming the copies with the same prefix + extension, and
+# numbers starting at start_number and incrementing.
+#
+# pixi run copy-file -- /media/$USER/0403-0201/patterns/PAT0004.pat 25 100
+#
+# delete-files <directory> <min_number>
+#
+# Deletes files like PAT####.pat in that directory whose number is >= min_number
+# (matches your example where 100 deletes PAT0100.pat too).
+#
+# pixi run delete-files /media/$USER/0403-0201/patterns/ 100
+# --------------------------------------------------------------------------------------
+[tasks.copy-file]
+description = "copy-file <source_file> <copies> <start_number>"
+cmd = "python tools/pat_tools.py copy-file"
+
+[tasks.delete-files]
+description = "delete-files <directory> <min_number>"
+cmd = "python tools/pat_tools.py delete-files"
+
+# --------------------------------------------------------------------------------------
 # PlatformIO build/upload tasks
 #
 # We select which example to build by setting PLATFORMIO_SRC_DIR (instead of editing
@@ -53,6 +75,13 @@ cmd = "python tools/clang_format_all.py --check"
 # Default example:
 #   examples/ArenaControllerTeensy12-12
 # --------------------------------------------------------------------------------------
+
+[tasks]
+# List connected devices/ports (helps users discover COM3, /dev/ttyACM0, /dev/cu.usbmodem*, etc.)
+ports = "pio device list"
+
+[tasks.pio-version]
+cmd = "pio --version"
 
 [tasks.build]
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
@@ -103,6 +132,14 @@ export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy4
 pio run -e teensy41 -t clean &&
 pio run -e teensy41
 """
+
+# Serial monitor (primarily used for examples/SDCardDebugTest)
+[tasks.monitor]
+args = [
+  { arg = "port", default = "/dev/ttyACM0" },
+  { arg = "baud", default = "115200" },
+]
+cmd = "pio device monitor --port {{ port }} --baud {{ baud }} --echo --eol=LF"
 
 # --------------------------------------------------------------------------------------
 # Version synchronization helpers

@@ -329,7 +329,9 @@ pixi run build examples/SDCardDebugTest
 pixi run build examples/WatchdogTest
 #+END_SRC
 
-*** Upload the firmware
+*** Flash the firmware
+
+Flash first cleans any previous build files, the builds the firmware, then uploads it over the serial port.
 
 List available devices/ports:
 
@@ -337,26 +339,46 @@ List available devices/ports:
 pixi run ports
 #+END_SRC
 
-Upload (a port can be provided; default is =/dev/ttyACM0=):
+Flash (a port can be provided; default is =/dev/ttyACM0=):
 
 #+BEGIN_SRC sh
-pixi run upload
-pixi run upload examples/ArenaControllerTeensy12-12 /dev/ttyACM1
-pixi run upload examples/ArenaControllerTeensy12-12 /dev/cu.usbmodem1234
-pixi run upload examples/ArenaControllerTeensy12-12 COM3
+pixi run flash
+pixi run flash examples/ArenaControllerTeensy12-12 /dev/ttyACM1
+pixi run flash examples/ArenaControllerTeensy12-12 /dev/cu.usbmodem1234
+pixi run flash examples/ArenaControllerTeensy12-12 COM3
 #+END_SRC
 
-Upload other examples:
+Flash other examples:
 
 #+BEGIN_SRC sh
-pixi run upload examples/MongooseTest
-pixi run upload examples/MongooseTest /dev/ttyACM1
+pixi run flash examples/MongooseTest
+pixi run flash examples/MongooseTest /dev/ttyACM1
 
-pixi run upload examples/SDCardDebugTest
-pixi run upload examples/SDCardDebugTest /dev/ttyACM1
+pixi run flash examples/SDCardDebugTest
+pixi run flash examples/SDCardDebugTest /dev/ttyACM1
 
-pixi run upload examples/WatchdogTest
-pixi run upload examples/WatchdogTest /dev/ttyACM1
+pixi run flash examples/WatchdogTest
+pixi run flash examples/WatchdogTest /dev/ttyACM1
+#+END_SRC
+
+*** Use serial monitor for debug tests
+
+The serial monitor should not be used for =examples/ArenaControllerTeensy12-12= since the output is binary. Use qspy (see below) instead.
+
+The serial monitor is used for examples/SDCardDebugTest however.
+
+List available devices/ports:
+
+#+BEGIN_SRC sh
+pixi run ports
+#+END_SRC
+
+Run monitor (a port can be provided; default is =/dev/ttyACM0=  @ 115200):
+
+#+BEGIN_SRC sh
+pixi run monitor /dev/ttyACM1
+pixi run monitor /dev/ttyACM0 9600
+pixi run monitor COM3 115200     # Windows
 #+END_SRC
 
 *** Version synchronization
