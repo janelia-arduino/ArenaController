@@ -837,6 +837,9 @@ BSP::openPatternDirectory ()
 {
   bool directory_opened
       = bsp_global::pattern_dir.open (constants::pattern_dir_str);
+  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+  QS_STR ("pattern directory opened");
+  QS_END ()
   return directory_opened;
 }
 
