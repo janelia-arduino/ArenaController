@@ -1,11 +1,13 @@
 #include "ArenaController.hpp"
 
-void setup()
+void
+setup ()
 {
-  ArduinoInterface::setup();
+  ArduinoInterface::setup ();
 }
 
-void loop()
+void
+loop ()
 {
-  ArduinoInterface::loop();
+  ArduinoInterface::loop ();
 }
