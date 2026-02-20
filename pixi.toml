@@ -15,6 +15,7 @@ platformio = ">=6.1.16,<7"
 # Explicit Python for repo helper scripts (quantum_leaps_tools.py, version_sync.py)
 python = ">=3.12,<3.13"
 clang-tools = "*"
+git = "*"
 
 [tasks]
 # List connected devices/ports (helps users discover COM3, /dev/ttyACM0, /dev/cu.usbmodem*, etc.)
