@@ -819,7 +819,6 @@ BSP::findPatternCard ()
   QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
   QS_STR ("Attempting to find pattern card");
   QS_END ()
-  QS_FLUSH ();
 
   bool result = bsp_global::pattern_sd.begin (SdioConfig (FIFO_SDIO));
 
