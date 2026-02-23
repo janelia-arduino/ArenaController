@@ -7,7 +7,6 @@ using namespace QP;
 
 using namespace AC;
 
-#define AC_ENABLE_PERF_PROBE 1
 //---------------------------------------------------------------------------
 // Performance probe instrumentation
 //
@@ -315,8 +314,8 @@ FSP::ArenaController_setup ()
   // QS_GLB_FILTER(QP::QS_QF_NEW);QS_QF_EQUEUE_POST
   // QS_GLB_FILTER(QP::QS_QF_EQUEUE_POST);
   QS_GLB_FILTER (QP::QS_UA_RECORDS); // all user records ON
-  // QS_GLB_FILTER (-QP::QS_U0_RECORDS); // ethernet records OFF
-  // QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
+  //  QS_GLB_FILTER (-QP::QS_U0_RECORDS); // ethernet records OFF
+  //  QS_GLB_FILTER(QP::QS_U1_RECORDS); // user records ON
 
   // init publish-subscribe
   static QSubscrList subscrSto[MAX_PUB_SIG];
@@ -376,6 +375,12 @@ FSP::ArenaController_setup ()
   QS_STR ("sizeof(lrgPoolSto[0])");
   QS_U16 (5, sizeof (lrgPoolSto[0]));
   QS_END ()
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  QS_BEGIN_ID (USER_COMMENT, AO_Arena->m_prio)
+  QS_STR ("PERF PROBE ENABLED (AC_ENABLE_PERF_PROBE)");
+  QS_END ()
+#endif
 }
 
 void
@@ -429,6 +434,7 @@ FSP::Arena_activateCommandInterfaces (QActive *const ao, QEvt const *e)
   // AO_SerialCommandInterface->POST (
   //     &constants::activate_serial_command_interface_evt,
   //     &constants::fsp_id);
+
   AO_EthernetCommandInterface->POST (
       &constants::activate_ethernet_command_interface_evt, ao);
 }
@@ -631,7 +637,7 @@ FSP::AnalogInput_enterInitialized (QHsm *const hsm, QEvt const *e)
 void
 FSP::AnalogInput_getInput (QHsm *const hsm, QEvt const *e)
 {
-  Arena *const arena = static_cast<Arena *const> (ao);
+  Arena *const arena = static_cast<Arena *const> (AO_Arena);
   arena->analog_input_time_evt_.armX (constants::ticks_per_second
                                       / constants::analog_input_frequency_hz);
   if (!BSP::analogInputDataAvailable ())

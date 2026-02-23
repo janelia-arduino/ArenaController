@@ -176,6 +176,23 @@ BSP::init ()
   digitalWriteFast (constants::perf_pin_frame_transfer, LOW);
   digitalWriteFast (constants::perf_pin_fetch, LOW);
 
+#if defined(AC_ENABLE_PERF_PROBE)
+  //  Boot-time signature pulses on the performance probe pins.
+  //  This is a sanity check: if you do not see these on the scope, you are
+  //  either probing the wrong pins or not running the expected firmware build.
+  digitalWriteFast (constants::perf_pin_refresh_tick, HIGH);
+  delay (20);
+  digitalWriteFast (constants::perf_pin_refresh_tick, LOW);
+  delay (20);
+  digitalWriteFast (constants::perf_pin_frame_transfer, HIGH);
+  delay (20);
+  digitalWriteFast (constants::perf_pin_frame_transfer, LOW);
+  delay (20);
+  digitalWriteFast (constants::perf_pin_fetch, HIGH);
+  delay (20);
+  digitalWriteFast (constants::perf_pin_fetch, LOW);
+#endif
+
   for (uint8_t region_index = 0;
        region_index < constants::region_count_per_frame; ++region_index)
     {

@@ -1,6 +1,22 @@
 #ifndef ARENA_CONTROLLER_CONSTANTS_HPP
 #define ARENA_CONTROLLER_CONSTANTS_HPP
 
+// ---------------------------------------------------------------------------
+// Build-time feature flags
+//
+// NOTE on Arduino/Teensy builds: each .cpp is compiled as a separate
+// translation unit. A #define placed in one .cpp does NOT automatically apply
+// to other .cpp files. If you want a feature flag to be seen project-wide,
+// define it in a header (like this one) or pass it as a compiler flag
+// (e.g. -D...).
+//
+// Performance probe instrumentation (pins 48/49/50 + QS PERF_* user records)
+// Enable by defining AC_ENABLE_PERF_PROBE=1. You can override this from the
+// build system by defining it before including this header.
+#ifndef AC_ENABLE_PERF_PROBE
+#define AC_ENABLE_PERF_PROBE 1
+#endif
+
 #include <Arduino.h>
 
 namespace AC
