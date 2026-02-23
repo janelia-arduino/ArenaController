@@ -168,6 +168,14 @@ BSP::init ()
   pinMode (LED_BUILTIN, OUTPUT);
   ledOff ();
 
+  // Optional performance probe pins
+  pinMode (constants::perf_pin_refresh_tick, OUTPUT);
+  pinMode (constants::perf_pin_frame_transfer, OUTPUT);
+  pinMode (constants::perf_pin_fetch, OUTPUT);
+  digitalWriteFast (constants::perf_pin_refresh_tick, LOW);
+  digitalWriteFast (constants::perf_pin_frame_transfer, LOW);
+  digitalWriteFast (constants::perf_pin_fetch, LOW);
+
   for (uint8_t region_index = 0;
        region_index < constants::region_count_per_frame; ++region_index)
     {
@@ -1153,7 +1161,9 @@ QP::QS::onCleanup ()
 QP::QSTimeCtr
 QP::QS::onGetTime ()
 {
-  return millis ();
+  // Use microsecond timestamps for tighter inter-frame-interval/jitter
+  // measurements. Note: micros() wraps in ~71 minutes (2^32 us).
+  return micros ();
 }
 //............................................................................
 void

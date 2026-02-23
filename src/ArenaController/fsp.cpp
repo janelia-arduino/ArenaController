@@ -7,6 +7,163 @@ using namespace QP;
 
 using namespace AC;
 
+#define AC_ENABLE_PERF_PROBE 1
+//---------------------------------------------------------------------------
+// Performance probe instrumentation
+//
+// Enable by compiling with -DAC_ENABLE_PERF_PROBE (PlatformIO build_flags or
+// a global #define).
+//
+// This adds:
+//   * 3 digital output pins for scope/logic-analyzer timing
+//   * lightweight QS user records for frame timing + stage durations
+//
+#if defined(AC_ENABLE_PERF_PROBE)
+namespace Perf
+{
+// Pin helpers (see constants.hpp for the default pin mapping)
+static bool refresh_tick_level = false;
+
+// Counters (useful to detect overload without parsing timestamps)
+static volatile uint32_t refresh_isr_count = 0;
+static volatile uint32_t refresh_post_fail_count = 0;
+static volatile uint32_t refresh_defer_drop_count = 0;
+
+// Frame timing
+static uint32_t frame_id = 0;
+static uint32_t last_frame_start_us = 0;
+static uint32_t current_frame_start_us = 0;
+static volatile uint8_t current_frame_flags = 0;
+static uint32_t refresh_rate_hz = 0;
+static uint32_t refresh_period_us = 0;
+
+enum : uint8_t
+{
+  FLAG_DEFER_SEEN
+  = 1U << 0, // at least one REFRESH_TIMEOUT arrived while transferring
+  FLAG_DEFER_DROPPED
+  = 1U << 1, // refresh_queue was full => at least one tick dropped
+};
+
+static inline void
+set_refresh_rate (uint32_t hz)
+{
+  refresh_rate_hz = hz;
+  refresh_period_us
+      = (hz > 0U) ? (AC::constants::microseconds_per_second / hz) : 0U;
+}
+
+static inline void
+pin_refresh_tick_toggle ()
+{
+  refresh_tick_level = !refresh_tick_level;
+  digitalWriteFast (AC::constants::perf_pin_refresh_tick,
+                    refresh_tick_level ? HIGH : LOW);
+}
+
+static inline void
+pin_frame_transfer_set (bool level)
+{
+  digitalWriteFast (AC::constants::perf_pin_frame_transfer,
+                    level ? HIGH : LOW);
+}
+
+static inline void
+pin_fetch_set (bool level)
+{
+  digitalWriteFast (AC::constants::perf_pin_fetch, level ? HIGH : LOW);
+}
+
+static inline void
+on_refresh_isr_post (bool success)
+{
+  ++refresh_isr_count;
+  pin_refresh_tick_toggle ();
+  if (!success)
+    {
+      ++refresh_post_fail_count;
+      // Log only the failure (rare unless overloaded)
+      QS_BEGIN_ID (AC::PERF_DROP, AC::AO_Display->m_prio)
+      QS_U8 (0, 0U); // 0 = POST_X failed
+      QS_U32 (8, refresh_isr_count);
+      QS_U32 (8, refresh_post_fail_count);
+      QS_END ()
+    }
+}
+
+static inline void
+on_frame_start ()
+{
+  ++frame_id;
+  current_frame_flags = 0U;
+  current_frame_start_us = micros ();
+  uint32_t ifi_us = 0U;
+  if (last_frame_start_us != 0U)
+    {
+      ifi_us = current_frame_start_us - last_frame_start_us;
+    }
+  last_frame_start_us = current_frame_start_us;
+  pin_frame_transfer_set (true);
+
+  QS_BEGIN_ID (AC::PERF_FRAME, AC::AO_Display->m_prio)
+  QS_U8 (0, 0U); // 0 = START
+  QS_U32 (8, frame_id);
+  QS_U32 (8, current_frame_start_us);
+  QS_U32 (8, ifi_us);
+  QS_U32 (8, refresh_period_us);
+  QS_END ()
+}
+
+static inline void
+on_frame_end ()
+{
+  uint32_t end_us = micros ();
+  uint32_t dur_us = end_us - current_frame_start_us;
+  pin_frame_transfer_set (false);
+
+  QS_BEGIN_ID (AC::PERF_FRAME, AC::AO_Frame->m_prio)
+  QS_U8 (0, 1U); // 1 = END
+  QS_U32 (8, frame_id);
+  QS_U32 (8, end_us);
+  QS_U32 (8, dur_us);
+  QS_U8 (0, current_frame_flags);
+  QS_END ()
+}
+
+static inline void
+on_defer_attempt (bool deferred)
+{
+  current_frame_flags |= FLAG_DEFER_SEEN;
+  if (!deferred)
+    {
+      current_frame_flags |= FLAG_DEFER_DROPPED;
+      ++refresh_defer_drop_count;
+      // Log drops (not every defer) to keep trace lightweight.
+      QS_BEGIN_ID (AC::PERF_DROP, AC::AO_Display->m_prio)
+      QS_U8 (0, 1U); // 1 = defer overflow (drop)
+      QS_U32 (8, frame_id);
+      QS_U32 (8, refresh_defer_drop_count);
+      QS_END ()
+    }
+}
+
+// Generic "stage duration" logger (pattern read/decode/fill, stream decode,
+// ...)
+static inline void
+log_stage (uint8_t stage_id, uint32_t start_us, uint32_t end_us,
+           uint32_t aux = 0U)
+{
+  QS_BEGIN_ID (AC::PERF_STAGE, AC::AO_Pattern->m_prio)
+  QS_U8 (0, stage_id);
+  QS_U32 (8, start_us);
+  QS_U32 (8, end_us - start_us);
+  QS_U32 (8, aux);
+  QS_END ()
+}
+
+} // namespace Perf
+#endif // AC_ENABLE_PERF_PROBE
+
 namespace AC
 {
 namespace constants
@@ -143,6 +300,9 @@ FSP::ArenaController_setup ()
 
   // user record dictionaries
   QS_USR_DICTIONARY (ETHERNET_LOG);
+  QS_USR_DICTIONARY (PERF_FRAME);
+  QS_USR_DICTIONARY (PERF_STAGE);
+  QS_USR_DICTIONARY (PERF_DROP);
   QS_USR_DICTIONARY (USER_COMMENT);
 
   // setup the QS filters...
@@ -493,6 +653,10 @@ FSP::Display_initializeAndSubscribe (QActive *const ao, QEvt const *e)
   ao->subscribe (FRAME_TRANSFERRED_SIG);
   display->refresh_rate_hz_ = constants::refresh_rate_grayscale_default;
 
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::set_refresh_rate (display->refresh_rate_hz_);
+#endif
+
   static QEvt const
       *display_refresh_queue_store[constants::display_refresh_queue_size];
   display->refresh_queue_.init (display_refresh_queue_store,
@@ -509,6 +673,10 @@ FSP::Display_setRefreshRate (QActive *const ao, QEvt const *e)
   Display *const display = static_cast<Display *const> (ao);
   UnsignedValueEvt const *uvev = static_cast<UnsignedValueEvt const *> (e);
   display->refresh_rate_hz_ = uvev->value;
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::set_refresh_rate (display->refresh_rate_hz_);
+#endif
   QS_BEGIN_ID (USER_COMMENT, AO_Display->m_prio)
   QS_STR ("set refresh rate");
   QS_U16 (5, display->refresh_rate_hz_);
@@ -520,11 +688,17 @@ postRefreshTimeout ()
 {
   bool success = AO_Display->POST_X (&constants::refresh_timeout_evt, 0U,
                                      &constants::fsp_id);
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::on_refresh_isr_post (success);
+#endif
   if (!success)
     {
+#if !defined(AC_ENABLE_PERF_PROBE)
       QS_BEGIN_ID (USER_COMMENT, AO_Display->m_prio)
       QS_STR ("postRefreshTimeout failed");
       QS_END ()
+#endif
     }
 }
 
@@ -551,6 +725,9 @@ FSP::Display_disarmRefreshTimer (QActive *const ao, QEvt const *e)
 void
 FSP::Display_transferFrame (QActive *const ao, QEvt const *e)
 {
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::on_frame_start ();
+#endif
   AO_Frame->POST (&constants::transfer_frame_evt, ao);
 }
 
@@ -558,10 +735,16 @@ void
 FSP::Display_defer (QP::QActive *const ao, QP::QEvt const *e)
 {
   Display *const display = static_cast<Display *const> (ao);
+  bool deferred = false;
   if (display->refresh_queue_.getNFree () > 0)
     {
       display->defer (&display->refresh_queue_, e);
+      deferred = true;
     }
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::on_defer_attempt (deferred);
+#endif
 }
 
 void
@@ -1170,7 +1353,17 @@ FSP::Frame_fillFrameBufferWithAllOn (QActive *const ao, QEvt const *e)
   Frame *const frame = static_cast<Frame *const> (ao);
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_FILLED_SIG);
 
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::pin_fetch_set (true);
+  uint32_t t0 = micros ();
+#endif
   BSP::fillFrameBufferWithAllOn (fe->buffer, frame->grayscale_);
+#if defined(AC_ENABLE_PERF_PROBE)
+  uint32_t t1 = micros ();
+  Perf::pin_fetch_set (false);
+  // stage_id 4 = fill all-on (synthetic)
+  Perf::log_stage (4U, t0, t1, frame->grayscale_ ? 1U : 0U);
+#endif
   if (frame->grayscale_)
     {
       QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -1192,7 +1385,17 @@ FSP::Frame_fillFrameBufferWithDecodedFrame (QActive *const ao, QEvt const *e)
   Frame *const frame = static_cast<Frame *const> (ao);
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_FILLED_SIG);
 
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::pin_fetch_set (true);
+  uint32_t t0 = micros ();
+#endif
   BSP::fillFrameBufferWithDecodedFrame (fe->buffer, frame->grayscale_);
+#if defined(AC_ENABLE_PERF_PROBE)
+  uint32_t t1 = micros ();
+  Perf::pin_fetch_set (false);
+  // stage_id 2 = fill frame buffer from decoded frame
+  Perf::log_stage (2U, t0, t1, frame->grayscale_ ? 1U : 0U);
+#endif
   QF::PUBLISH (fe, ao);
 }
 
@@ -1273,6 +1476,9 @@ FSP::Frame_ifFrameNotTransferred (QActive *const ao, QEvt const *e)
 void
 FSP::Frame_publishFrameTransferred (QActive *const ao, QEvt const *e)
 {
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::on_frame_end ();
+#endif
   QF::PUBLISH (&constants::frame_transferred_evt, ao);
 }
 
@@ -1568,8 +1774,19 @@ FSP::Pattern_readFrameFromFile (QP::QActive *const ao, QP::QEvt const *e)
 {
   Pattern *const pattern = static_cast<Pattern *const> (ao);
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_READ_FROM_FILE_SIG);
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::pin_fetch_set (true);
+  uint32_t t0 = micros ();
+#endif
   BSP::readPatternFrameFromFileIntoBuffer (fe->buffer, pattern->frame_index_,
                                            pattern->byte_count_per_frame_);
+#if defined(AC_ENABLE_PERF_PROBE)
+  uint32_t t1 = micros ();
+  Perf::pin_fetch_set (false);
+  // stage_id 0 = SD read (pattern)
+  Perf::log_stage (0U, t0, t1, pattern->frame_index_);
+#endif
   AO_Pattern->POST (fe, ao);
 }
 
@@ -1667,7 +1884,19 @@ void
 FSP::Pattern_decodeFrame (QActive *const ao, QEvt const *e)
 {
   Pattern *const pattern = static_cast<Pattern *const> (ao);
-  BSP::decodePatternFrameBuffer (pattern->frame_->buffer, pattern->grayscale_);
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::pin_fetch_set (true);
+  uint32_t t0 = micros ();
+#endif
+  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer (
+      pattern->frame_->buffer, pattern->grayscale_);
+#if defined(AC_ENABLE_PERF_PROBE)
+  uint32_t t1 = micros ();
+  Perf::pin_fetch_set (false);
+  // stage_id 1 = decode (pattern)
+  Perf::log_stage (1U, t0, t1, bytes_decoded);
+#endif
   AO_Pattern->POST (&constants::frame_decoded_evt, ao);
 }
 
@@ -2440,8 +2669,18 @@ FSP::processStreamCommand (uint8_t const *stream_buffer,
   QS_U32 (8, analog_output_value_y);
   QS_END ()
 
-  uint16_t bytes_decoded
-      = BSP::decodePatternFrameBuffer (frame_buffer, grayscale);
+  uint16_t bytes_decoded;
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::pin_fetch_set (true);
+  uint32_t t0 = micros ();
+#endif
+  bytes_decoded = BSP::decodePatternFrameBuffer (frame_buffer, grayscale);
+#if defined(AC_ENABLE_PERF_PROBE)
+  uint32_t t1 = micros ();
+  Perf::pin_fetch_set (false);
+  // stage_id 3 = decode (streamed frame)
+  Perf::log_stage (3U, t0, t1, bytes_decoded);
+#endif
   AO_Arena->POST (&constants::stream_frame_evt, &constants::fsp_id);
   QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
   QS_STR ("processed stream command");
