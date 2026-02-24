@@ -1031,9 +1031,15 @@ dns_fn (struct mg_connection *c, int ev, void *ev_data)
 void
 mongoose_init (void)
 {
+
+#ifndef AC_MONGOOSE_LOG_LEVEL
+// Default to errors only. Define AC_MONGOOSE_LOG_LEVEL=MG_LL_INFO (or DEBUG)
+// while debugging Mongoose itself.
+#define AC_MONGOOSE_LOG_LEVEL MG_LL_ERROR
+#endif
+  mg_log_set (AC_MONGOOSE_LOG_LEVEL);
+
   mg_mgr_init (&g_mgr); // Initialise event manager
-  /* mg_log_set(MG_LL_DEBUG);  // Set log level to debug */
-  mg_log_set (MG_LL_INFO); // Set log level to info
 
 #if WIZARD_ENABLE_HTTP
   MG_INFO (("Starting HTTP listener"));

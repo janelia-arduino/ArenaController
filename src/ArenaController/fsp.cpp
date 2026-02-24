@@ -1113,7 +1113,20 @@ void
 FSP::EthernetCommandInterface_initializeEthernet (QActive *const ao,
                                                   QEvt const *e)
 {
+  // NOTE: ethernet_time_evt_ is a one-shot time event. In the Unintitalized
+  // substate, ETHERNET_TIMEOUT_SIG is handled here (not in the Active
+  // superstate), so we must explicitly re-arm the timer or ethernet processing
+  // will stop after the first timeout.
   bool ethernet_initialized = BSP::initializeEthernet ();
+
+  // Kick the TCP/IP stack once immediately after init so DHCP/link can start
+  // progressing right away (even before the server/listener is up).
+  BSP::pollEthernet ();
+
+  // Re-arm the one-shot timer AFTER init to avoid queueing multiple timeouts
+  // while init is running.
+  FSP::EthernetCommandInterface_armEthernetTimerLowSpeed (ao, e);
+
   if (ethernet_initialized)
     {
       AO_EthernetCommandInterface->POST (&constants::ethernet_initialized_evt,
@@ -1148,9 +1161,26 @@ void
 FSP::EthernetCommandInterface_createServerConnection (QActive *const ao,
                                                       QEvt const *e)
 {
+  // Same as initializeEthernet(): this handler runs in the
+  // CreatingServerConnection substate, so it must re-arm the one-shot timer.
   bool server_connected = BSP::createEthernetServerConnection ();
+
+  // Keep the TCP/IP stack progressing (DHCP/link) while we are bringing up
+  // listeners and waiting for the server to become usable.
+  BSP::pollEthernet ();
+
+  // Re-arm AFTER attempting server creation to avoid queueing multiple
+  // retries while we are still in this handler.
+  FSP::EthernetCommandInterface_armEthernetTimerLowSpeed (ao, e);
+
   if (server_connected)
     {
+      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR ("Ethernet command server listening");
+      QS_STR ("port");
+      QS_U16 (5, constants::ethernet_server_port);
+      QS_END ()
+
       AO_EthernetCommandInterface->POST (
           &constants::ethernet_server_connected_evt, ao);
     }

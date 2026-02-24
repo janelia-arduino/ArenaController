@@ -311,9 +311,28 @@ log_fn (char ch, void *param)
 bool
 BSP::initializeEthernet ()
 {
+  // Reset DHCP/IP announcement state on every init.
+  bsp_global::ethernet_ip_address[0] = '\0';
+  bsp_global::ip_announced = false;
+
+  // Mongoose internal logs are noisy; keep them off by default (see
+  // mongoose_impl.c), but still route them to QS if the level is raised.
   mg_log_set_fn (log_fn, 0);
+
+#ifndef AC_MONGOOSE_LOG_LEVEL
+// Default to errors only. Define AC_MONGOOSE_LOG_LEVEL=MG_LL_INFO (or DEBUG)
+// while debugging Mongoose itself.
+#define AC_MONGOOSE_LOG_LEVEL MG_LL_ERROR
+#endif
+  mg_log_set (AC_MONGOOSE_LOG_LEVEL);
+
   ethernet_init ();
   mongoose_init ();
+
+  QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+  QS_STR ("Ethernet init complete; waiting for DHCP");
+  QS_END ()
+
   return true;
 }
 
@@ -321,6 +340,63 @@ void
 BSP::pollEthernet ()
 {
   mongoose_poll ();
+
+  if (!g_mgr.ifp)
+    {
+      return;
+    }
+
+  // Log state changes (minimal but very informative): DOWN->UP->REQ->IP->READY
+  static uint8_t last_state = 0xFF;
+  uint8_t st = g_mgr.ifp->state;
+  if (st != last_state)
+    {
+      last_state = st;
+      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR ("ETH state");
+      switch (st)
+        {
+        case MG_TCPIP_STATE_DOWN:
+          QS_STR ("DOWN");
+          break;
+        case MG_TCPIP_STATE_UP:
+          QS_STR ("UP");
+          break;
+        case MG_TCPIP_STATE_REQ:
+          QS_STR ("REQ");
+          break;
+        case MG_TCPIP_STATE_IP:
+          QS_STR ("IP");
+          break;
+        case MG_TCPIP_STATE_READY:
+          QS_STR ("READY");
+          break;
+        default:
+          QS_STR ("UNKNOWN");
+          QS_U8 (3, st);
+          break;
+        }
+      QS_END ()
+    }
+
+  // Announce the DHCP IP exactly once, via QS user records. This check is done
+  // here (not in a specific Mongoose connection callback) so it works
+  // regardless of which listeners are enabled (HTTP/HTTPS/binary server).
+  if (!bsp_global::ip_announced && g_mgr.ifp && g_mgr.ifp->ip != 0)
+    {
+      mg_snprintf (bsp_global::ethernet_ip_address,
+                   sizeof (bsp_global::ethernet_ip_address), "%M",
+                   mg_print_ip, &g_mgr.ifp->ip);
+      bsp_global::ip_announced = true;
+
+      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR ("ETHERNET UP");
+      QS_STR ("IP");
+      QS_STR (bsp_global::ethernet_ip_address);
+      QS_STR ("CMD PORT");
+      QS_U16 (5, constants::ethernet_server_port);
+      QS_END ()
+    }
 }
 
 void
@@ -365,15 +441,6 @@ sfn (struct mg_connection *c, int ev, void *ev_data)
       break;
 
     case MG_EV_POLL:
-      // DHCP done? g_mgr.ifp points to struct mg_tcpip_if
-      if (!bsp_global::ip_announced && g_mgr.ifp && g_mgr.ifp->ip != 0)
-        {
-          mg_snprintf (bsp_global::ethernet_ip_address,
-                       sizeof (bsp_global::ethernet_ip_address), "%M",
-                       mg_print_ip, &g_mgr.ifp->ip);
-          MG_INFO (("DHCP IP: %s", bsp_global::ethernet_ip_address));
-          bsp_global::ip_announced = true;
-        }
       break;
 
     default:
