@@ -8,33 +8,130 @@ using namespace QP;
 using namespace AC;
 
 //---------------------------------------------------------------------------
-// Performance probe instrumentation
+// Performance probe (optional)
 //
 // Enable by compiling with -DAC_ENABLE_PERF_PROBE (PlatformIO build_flags or
 // a global #define).
 //
 // This adds:
-//   * 3 digital output pins for scope/logic-analyzer timing
-//   * lightweight QS user records for frame timing + stage durations
+//   * 3 digital output pins for scope/logic-analyzer timing (board-specific
+//     mapping in the BSP: examples/*/bsp.cpp)
+//   * on-device running statistics for:
+//       - inter-frame-interval (IFI) jitter
+//       - refresh tick deferrals and drops
+//       - frame-transfer durations
+//       - aggregate "fetch" / frame-prep stage durations
+//
+// Query at runtime using:
+//   * string command "PERF" (human-readable)
+//   * binary command GET_PERF_STATS_CMD (compact binary payload)
+//   * binary command RESET_PERF_STATS_CMD (clears stats window)
 //
 #if defined(AC_ENABLE_PERF_PROBE)
+#include <math.h>
+#include <stdio.h>
 namespace Perf
 {
-// Pin helpers (see constants.hpp for the default pin mapping)
-static bool refresh_tick_level = false;
 
-// Counters (useful to detect overload without parsing timestamps)
-static volatile uint32_t refresh_isr_count = 0;
-static volatile uint32_t refresh_post_fail_count = 0;
-static volatile uint32_t refresh_defer_drop_count = 0;
+// Lightweight running-statistics helper (Welford)
+struct RunningStats
+{
+  uint32_t n = 0U;
+  double mean = 0.0;
+  double m2 = 0.0;
+  double min = 0.0;
+  double max = 0.0;
+
+  void
+  reset ()
+  {
+    n = 0U;
+    mean = 0.0;
+    m2 = 0.0;
+    min = 0.0;
+    max = 0.0;
+  }
+
+  void
+  push (double x)
+  {
+    if (n == 0U)
+      {
+        n = 1U;
+        mean = x;
+        m2 = 0.0;
+        min = x;
+        max = x;
+        return;
+      }
+
+    if (x < min)
+      {
+        min = x;
+      }
+    if (x > max)
+      {
+        max = x;
+      }
+
+    ++n;
+    double const delta = x - mean;
+    mean += delta / static_cast<double> (n);
+    double const delta2 = x - mean;
+    m2 += delta * delta2;
+  }
+
+  double
+  variance () const
+  {
+    return (n > 1U) ? (m2 / static_cast<double> (n - 1U)) : 0.0;
+  }
+
+  double
+  stddev () const
+  {
+    double const v = variance ();
+    return (v > 0.0) ? sqrt (v) : 0.0;
+  }
+};
+
+// Saturating helpers for compact binary responses
+static inline uint16_t
+sat_u16 (uint32_t v)
+{
+  return (v > 0xFFFFu) ? 0xFFFFu : static_cast<uint16_t> (v);
+}
+
+static inline int16_t
+sat_i16 (int32_t v)
+{
+  if (v > 32767)
+    {
+      return 32767;
+    }
+  if (v < -32768)
+    {
+      return -32768;
+    }
+  return static_cast<int16_t> (v);
+}
+
+// Counters
+static volatile uint32_t refresh_isr_count = 0U;
+static volatile uint32_t refresh_post_fail_count = 0U;
+static volatile uint32_t refresh_defer_count = 0U;
+static volatile uint32_t refresh_defer_drop_count = 0U;
 
 // Frame timing
-static uint32_t frame_id = 0;
-static uint32_t last_frame_start_us = 0;
-static uint32_t current_frame_start_us = 0;
-static volatile uint8_t current_frame_flags = 0;
-static uint32_t refresh_rate_hz = 0;
-static uint32_t refresh_period_us = 0;
+static uint32_t frame_id = 0U;
+static uint32_t first_frame_start_us = 0U;
+static uint32_t last_frame_start_us = 0U;
+static uint32_t current_frame_start_us = 0U;
+static uint32_t last_frame_end_us = 0U;
+static uint8_t current_frame_flags = 0U;
+
+static uint32_t refresh_rate_hz = 0U;
+static uint32_t refresh_period_us = 0U;
 
 enum : uint8_t
 {
@@ -44,49 +141,93 @@ enum : uint8_t
   = 1U << 1, // refresh_queue was full => at least one tick dropped
 };
 
+// Running stats (since last reset / refresh-rate change)
+static RunningStats ifi_us_stats;
+static RunningStats jitter_us_stats;
+static RunningStats frame_dur_us_stats;
+static RunningStats fetch_dur_us_stats;
+
+// Fetch measurement can be nested; keep depth + first timestamp
+static uint16_t fetch_depth = 0U;
+static uint32_t fetch_start_us = 0U;
+
+struct PerfStatsPayload
+{
+  uint16_t refresh_rate_hz;
+  uint16_t flags;
+  uint16_t ifi_mean_us;
+  uint16_t ifi_std_us;
+  int16_t jitter_min_us;
+  int16_t jitter_max_us;
+  uint16_t frame_dur_mean_us;
+  uint16_t frame_dur_max_us;
+  uint16_t fetch_dur_mean_us;
+  uint16_t fetch_dur_max_us;
+  uint16_t drop_count;
+  uint16_t defer_count;
+  uint16_t ifi_n;
+  uint16_t reserved;
+};
+
+static_assert (sizeof (PerfStatsPayload)
+                   <= (AC::constants::byte_count_per_response_max - 3),
+               "PerfStatsPayload must fit in a single binary response");
+
+static inline void
+reset_window ()
+{
+  refresh_isr_count = 0U;
+  refresh_post_fail_count = 0U;
+  refresh_defer_count = 0U;
+  refresh_defer_drop_count = 0U;
+
+  frame_id = 0U;
+  first_frame_start_us = 0U;
+  last_frame_start_us = 0U;
+  current_frame_start_us = 0U;
+  last_frame_end_us = 0U;
+  current_frame_flags = 0U;
+
+  ifi_us_stats.reset ();
+  jitter_us_stats.reset ();
+  frame_dur_us_stats.reset ();
+  fetch_dur_us_stats.reset ();
+
+  fetch_depth = 0U;
+  fetch_start_us = 0U;
+
+  // Ensure pins are not left high
+  BSP::perfFrameTransferSet (false);
+  BSP::perfFetchSet (false);
+}
+
 static inline void
 set_refresh_rate (uint32_t hz)
 {
-  refresh_rate_hz = hz;
-  refresh_period_us
-      = (hz > 0U) ? (AC::constants::microseconds_per_second / hz) : 0U;
-}
-
-static inline void
-pin_refresh_tick_toggle ()
-{
-  refresh_tick_level = !refresh_tick_level;
-  digitalWriteFast (AC::constants::perf_pin_refresh_tick,
-                    refresh_tick_level ? HIGH : LOW);
-}
-
-static inline void
-pin_frame_transfer_set (bool level)
-{
-  digitalWriteFast (AC::constants::perf_pin_frame_transfer,
-                    level ? HIGH : LOW);
-}
-
-static inline void
-pin_fetch_set (bool level)
-{
-  digitalWriteFast (AC::constants::perf_pin_fetch, level ? HIGH : LOW);
+  if (refresh_rate_hz != hz)
+    {
+      refresh_rate_hz = hz;
+      refresh_period_us
+          = (hz > 0U) ? (AC::constants::microseconds_per_second / hz) : 0U;
+      // New operating point: reset stats window so measurements remain
+      // comparable.
+      reset_window ();
+    }
+  else
+    {
+      refresh_period_us
+          = (hz > 0U) ? (AC::constants::microseconds_per_second / hz) : 0U;
+    }
 }
 
 static inline void
 on_refresh_isr_post (bool success)
 {
   ++refresh_isr_count;
-  pin_refresh_tick_toggle ();
+  BSP::perfRefreshTickToggle ();
   if (!success)
     {
       ++refresh_post_fail_count;
-      // Log only the failure (rare unless overloaded)
-      QS_BEGIN_ID (AC::PERF_DROP, AC::AO_Display->m_prio)
-      QS_U8 (0, 0U); // 0 = POST_X failed
-      QS_U32 (8, refresh_isr_count);
-      QS_U32 (8, refresh_post_fail_count);
-      QS_END ()
     }
 }
 
@@ -96,68 +237,209 @@ on_frame_start ()
   ++frame_id;
   current_frame_flags = 0U;
   current_frame_start_us = micros ();
-  uint32_t ifi_us = 0U;
+
+  if (first_frame_start_us == 0U)
+    {
+      first_frame_start_us = current_frame_start_us;
+    }
+
   if (last_frame_start_us != 0U)
     {
-      ifi_us = current_frame_start_us - last_frame_start_us;
+      uint32_t const ifi_us = current_frame_start_us - last_frame_start_us;
+      ifi_us_stats.push (static_cast<double> (ifi_us));
+      if (refresh_period_us != 0U)
+        {
+          int32_t const jitter_us = static_cast<int32_t> (ifi_us)
+                                    - static_cast<int32_t> (refresh_period_us);
+          jitter_us_stats.push (static_cast<double> (jitter_us));
+        }
     }
-  last_frame_start_us = current_frame_start_us;
-  pin_frame_transfer_set (true);
 
-  QS_BEGIN_ID (AC::PERF_FRAME, AC::AO_Display->m_prio)
-  QS_U8 (0, 0U); // 0 = START
-  QS_U32 (8, frame_id);
-  QS_U32 (8, current_frame_start_us);
-  QS_U32 (8, ifi_us);
-  QS_U32 (8, refresh_period_us);
-  QS_END ()
+  last_frame_start_us = current_frame_start_us;
+
+  BSP::perfFrameTransferSet (true);
 }
 
 static inline void
 on_frame_end ()
 {
-  uint32_t end_us = micros ();
-  uint32_t dur_us = end_us - current_frame_start_us;
-  pin_frame_transfer_set (false);
+  uint32_t const end_us = micros ();
+  last_frame_end_us = end_us;
+  uint32_t const dur_us = end_us - current_frame_start_us;
+  frame_dur_us_stats.push (static_cast<double> (dur_us));
 
-  QS_BEGIN_ID (AC::PERF_FRAME, AC::AO_Frame->m_prio)
-  QS_U8 (0, 1U); // 1 = END
-  QS_U32 (8, frame_id);
-  QS_U32 (8, end_us);
-  QS_U32 (8, dur_us);
-  QS_U8 (0, current_frame_flags);
-  QS_END ()
+  BSP::perfFrameTransferSet (false);
 }
 
 static inline void
 on_defer_attempt (bool deferred)
 {
   current_frame_flags |= FLAG_DEFER_SEEN;
+  ++refresh_defer_count;
   if (!deferred)
     {
       current_frame_flags |= FLAG_DEFER_DROPPED;
       ++refresh_defer_drop_count;
-      // Log drops (not every defer) to keep trace lightweight.
-      QS_BEGIN_ID (AC::PERF_DROP, AC::AO_Display->m_prio)
-      QS_U8 (0, 1U); // 1 = defer overflow (drop)
-      QS_U32 (8, frame_id);
-      QS_U32 (8, refresh_defer_drop_count);
-      QS_END ()
     }
 }
 
-// Generic "stage duration" logger (pattern read/decode/fill, stream decode,
-// ...)
 static inline void
-log_stage (uint8_t stage_id, uint32_t start_us, uint32_t end_us,
-           uint32_t aux = 0U)
+fetch_begin ()
 {
-  QS_BEGIN_ID (AC::PERF_STAGE, AC::AO_Pattern->m_prio)
-  QS_U8 (0, stage_id);
-  QS_U32 (8, start_us);
-  QS_U32 (8, end_us - start_us);
-  QS_U32 (8, aux);
-  QS_END ()
+  if (fetch_depth == 0U)
+    {
+      fetch_start_us = micros ();
+      BSP::perfFetchSet (true);
+    }
+  ++fetch_depth;
+}
+
+static inline void
+fetch_end ()
+{
+  if (fetch_depth == 0U)
+    {
+      return; // underflow guard
+    }
+
+  --fetch_depth;
+  if (fetch_depth == 0U)
+    {
+      uint32_t const end_us = micros ();
+      BSP::perfFetchSet (false);
+      uint32_t const dur_us = end_us - fetch_start_us;
+      fetch_dur_us_stats.push (static_cast<double> (dur_us));
+    }
+}
+
+static inline PerfStatsPayload
+snapshot_payload ()
+{
+  PerfStatsPayload p{};
+  p.refresh_rate_hz = sat_u16 (refresh_rate_hz);
+
+  uint32_t const drop_total
+      = refresh_post_fail_count + refresh_defer_drop_count;
+
+  p.flags = 0U;
+  if (drop_total != 0U)
+    {
+      p.flags |= 1U << 0; // any drops
+    }
+  if (refresh_defer_count != 0U)
+    {
+      p.flags |= 1U << 1; // any defers
+    }
+
+  // Inter-frame-interval (IFI)
+  p.ifi_n = sat_u16 (ifi_us_stats.n);
+  p.ifi_mean_us = sat_u16 (static_cast<uint32_t> (ifi_us_stats.mean + 0.5));
+  p.ifi_std_us
+      = sat_u16 (static_cast<uint32_t> (ifi_us_stats.stddev () + 0.5));
+
+  // Jitter relative to expected period
+  p.jitter_min_us = sat_i16 (static_cast<int32_t> (jitter_us_stats.min));
+  p.jitter_max_us = sat_i16 (static_cast<int32_t> (jitter_us_stats.max));
+
+  // Frame transfer duration
+  p.frame_dur_mean_us
+      = sat_u16 (static_cast<uint32_t> (frame_dur_us_stats.mean + 0.5));
+  p.frame_dur_max_us
+      = sat_u16 (static_cast<uint32_t> (frame_dur_us_stats.max + 0.5));
+
+  // Fetch/prep duration (aggregate over all measured fetch sections)
+  p.fetch_dur_mean_us
+      = sat_u16 (static_cast<uint32_t> (fetch_dur_us_stats.mean + 0.5));
+  p.fetch_dur_max_us
+      = sat_u16 (static_cast<uint32_t> (fetch_dur_us_stats.max + 0.5));
+
+  // Counters
+  p.drop_count = sat_u16 (drop_total);
+  p.defer_count = sat_u16 (refresh_defer_count);
+
+  p.reserved = 0U;
+  return p;
+}
+
+static inline void
+format_summary (char *out, size_t out_len)
+{
+  uint32_t const drop_total
+      = refresh_post_fail_count + refresh_defer_drop_count;
+
+  uint32_t const ifi_mean_us = static_cast<uint32_t> (ifi_us_stats.mean + 0.5);
+  uint32_t const ifi_std_us
+      = static_cast<uint32_t> (ifi_us_stats.stddev () + 0.5);
+
+  int32_t const jitter_min_us = static_cast<int32_t> (jitter_us_stats.min);
+  int32_t const jitter_max_us = static_cast<int32_t> (jitter_us_stats.max);
+
+  uint32_t const frame_dur_mean_us
+      = static_cast<uint32_t> (frame_dur_us_stats.mean + 0.5);
+  uint32_t const frame_dur_max_us
+      = static_cast<uint32_t> (frame_dur_us_stats.max + 0.5);
+
+  uint32_t const fetch_dur_mean_us
+      = static_cast<uint32_t> (fetch_dur_us_stats.mean + 0.5);
+  uint32_t const fetch_dur_max_us
+      = static_cast<uint32_t> (fetch_dur_us_stats.max + 0.5);
+
+  uint32_t window_us = 0U;
+  if (first_frame_start_us != 0U && last_frame_end_us != 0U
+      && last_frame_end_us >= first_frame_start_us)
+    {
+      window_us = last_frame_end_us - first_frame_start_us;
+    }
+  uint32_t const window_ms = window_us / 1000U;
+
+  // Report FPS as fixed-point with 2 decimals, derived from IFI mean.
+  uint32_t fps_x100 = 0U;
+  if (ifi_mean_us != 0U)
+    {
+      fps_x100 = (100000000UL + (ifi_mean_us / 2U)) / ifi_mean_us;
+    }
+  uint32_t const fps_int = fps_x100 / 100U;
+  uint32_t const fps_frac = fps_x100 % 100U;
+
+  // Utilization estimate: mean frame-transfer time divided by expected period.
+  uint32_t util_x10 = 0U;
+  if (refresh_period_us != 0U)
+    {
+      util_x10 = (frame_dur_mean_us * 1000U) / refresh_period_us;
+    }
+  uint32_t const util_int = util_x10 / 10U;
+  uint32_t const util_frac = util_x10 % 10U;
+
+  snprintf (out, out_len,
+            "PERF hz=%lu period_us=%lu fps=%lu.%02lu "
+            "frames=%lu ticks=%lu window_ms=%lu "
+            "ifi_n=%lu ifi_mean_us=%lu ifi_std_us=%lu "
+            "jitter_us=[%ld..%ld] "
+            "xfer_mean_us=%lu xfer_max_us=%lu util=~%lu.%lu%% "
+            "fetch_mean_us=%lu fetch_max_us=%lu "
+            "defers=%lu drops=%lu (post_fail=%lu defer_drop=%lu)",
+            static_cast<unsigned long> (refresh_rate_hz),
+            static_cast<unsigned long> (refresh_period_us),
+            static_cast<unsigned long> (fps_int),
+            static_cast<unsigned long> (fps_frac),
+            static_cast<unsigned long> (frame_id),
+            static_cast<unsigned long> (refresh_isr_count),
+            static_cast<unsigned long> (window_ms),
+            static_cast<unsigned long> (ifi_us_stats.n),
+            static_cast<unsigned long> (ifi_mean_us),
+            static_cast<unsigned long> (ifi_std_us),
+            static_cast<long> (jitter_min_us),
+            static_cast<long> (jitter_max_us),
+            static_cast<unsigned long> (frame_dur_mean_us),
+            static_cast<unsigned long> (frame_dur_max_us),
+            static_cast<unsigned long> (util_int),
+            static_cast<unsigned long> (util_frac),
+            static_cast<unsigned long> (fetch_dur_mean_us),
+            static_cast<unsigned long> (fetch_dur_max_us),
+            static_cast<unsigned long> (refresh_defer_count),
+            static_cast<unsigned long> (drop_total),
+            static_cast<unsigned long> (refresh_post_fail_count),
+            static_cast<unsigned long> (refresh_defer_drop_count));
 }
 
 } // namespace Perf
@@ -1394,15 +1676,11 @@ FSP::Frame_fillFrameBufferWithAllOn (QActive *const ao, QEvt const *e)
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_FILLED_SIG);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::pin_fetch_set (true);
-  uint32_t t0 = micros ();
+  Perf::fetch_begin ();
 #endif
   BSP::fillFrameBufferWithAllOn (fe->buffer, frame->grayscale_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  uint32_t t1 = micros ();
-  Perf::pin_fetch_set (false);
-  // stage_id 4 = fill all-on (synthetic)
-  Perf::log_stage (4U, t0, t1, frame->grayscale_ ? 1U : 0U);
+  Perf::fetch_end ();
 #endif
   if (frame->grayscale_)
     {
@@ -1426,15 +1704,11 @@ FSP::Frame_fillFrameBufferWithDecodedFrame (QActive *const ao, QEvt const *e)
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_FILLED_SIG);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::pin_fetch_set (true);
-  uint32_t t0 = micros ();
+  Perf::fetch_begin ();
 #endif
   BSP::fillFrameBufferWithDecodedFrame (fe->buffer, frame->grayscale_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  uint32_t t1 = micros ();
-  Perf::pin_fetch_set (false);
-  // stage_id 2 = fill frame buffer from decoded frame
-  Perf::log_stage (2U, t0, t1, frame->grayscale_ ? 1U : 0U);
+  Perf::fetch_end ();
 #endif
   QF::PUBLISH (fe, ao);
 }
@@ -1816,16 +2090,12 @@ FSP::Pattern_readFrameFromFile (QP::QActive *const ao, QP::QEvt const *e)
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_READ_FROM_FILE_SIG);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::pin_fetch_set (true);
-  uint32_t t0 = micros ();
+  Perf::fetch_begin ();
 #endif
   BSP::readPatternFrameFromFileIntoBuffer (fe->buffer, pattern->frame_index_,
                                            pattern->byte_count_per_frame_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  uint32_t t1 = micros ();
-  Perf::pin_fetch_set (false);
-  // stage_id 0 = SD read (pattern)
-  Perf::log_stage (0U, t0, t1, pattern->frame_index_);
+  Perf::fetch_end ();
 #endif
   AO_Pattern->POST (fe, ao);
 }
@@ -1926,16 +2196,11 @@ FSP::Pattern_decodeFrame (QActive *const ao, QEvt const *e)
   Pattern *const pattern = static_cast<Pattern *const> (ao);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::pin_fetch_set (true);
-  uint32_t t0 = micros ();
+  Perf::fetch_begin ();
 #endif
-  uint16_t bytes_decoded = BSP::decodePatternFrameBuffer (
-      pattern->frame_->buffer, pattern->grayscale_);
+  BSP::decodePatternFrameBuffer (pattern->frame_->buffer, pattern->grayscale_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  uint32_t t1 = micros ();
-  Perf::pin_fetch_set (false);
-  // stage_id 1 = decode (pattern)
-  Perf::log_stage (1U, t0, t1, bytes_decoded);
+  Perf::fetch_end ();
 #endif
   AO_Pattern->POST (&constants::frame_decoded_evt, ao);
 }
@@ -2633,6 +2898,27 @@ FSP::processBinaryCommand (
         QS_END ()
         break;
       }
+    case GET_PERF_STATS_CMD:
+      {
+#if defined(AC_ENABLE_PERF_PROBE)
+        Perf::PerfStatsPayload const p = Perf::snapshot_payload ();
+        memcpy (&response[response_byte_count], &p, sizeof (p));
+        response_byte_count += sizeof (p);
+#else
+        appendMessage (response, response_byte_count, "PERF PROBE DISABLED");
+#endif
+        break;
+      }
+    case RESET_PERF_STATS_CMD:
+      {
+#if defined(AC_ENABLE_PERF_PROBE)
+        Perf::reset_window ();
+        appendMessage (response, response_byte_count, "PERF RESET");
+#else
+        appendMessage (response, response_byte_count, "PERF PROBE DISABLED");
+#endif
+        break;
+      }
     case ALL_ON_CMD:
       {
         AO_Arena->POST (&constants::all_on_evt, &constants::fsp_id);
@@ -2645,6 +2931,7 @@ FSP::processBinaryCommand (
     default:
       break;
     }
+  response[0] = response_byte_count - 1;
   return response_byte_count;
 }
 
@@ -2711,15 +2998,11 @@ FSP::processStreamCommand (uint8_t const *stream_buffer,
 
   uint16_t bytes_decoded;
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::pin_fetch_set (true);
-  uint32_t t0 = micros ();
+  Perf::fetch_begin ();
 #endif
   bytes_decoded = BSP::decodePatternFrameBuffer (frame_buffer, grayscale);
 #if defined(AC_ENABLE_PERF_PROBE)
-  uint32_t t1 = micros ();
-  Perf::pin_fetch_set (false);
-  // stage_id 3 = decode (streamed frame)
-  Perf::log_stage (3U, t0, t1, bytes_decoded);
+  Perf::fetch_end ();
 #endif
   AO_Arena->POST (&constants::stream_frame_evt, &constants::fsp_id);
   QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -2751,6 +3034,23 @@ FSP::processStringCommand (const char *command, char *response)
   else if (strcmp (command, "ALL_OFF") == 0)
     {
       AO_Arena->POST (&constants::all_off_evt, &constants::fsp_id);
+    }
+  else if (strcmp (command, "PERF") == 0)
+    {
+#if defined(AC_ENABLE_PERF_PROBE)
+      Perf::format_summary (response, constants::string_response_length_max);
+#else
+      strcpy (response, "PERF PROBE DISABLED");
+#endif
+    }
+  else if (strcmp (command, "PERF_RESET") == 0)
+    {
+#if defined(AC_ENABLE_PERF_PROBE)
+      Perf::reset_window ();
+      strcpy (response, "PERF RESET");
+#else
+      strcpy (response, "PERF PROBE DISABLED");
+#endif
     }
   else if (strcmp (command, "EHS") == 0)
     {

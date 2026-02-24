@@ -15,6 +15,9 @@ enum ArenaCommands
   STREAM_FRAME_CMD = 0x32,
   GET_ETHERNET_IP_ADDRESS_CMD = 0x66,
   SET_FRAME_POSITION_CMD = 0x70,
+  // Performance / diagnostics (0x71+)
+  GET_PERF_STATS_CMD = 0x71,
+  RESET_PERF_STATS_CMD = 0x72,
   ALL_ON_CMD = 0xFF,
 };
 

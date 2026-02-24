@@ -10,6 +10,15 @@ struct BSP
   static void ledOff ();
   static void ledOn ();
 
+  // Optional performance probe pins / timing helpers
+  //
+  // Implemented by the board support package (examples/*/bsp.cpp).
+  // The core firmware calls these helpers and remains board-agnostic
+  // with respect to pin numbers and digital I/O implementation.
+  static void perfRefreshTickToggle ();
+  static void perfFrameTransferSet (bool level);
+  static void perfFetchSet (bool level);
+
   static void initializeWatchdog ();
   static void feedWatchdog ();
 

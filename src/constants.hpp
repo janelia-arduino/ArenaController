@@ -173,23 +173,6 @@ constexpr uint32_t analog_closed_loop_frequency_hz = 200;
 // 20fps = (10 * (1000mv + 0)) / 500
 constexpr int32_t analog_closed_loop_offset = 0;
 constexpr int32_t analog_closed_loop_scale_factor = 500;
-
-// ---------------------------------------------------------------------------
-// Performance instrumentation
-//
-// These pins are intended as *optional* digital debug outputs that you can
-// connect to an oscilloscope / logic analyzer to measure timing.
-//
-// Defaults are chosen for Teensy 4.1 and match the user's available pins
-// (48, 49, 50). If these collide with your wiring, change them here.
-//
-// Suggested mapping (see perf instrumentation in fsp.cpp):
-//   - perf_pin_refresh_tick: toggles every refresh timer ISR tick
-//   - perf_pin_frame_transfer: HIGH while a full frame transfer is in-flight
-//   - perf_pin_fetch: HIGH while a "frame preparation" stage runs
-constexpr uint8_t perf_pin_refresh_tick = 48;
-constexpr uint8_t perf_pin_frame_transfer = 49;
-constexpr uint8_t perf_pin_fetch = 50;
 } // namespace constants
 } // namespace AC
 #endif

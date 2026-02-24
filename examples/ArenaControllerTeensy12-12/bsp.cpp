@@ -41,6 +41,17 @@ constexpr uint32_t spi_clock_speed = 4000000;
 
 constexpr uint8_t reset_pin = 34;
 
+// ---------------------------------------------------------------------------
+// Optional performance probe pins (scope / logic analyzer)
+//
+// Mapping for this board (Teensy 4.1):
+//   - perf_pin_refresh_tick: toggles every refresh timer ISR tick
+//   - perf_pin_frame_transfer: HIGH while a full frame transfer is in-flight
+//   - perf_pin_fetch: HIGH while a "frame preparation" stage runs
+constexpr uint8_t perf_pin_refresh_tick = 48;
+constexpr uint8_t perf_pin_frame_transfer = 49;
+constexpr uint8_t perf_pin_fetch = 50;
+
 // Ethernet Communication Interface
 // static const char *ethernet_static_url = "tcp://192.168.10.62:62222";
 const char *ethernet_dhcp_url = "tcp://0.0.0.0:62222";
@@ -103,6 +114,11 @@ static usb_serial_class &qs_serial_stream = Serial;
 static char ethernet_ip_address[constants::ethernet_ip_address_length_max]
     = "";
 static bool ip_announced = false;
+
+#if defined(AC_ENABLE_PERF_PROBE)
+// Performance probe pin state
+static bool perf_refresh_tick_level = false;
+#endif
 
 // Log
 static char log_str[constants::string_log_length_max];
@@ -168,6 +184,7 @@ BSP::init ()
   pinMode (LED_BUILTIN, OUTPUT);
   ledOff ();
 
+#if defined(AC_ENABLE_PERF_PROBE)
   // Optional performance probe pins
   pinMode (constants::perf_pin_refresh_tick, OUTPUT);
   pinMode (constants::perf_pin_frame_transfer, OUTPUT);
@@ -176,7 +193,6 @@ BSP::init ()
   digitalWriteFast (constants::perf_pin_frame_transfer, LOW);
   digitalWriteFast (constants::perf_pin_fetch, LOW);
 
-#if defined(AC_ENABLE_PERF_PROBE)
   //  Boot-time signature pulses on the performance probe pins.
   //  This is a sanity check: if you do not see these on the scope, you are
   //  either probing the wrong pins or not running the expected firmware build.
@@ -213,6 +229,41 @@ void
 BSP::ledOn ()
 {
   digitalWriteFast (LED_BUILTIN, HIGH);
+}
+
+// ---------------------------------------------------------------------------
+// Performance probe pin helpers (board-specific)
+
+void
+BSP::perfRefreshTickToggle ()
+{
+#if defined(AC_ENABLE_PERF_PROBE)
+  bsp_global::perf_refresh_tick_level = !bsp_global::perf_refresh_tick_level;
+  digitalWriteFast (constants::perf_pin_refresh_tick,
+                    bsp_global::perf_refresh_tick_level ? HIGH : LOW);
+#else
+  (void)0;
+#endif
+}
+
+void
+BSP::perfFrameTransferSet (bool level)
+{
+#if defined(AC_ENABLE_PERF_PROBE)
+  digitalWriteFast (constants::perf_pin_frame_transfer, level ? HIGH : LOW);
+#else
+  (void)level;
+#endif
+}
+
+void
+BSP::perfFetchSet (bool level)
+{
+#if defined(AC_ENABLE_PERF_PROBE)
+  digitalWriteFast (constants::perf_pin_fetch, level ? HIGH : LOW);
+#else
+  (void)level;
+#endif
 }
 
 void
@@ -385,8 +436,8 @@ BSP::pollEthernet ()
   if (!bsp_global::ip_announced && g_mgr.ifp && g_mgr.ifp->ip != 0)
     {
       mg_snprintf (bsp_global::ethernet_ip_address,
-                   sizeof (bsp_global::ethernet_ip_address), "%M",
-                   mg_print_ip, &g_mgr.ifp->ip);
+                   sizeof (bsp_global::ethernet_ip_address), "%M", mg_print_ip,
+                   &g_mgr.ifp->ip);
       bsp_global::ip_announced = true;
 
       QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
