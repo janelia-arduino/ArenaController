@@ -376,6 +376,10 @@ FSP::ArenaController_setup ()
   QS_U16 (5, sizeof (lrgPoolSto[0]));
   QS_END ()
 
+  QS_BEGIN_ID (USER_COMMENT, AO_Arena->m_prio)
+  QS_STR ("BUILD " __DATE__ " " __TIME__);
+  QS_END ()
+
 #if defined(AC_ENABLE_PERF_PROBE)
   QS_BEGIN_ID (USER_COMMENT, AO_Arena->m_prio)
   QS_STR ("PERF PROBE ENABLED (AC_ENABLE_PERF_PROBE)");

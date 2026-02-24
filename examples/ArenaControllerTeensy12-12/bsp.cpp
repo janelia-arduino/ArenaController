@@ -1153,8 +1153,8 @@ Q_onAssert (char const *const module, int location)
 bool
 QP::QS::onStartup (void const *arg)
 {
-  static uint8_t qsTxBuf[2048]; // buffer for QS transmit channel (QS-TX)
-  static uint8_t qsRxBuf[1024]; // buffer for QS receive channel (QS-RX)
+  static uint8_t qsTxBuf[16384]; // buffer for QS transmit channel (QS-TX)
+  static uint8_t qsRxBuf[1024];  // buffer for QS receive channel (QS-RX)
   initBuf (qsTxBuf, sizeof (qsTxBuf));
   rxInitBuf (qsRxBuf, sizeof (qsRxBuf));
   // bsp_global::qs_serial_stream.setTX (constants::qs_serial_stream_tx_pin);

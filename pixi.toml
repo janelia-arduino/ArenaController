@@ -87,7 +87,12 @@ cmd = "pio --version"
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
 cmd = """
 export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
-export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+# NOTE: PLATFORMIO_BUILD_DIR is a *base* directory; PlatformIO will append the
+# environment name (e.g. "teensy41") automatically. If you include the env
+# name here, you end up with nested build paths like:
+#   .pio/build/<example>/teensy41/teensy41
+# which can make `pio run -t clean` appear to "miss" stale artifacts.
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}" &&
 pio run -e teensy41
 """
 
@@ -95,7 +100,7 @@ pio run -e teensy41
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
 cmd = """
 export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
-export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}" &&
 pio run -e teensy41 -t clean
 """
 
@@ -106,7 +111,7 @@ args = [
 ]
 cmd = """
 export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
-export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}" &&
 pio run -e teensy41 -t upload --upload-port {{ port }}
 """
 
@@ -118,7 +123,7 @@ args = [
 ]
 cmd = """
 export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
-export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}" &&
 pio run -e teensy41 -t clean &&
 pio run -e teensy41 -t upload --upload-port {{ port }}
 """
@@ -128,9 +133,17 @@ pio run -e teensy41 -t upload --upload-port {{ port }}
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
 cmd = """
 export PLATFORMIO_SRC_DIR="$PIXI_PROJECT_ROOT/{{ example }}" &&
-export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}/teensy41" &&
+export PLATFORMIO_BUILD_DIR="$PIXI_PROJECT_ROOT/.pio/build/{{ example }}" &&
 pio run -e teensy41 -t clean &&
 pio run -e teensy41
+"""
+
+# "Nuclear" clean that matches what you found works (`rm -rf .pio/build`), but
+# scoped to one example. Useful if you suspect any stale build products.
+[tasks.deepclean]
+args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
+cmd = """
+rm -rf "$PIXI_PROJECT_ROOT/.pio/build/{{ example }}"
 """
 
 # Serial monitor (primarily used for examples/SDCardDebugTest)
