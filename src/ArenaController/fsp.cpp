@@ -147,6 +147,37 @@ static RunningStats jitter_us_stats;
 static RunningStats frame_dur_us_stats;
 static RunningStats fetch_dur_us_stats;
 
+static uint64_t frame_dur_sum_us = 0ULL;
+static uint64_t fetch_dur_sum_us = 0ULL;
+
+// Optional stage breakdown for "fetch/prep" work. These stages are board-agnostic
+// and map to major firmware activities (SD read, decode, buffer fill, ...).
+enum Stage : uint8_t
+{
+  STAGE_SD_READ = 0U,
+  STAGE_PATTERN_DECODE,
+  STAGE_FILL_FRAME_BUFFER,
+  STAGE_FILL_ALL_ON,
+  STAGE_STREAM_DECODE,
+  STAGE_COUNT
+};
+
+static RunningStats stage_dur_us_stats[STAGE_COUNT];
+static uint64_t stage_dur_sum_us[STAGE_COUNT] = {};
+static uint16_t stage_depth[STAGE_COUNT] = {};
+static uint32_t stage_start_us[STAGE_COUNT] = {};
+
+// SPI/DMA transfer breakdown inside a full frame transfer
+static RunningStats panelset_dur_us_stats;          // per panel-set transfer
+static RunningStats spi_sum_per_frame_us_stats;     // sum of panel-set transfers per frame
+static RunningStats xfer_overhead_per_frame_us_stats; // frame transfer overhead (frame_dur - spi_sum)
+
+static uint64_t spi_sum_us = 0ULL;
+static uint64_t xfer_overhead_sum_us = 0ULL;
+
+static uint32_t panelset_start_us = 0U;
+static uint32_t current_frame_panelset_sum_us = 0U;
+
 // Fetch measurement can be nested; keep depth + first timestamp
 static uint16_t fetch_depth = 0U;
 static uint32_t fetch_start_us = 0U;
@@ -192,6 +223,25 @@ reset_window ()
   jitter_us_stats.reset ();
   frame_dur_us_stats.reset ();
   fetch_dur_us_stats.reset ();
+  panelset_dur_us_stats.reset ();
+  spi_sum_per_frame_us_stats.reset ();
+  xfer_overhead_per_frame_us_stats.reset ();
+
+  frame_dur_sum_us = 0ULL;
+  fetch_dur_sum_us = 0ULL;
+  spi_sum_us = 0ULL;
+  xfer_overhead_sum_us = 0ULL;
+
+  panelset_start_us = 0U;
+  current_frame_panelset_sum_us = 0U;
+
+  for (uint8_t i = 0U; i < STAGE_COUNT; ++i)
+    {
+      stage_dur_us_stats[i].reset ();
+      stage_dur_sum_us[i] = 0ULL;
+      stage_depth[i] = 0U;
+      stage_start_us[i] = 0U;
+    }
 
   fetch_depth = 0U;
   fetch_start_us = 0U;
@@ -237,6 +287,8 @@ on_frame_start ()
   ++frame_id;
   current_frame_flags = 0U;
   current_frame_start_us = micros ();
+  current_frame_panelset_sum_us = 0U;
+  panelset_start_us = 0U;
 
   if (first_frame_start_us == 0U)
     {
@@ -267,6 +319,19 @@ on_frame_end ()
   last_frame_end_us = end_us;
   uint32_t const dur_us = end_us - current_frame_start_us;
   frame_dur_us_stats.push (static_cast<double> (dur_us));
+  frame_dur_sum_us += static_cast<uint64_t> (dur_us);
+
+  // SPI/DMA portion of the transfer (sum of panel-set transfers measured by
+  // Perf::on_panelset_start()/end()) and the remaining per-frame overhead.
+  spi_sum_per_frame_us_stats.push (
+      static_cast<double> (current_frame_panelset_sum_us));
+  spi_sum_us += static_cast<uint64_t> (current_frame_panelset_sum_us);
+
+  uint32_t const overhead_us = (dur_us >= current_frame_panelset_sum_us)
+                                   ? (dur_us - current_frame_panelset_sum_us)
+                                   : 0U;
+  xfer_overhead_per_frame_us_stats.push (static_cast<double> (overhead_us));
+  xfer_overhead_sum_us += static_cast<uint64_t> (overhead_us);
 
   BSP::perfFrameTransferSet (false);
 }
@@ -309,7 +374,65 @@ fetch_end ()
       BSP::perfFetchSet (false);
       uint32_t const dur_us = end_us - fetch_start_us;
       fetch_dur_us_stats.push (static_cast<double> (dur_us));
+      fetch_dur_sum_us += static_cast<uint64_t> (dur_us);
     }
+}
+
+
+
+static inline void
+on_panelset_start ()
+{
+  panelset_start_us = micros ();
+}
+
+static inline void
+on_panelset_end ()
+{
+  if (panelset_start_us == 0U)
+    {
+      return;
+    }
+  uint32_t const end_us = micros ();
+  uint32_t const dur_us = end_us - panelset_start_us;
+  panelset_dur_us_stats.push (static_cast<double> (dur_us));
+  current_frame_panelset_sum_us += dur_us;
+  panelset_start_us = 0U;
+}
+
+// Stage-tagged timing helpers. These also drive the "fetch" probe pin.
+static inline void
+stage_begin (Stage s)
+{
+  uint8_t const idx = static_cast<uint8_t> (s);
+  fetch_begin ();
+  if (idx >= STAGE_COUNT)
+    {
+      return;
+    }
+  if (stage_depth[idx] == 0U)
+    {
+      stage_start_us[idx] = micros ();
+    }
+  ++stage_depth[idx];
+}
+
+static inline void
+stage_end (Stage s)
+{
+  uint8_t const idx = static_cast<uint8_t> (s);
+  if (idx < STAGE_COUNT && stage_depth[idx] != 0U)
+    {
+      --stage_depth[idx];
+      if (stage_depth[idx] == 0U)
+        {
+          uint32_t const end_us = micros ();
+          uint32_t const dur_us = end_us - stage_start_us[idx];
+          stage_dur_us_stats[idx].push (static_cast<double> (dur_us));
+          stage_dur_sum_us[idx] += static_cast<uint64_t> (dur_us);
+        }
+    }
+  fetch_end ();
 }
 
 static inline PerfStatsPayload
@@ -441,6 +564,119 @@ format_summary (char *out, size_t out_len)
             static_cast<unsigned long> (refresh_post_fail_count),
             static_cast<unsigned long> (refresh_defer_drop_count));
 }
+
+
+
+static inline uint32_t
+pct_x10 (uint64_t sum_us, uint32_t window_us)
+{
+  if (window_us == 0U)
+    {
+      return 0U;
+    }
+  return static_cast<uint32_t> ((sum_us * 1000ULL)
+                                / static_cast<uint64_t> (window_us));
+}
+
+// Additional, stage-aware breakdown (SD read / decode / fill, and SPI vs
+// per-frame overhead within the frame transfer window).
+void
+format_breakdown (char *out, size_t out_len)
+{
+  uint32_t const window_us
+      = (first_frame_start_us != 0U && last_frame_end_us >= first_frame_start_us)
+            ? (last_frame_end_us - first_frame_start_us)
+            : 0U;
+
+  uint32_t const duty_xfer_x10 = pct_x10 (frame_dur_sum_us, window_us);
+  uint32_t const duty_spi_x10 = pct_x10 (spi_sum_us, window_us);
+  uint32_t const duty_sd_x10
+      = pct_x10 (stage_dur_sum_us[STAGE_SD_READ], window_us);
+  uint32_t const duty_dec_x10
+      = pct_x10 (stage_dur_sum_us[STAGE_PATTERN_DECODE], window_us);
+  uint32_t const duty_fill_x10
+      = pct_x10 (stage_dur_sum_us[STAGE_FILL_FRAME_BUFFER]
+                     + stage_dur_sum_us[STAGE_FILL_ALL_ON],
+                 window_us);
+
+  uint32_t const xfer_mean_us
+      = static_cast<uint32_t> (frame_dur_us_stats.mean + 0.5);
+  uint32_t const xfer_max_us
+      = static_cast<uint32_t> (frame_dur_us_stats.max + 0.5);
+
+  uint32_t const spi_frame_mean_us
+      = static_cast<uint32_t> (spi_sum_per_frame_us_stats.mean + 0.5);
+  uint32_t const spi_frame_max_us
+      = static_cast<uint32_t> (spi_sum_per_frame_us_stats.max + 0.5);
+
+  uint32_t const ovh_frame_mean_us
+      = static_cast<uint32_t> (xfer_overhead_per_frame_us_stats.mean + 0.5);
+  uint32_t const ovh_frame_max_us
+      = static_cast<uint32_t> (xfer_overhead_per_frame_us_stats.max + 0.5);
+
+  uint32_t const panelset_mean_us
+      = static_cast<uint32_t> (panelset_dur_us_stats.mean + 0.5);
+  uint32_t const panelset_max_us
+      = static_cast<uint32_t> (panelset_dur_us_stats.max + 0.5);
+
+  uint32_t const sd_mean_us
+      = static_cast<uint32_t> (stage_dur_us_stats[STAGE_SD_READ].mean + 0.5);
+  uint32_t const sd_max_us
+      = static_cast<uint32_t> (stage_dur_us_stats[STAGE_SD_READ].max + 0.5);
+
+  uint32_t const dec_mean_us
+      = static_cast<uint32_t> (stage_dur_us_stats[STAGE_PATTERN_DECODE].mean
+                               + 0.5);
+  uint32_t const dec_max_us
+      = static_cast<uint32_t> (stage_dur_us_stats[STAGE_PATTERN_DECODE].max
+                               + 0.5);
+
+  uint32_t const fill_mean_us
+      = static_cast<uint32_t> (
+          stage_dur_us_stats[STAGE_FILL_FRAME_BUFFER].mean + 0.5);
+  uint32_t const fill_max_us
+      = static_cast<uint32_t> (
+          stage_dur_us_stats[STAGE_FILL_FRAME_BUFFER].max + 0.5);
+
+  uint32_t const window_ms = window_us / 1000U;
+
+  snprintf (out, out_len,
+            "PERF_BREAKDOWN window_ms=%lu duty(xfer=%lu.%lu%% spi=%lu.%lu%% "
+            "sd=%lu.%lu%% dec=%lu.%lu%% fill=%lu.%lu%%) "
+            "xfer_mean_us=%lu xfer_max_us=%lu "
+            "spi_frame_mean_us=%lu spi_frame_max_us=%lu "
+            "ovh_frame_mean_us=%lu ovh_frame_max_us=%lu "
+            "panelset_mean_us=%lu panelset_max_us=%lu "
+            "sd_mean_us=%lu sd_max_us=%lu "
+            "dec_mean_us=%lu dec_max_us=%lu "
+            "fill_mean_us=%lu fill_max_us=%lu",
+            static_cast<unsigned long> (window_ms),
+            static_cast<unsigned long> (duty_xfer_x10 / 10U),
+            static_cast<unsigned long> (duty_xfer_x10 % 10U),
+            static_cast<unsigned long> (duty_spi_x10 / 10U),
+            static_cast<unsigned long> (duty_spi_x10 % 10U),
+            static_cast<unsigned long> (duty_sd_x10 / 10U),
+            static_cast<unsigned long> (duty_sd_x10 % 10U),
+            static_cast<unsigned long> (duty_dec_x10 / 10U),
+            static_cast<unsigned long> (duty_dec_x10 % 10U),
+            static_cast<unsigned long> (duty_fill_x10 / 10U),
+            static_cast<unsigned long> (duty_fill_x10 % 10U),
+            static_cast<unsigned long> (xfer_mean_us),
+            static_cast<unsigned long> (xfer_max_us),
+            static_cast<unsigned long> (spi_frame_mean_us),
+            static_cast<unsigned long> (spi_frame_max_us),
+            static_cast<unsigned long> (ovh_frame_mean_us),
+            static_cast<unsigned long> (ovh_frame_max_us),
+            static_cast<unsigned long> (panelset_mean_us),
+            static_cast<unsigned long> (panelset_max_us),
+            static_cast<unsigned long> (sd_mean_us),
+            static_cast<unsigned long> (sd_max_us),
+            static_cast<unsigned long> (dec_mean_us),
+            static_cast<unsigned long> (dec_max_us),
+            static_cast<unsigned long> (fill_mean_us),
+            static_cast<unsigned long> (fill_max_us));
+}
+
 
 } // namespace Perf
 #endif // AC_ENABLE_PERF_PROBE
@@ -1676,11 +1912,11 @@ FSP::Frame_fillFrameBufferWithAllOn (QActive *const ao, QEvt const *e)
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_FILLED_SIG);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_begin ();
+  Perf::stage_begin (Perf::STAGE_FILL_ALL_ON);
 #endif
   BSP::fillFrameBufferWithAllOn (fe->buffer, frame->grayscale_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_end ();
+  Perf::stage_end (Perf::STAGE_FILL_ALL_ON);
 #endif
   if (frame->grayscale_)
     {
@@ -1704,11 +1940,11 @@ FSP::Frame_fillFrameBufferWithDecodedFrame (QActive *const ao, QEvt const *e)
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_FILLED_SIG);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_begin ();
+  Perf::stage_begin (Perf::STAGE_FILL_FRAME_BUFFER);
 #endif
   BSP::fillFrameBufferWithDecodedFrame (fe->buffer, frame->grayscale_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_end ();
+  Perf::stage_end (Perf::STAGE_FILL_FRAME_BUFFER);
 #endif
   QF::PUBLISH (fe, ao);
 }
@@ -1755,6 +1991,9 @@ FSP::Frame_beginTransferPanelSet (QActive *const ao, QEvt const *e)
     {
       panel_byte_count = constants::byte_count_per_panel_binary;
     }
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::on_panelset_start ();
+#endif
   BSP::transferPanelSet (frame->frame_->buffer, frame->buffer_position_,
                          panel_byte_count);
 }
@@ -1763,6 +2002,9 @@ void
 FSP::Frame_endTransferPanelSet (QActive *const ao, QEvt const *e)
 {
   Frame *const frame = static_cast<Frame *const> (ao);
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::on_panelset_end ();
+#endif
   BSP::disablePanelSetSelectPin (frame->panel_set_row_index_,
                                  frame->panel_set_col_index_);
   ++frame->panel_set_row_index_;
@@ -1969,6 +2211,10 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
   // QS_U16(5, gain);
   // QS_U16(5, pattern->runtime_duration_ms_);
   // QS_END()
+#if defined(AC_ENABLE_PERF_PROBE)
+  // Start a fresh measurement window for this pattern run.
+  Perf::reset_window ();
+#endif
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_playing_pattern_evt, ao);
 }
@@ -2024,6 +2270,33 @@ FSP::Pattern_armFindCardTimer (QActive *const ao, QEvt const *e)
 void
 FSP::Pattern_endRuntimeDuration (QActive *const ao, QEvt const *e)
 {
+#if defined(AC_ENABLE_PERF_PROBE)
+  // Emit a low-rate, human-readable performance summary at the end of a pattern
+  // run (so we don't spam QSpy during normal playback).
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+
+  char header[constants::string_response_length_max];
+  snprintf (header, sizeof (header),
+            "PERF_PATTERN_FINISHED frame_rate_hz=%lu runtime_ms=%lu",
+            static_cast<unsigned long> (pattern->frame_rate_hz_),
+            static_cast<unsigned long> (pattern->runtime_duration_ms_));
+  QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
+  QS_STR (header);
+  QS_END ()
+
+  char summary[constants::string_response_length_max];
+  Perf::format_summary (summary, sizeof (summary));
+  QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
+  QS_STR (summary);
+  QS_END ()
+
+  char breakdown[constants::string_response_length_max];
+  Perf::format_breakdown (breakdown, sizeof (breakdown));
+  QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
+  QS_STR (breakdown);
+  QS_END ()
+#endif
+
   QF::PUBLISH (&constants::pattern_finished_playing_evt, ao);
   AO_Arena->POST (&constants::all_off_evt, ao);
 }
@@ -2090,12 +2363,12 @@ FSP::Pattern_readFrameFromFile (QP::QActive *const ao, QP::QEvt const *e)
   FrameEvt *fe = Q_NEW (FrameEvt, FRAME_READ_FROM_FILE_SIG);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_begin ();
+  Perf::stage_begin (Perf::STAGE_SD_READ);
 #endif
   BSP::readPatternFrameFromFileIntoBuffer (fe->buffer, pattern->frame_index_,
                                            pattern->byte_count_per_frame_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_end ();
+  Perf::stage_end (Perf::STAGE_SD_READ);
 #endif
   AO_Pattern->POST (fe, ao);
 }
@@ -2196,11 +2469,11 @@ FSP::Pattern_decodeFrame (QActive *const ao, QEvt const *e)
   Pattern *const pattern = static_cast<Pattern *const> (ao);
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_begin ();
+  Perf::stage_begin (Perf::STAGE_PATTERN_DECODE);
 #endif
   BSP::decodePatternFrameBuffer (pattern->frame_->buffer, pattern->grayscale_);
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_end ();
+  Perf::stage_end (Perf::STAGE_PATTERN_DECODE);
 #endif
   AO_Pattern->POST (&constants::frame_decoded_evt, ao);
 }
@@ -2998,11 +3271,11 @@ FSP::processStreamCommand (uint8_t const *stream_buffer,
 
   uint16_t bytes_decoded;
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_begin ();
+  Perf::stage_begin (Perf::STAGE_STREAM_DECODE);
 #endif
   bytes_decoded = BSP::decodePatternFrameBuffer (frame_buffer, grayscale);
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::fetch_end ();
+  Perf::stage_end (Perf::STAGE_STREAM_DECODE);
 #endif
   AO_Arena->POST (&constants::stream_frame_evt, &constants::fsp_id);
   QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
