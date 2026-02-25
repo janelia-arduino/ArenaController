@@ -1,8 +1,8 @@
 #include "fsp.hpp"
 
-#include "Perf.hpp"
 #include "commands.hpp"
 #include "modes.hpp"
+#include "perf.hpp"
 
 using namespace QP;
 
@@ -507,7 +507,6 @@ FSP::Display_initializeAndSubscribe (QActive *const ao, QEvt const *e)
   ao->subscribe (DEACTIVATE_DISPLAY_SIG);
   ao->subscribe (FRAME_TRANSFERRED_SIG);
   display->refresh_rate_hz_ = constants::refresh_rate_grayscale_default;
-
 
   static QEvt const
       *display_refresh_queue_store[constants::display_refresh_queue_size];
@@ -1537,8 +1536,8 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
   // Start a fresh measurement session for this pattern run.
   Display *const display = static_cast<Display *const> (AO_Display);
   Perf::begin_session (Perf::SessionMode::Pattern,
-                      static_cast<uint16_t> (display->refresh_rate_hz_),
-                      pattern->runtime_duration_ms_);
+                       static_cast<uint16_t> (display->refresh_rate_hz_),
+                       pattern->runtime_duration_ms_);
 #endif
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_playing_pattern_evt, ao);

@@ -1,6 +1,6 @@
-#include "Perf.hpp"
+#include "perf.hpp"
 
-#if defined(AC_ENABLE_PERF_PROBE)
+#if AC_ENABLE_PERF_PROBE
 
 #include <Arduino.h>
 #include <math.h>
@@ -47,7 +47,8 @@ struct RunningStats
   double min = 0.0;
   double max = 0.0;
 
-  void reset ()
+  void
+  reset ()
   {
     n = 0U;
     mean = 0.0;
@@ -56,7 +57,8 @@ struct RunningStats
     max = 0.0;
   }
 
-  void push (double x)
+  void
+  push (double x)
   {
     if (n == 0U)
       {
@@ -84,12 +86,14 @@ struct RunningStats
     m2 += delta * delta2;
   }
 
-  double variance () const
+  double
+  variance () const
   {
     return (n > 1U) ? (m2 / static_cast<double> (n - 1U)) : 0.0;
   }
 
-  double stddev () const
+  double
+  stddev () const
   {
     double const v = variance ();
     return (v > 0.0) ? sqrt (v) : 0.0;
@@ -105,7 +109,8 @@ class P2Quantile
 public:
   explicit P2Quantile (float p) : p_ (p) { reset (); }
 
-  void reset ()
+  void
+  reset ()
   {
     init_count_ = 0U;
     initialized_ = false;
@@ -119,7 +124,8 @@ public:
       }
   }
 
-  void push (float x)
+  void
+  push (float x)
   {
     if (!initialized_)
       {
@@ -222,7 +228,8 @@ public:
             int32_t const ni = n_[i];
             int32_t const nim1 = n_[i - 1];
 
-            float const a = static_cast<float> (ds) / static_cast<float> (nip1 - nim1);
+            float const a
+                = static_cast<float> (ds) / static_cast<float> (nip1 - nim1);
             float const b1 = static_cast<float> (ni - nim1 + ds) * (qip1 - qi)
                              / static_cast<float> (nip1 - ni);
             float const b2 = static_cast<float> (nip1 - ni - ds) * (qi - qim1)
@@ -238,8 +245,7 @@ public:
               {
                 // Linear
                 q_[i] = qi
-                        + static_cast<float> (ds)
-                              * (q_[i + ds] - qi)
+                        + static_cast<float> (ds) * (q_[i + ds] - qi)
                               / static_cast<float> (n_[i + ds] - ni);
               }
 
@@ -248,9 +254,14 @@ public:
       }
   }
 
-  bool ready () const { return initialized_; }
+  bool
+  ready () const
+  {
+    return initialized_;
+  }
 
-  float value () const
+  float
+  value () const
   {
     // Marker 3 (index 2) tracks the desired quantile
     return q_[2];
@@ -279,7 +290,8 @@ struct Metric
   {
   }
 
-  void reset ()
+  void
+  reset ()
   {
     stats.reset ();
     sum_us = 0ULL;
@@ -287,7 +299,8 @@ struct Metric
     q99.reset ();
   }
 
-  void push_u32 (uint32_t x)
+  void
+  push_u32 (uint32_t x)
   {
     stats.push (static_cast<double> (x));
     sum_us += static_cast<uint64_t> (x);
@@ -298,35 +311,49 @@ struct Metric
       }
   }
 
-  bool p95_ready () const { return quantiles_enabled && q95.ready (); }
-  bool p99_ready () const { return quantiles_enabled && q99.ready (); }
+  bool
+  p95_ready () const
+  {
+    return quantiles_enabled && q95.ready ();
+  }
+  bool
+  p99_ready () const
+  {
+    return quantiles_enabled && q99.ready ();
+  }
 
-  uint32_t p95_u32 () const
+  uint32_t
+  p95_u32 () const
   {
     return p95_ready () ? static_cast<uint32_t> (q95.value () + 0.5f) : 0U;
   }
 
-  uint32_t p99_u32 () const
+  uint32_t
+  p99_u32 () const
   {
     return p99_ready () ? static_cast<uint32_t> (q99.value () + 0.5f) : 0U;
   }
 
-  uint32_t mean_u32 () const
+  uint32_t
+  mean_u32 () const
   {
     return (stats.n != 0U) ? static_cast<uint32_t> (stats.mean + 0.5) : 0U;
   }
 
-  uint32_t std_u32 () const
+  uint32_t
+  std_u32 () const
   {
     return (stats.n > 1U) ? static_cast<uint32_t> (stats.stddev () + 0.5) : 0U;
   }
 
-  uint32_t min_u32 () const
+  uint32_t
+  min_u32 () const
   {
     return (stats.n != 0U) ? static_cast<uint32_t> (stats.min + 0.5) : 0U;
   }
 
-  uint32_t max_u32 () const
+  uint32_t
+  max_u32 () const
   {
     return (stats.n != 0U) ? static_cast<uint32_t> (stats.max + 0.5) : 0U;
   }
@@ -342,7 +369,8 @@ struct StageMetric
 
   explicit StageMetric (bool quantiles) : dur_us (quantiles) {}
 
-  void reset ()
+  void
+  reset ()
   {
     dur_us.reset ();
     depth = 0U;
@@ -397,7 +425,8 @@ static StageMetric stages[STAGE_COUNT] = {
   StageMetric (false)  // stream decode: may vary; enable later if needed
 };
 
-static const char *mode_str (SessionMode m)
+static const char *
+mode_str (SessionMode m)
 {
   switch (m)
     {
@@ -413,12 +442,14 @@ static const char *mode_str (SessionMode m)
     }
 }
 
-static inline uint32_t hz_to_period_us (uint16_t hz)
+static inline uint32_t
+hz_to_period_us (uint16_t hz)
 {
   return (hz != 0U) ? (1000000UL / static_cast<uint32_t> (hz)) : 0U;
 }
 
-static inline uint32_t pct_x100 (uint64_t sum_us, uint32_t window_us)
+static inline uint32_t
+pct_x100 (uint64_t sum_us, uint32_t window_us)
 {
   if (window_us == 0U)
     {
@@ -428,15 +459,16 @@ static inline uint32_t pct_x100 (uint64_t sum_us, uint32_t window_us)
                                 / static_cast<uint64_t> (window_us));
 }
 
-static inline void qs_user_comment (uint8_t prio, const char *s)
+static inline void
+qs_user_comment (uint8_t prio, const char *s)
 {
-  QS_BEGIN_ID (USER_COMMENT, prio)
+  QS_BEGIN_ID (AC::USER_COMMENT, prio)
   QS_STR (s);
   QS_END ()
 }
 
-static inline void fmt_u32_or_na (char *dst, size_t dst_len, bool ready,
-                                 uint32_t v)
+static inline void
+fmt_u32_or_na (char *dst, size_t dst_len, bool ready, uint32_t v)
 {
   if (!ready)
     {
@@ -450,14 +482,16 @@ static inline void fmt_u32_or_na (char *dst, size_t dst_len, bool ready,
 // "p99-ish" formatter: if a true p99 is available, print it; otherwise print
 // the fallback (typically max). This keeps reports self-explanatory without
 // requiring quantiles for every metric.
-static inline void fmt_p99ish (char *dst, size_t dst_len, bool p99_ready,
-                               uint32_t p99_val, uint32_t fallback_val)
+static inline void
+fmt_p99ish (char *dst, size_t dst_len, bool p99_ready, uint32_t p99_val,
+            uint32_t fallback_val)
 {
   uint32_t const v = p99_ready ? p99_val : fallback_val;
   snprintf (dst, dst_len, "%lu", static_cast<unsigned long> (v));
 }
 
-static inline uint16_t safe_div_u16 (uint32_t numer, uint32_t denom)
+static inline uint16_t
+safe_div_u16 (uint32_t numer, uint32_t denom)
 {
   if (denom == 0U)
     {
@@ -467,7 +501,8 @@ static inline uint16_t safe_div_u16 (uint32_t numer, uint32_t denom)
   return (q > 0xFFFFu) ? 0xFFFFu : static_cast<uint16_t> (q);
 }
 
-void reset_window ()
+void
+reset_window ()
 {
   // timestamps
   first_frame_start_us = 0U;
@@ -507,7 +542,8 @@ void reset_window ()
     }
 }
 
-void begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms)
+void
+begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms)
 {
   s_mode = mode;
   s_target_hz = target_hz;
@@ -516,12 +552,14 @@ void begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms)
   reset_window ();
 }
 
-void end_session ()
+void
+end_session ()
 {
   // Nothing special yet. Window is derived from first/last frame.
 }
 
-void on_refresh_isr_post (bool post_ok)
+void
+on_refresh_isr_post (bool post_ok)
 {
   ++refresh_tick_count;
   // scope pin: tick edge marker
@@ -532,7 +570,8 @@ void on_refresh_isr_post (bool post_ok)
     }
 }
 
-void on_refresh_defer (bool deferred_ok)
+void
+on_refresh_defer (bool deferred_ok)
 {
   ++refresh_defer_count;
   if (!deferred_ok)
@@ -541,7 +580,8 @@ void on_refresh_defer (bool deferred_ok)
     }
 }
 
-void on_frame_start (uint16_t refresh_rate_hz)
+void
+on_frame_start (uint16_t refresh_rate_hz)
 {
   ++frames_started;
 
@@ -572,7 +612,8 @@ void on_frame_start (uint16_t refresh_rate_hz)
   last_frame_start_us = start_us;
 }
 
-void on_frame_end ()
+void
+on_frame_end ()
 {
   ++frames_completed;
 
@@ -584,10 +625,9 @@ void on_frame_end ()
 
   spi_frame_us.push_u32 (current_frame_panelset_sum_us);
 
-  uint32_t const overhead_us
-      = (dur_us >= current_frame_panelset_sum_us)
-            ? (dur_us - current_frame_panelset_sum_us)
-            : 0U;
+  uint32_t const overhead_us = (dur_us >= current_frame_panelset_sum_us)
+                                   ? (dur_us - current_frame_panelset_sum_us)
+                                   : 0U;
   ovh_frame_us.push_u32 (overhead_us);
 
   if (s_period_us != 0U && dur_us > s_period_us)
@@ -603,9 +643,14 @@ void on_frame_end ()
   BSP::perfFrameTransferSet (false);
 }
 
-void on_panelset_start () { panelset_start_us = micros (); }
+void
+on_panelset_start ()
+{
+  panelset_start_us = micros ();
+}
 
-void on_panelset_end ()
+void
+on_panelset_end ()
 {
   if (panelset_start_us == 0U)
     {
@@ -618,7 +663,8 @@ void on_panelset_end ()
   panelset_start_us = 0U;
 }
 
-void fetch_begin ()
+void
+fetch_begin ()
 {
   if (fetch_depth == 0U)
     {
@@ -628,7 +674,8 @@ void fetch_begin ()
   ++fetch_depth;
 }
 
-void fetch_end ()
+void
+fetch_end ()
 {
   if (fetch_depth == 0U)
     {
@@ -644,7 +691,8 @@ void fetch_end ()
     }
 }
 
-void stage_begin (Stage s)
+void
+stage_begin (Stage s)
 {
   fetch_begin ();
   uint8_t const idx = static_cast<uint8_t> (s);
@@ -659,7 +707,8 @@ void stage_begin (Stage s)
   ++stages[idx].depth;
 }
 
-void stage_end (Stage s)
+void
+stage_end (Stage s)
 {
   uint8_t const idx = static_cast<uint8_t> (s);
   if (idx < STAGE_COUNT && stages[idx].depth != 0U)
@@ -676,7 +725,8 @@ void stage_end (Stage s)
 }
 
 // Compute derived window_us
-static inline uint32_t window_us ()
+static inline uint32_t
+window_us ()
 {
   if (first_frame_start_us == 0U || last_frame_end_us < first_frame_start_us)
     {
@@ -685,7 +735,8 @@ static inline uint32_t window_us ()
   return last_frame_end_us - first_frame_start_us;
 }
 
-static Snapshot compute_snapshot ()
+static Snapshot
+compute_snapshot ()
 {
   Snapshot s{};
   s.mode = s_mode;
@@ -755,7 +806,8 @@ static Snapshot compute_snapshot ()
          + s.stage_max_us[STAGE_FILL_ALL_ON]
          + s.stage_max_us[STAGE_STREAM_DECODE]);
 
-  uint32_t const xfer_p99 = (xfer_us.p99_ready () ? s.xfer_p99_us : s.xfer_max_us);
+  uint32_t const xfer_p99
+      = (xfer_us.p99_ready () ? s.xfer_p99_us : s.xfer_max_us);
 
   uint32_t crit_p99 = xfer_p99;
   bool limiter_transfer = true;
@@ -794,9 +846,14 @@ static Snapshot compute_snapshot ()
   return s;
 }
 
-Snapshot snapshot () { return compute_snapshot (); }
+Snapshot
+snapshot ()
+{
+  return compute_snapshot ();
+}
 
-PerfStatsPayload snapshot_payload_v1 ()
+PerfStatsPayload
+snapshot_payload_v1 ()
 {
   Snapshot const s = compute_snapshot ();
   PerfStatsPayload p{};
@@ -844,7 +901,8 @@ PerfStatsPayload snapshot_payload_v1 ()
   return p;
 }
 
-void format_summary (char *out, size_t out_len)
+void
+format_summary (char *out, size_t out_len)
 {
   Snapshot const s = compute_snapshot ();
   uint32_t const win_us = s.window_us;
@@ -871,10 +929,9 @@ void format_summary (char *out, size_t out_len)
               s.xfer_p99_us, s.xfer_max_us);
 
   char sd_p99ish[12];
-  fmt_p99ish (sd_p99ish, sizeof (sd_p99ish),
-              stages[STAGE_SD_READ].dur_us.p99_ready (),
-              stages[STAGE_SD_READ].dur_us.p99_u32 (),
-              s.stage_max_us[STAGE_SD_READ]);
+  fmt_p99ish (
+      sd_p99ish, sizeof (sd_p99ish), stages[STAGE_SD_READ].dur_us.p99_ready (),
+      stages[STAGE_SD_READ].dur_us.p99_u32 (), s.stage_max_us[STAGE_SD_READ]);
 
   snprintf (out, out_len,
             "PERF_SUM hz=%u fps=%.2f IFI_mean_us=%lu std_us=%lu "
@@ -885,8 +942,7 @@ void format_summary (char *out, size_t out_len)
             static_cast<unsigned long> (s.ifi_mean_us),
             static_cast<unsigned long> (s.ifi_std_us),
             static_cast<long> (jitter_min), static_cast<long> (jitter_max),
-            static_cast<unsigned long> (s.xfer_mean_us),
-            xfer_p99ish,
+            static_cast<unsigned long> (s.xfer_mean_us), xfer_p99ish,
             static_cast<unsigned long> (s.xfer_max_us),
             static_cast<unsigned long> (s.stage_mean_us[STAGE_SD_READ]),
             sd_p99ish,
@@ -897,23 +953,24 @@ void format_summary (char *out, size_t out_len)
             static_cast<unsigned> (s.safe_fps_p99_pipe));
 }
 
-void qs_report_session (uint8_t qs_prio, const char *reason)
+void
+qs_report_session (uint8_t qs_prio, const char *reason)
 {
   Snapshot const s = compute_snapshot ();
   uint32_t const win_us = s.window_us;
   uint32_t const win_ms = win_us / 1000U;
 
-  double const win_s = (win_us != 0U) ? (static_cast<double> (win_us) / 1.0e6)
-                                     : 0.0;
-  double const fps = (win_s > 0.0) ? (static_cast<double> (s.frames_completed) / win_s)
-                                  : 0.0;
-  double const tick_hz = (win_s > 0.0) ? (static_cast<double> (s.refresh_ticks) / win_s)
-                                      : 0.0;
+  double const win_s
+      = (win_us != 0U) ? (static_cast<double> (win_us) / 1.0e6) : 0.0;
+  double const fps = (win_s > 0.0)
+                         ? (static_cast<double> (s.frames_completed) / win_s)
+                         : 0.0;
+  double const tick_hz
+      = (win_s > 0.0) ? (static_cast<double> (s.refresh_ticks) / win_s) : 0.0;
   double const frames_per_tick
-      = (s.refresh_ticks != 0U)
-            ? (static_cast<double> (s.frames_completed)
-               / static_cast<double> (s.refresh_ticks))
-            : 0.0;
+      = (s.refresh_ticks != 0U) ? (static_cast<double> (s.frames_completed)
+                                   / static_cast<double> (s.refresh_ticks))
+                                : 0.0;
 
   uint32_t const drops_total = s.refresh_post_fail + s.refresh_defer_drops;
 
@@ -925,14 +982,12 @@ void qs_report_session (uint8_t qs_prio, const char *reason)
               "period_us=%lu runtime_ms=%lu fps=%.2f tick_hz=%.2f f/tick=%.3f "
               "frames=%lu/%lu ticks=%lu defers=%lu late=%lu drops=%lu "
               "(post=%lu defer_overflow=%lu)",
-              (reason != nullptr) ? reason : "END",
-              mode_str (s.mode),
+              (reason != nullptr) ? reason : "END", mode_str (s.mode),
               static_cast<unsigned long> (win_ms),
               static_cast<unsigned> (s.target_hz),
               static_cast<unsigned long> (s.period_us),
-              static_cast<unsigned long> (s_runtime_ms),
-              fps, tick_hz, frames_per_tick,
-              static_cast<unsigned long> (s.frames_completed),
+              static_cast<unsigned long> (s_runtime_ms), fps, tick_hz,
+              frames_per_tick, static_cast<unsigned long> (s.frames_completed),
               static_cast<unsigned long> (s.frames_started),
               static_cast<unsigned long> (s.refresh_ticks),
               static_cast<unsigned long> (s.refresh_defers),
@@ -966,12 +1021,10 @@ void qs_report_session (uint8_t qs_prio, const char *reason)
               "min=%lu max=%lu jitter_us=[%ld..%ld]",
               static_cast<unsigned long> (s.ifi_n),
               static_cast<unsigned long> (s.ifi_mean_us),
-              static_cast<unsigned long> (s.ifi_std_us),
-              p95, p99,
+              static_cast<unsigned long> (s.ifi_std_us), p95, p99,
               static_cast<unsigned long> (s.ifi_min_us),
               static_cast<unsigned long> (s.ifi_max_us),
-              static_cast<long> (jitter_min),
-              static_cast<long> (jitter_max));
+              static_cast<long> (jitter_min), static_cast<long> (jitter_max));
     qs_user_comment (qs_prio, line);
   }
 
@@ -985,16 +1038,19 @@ void qs_report_session (uint8_t qs_prio, const char *reason)
     char p99_spi[12];
     char p99_panelset[12];
 
-    fmt_u32_or_na (p99_xfer, sizeof (p99_xfer), xfer_us.p99_ready (), s.xfer_p99_us);
-    fmt_u32_or_na (p99_spi, sizeof (p99_spi), spi_frame_us.p99_ready (), s.spi_frame_p99_us);
-    fmt_u32_or_na (p99_panelset, sizeof (p99_panelset), panelset_us.p99_ready (), s.panelset_p99_us);
+    fmt_u32_or_na (p99_xfer, sizeof (p99_xfer), xfer_us.p99_ready (),
+                   s.xfer_p99_us);
+    fmt_u32_or_na (p99_spi, sizeof (p99_spi), spi_frame_us.p99_ready (),
+                   s.spi_frame_p99_us);
+    fmt_u32_or_na (p99_panelset, sizeof (p99_panelset),
+                   panelset_us.p99_ready (), s.panelset_p99_us);
 
     uint32_t panelsets_per_frame_x10 = 0U;
     if (s.frames_completed != 0U)
       {
-        panelsets_per_frame_x10
-            = static_cast<uint32_t> ((static_cast<uint64_t> (s.panelset_n) * 10ULL)
-                                     / static_cast<uint64_t> (s.frames_completed));
+        panelsets_per_frame_x10 = static_cast<uint32_t> (
+            (static_cast<uint64_t> (s.panelset_n) * 10ULL)
+            / static_cast<uint64_t> (s.frames_completed));
       }
 
     char line[260];
@@ -1010,17 +1066,14 @@ void qs_report_session (uint8_t qs_prio, const char *reason)
         static_cast<unsigned long> (duty_spi_x100 / 100U),
         static_cast<unsigned long> (duty_spi_x100 % 100U),
         static_cast<unsigned long> (s.xfer_n),
-        static_cast<unsigned long> (s.xfer_mean_us),
-        p99_xfer,
+        static_cast<unsigned long> (s.xfer_mean_us), p99_xfer,
         static_cast<unsigned long> (s.xfer_max_us),
-        static_cast<unsigned long> (s.spi_frame_mean_us),
-        p99_spi,
+        static_cast<unsigned long> (s.spi_frame_mean_us), p99_spi,
         static_cast<unsigned long> (s.spi_frame_max_us),
         static_cast<unsigned long> (s.ovh_frame_mean_us),
         static_cast<unsigned long> (s.ovh_frame_max_us),
         static_cast<unsigned long> (s.panelset_n),
-        static_cast<unsigned long> (s.panelset_mean_us),
-        p99_panelset,
+        static_cast<unsigned long> (s.panelset_mean_us), p99_panelset,
         static_cast<unsigned long> (s.panelset_max_us),
         static_cast<unsigned long> (panelsets_per_frame_x10 / 10U),
         static_cast<unsigned long> (panelsets_per_frame_x10 % 10U));
@@ -1031,42 +1084,45 @@ void qs_report_session (uint8_t qs_prio, const char *reason)
   // ---- PERF_CPU ----
   {
     // Compute duty/total for key stages
-    auto stage_name = [] (uint8_t idx) -> const char * {
-      switch (idx)
-        {
-        case STAGE_SD_READ:
-          return "SD";
-        case STAGE_PATTERN_DECODE:
-          return "DEC";
-        case STAGE_FILL_FRAME_BUFFER:
-          return "FILL";
-        case STAGE_FILL_ALL_ON:
-          return "ALLON";
-        case STAGE_STREAM_DECODE:
-          return "SDEC";
-        default:
-          return "STG";
-        }
-    };
+    auto stage_name = [] (uint8_t idx) -> const char *
+      {
+        switch (idx)
+          {
+          case STAGE_SD_READ:
+            return "SD";
+          case STAGE_PATTERN_DECODE:
+            return "DEC";
+          case STAGE_FILL_FRAME_BUFFER:
+            return "FILL";
+          case STAGE_FILL_ALL_ON:
+            return "ALLON";
+          case STAGE_STREAM_DECODE:
+            return "SDEC";
+          default:
+            return "STG";
+          }
+      };
 
     char line[300];
     size_t pos = 0U;
 
     pos += snprintf (line + pos, sizeof (line) - pos,
-                    "PERF_CPU window_ms=%lu ",
-                    static_cast<unsigned long> (win_ms));
+                     "PERF_CPU window_ms=%lu ",
+                     static_cast<unsigned long> (win_ms));
 
     // Print SD/DEC/FILL always, print others if used.
     for (uint8_t idx = 0U; idx < STAGE_COUNT; ++idx)
       {
-        bool const always = (idx == STAGE_SD_READ || idx == STAGE_PATTERN_DECODE
-                             || idx == STAGE_FILL_FRAME_BUFFER);
+        bool const always
+            = (idx == STAGE_SD_READ || idx == STAGE_PATTERN_DECODE
+               || idx == STAGE_FILL_FRAME_BUFFER);
         if (!always && s.stage_n[idx] == 0U)
           {
             continue;
           }
 
-        uint32_t const duty_x100 = pct_x100 (stages[idx].dur_us.sum_us, win_us);
+        uint32_t const duty_x100
+            = pct_x100 (stages[idx].dur_us.sum_us, win_us);
         uint32_t const total_ms
             = static_cast<uint32_t> (stages[idx].dur_us.sum_us / 1000ULL);
 
@@ -1082,13 +1138,11 @@ void qs_report_session (uint8_t qs_prio, const char *reason)
 
         pos += snprintf (
             line + pos, sizeof (line) - pos,
-            "%s n=%lu c/f=%.2f mean=%lu p99ish=%s max=%lu total_ms=%lu duty=%lu.%02lu%% ",
-            stage_name (idx),
-            static_cast<unsigned long> (s.stage_n[idx]),
-            calls_per_frame,
-            static_cast<unsigned long> (s.stage_mean_us[idx]),
-            p99ish,
-            static_cast<unsigned long> (s.stage_max_us[idx]),
+            "%s n=%lu c/f=%.2f mean=%lu p99ish=%s max=%lu total_ms=%lu "
+            "duty=%lu.%02lu%% ",
+            stage_name (idx), static_cast<unsigned long> (s.stage_n[idx]),
+            calls_per_frame, static_cast<unsigned long> (s.stage_mean_us[idx]),
+            p99ish, static_cast<unsigned long> (s.stage_max_us[idx]),
             static_cast<unsigned long> (total_ms),
             static_cast<unsigned long> (duty_x100 / 100U),
             static_cast<unsigned long> (duty_x100 % 100U));
@@ -1115,20 +1169,20 @@ void qs_report_session (uint8_t qs_prio, const char *reason)
       }
 
     char line[240];
-    snprintf (line, sizeof (line),
-              "PERF_EST model=PIPE safe_fps_p99=%u safe_fps_max=%u "
-              "crit_p99_us=%lu guard_p99_us=%lu crit_max_us=%lu guard_max_us=%lu "
-              "limiter=%s headroom_p99_us=%ld headroom_min_us=%ld late_max_us=%lu",
-              static_cast<unsigned> (s.safe_fps_p99_pipe),
-              static_cast<unsigned> (s.safe_fps_max_pipe),
-              static_cast<unsigned long> (s.crit_p99_us),
-              static_cast<unsigned long> (s.guard_p99_us),
-              static_cast<unsigned long> (s.crit_max_us),
-              static_cast<unsigned long> (s.guard_max_us),
-              s.limiter_is_transfer ? "TRANSFER" : "CPU",
-              static_cast<long> (headroom_p99),
-              static_cast<long> (headroom_min),
-              static_cast<unsigned long> (s.max_late_us));
+    snprintf (
+        line, sizeof (line),
+        "PERF_EST model=PIPE safe_fps_p99=%u safe_fps_max=%u "
+        "crit_p99_us=%lu guard_p99_us=%lu crit_max_us=%lu guard_max_us=%lu "
+        "limiter=%s headroom_p99_us=%ld headroom_min_us=%ld late_max_us=%lu",
+        static_cast<unsigned> (s.safe_fps_p99_pipe),
+        static_cast<unsigned> (s.safe_fps_max_pipe),
+        static_cast<unsigned long> (s.crit_p99_us),
+        static_cast<unsigned long> (s.guard_p99_us),
+        static_cast<unsigned long> (s.crit_max_us),
+        static_cast<unsigned long> (s.guard_max_us),
+        s.limiter_is_transfer ? "TRANSFER" : "CPU",
+        static_cast<long> (headroom_p99), static_cast<long> (headroom_min),
+        static_cast<unsigned long> (s.max_late_us));
 
     qs_user_comment (qs_prio, line);
   }
