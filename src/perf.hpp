@@ -81,7 +81,7 @@ struct Snapshot
   uint16_t target_hz;
   uint32_t period_us;
 
-  uint32_t window_us;
+  uint64_t window_us;
 
   uint32_t refresh_ticks;
   uint32_t refresh_post_fail;
@@ -232,7 +232,7 @@ struct Snapshot
   SessionMode mode;
   uint16_t target_hz;
   uint32_t period_us;
-  uint32_t window_us;
+  uint64_t window_us;
   uint32_t refresh_ticks;
   uint32_t refresh_post_fail;
   uint32_t refresh_defers;

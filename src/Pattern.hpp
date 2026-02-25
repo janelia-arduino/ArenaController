@@ -49,6 +49,7 @@ public:
   QP::QTimeEvt frame_rate_time_evt_;
   std::uint16_t frame_rate_hz_;
   std::uint32_t runtime_duration_ms_;
+  std::uint16_t runtime_duration_units_remaining_;
   QP::QTimeEvt runtime_duration_time_evt_;
   std::uint64_t byte_count_per_frame_;
   QP::QEQueue frame_rate_queue_;

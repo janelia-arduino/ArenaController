@@ -1454,6 +1454,7 @@ FSP::Pattern_initializeAndSubscribe (QActive *const ao, QEvt const *e)
   Pattern *const pattern = static_cast<Pattern *const> (ao);
   pattern->frame_rate_hz_ = 0;
   pattern->runtime_duration_ms_ = 0;
+  pattern->runtime_duration_units_remaining_ = 0;
   pattern->byte_count_per_frame_ = 0;
   pattern->positive_direction_ = true;
   pattern->frame_ = nullptr;
@@ -1508,6 +1509,7 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
       QS_STR ("invalid frame rate");
       QS_END ()
       AO_Arena->POST (&constants::all_off_evt, ao);
+      AO_Arena->POST (&constants::all_off_evt, ao);
       return;
     }
   else if (ppev->frame_rate < 0)
@@ -1528,6 +1530,7 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
   pattern->runtime_duration_ms_
       = ppev->runtime_duration
         * constants::milliseconds_per_runtime_duration_unit;
+  pattern->runtime_duration_units_remaining_ = ppev->runtime_duration;
   pattern->frame_index_ = ppev->frame_index;
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
   //   QS_STR("check and store parameters");
@@ -1571,6 +1574,7 @@ FSP::Pattern_initializeAnalogClosedLoop (QActive *const ao, QEvt const *e)
   pattern->runtime_duration_ms_
       = aclev->runtime_duration
         * constants::milliseconds_per_runtime_duration_unit;
+  pattern->runtime_duration_units_remaining_ = aclev->runtime_duration;
   pattern->frame_index_ = aclev->frame_index;
   // QS_BEGIN_ID(USER_COMMENT, AO_Arena->m_prio)
   //   QS_STR("check and store parameters");
@@ -1599,6 +1603,27 @@ FSP::Pattern_armFindCardTimer (QActive *const ao, QEvt const *e)
 void
 FSP::Pattern_endRuntimeDuration (QActive *const ao, QEvt const *e)
 {
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+
+  // runtime_duration_time_evt_ is armed as a short periodic timer (one tick
+  // per runtime unit, typically 100ms). Count down units_remaining until it
+  // reaches zero, then end the pattern.
+  if (pattern->runtime_duration_units_remaining_ == 0U)
+    {
+      // runtime_duration==0 means "run indefinitely"; timer should not be
+      // armed, but ignore spurious timeouts just in case.
+      return;
+    }
+
+  --pattern->runtime_duration_units_remaining_;
+  if (pattern->runtime_duration_units_remaining_ != 0U)
+    {
+      return;
+    }
+
+  // Stop the periodic runtime timer now to prevent re-entry.
+  pattern->runtime_duration_time_evt_.disarm ();
+
 #if defined(AC_ENABLE_PERF_PROBE)
   Perf::qs_report_session (ao->m_prio, "PATTERN_FINISHED");
 #endif
@@ -1613,16 +1638,33 @@ FSP::Pattern_armTimers (QActive *const ao, QEvt const *e)
   Pattern *const pattern = static_cast<Pattern *const> (ao);
   pattern->frame_rate_time_evt_.armX (constants::ticks_per_second
                                       / pattern->frame_rate_hz_);
-  pattern->runtime_duration_time_evt_.armX (
-      (constants::ticks_per_second * pattern->runtime_duration_ms_)
-      / constants::milliseconds_per_second);
+  uint32_t const runtime_unit_ticks =
+      (constants::ticks_per_second
+       * constants::milliseconds_per_runtime_duration_unit)
+      / constants::milliseconds_per_second;
+
+  if (pattern->runtime_duration_units_remaining_ != 0U)
+    {
+      // Use a short periodic time event (one tick per runtime unit) to
+      // support long runtimes even when QP time-event counters are 16-bit.
+      pattern->runtime_duration_time_evt_.armX (runtime_unit_ticks,
+                                                runtime_unit_ticks);
+    }
+  else
+    {
+      // runtime_duration==0 => run indefinitely (no runtime timeout armed)
+      pattern->runtime_duration_time_evt_.disarm ();
+    }
   QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
   QS_STR ("arming pattern timers");
   QS_STR ("frame rate ticks");
   QS_U32 (8, (constants::ticks_per_second / pattern->frame_rate_hz_));
-  QS_STR ("runtime duration ticks");
-  QS_U32 (8, ((constants::ticks_per_second * pattern->runtime_duration_ms_)
-              / constants::milliseconds_per_second));
+  QS_STR ("runtime unit ticks");
+  QS_U32 (8, runtime_unit_ticks);
+  QS_STR ("runtime units");
+  QS_U32 (8, pattern->runtime_duration_units_remaining_);
+  QS_STR ("runtime duration ms");
+  QS_U32 (8, pattern->runtime_duration_ms_);
   QS_END ()
 }
 

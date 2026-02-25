@@ -386,8 +386,29 @@ static uint16_t s_target_hz = 0U;
 static uint32_t s_runtime_ms = 0U;
 static uint32_t s_period_us = 0U;
 
-static uint32_t first_frame_start_us = 0U;
-static uint32_t last_frame_end_us = 0U;
+static uint64_t first_frame_start_us = 0ULL;
+static uint64_t last_frame_end_us = 0ULL;
+
+// Extend micros() to 64-bit so long sessions (e.g., 109 minutes) do not
+// break window_ms/window_us calculations when micros() wraps (~71 minutes).
+static uint64_t micros64_accum = 0ULL;
+static uint32_t micros64_last = 0U;
+
+static inline uint64_t
+extend_micros64 (uint32_t now_us32)
+{
+  if (micros64_last == 0U)
+    {
+      micros64_last = now_us32;
+      micros64_accum = static_cast<uint64_t> (now_us32);
+      return micros64_accum;
+    }
+
+  uint32_t const delta = now_us32 - micros64_last;
+  micros64_last = now_us32;
+  micros64_accum += static_cast<uint64_t> (delta);
+  return micros64_accum;
+}
 static uint32_t last_frame_start_us = 0U;
 static uint32_t current_frame_start_us = 0U;
 
@@ -453,9 +474,9 @@ hz_to_period_us (uint16_t hz)
 }
 
 static inline uint32_t
-pct_x100 (uint64_t sum_us, uint32_t window_us)
+pct_x100 (uint64_t sum_us, uint64_t window_us)
 {
-  if (window_us == 0U)
+  if (window_us == 0ULL)
     {
       return 0U;
     }
@@ -520,10 +541,13 @@ void
 reset_window ()
 {
   // timestamps
-  first_frame_start_us = 0U;
-  last_frame_end_us = 0U;
+  first_frame_start_us = 0ULL;
+  last_frame_end_us = 0ULL;
   last_frame_start_us = 0U;
   current_frame_start_us = 0U;
+
+  micros64_accum = 0ULL;
+  micros64_last = 0U;
 
   current_frame_panelset_sum_us = 0U;
   panelset_start_us = 0U;
@@ -604,6 +628,7 @@ on_frame_start (uint16_t refresh_rate_hz)
   ++frames_started;
 
   uint32_t const start_us = micros ();
+  uint64_t const start_us64 = extend_micros64 (start_us);
   current_frame_start_us = start_us;
   current_frame_panelset_sum_us = 0U;
   panelset_start_us = 0U;
@@ -617,9 +642,9 @@ on_frame_start (uint16_t refresh_rate_hz)
 
   BSP::perfFrameTransferSet (true);
 
-  if (first_frame_start_us == 0U)
+  if (first_frame_start_us == 0ULL)
     {
-      first_frame_start_us = start_us;
+      first_frame_start_us = start_us64;
     }
 
   if (last_frame_start_us != 0U)
@@ -636,7 +661,8 @@ on_frame_end ()
   ++frames_completed;
 
   uint32_t const end_us = micros ();
-  last_frame_end_us = end_us;
+  uint64_t const end_us64 = extend_micros64 (end_us);
+  last_frame_end_us = end_us64;
 
   uint32_t const dur_us = end_us - current_frame_start_us;
   xfer_us.push_u32 (dur_us);
@@ -755,12 +781,13 @@ stage_end (Stage s)
 }
 
 // Compute derived window_us
-static inline uint32_t
+static inline uint64_t
 window_us ()
 {
-  if (first_frame_start_us == 0U || last_frame_end_us < first_frame_start_us)
+  if (first_frame_start_us == 0ULL || last_frame_end_us == 0ULL
+      || last_frame_end_us < first_frame_start_us)
     {
-      return 0U;
+      return 0ULL;
     }
   return last_frame_end_us - first_frame_start_us;
 }
@@ -938,7 +965,7 @@ void
 format_summary (char *out, size_t out_len)
 {
   Snapshot const s = compute_snapshot ();
-  uint32_t const win_us = s.window_us;
+  uint64_t const win_us = s.window_us;
   double const win_s
       = (win_us != 0U) ? (static_cast<double> (win_us) / 1.0e6) : 0.0;
   double const fps = (win_s > 0.0)
@@ -990,8 +1017,8 @@ void
 qs_report_session (uint8_t qs_prio, const char *reason)
 {
   Snapshot const s = compute_snapshot ();
-  uint32_t const win_us = s.window_us;
-  uint32_t const win_ms = win_us / 1000U;
+  uint64_t const win_us = s.window_us;
+  uint32_t const win_ms = static_cast<uint32_t> (win_us / 1000ULL);
 
   double const win_s
       = (win_us != 0U) ? (static_cast<double> (win_us) / 1.0e6) : 0.0;

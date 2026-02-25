@@ -886,6 +886,7 @@ analog_input_ = AnalogInput_getInstance();</code>
    <attribute name="frame_rate_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate_hz_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_ms_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="runtime_duration_units_remaining_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_time_evt_" type="QP::QTimeEvt" visibility="0x00" properties="0x00"/>
    <attribute name="byte_count_per_frame_" type="std::uint64_t" visibility="0x00" properties="0x00"/>
    <attribute name="frame_rate_queue_" type="QP::QEQueue" visibility="0x00" properties="0x00"/>
