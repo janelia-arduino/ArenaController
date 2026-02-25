@@ -1535,7 +1535,7 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
   // QS_U16(5, pattern->frame_rate_hz_);
   // QS_U16(5, init_pos);
   // QS_U16(5, gain);
-  // QS_U16(5, pattern->runtime_duration_ms_);
+  // QS_U32(8, pattern->runtime_duration_ms_);
   // QS_END()
 #if defined(AC_ENABLE_PERF_PROBE)
   // Start a fresh measurement session for this pattern run.
@@ -1578,7 +1578,7 @@ FSP::Pattern_initializeAnalogClosedLoop (QActive *const ao, QEvt const *e)
   // QS_U16(5, pattern->frame_rate_hz_);
   // QS_U16(5, init_pos);
   // QS_U16(5, gain);
-  // QS_U16(5, pattern->runtime_duration_ms_);
+  // QS_U32(8, pattern->runtime_duration_ms_);
   // QS_END()
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_playing_pattern_evt, ao);

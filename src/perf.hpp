@@ -130,6 +130,10 @@ struct Snapshot
   uint32_t stage_p99_us[STAGE_COUNT];
   uint32_t stage_max_us[STAGE_COUNT];
 
+  // SD spike counters (how often SD read exceeds thresholds)
+  uint32_t sd_over_500us;
+  uint32_t sd_over_1000us;
+
   // Estimates
   uint16_t safe_fps_p99_pipe;
   uint16_t safe_fps_max_pipe;

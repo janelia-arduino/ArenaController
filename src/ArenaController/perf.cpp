@@ -406,6 +406,10 @@ static uint32_t frames_completed = 0U;
 static uint32_t late_frame_count = 0U;
 static uint32_t late_max_us = 0U;
 
+// SD spike counters (counts of SD read durations above thresholds)
+static uint32_t sd_over_500us_count = 0U;
+static uint32_t sd_over_1000us_count = 0U;
+
 // Metrics
 static Metric ifi_us (true);
 static Metric xfer_us (true);
@@ -457,6 +461,17 @@ pct_x100 (uint64_t sum_us, uint32_t window_us)
     }
   return static_cast<uint32_t> ((sum_us * 10000ULL)
                                 / static_cast<uint64_t> (window_us));
+}
+
+static inline uint32_t
+pct_count_x100 (uint32_t count, uint32_t total)
+{
+  if (total == 0U)
+    {
+      return 0U;
+    }
+  return static_cast<uint32_t> ((static_cast<uint64_t> (count) * 10000ULL)
+                                / static_cast<uint64_t> (total));
 }
 
 static inline void
@@ -524,6 +539,9 @@ reset_window ()
 
   late_frame_count = 0U;
   late_max_us = 0U;
+
+  sd_over_500us_count = 0U;
+  sd_over_1000us_count = 0U;
 
   // metrics
   ifi_us.reset ();
@@ -719,6 +737,18 @@ stage_end (Stage s)
           uint32_t const end_us = micros ();
           uint32_t const dur_us = end_us - stages[idx].start_us;
           stages[idx].dur_us.push_u32 (dur_us);
+
+          if (idx == STAGE_SD_READ)
+            {
+              if (dur_us > 500U)
+                {
+                  ++sd_over_500us_count;
+                }
+              if (dur_us > 1000U)
+                {
+                  ++sd_over_1000us_count;
+                }
+            }
         }
     }
   fetch_end ();
@@ -779,6 +809,9 @@ compute_snapshot ()
   s.panelset_mean_us = panelset_us.mean_u32 ();
   s.panelset_p99_us = panelset_us.p99_u32 ();
   s.panelset_max_us = panelset_us.max_u32 ();
+
+  s.sd_over_500us = sd_over_500us_count;
+  s.sd_over_1000us = sd_over_1000us_count;
 
   for (uint8_t i = 0U; i < STAGE_COUNT; ++i)
     {
@@ -1146,6 +1179,23 @@ qs_report_session (uint8_t qs_prio, const char *reason)
             static_cast<unsigned long> (total_ms),
             static_cast<unsigned long> (duty_x100 / 100U),
             static_cast<unsigned long> (duty_x100 % 100U));
+
+        if (idx == STAGE_SD_READ)
+          {
+            uint32_t const over500_x100
+                = pct_count_x100 (s.sd_over_500us, s.stage_n[idx]);
+            uint32_t const over1000_x100
+                = pct_count_x100 (s.sd_over_1000us, s.stage_n[idx]);
+            pos += snprintf (
+                line + pos, sizeof (line) - pos,
+                "over500=%lu (%lu.%02lu%%) over1000=%lu (%lu.%02lu%%) ",
+                static_cast<unsigned long> (s.sd_over_500us),
+                static_cast<unsigned long> (over500_x100 / 100U),
+                static_cast<unsigned long> (over500_x100 % 100U),
+                static_cast<unsigned long> (s.sd_over_1000us),
+                static_cast<unsigned long> (over1000_x100 / 100U),
+                static_cast<unsigned long> (over1000_x100 % 100U));
+          }
 
         if (pos >= sizeof (line))
           {
