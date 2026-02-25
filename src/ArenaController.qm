@@ -1170,7 +1170,7 @@ card_ = Card_getInstance();</code>
        <state name="WaitingToDisplayFrame">
         <entry brief="recallFrameRate()">FSP::Pattern_recallFrameRate(this, e);</entry>
         <tran trig="FRAME_RATE_TIMEOUT" target="../../4">
-         <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
+         <action brief="rearmFrameRateTimer()">FSP::Pattern_rearmFrameRateTimer(this, e);</action>
          <tran_glyph conn="42,116,2,0,7">
           <action box="1,1,20,4"/>
          </tran_glyph>

@@ -232,6 +232,8 @@ struct FSP
   static void Pattern_armTimers (QP::QActive *const ao, QP::QEvt const *e);
   static void Pattern_disarmTimersAndCleanup (QP::QActive *const ao,
                                               QP::QEvt const *e);
+  static void Pattern_rearmFrameRateTimer (QP::QActive *const ao,
+                                           QP::QEvt const *e);
   static void Pattern_deactivateDisplay (QP::QActive *const ao,
                                          QP::QEvt const *e);
   static void Pattern_readFrameFromFile (QP::QActive *const ao,

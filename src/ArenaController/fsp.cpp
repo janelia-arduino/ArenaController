@@ -1274,6 +1274,11 @@ void
 FSP::Frame_saveFrameReference (QP::QActive *const ao, QP::QEvt const *e)
 {
   Frame *const frame = static_cast<Frame *const> (ao);
+  if (frame->frame_)
+    {
+      Q_DELETE_REF (frame->frame_);
+      frame->frame_ = nullptr;
+    }
   Q_NEW_REF (frame->frame_, FrameEvt);
 }
 
@@ -1643,14 +1648,16 @@ FSP::Pattern_disarmTimersAndCleanup (QActive *const ao, QEvt const *e)
 }
 
 void
+FSP::Pattern_rearmFrameRateTimer (QActive *const ao, QEvt const *e)
+{
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+  pattern->frame_rate_time_evt_.armX (constants::ticks_per_second
+                                      / pattern->frame_rate_hz_);
+}
+
+void
 FSP::Pattern_deactivateDisplay (QActive *const ao, QEvt const *e)
 {
-  if (e->sig == FRAME_RATE_TIMEOUT_SIG)
-    {
-      Pattern *const pattern = static_cast<Pattern *const> (ao);
-      pattern->frame_rate_time_evt_.armX (constants::ticks_per_second
-                                          / pattern->frame_rate_hz_);
-    }
   // QS_BEGIN_ID(USER_COMMENT, ao->m_prio)
   //   QS_STR("deactivating display");
   // QS_END()

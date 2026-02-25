@@ -621,7 +621,7 @@ Q_STATE_DEF (Pattern, WaitingToDisplayFrame)
     //${AOs::Pattern::SM::Initialized::DisplayingPatter~::PlayingPattern::WaitingToDisplay~::FRAME_RATE_TIMEOUT}
     case FRAME_RATE_TIMEOUT_SIG:
       {
-        FSP::Pattern_deactivateDisplay (this, e);
+        FSP::Pattern_rearmFrameRateTimer (this, e);
         status_ = tran (&PP_DecodingFrame);
         break;
       }
