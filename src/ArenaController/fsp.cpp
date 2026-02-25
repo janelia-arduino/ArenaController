@@ -508,9 +508,6 @@ FSP::Display_initializeAndSubscribe (QActive *const ao, QEvt const *e)
   ao->subscribe (FRAME_TRANSFERRED_SIG);
   display->refresh_rate_hz_ = constants::refresh_rate_grayscale_default;
 
-#if defined(AC_ENABLE_PERF_PROBE)
-  Perf::set_refresh_rate (display->refresh_rate_hz_);
-#endif
 
   static QEvt const
       *display_refresh_queue_store[constants::display_refresh_queue_size];
@@ -529,9 +526,6 @@ FSP::Display_setRefreshRate (QActive *const ao, QEvt const *e)
   UnsignedValueEvt const *uvev = static_cast<UnsignedValueEvt const *> (e);
   display->refresh_rate_hz_ = uvev->value;
 
-#if defined(AC_ENABLE_PERF_PROBE)
-  Perf::set_refresh_rate (display->refresh_rate_hz_);
-#endif
   QS_BEGIN_ID (USER_COMMENT, AO_Display->m_prio)
   QS_STR ("set refresh rate");
   QS_U16 (5, display->refresh_rate_hz_);
@@ -581,7 +575,8 @@ void
 FSP::Display_transferFrame (QActive *const ao, QEvt const *e)
 {
 #if defined(AC_ENABLE_PERF_PROBE)
-  Perf::on_frame_start ();
+  Display *const display = static_cast<Display *const> (ao);
+  Perf::on_frame_start (static_cast<uint16_t> (display->refresh_rate_hz_));
 #endif
   AO_Frame->POST (&constants::transfer_frame_evt, ao);
 }
@@ -1539,8 +1534,11 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
   // QS_U16(5, pattern->runtime_duration_ms_);
   // QS_END()
 #if defined(AC_ENABLE_PERF_PROBE)
-  // Start a fresh measurement window for this pattern run.
-  Perf::reset_window ();
+  // Start a fresh measurement session for this pattern run.
+  Display *const display = static_cast<Display *const> (AO_Display);
+  Perf::begin_session (Perf::SessionMode::Pattern,
+                      static_cast<uint16_t> (display->refresh_rate_hz_),
+                      pattern->runtime_duration_ms_);
 #endif
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_playing_pattern_evt, ao);
@@ -1598,30 +1596,7 @@ void
 FSP::Pattern_endRuntimeDuration (QActive *const ao, QEvt const *e)
 {
 #if defined(AC_ENABLE_PERF_PROBE)
-  // Emit a low-rate, human-readable performance summary at the end of a
-  // pattern run (so we don't spam QSpy during normal playback).
-  Pattern *const pattern = static_cast<Pattern *const> (ao);
-
-  char header[constants::string_response_length_max];
-  snprintf (header, sizeof (header),
-            "PERF_PATTERN_FINISHED frame_rate_hz=%lu runtime_ms=%lu",
-            static_cast<unsigned long> (pattern->frame_rate_hz_),
-            static_cast<unsigned long> (pattern->runtime_duration_ms_));
-  QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
-  QS_STR (header);
-  QS_END ()
-
-  char summary[constants::string_response_length_max];
-  Perf::format_summary (summary, sizeof (summary));
-  QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
-  QS_STR (summary);
-  QS_END ()
-
-  char breakdown[constants::string_response_length_max];
-  Perf::format_breakdown (breakdown, sizeof (breakdown));
-  QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
-  QS_STR (breakdown);
-  QS_END ()
+  Perf::qs_report_session (ao->m_prio, "PATTERN_FINISHED");
 #endif
 
   QF::PUBLISH (&constants::pattern_finished_playing_evt, ao);

@@ -24,9 +24,33 @@
 namespace Perf
 {
 
+// Backward-compatible compact payload (used by GET_PERF_STATS_CMD in earlier
+// iterations). Intentionally kept small.
+//
+// flags:
+//   bit0: any drops
+//   bit1: any defers
+struct PerfStatsPayload
+{
+  uint16_t refresh_rate_hz;
+  uint16_t flags;
+  uint16_t ifi_mean_us;
+  uint16_t ifi_std_us;
+  int16_t jitter_min_us;
+  int16_t jitter_max_us;
+  uint16_t frame_dur_mean_us;
+  uint16_t frame_dur_max_us;
+  uint16_t fetch_dur_mean_us;
+  uint16_t fetch_dur_max_us;
+  uint16_t drop_count;
+  uint16_t defer_count;
+  uint16_t ifi_n;
+  uint16_t reserved;
+} __attribute__ ((packed));
+
 #if defined(AC_ENABLE_PERF_PROBE)
 
-// Stages used for optional breakdown of CPU-side work during pattern playback.
+// Stages used for breakdown of CPU-side work during pattern playback.
 // These correspond to major activities in the Pattern/Frame pipeline.
 enum Stage : uint8_t
 {
@@ -111,50 +135,11 @@ struct Snapshot
   bool limiter_is_transfer;
 };
 
-struct PerfStatsPayload
-{
-  uint16_t refresh_rate_hz;
-  uint16_t flags;
-  uint16_t ifi_mean_us;
-  uint16_t ifi_std_us;
-  int16_t jitter_min_us;
-  int16_t jitter_max_us;
-  uint16_t frame_dur_mean_us;
-  uint16_t frame_dur_max_us;
-  uint16_t fetch_dur_mean_us;
-  uint16_t fetch_dur_max_us;
-  uint16_t drop_count;
-  uint16_t defer_count;
-  uint16_t ifi_n;
-  uint16_t reserved;
-} __attribute__ ((packed));
-
-// Backward-compatible compact payload (used by GET_PERF_STATS_CMD in earlier
-// iterations). This is intentionally kept small.
-struct PerfStatsPayload
-{
-  uint16_t refresh_rate_hz;
-  uint16_t flags; // bit0: any drops, bit1: any defers
-  uint16_t ifi_mean_us;
-  uint16_t ifi_std_us;
-  int16_t jitter_min_us;
-  int16_t jitter_max_us;
-  uint16_t frame_dur_mean_us;
-  uint16_t frame_dur_max_us;
-  uint16_t fetch_dur_mean_us;
-  uint16_t fetch_dur_max_us;
-  uint16_t drop_count;
-  uint16_t defer_count;
-  uint16_t ifi_n;
-  uint16_t reserved;
-} __attribute__ ((packed));
-
 // Reset rolling stats/counters but keep mode metadata.
 void reset_window ();
 
 // Start a new measurement session (resets window + sets metadata).
-void begin_session (SessionMode mode, uint16_t target_hz,
-                    uint32_t runtime_ms);
+void begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms);
 
 // Optional explicit end; currently just marks end time.
 void end_session ();
@@ -168,7 +153,7 @@ void on_refresh_isr_post (bool post_ok);
 // the refresh tick was dropped.
 void on_refresh_defer (bool deferred_ok);
 
-// Compatibility alias: earlier code called this from the Display defer path.
+// Compatibility alias: older fsp.cpp called this from the Display defer path.
 static inline void on_defer_attempt (bool deferred_ok)
 {
   on_refresh_defer (deferred_ok);
@@ -197,11 +182,13 @@ void qs_report_session (uint8_t qs_prio, const char *reason);
 
 // Optional helpers (used by string/binary PERF commands).
 PerfStatsPayload snapshot_payload_v1 ();
+
 // Compatibility alias for older code.
 static inline PerfStatsPayload snapshot_payload ()
 {
   return snapshot_payload_v1 ();
 }
+
 void format_summary (char *out, size_t out_len);
 
 // Obtain a snapshot suitable for embedding in a second Ethernet response later.
