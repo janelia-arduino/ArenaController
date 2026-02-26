@@ -1,6 +1,6 @@
 [workspace]
 name = "G4.1-ArenaController"
-version = "6.0.1"
+version = "6.1.0"
 description = "Arduino library for communicating with the Reiser Lab Modular LED panels display arena."
 authors = ["Peter Polidoro <peter@polidoro.io>"]
 channels = ["conda-forge"]
