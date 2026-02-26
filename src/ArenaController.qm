@@ -138,6 +138,12 @@ analog_input_ = AnalogInput_getInstance();</code>
      </state>
      <state name="StreamingFrame">
       <entry brief="fillFrameBufferWithDecodedFrame()">FSP::Arena_fillFrameBufferWithDecodedFrame(this, e);</entry>
+      <tran trig="STREAM_FRAME">
+       <action brief="fillFrameBufferWithDecodedFrame()">FSP::Arena_fillFrameBufferWithDecodedFrame(this, e);</action>
+       <tran_glyph conn="33,68,3,-1,25">
+        <action box="0,-2,30,2"/>
+       </tran_glyph>
+      </tran>
       <tran trig="FRAME_FILLED">
        <action brief="displayFrame()">FSP::Arena_displayFrame(this, e);</action>
        <tran_glyph conn="33,72,3,-1,25">

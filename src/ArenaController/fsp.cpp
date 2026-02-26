@@ -1370,27 +1370,54 @@ FSP::Frame_setGrayscale (QActive *const ao, QEvt const *e)
   Frame *const frame = static_cast<Frame *const> (ao);
   UnsignedValueEvt const *uvev = static_cast<UnsignedValueEvt const *> (e);
 
+  bool const prev_grayscale = frame->grayscale_;
   uint8_t grayscale_index = uvev->value;
+  bool valid = false;
 
   if (grayscale_index == constants::set_grayscale_command_value_grayscale)
     {
       frame->grayscale_ = true;
-      QS_BEGIN_ID (USER_COMMENT, AO_Frame->m_prio)
-      QS_STR ("set grayscale to true");
-      QS_END ()
+      valid = true;
     }
   else if (grayscale_index == constants::set_grayscale_command_value_binary)
     {
       frame->grayscale_ = false;
-      QS_BEGIN_ID (USER_COMMENT, AO_Frame->m_prio)
-      QS_STR ("set grayscale to false");
-      QS_END ()
+      valid = true;
     }
   else
     {
       QS_BEGIN_ID (USER_COMMENT, AO_Frame->m_prio)
       QS_STR ("invalid grayscale value");
       QS_END ()
+    }
+
+  // Auto-select the default display refresh rate based on the grayscale mode.
+  // IMPORTANT: only do this on a *mode change* to avoid re-arming the
+  // refresh timer on every streamed frame.
+  if (valid && (frame->grayscale_ != prev_grayscale))
+    {
+      QS_BEGIN_ID (USER_COMMENT, AO_Frame->m_prio)
+      QS_STR (frame->grayscale_ ? "set grayscale to true"
+                               : "set grayscale to false");
+      QS_END ()
+
+      uint32_t const desired_refresh_hz
+          = frame->grayscale_ ? constants::refresh_rate_grayscale_default
+                              : constants::refresh_rate_binary_default;
+
+      Display *const display = static_cast<Display *const> (AO_Display);
+      if (display->refresh_rate_hz_ != desired_refresh_hz)
+        {
+          UnsignedValueEvt *set_refresh_rate_ev
+              = Q_NEW (UnsignedValueEvt, SET_REFRESH_RATE_SIG);
+          set_refresh_rate_ev->value = desired_refresh_hz;
+          AO_Display->POST (set_refresh_rate_ev, ao);
+
+          QS_BEGIN_ID (USER_COMMENT, AO_Frame->m_prio)
+          QS_STR ("auto refresh rate");
+          QS_U32 (8, desired_refresh_hz);
+          QS_END ()
+        }
     }
 }
 

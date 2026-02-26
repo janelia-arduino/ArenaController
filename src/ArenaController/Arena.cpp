@@ -271,6 +271,16 @@ Q_STATE_DEF (Arena, StreamingFrame)
         status_ = Q_RET_HANDLED;
         break;
       }
+    //${AOs::Arena::SM::ArenaOn::StreamingFrame::STREAM_FRAME}
+    case STREAM_FRAME_SIG:
+      {
+        // When already in StreamingFrame, do NOT transition (which would
+        // re-run transition actions like deactivateDisplay). Instead just
+        // trigger a new fill of the decoded frame buffer.
+        FSP::Arena_fillFrameBufferWithDecodedFrame (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
     //${AOs::Arena::SM::ArenaOn::StreamingFrame::FRAME_FILLED}
     case FRAME_FILLED_SIG:
       {
