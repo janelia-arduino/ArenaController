@@ -430,6 +430,8 @@ static uint32_t late_max_us = 0U;
 // SD spike counters (counts of SD read durations above thresholds)
 static uint32_t sd_over_500us_count = 0U;
 static uint32_t sd_over_1000us_count = 0U;
+static uint32_t sd_over_2000us_count = 0U;
+static uint32_t sd_over_5000us_count = 0U;
 
 // Metrics
 static Metric ifi_us (true);
@@ -566,6 +568,8 @@ reset_window ()
 
   sd_over_500us_count = 0U;
   sd_over_1000us_count = 0U;
+  sd_over_2000us_count = 0U;
+  sd_over_5000us_count = 0U;
 
   // metrics
   ifi_us.reset ();
@@ -774,6 +778,14 @@ stage_end (Stage s)
                 {
                   ++sd_over_1000us_count;
                 }
+              if (dur_us > 2000U)
+                {
+                  ++sd_over_2000us_count;
+                }
+              if (dur_us > 5000U)
+                {
+                  ++sd_over_5000us_count;
+                }
             }
         }
     }
@@ -839,6 +851,8 @@ compute_snapshot ()
 
   s.sd_over_500us = sd_over_500us_count;
   s.sd_over_1000us = sd_over_1000us_count;
+  s.sd_over_2000us = sd_over_2000us_count;
+  s.sd_over_5000us = sd_over_5000us_count;
 
   for (uint8_t i = 0U; i < STAGE_COUNT; ++i)
     {
@@ -1163,7 +1177,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
           }
       };
 
-    char line[300];
+    char line[512];
     size_t pos = 0U;
 
     pos += snprintf (line + pos, sizeof (line) - pos,
@@ -1213,15 +1227,26 @@ qs_report_session (uint8_t qs_prio, const char *reason)
                 = pct_count_x100 (s.sd_over_500us, s.stage_n[idx]);
             uint32_t const over1000_x100
                 = pct_count_x100 (s.sd_over_1000us, s.stage_n[idx]);
+            uint32_t const over2000_x100
+                = pct_count_x100 (s.sd_over_2000us, s.stage_n[idx]);
+            uint32_t const over5000_x100
+                = pct_count_x100 (s.sd_over_5000us, s.stage_n[idx]);
             pos += snprintf (
                 line + pos, sizeof (line) - pos,
-                "over500=%lu (%lu.%02lu%%) over1000=%lu (%lu.%02lu%%) ",
+                "over500=%lu (%lu.%02lu%%) over1000=%lu (%lu.%02lu%%) "
+                "over2000=%lu (%lu.%02lu%%) over5000=%lu (%lu.%02lu%%) ",
                 static_cast<unsigned long> (s.sd_over_500us),
                 static_cast<unsigned long> (over500_x100 / 100U),
                 static_cast<unsigned long> (over500_x100 % 100U),
                 static_cast<unsigned long> (s.sd_over_1000us),
                 static_cast<unsigned long> (over1000_x100 / 100U),
-                static_cast<unsigned long> (over1000_x100 % 100U));
+                static_cast<unsigned long> (over1000_x100 % 100U),
+                static_cast<unsigned long> (s.sd_over_2000us),
+                static_cast<unsigned long> (over2000_x100 / 100U),
+                static_cast<unsigned long> (over2000_x100 % 100U),
+                static_cast<unsigned long> (s.sd_over_5000us),
+                static_cast<unsigned long> (over5000_x100 / 100U),
+                static_cast<unsigned long> (over5000_x100 % 100U));
           }
 
         if (pos >= sizeof (line))

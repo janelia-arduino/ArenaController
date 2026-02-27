@@ -1398,7 +1398,7 @@ FSP::Frame_setGrayscale (QActive *const ao, QEvt const *e)
     {
       QS_BEGIN_ID (USER_COMMENT, AO_Frame->m_prio)
       QS_STR (frame->grayscale_ ? "set grayscale to true"
-                               : "set grayscale to false");
+                                : "set grayscale to false");
       QS_END ()
 
       uint32_t const desired_refresh_hz
@@ -1665,10 +1665,10 @@ FSP::Pattern_armTimers (QActive *const ao, QEvt const *e)
   Pattern *const pattern = static_cast<Pattern *const> (ao);
   pattern->frame_rate_time_evt_.armX (constants::ticks_per_second
                                       / pattern->frame_rate_hz_);
-  uint32_t const runtime_unit_ticks =
-      (constants::ticks_per_second
-       * constants::milliseconds_per_runtime_duration_unit)
-      / constants::milliseconds_per_second;
+  uint32_t const runtime_unit_ticks
+      = (constants::ticks_per_second
+         * constants::milliseconds_per_runtime_duration_unit)
+        / constants::milliseconds_per_second;
 
   if (pattern->runtime_duration_units_remaining_ != 0U)
     {
