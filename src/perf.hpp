@@ -3,18 +3,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "records.hpp"
-
 #include "constants.hpp" // AC_ENABLE_PERF_PROBE default
+#include "perf_spec.hpp" // project-local metric/stage lists
 
 // Performance/profiling probe
 //
 // Design goals:
-//   * Board-agnostic core: no pin numbers or digitalWriteFast() usage here.
-//     All GPIO is delegated to BSP::{perfRefreshTickToggle,
-//     perfFrameTransferSet, perfFetchSet} implemented in
-//     examples/<board>/bsp.cpp.
-//   * Low-overhead: streaming stats with optional p95/p99 estimation.
+//   * Low-overhead: O(1) streaming stats with optional p95/p99 estimation.
+//   * Board/platform portability:
+//       - Time source and optional scope pins are provided by a tiny "port"
+//         implementation (see perf/perf_port.hpp).
+//       - Core streaming stats primitives live in perf/perf_core.hpp.
 //   * QS output emitted only at session end (e.g., pattern finished), not
 //     per-frame.
 //
@@ -53,18 +52,14 @@ struct PerfStatsPayload
   uint16_t reserved;
 } __attribute__ ((packed));
 
-#if AC_ENABLE_PERF_PROBE
-
 // Stages used for breakdown of CPU-side work during pattern playback.
-// These correspond to major activities in the Pattern/Frame pipeline.
+// The enum entries are defined by the project spec list in perf_spec.hpp.
 enum Stage : uint8_t
 {
-  STAGE_SD_READ = 0U,
-  STAGE_PATTERN_DECODE,
-  STAGE_FILL_FRAME_BUFFER,
-  STAGE_FILL_ALL_ON,
-  STAGE_STREAM_DECODE,
-  STAGE_COUNT
+#define AC_PERF_STAGE_ENUM_ENTRY(_id, _label, _always, _quant) _id,
+  AC_PERF_STAGES (AC_PERF_STAGE_ENUM_ENTRY)
+#undef AC_PERF_STAGE_ENUM_ENTRY
+      STAGE_COUNT
 };
 
 enum class SessionMode : uint8_t
@@ -75,22 +70,35 @@ enum class SessionMode : uint8_t
   Other = 3U,
 };
 
+#if AC_ENABLE_PERF_PROBE
+
+// Snapshot of current rolling-window/session statistics.
+//
+// This struct is intentionally "report-friendly": it contains derived fields
+// (means, p99ish, sums) so report sinks (QS / text / binary) do not need to
+// access internal metric objects.
 struct Snapshot
 {
+  // Session metadata
   SessionMode mode;
   uint16_t target_hz;
   uint32_t period_us;
+  uint32_t runtime_ms;
 
+  // Window duration
   uint64_t window_us;
 
+  // Refresh ISR behavior
   uint32_t refresh_ticks;
   uint32_t refresh_post_fail;
   uint32_t refresh_defers;
   uint32_t refresh_defer_drops;
 
+  // Frame transfer counts
   uint32_t frames_started;
   uint32_t frames_completed;
 
+  // Late frames
   uint32_t late_frames;
   uint32_t max_late_us;
 
@@ -108,27 +116,39 @@ struct Snapshot
   uint32_t xfer_mean_us;
   uint32_t xfer_p99_us;
   uint32_t xfer_max_us;
+  uint64_t xfer_sum_us;
 
   // SPI-ish portion of transfer (sum of panel-set durations per frame)
   uint32_t spi_frame_mean_us;
   uint32_t spi_frame_p99_us;
   uint32_t spi_frame_max_us;
+  uint64_t spi_frame_sum_us;
 
   // Non-SPI overhead inside transfer
   uint32_t ovh_frame_mean_us;
   uint32_t ovh_frame_max_us;
+  uint64_t ovh_frame_sum_us;
 
   // Panel-set transfer distribution
   uint32_t panelset_n;
   uint32_t panelset_mean_us;
   uint32_t panelset_p99_us;
   uint32_t panelset_max_us;
+  uint64_t panelset_sum_us;
 
-  // Stages (SD/Decode/Fill)
+  // Generic "fetch" scope timing (nested)
+  uint32_t fetch_n;
+  uint32_t fetch_mean_us;
+  uint32_t fetch_p99_us;
+  uint32_t fetch_max_us;
+  uint64_t fetch_sum_us;
+
+  // Stages (SD/Decode/Fill/...)
   uint32_t stage_n[STAGE_COUNT];
   uint32_t stage_mean_us[STAGE_COUNT];
   uint32_t stage_p99_us[STAGE_COUNT];
   uint32_t stage_max_us[STAGE_COUNT];
+  uint64_t stage_sum_us[STAGE_COUNT];
 
   // SD spike counters (how often SD read exceeds thresholds)
   uint32_t sd_over_500us;
@@ -211,29 +231,14 @@ Snapshot snapshot ();
 #else // AC_ENABLE_PERF_PROBE
 
 // No-op stubs when performance probe is disabled.
-enum Stage : uint8_t
-{
-  STAGE_SD_READ = 0U,
-  STAGE_PATTERN_DECODE,
-  STAGE_FILL_FRAME_BUFFER,
-  STAGE_FILL_ALL_ON,
-  STAGE_STREAM_DECODE,
-  STAGE_COUNT
-};
-
-enum class SessionMode : uint8_t
-{
-  None = 0U,
-  Pattern = 1U,
-  Stream = 2U,
-  Other = 3U,
-};
+// Stage and SessionMode enums are still available (defined above).
 
 struct Snapshot
 {
   SessionMode mode;
   uint16_t target_hz;
   uint32_t period_us;
+  uint32_t runtime_ms;
   uint64_t window_us;
   uint32_t refresh_ticks;
   uint32_t refresh_post_fail;
@@ -254,19 +259,29 @@ struct Snapshot
   uint32_t xfer_mean_us;
   uint32_t xfer_p99_us;
   uint32_t xfer_max_us;
+  uint64_t xfer_sum_us;
   uint32_t spi_frame_mean_us;
   uint32_t spi_frame_p99_us;
   uint32_t spi_frame_max_us;
+  uint64_t spi_frame_sum_us;
   uint32_t ovh_frame_mean_us;
   uint32_t ovh_frame_max_us;
+  uint64_t ovh_frame_sum_us;
   uint32_t panelset_n;
   uint32_t panelset_mean_us;
   uint32_t panelset_p99_us;
   uint32_t panelset_max_us;
+  uint64_t panelset_sum_us;
+  uint32_t fetch_n;
+  uint32_t fetch_mean_us;
+  uint32_t fetch_p99_us;
+  uint32_t fetch_max_us;
+  uint64_t fetch_sum_us;
   uint32_t stage_n[STAGE_COUNT];
   uint32_t stage_mean_us[STAGE_COUNT];
   uint32_t stage_p99_us[STAGE_COUNT];
   uint32_t stage_max_us[STAGE_COUNT];
+  uint64_t stage_sum_us[STAGE_COUNT];
   // SD spike counters
   uint32_t sd_over_500us;
   uint32_t sd_over_1000us;
