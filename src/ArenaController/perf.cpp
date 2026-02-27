@@ -71,6 +71,96 @@ static uint32_t sd_over_2000us_count = 0U;
 static uint32_t sd_over_5000us_count = 0U;
 
 // -----------------------------
+// Host-driven update tracking
+
+struct UpdateTracker
+{
+  uint32_t received = 0U;
+  uint32_t processed = 0U;
+  uint32_t committed = 0U;
+  uint32_t applied = 0U;
+  uint32_t coalesced = 0U;
+
+  core::QuantilePair q_ifi;
+  core::QuantilePair q_latency;
+  core::Metric ifi_us{ &q_ifi };
+  core::Metric latency_us{ &q_latency };
+
+  static constexpr uint8_t kProcFifoSize = 8U;
+  uint64_t proc_ts_us[kProcFifoSize]{};
+  uint8_t proc_head = 0U;
+  uint8_t proc_len = 0U;
+
+  // The next frame-buffer swap(s) are expected to correspond to this update
+  // kind. This is a count to handle multiple in-flight updates.
+  uint8_t commit_expected = 0U;
+
+  // A committed update waiting to become visible on a subsequent refresh.
+  bool pending_valid = false;
+  bool pending_transfer_started = false;
+  uint32_t pending_frame_started_at_commit = 0U;
+  uint64_t pending_processed_ts_us64 = 0ULL;
+
+  uint64_t last_applied_us64 = 0ULL;
+
+  void
+  reset ()
+  {
+    received = 0U;
+    processed = 0U;
+    committed = 0U;
+    applied = 0U;
+    coalesced = 0U;
+    ifi_us.reset ();
+    latency_us.reset ();
+    proc_head = 0U;
+    proc_len = 0U;
+    for (uint8_t i = 0U; i < kProcFifoSize; ++i)
+      {
+        proc_ts_us[i] = 0ULL;
+      }
+    commit_expected = 0U;
+    pending_valid = false;
+    pending_transfer_started = false;
+    pending_frame_started_at_commit = 0U;
+    pending_processed_ts_us64 = 0ULL;
+    last_applied_us64 = 0ULL;
+  }
+
+  void
+  proc_push (uint64_t ts_us64)
+  {
+    if (proc_len == kProcFifoSize)
+      {
+        // Tracking FIFO overflow. Drop the oldest timestamp and count it as
+        // coalesced (the update won't have a matching latency measurement).
+        proc_head = static_cast<uint8_t> ((proc_head + 1U) % kProcFifoSize);
+        --proc_len;
+        ++coalesced;
+      }
+    uint8_t const tail
+        = static_cast<uint8_t> ((proc_head + proc_len) % kProcFifoSize);
+    proc_ts_us[tail] = ts_us64;
+    ++proc_len;
+  }
+
+  bool
+  proc_pop (uint64_t &out_ts_us64)
+  {
+    if (proc_len == 0U)
+      {
+        return false;
+      }
+    out_ts_us64 = proc_ts_us[proc_head];
+    proc_head = static_cast<uint8_t> ((proc_head + 1U) % kProcFifoSize);
+    --proc_len;
+    return true;
+  }
+};
+
+static UpdateTracker updates[UPD_COUNT];
+
+// -----------------------------
 // Metrics
 
 // Use the project spec list (perf_spec.hpp) to declare metrics and their
@@ -179,6 +269,11 @@ reset_window ()
     {
       stages[i].reset ();
     }
+
+  for (uint8_t i = 0U; i < UPD_COUNT; ++i)
+    {
+      updates[i].reset ();
+    }
 }
 
 void
@@ -190,6 +285,7 @@ begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms)
   s_period_us = hz_to_period_us (target_hz);
   reset_window ();
 }
+
 
 void
 end_session ()
@@ -250,6 +346,18 @@ on_frame_start (uint16_t refresh_rate_hz)
       ifi_us.push_u32 (ifi);
     }
   last_frame_start_us = start_us;
+
+  // If an update was committed while a transfer was already in progress, it
+  // should be attributed to the *next* transfer that starts after the commit.
+  for (uint8_t i = 0U; i < UPD_COUNT; ++i)
+    {
+      UpdateTracker &u = updates[i];
+      if (u.pending_valid && !u.pending_transfer_started
+          && frames_started > u.pending_frame_started_at_commit)
+        {
+          u.pending_transfer_started = true;
+        }
+    }
 }
 
 void
@@ -278,6 +386,43 @@ on_frame_end ()
       if (late_us > late_max_us)
         {
           late_max_us = late_us;
+        }
+    }
+
+  // Update apply point: first completed transfer after a committed buffer swap.
+  for (uint8_t i = 0U; i < UPD_COUNT; ++i)
+    {
+      UpdateTracker &u = updates[i];
+      if (u.pending_valid && u.pending_transfer_started)
+        {
+          ++u.applied;
+
+          uint64_t latency_us64 = 0ULL;
+          if (end_us64 >= u.pending_processed_ts_us64)
+            {
+              latency_us64 = end_us64 - u.pending_processed_ts_us64;
+            }
+          uint32_t const latency_u32
+              = (latency_us64 > 0xFFFFFFFFULL)
+                    ? 0xFFFFFFFFu
+                    : static_cast<uint32_t> (latency_us64);
+          u.latency_us.push_u32 (latency_u32);
+
+          if (u.last_applied_us64 != 0ULL)
+            {
+              uint64_t const ifi_us64 = end_us64 - u.last_applied_us64;
+              uint32_t const ifi_u32
+                  = (ifi_us64 > 0xFFFFFFFFULL)
+                        ? 0xFFFFFFFFu
+                        : static_cast<uint32_t> (ifi_us64);
+              u.ifi_us.push_u32 (ifi_u32);
+            }
+          u.last_applied_us64 = end_us64;
+
+          u.pending_valid = false;
+          u.pending_transfer_started = false;
+          u.pending_frame_started_at_commit = 0U;
+          u.pending_processed_ts_us64 = 0ULL;
         }
     }
 
@@ -383,6 +528,92 @@ stage_end (Stage s)
         }
     }
   fetch_end ();
+}
+
+void
+update_received (UpdateKind k)
+{
+  uint8_t const idx = static_cast<uint8_t> (k);
+  if (idx >= UPD_COUNT)
+    {
+      return;
+    }
+  ++updates[idx].received;
+}
+
+void
+update_processed (UpdateKind k)
+{
+  uint8_t const idx = static_cast<uint8_t> (k);
+  if (idx >= UPD_COUNT)
+    {
+      return;
+    }
+  ++updates[idx].processed;
+  uint32_t const now_us32 = port::now_us32 ();
+  uint64_t const now_us64 = micros64.extend (now_us32);
+  updates[idx].proc_push (now_us64);
+}
+
+void
+update_expect_commit (UpdateKind k)
+{
+  uint8_t const idx = static_cast<uint8_t> (k);
+  if (idx >= UPD_COUNT)
+    {
+      return;
+    }
+  if (updates[idx].commit_expected != 0xFFU)
+    {
+      ++updates[idx].commit_expected;
+    }
+}
+
+void
+on_frame_reference_saved ()
+{
+  // A new frame reference has been installed by the Frame AO.
+  // If any update kind is expecting a commit, treat this as the point where
+  // the update becomes eligible to appear on a subsequent refresh.
+
+  uint8_t idx = 0xFFU;
+  for (uint8_t i = 0U; i < UPD_COUNT; ++i)
+    {
+      if (updates[i].commit_expected != 0U)
+        {
+          idx = i;
+          break;
+        }
+    }
+
+  if (idx == 0xFFU)
+    {
+      return;
+    }
+
+  UpdateTracker &u = updates[idx];
+  --u.commit_expected;
+  ++u.committed;
+
+  uint64_t processed_ts = 0ULL;
+  if (!u.proc_pop (processed_ts))
+    {
+      // Fallback: no processed timestamp captured; use commit time.
+      uint32_t const now_us32 = port::now_us32 ();
+      processed_ts = micros64.extend (now_us32);
+    }
+
+  if (u.pending_valid)
+    {
+      // A previous committed update was never observed on the wire before the
+      // buffer was swapped again. Count it as coalesced.
+      ++u.coalesced;
+    }
+
+  u.pending_valid = true;
+  u.pending_transfer_started = false;
+  u.pending_frame_started_at_commit = frames_started;
+  u.pending_processed_ts_us64 = processed_ts;
 }
 
 // Compute derived window_us
@@ -518,6 +749,25 @@ compute_snapshot ()
   s.guard_p99_us = guard_p99;
   s.guard_max_us = guard_max;
   s.limiter_is_transfer = limiter_transfer;
+
+  for (uint8_t i = 0U; i < UPD_COUNT; ++i)
+    {
+      s.upd[i].received = updates[i].received;
+      s.upd[i].processed = updates[i].processed;
+      s.upd[i].committed = updates[i].committed;
+      s.upd[i].applied = updates[i].applied;
+      s.upd[i].coalesced = updates[i].coalesced;
+
+      s.upd[i].ifi_n = updates[i].ifi_us.stats.n;
+      s.upd[i].ifi_mean_us = updates[i].ifi_us.mean_u32 ();
+      s.upd[i].ifi_p99_us = updates[i].ifi_us.p99_u32 ();
+      s.upd[i].ifi_max_us = updates[i].ifi_us.max_u32 ();
+
+      s.upd[i].latency_n = updates[i].latency_us.stats.n;
+      s.upd[i].latency_mean_us = updates[i].latency_us.mean_u32 ();
+      s.upd[i].latency_p99_us = updates[i].latency_us.p99_u32 ();
+      s.upd[i].latency_max_us = updates[i].latency_us.max_u32 ();
+    }
 
   return s;
 }

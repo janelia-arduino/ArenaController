@@ -28,6 +28,12 @@ static const bool kStageAlwaysPrint[STAGE_COUNT] = {
 #undef AC_PERF_STAGE_ALWAYS
 };
 
+static const char *const kUpdateShortName[UPD_COUNT] = {
+#define AC_PERF_UPD_NAME(_id, _label) _label,
+  AC_PERF_UPDATES (AC_PERF_UPD_NAME)
+#undef AC_PERF_UPD_NAME
+};
+
 static const char *
 mode_str (SessionMode m)
 {
@@ -362,6 +368,47 @@ qs_report_session (uint8_t qs_prio, const char *reason)
       }
 
     qs_user_comment (qs_prio, line);
+  }
+
+  // ---- PERF_UPD ----
+  {
+    for (uint8_t idx = 0U; idx < UPD_COUNT; ++idx)
+      {
+        Snapshot::UpdateSnapshot const &u = s.upd[idx];
+        if (u.received == 0U && u.processed == 0U && u.applied == 0U)
+          {
+            continue;
+          }
+
+        bool const ifi_p99_ready = (u.ifi_n >= 5U);
+        bool const lat_p99_ready = (u.latency_n >= 5U);
+
+        char ifi_p99[12];
+        char lat_p99[12];
+        fmt_u32_or_na (ifi_p99, sizeof (ifi_p99), ifi_p99_ready, u.ifi_p99_us);
+        fmt_u32_or_na (lat_p99, sizeof (lat_p99), lat_p99_ready,
+                       u.latency_p99_us);
+
+        char line[260];
+        snprintf (
+            line, sizeof (line),
+            "PERF_UPD kind=%s recv=%lu proc=%lu commit=%lu applied=%lu "
+            "coalesced=%lu "
+            "ifi_us n=%lu mean=%lu p99=%s max=%lu "
+            "latency_us n=%lu mean=%lu p99=%s max=%lu",
+            kUpdateShortName[idx], static_cast<unsigned long> (u.received),
+            static_cast<unsigned long> (u.processed),
+            static_cast<unsigned long> (u.committed),
+            static_cast<unsigned long> (u.applied),
+            static_cast<unsigned long> (u.coalesced),
+            static_cast<unsigned long> (u.ifi_n),
+            static_cast<unsigned long> (u.ifi_mean_us), ifi_p99,
+            static_cast<unsigned long> (u.ifi_max_us),
+            static_cast<unsigned long> (u.latency_n),
+            static_cast<unsigned long> (u.latency_mean_us), lat_p99,
+            static_cast<unsigned long> (u.latency_max_us));
+        qs_user_comment (qs_prio, line);
+      }
   }
 
   // ---- PERF_EST ----

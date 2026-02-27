@@ -48,3 +48,15 @@
   X (STAGE_FILL_FRAME_BUFFER, "FILL", 1, 0)                                   \
   X (STAGE_FILL_ALL_ON, "ALLON", 0, 0)                                        \
   X (STAGE_STREAM_DECODE, "SDEC", 0, 0)
+
+// -----------------------------
+// Host-driven "updates" (distinct from the continuous refresh transfer)
+//
+// Each entry: X(enum_id, short_label)
+//
+// Notes:
+//   * "SPF" corresponds to SET_FRAME_POSITION_CMD / UPDATE_PATTERN_FRAME.
+//   * "STREAM" corresponds to streaming frame packets.
+#define AC_PERF_UPDATES(X)                                                    \
+  X (UPD_SHOW_PATTERN_FRAME, "SPF")                                          \
+  X (UPD_STREAM_FRAME, "STREAM")

@@ -62,6 +62,17 @@ enum Stage : uint8_t
       STAGE_COUNT
 };
 
+// Host-driven update kinds (see perf_spec.hpp). These represent externally
+// triggered "content changes" that should become visible on the next refresh
+// (e.g., a streamed frame packet or a pattern-frame position update).
+enum UpdateKind : uint8_t
+{
+#define AC_PERF_UPDATE_ENUM_ENTRY(_id, _label) _id,
+  AC_PERF_UPDATES (AC_PERF_UPDATE_ENUM_ENTRY)
+#undef AC_PERF_UPDATE_ENUM_ENTRY
+      UPD_COUNT
+};
+
 enum class SessionMode : uint8_t
 {
   None = 0U,
@@ -79,6 +90,25 @@ enum class SessionMode : uint8_t
 // access internal metric objects.
 struct Snapshot
 {
+  struct UpdateSnapshot
+  {
+    uint32_t received;
+    uint32_t processed;
+    uint32_t committed;
+    uint32_t applied;
+    uint32_t coalesced;
+
+    uint32_t ifi_n;
+    uint32_t ifi_mean_us;
+    uint32_t ifi_p99_us;
+    uint32_t ifi_max_us;
+
+    uint32_t latency_n;
+    uint32_t latency_mean_us;
+    uint32_t latency_p99_us;
+    uint32_t latency_max_us;
+  };
+
   // Session metadata
   SessionMode mode;
   uint16_t target_hz;
@@ -164,6 +194,9 @@ struct Snapshot
   uint32_t guard_p99_us;
   uint32_t guard_max_us;
   bool limiter_is_transfer;
+
+  // Host-driven update stats
+  UpdateSnapshot upd[UPD_COUNT];
 };
 
 // Reset rolling stats/counters but keep mode metadata.
@@ -171,6 +204,7 @@ void reset_window ();
 
 // Start a new measurement session (resets window + sets metadata).
 void begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms);
+
 
 // Optional explicit end; currently just marks end time.
 void end_session ();
@@ -207,6 +241,21 @@ void fetch_end ();
 void stage_begin (Stage s);
 void stage_end (Stage s);
 
+// -----------------------------
+// Host-driven update tracking
+//
+// "received" is called when the command/packet is accepted.
+// "processed" is called when the firmware begins work for that update.
+// "expect_commit" marks that the next frame-buffer swap corresponds to that
+// update kind.
+// "on_frame_reference_saved" is called when the Frame AO installs a new frame
+// buffer pointer (i.e., when the update is ready to become visible on a
+// subsequent refresh).
+void update_received (UpdateKind k);
+void update_processed (UpdateKind k);
+void update_expect_commit (UpdateKind k);
+void on_frame_reference_saved ();
+
 // Print a multi-line, self-explanatory QS performance report.
 // Intended to be called at end-of-pattern (e.g., in
 // Pattern_endRuntimeDuration) or other session end.
@@ -235,6 +284,23 @@ Snapshot snapshot ();
 
 struct Snapshot
 {
+  struct UpdateSnapshot
+  {
+    uint32_t received;
+    uint32_t processed;
+    uint32_t committed;
+    uint32_t applied;
+    uint32_t coalesced;
+    uint32_t ifi_n;
+    uint32_t ifi_mean_us;
+    uint32_t ifi_p99_us;
+    uint32_t ifi_max_us;
+    uint32_t latency_n;
+    uint32_t latency_mean_us;
+    uint32_t latency_p99_us;
+    uint32_t latency_max_us;
+  };
+
   SessionMode mode;
   uint16_t target_hz;
   uint32_t period_us;
@@ -294,6 +360,8 @@ struct Snapshot
   uint32_t guard_p99_us;
   uint32_t guard_max_us;
   bool limiter_is_transfer;
+
+  UpdateSnapshot upd[UPD_COUNT];
 };
 
 static inline void
@@ -350,6 +418,22 @@ stage_begin (Stage)
 }
 static inline void
 stage_end (Stage)
+{
+}
+static inline void
+update_received (UpdateKind)
+{
+}
+static inline void
+update_processed (UpdateKind)
+{
+}
+static inline void
+update_expect_commit (UpdateKind)
+{
+}
+static inline void
+on_frame_reference_saved ()
 {
 }
 static inline void

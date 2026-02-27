@@ -322,6 +322,9 @@ FSP::Arena_fillFrameBufferWithAllOn (QActive *const ao, QEvt const *e)
 void
 FSP::Arena_fillFrameBufferWithDecodedFrame (QActive *const ao, QEvt const *e)
 {
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::update_expect_commit (Perf::UPD_STREAM_FRAME);
+#endif
   AO_Frame->POST (&constants::fill_frame_buffer_with_decoded_frame_evt, ao);
 }
 
@@ -1280,6 +1283,10 @@ FSP::Frame_saveFrameReference (QP::QActive *const ao, QP::QEvt const *e)
       frame->frame_ = nullptr;
     }
   Q_NEW_REF (frame->frame_, FrameEvt);
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::on_frame_reference_saved ();
+#endif
 }
 
 void
@@ -1585,6 +1592,13 @@ FSP::Pattern_initializeShowPatternFrame (QActive *const ao, QEvt const *e)
   ShowPatternFrameEvt const *spfev
       = static_cast<ShowPatternFrameEvt const *> (e);
   pattern->frame_index_ = spfev->frame_index;
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  // Treat the initial show-pattern-frame display as an update.
+  Perf::update_received (Perf::UPD_SHOW_PATTERN_FRAME);
+  Perf::update_processed (Perf::UPD_SHOW_PATTERN_FRAME);
+  Perf::update_expect_commit (Perf::UPD_SHOW_PATTERN_FRAME);
+#endif
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_showing_pattern_frame_evt, ao);
 }
@@ -1819,7 +1833,10 @@ FSP::Pattern_setupNextFrame (QP::QActive *const ao, QP::QEvt const *e)
 void
 FSP::Pattern_updatePatternFrame (QP::QActive *const ao, QP::QEvt const *e)
 {
-  QF::PUBLISH (&constants::deactivate_display_evt, ao);
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::update_processed (Perf::UPD_SHOW_PATTERN_FRAME);
+  Perf::update_expect_commit (Perf::UPD_SHOW_PATTERN_FRAME);
+#endif
 
   Pattern *const pattern = static_cast<Pattern *const> (ao);
   if (pattern->frame_)
@@ -2537,6 +2554,10 @@ FSP::processBinaryCommand (
         memcpy (&frame_index, command_buffer + command_buffer_position,
                 sizeof (frame_index));
 
+#if defined(AC_ENABLE_PERF_PROBE)
+        Perf::update_received (Perf::UPD_SHOW_PATTERN_FRAME);
+#endif
+
         UnsignedValueEvt *uvev
             = Q_NEW (UnsignedValueEvt, UPDATE_PATTERN_FRAME_SIG);
         uvev->value = frame_index;
@@ -2620,6 +2641,11 @@ FSP::processStreamCommand (uint8_t const *stream_buffer,
       AO_Arena->POST (&constants::all_off_evt, &constants::fsp_id);
       return;
     }
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  Perf::update_received (Perf::UPD_STREAM_FRAME);
+  Perf::update_processed (Perf::UPD_STREAM_FRAME);
+#endif
   UnsignedValueEvt *set_grayscale_ev
       = Q_NEW (UnsignedValueEvt, SET_GRAYSCALE_SIG);
   set_grayscale_ev->value = grayscale;
@@ -2698,6 +2724,15 @@ FSP::processStringCommand (const char *command, char *response)
 #if defined(AC_ENABLE_PERF_PROBE)
       Perf::reset_window ();
       strcpy (response, "PERF RESET");
+#else
+      strcpy (response, "PERF PROBE DISABLED");
+#endif
+    }
+  else if (strcmp (command, "PERF_QS") == 0)
+    {
+#if defined(AC_ENABLE_PERF_PROBE)
+      Perf::qs_report_session (AO_Arena->m_prio, "MANUAL");
+      strcpy (response, "PERF_QS");
 #else
       strcpy (response, "PERF PROBE DISABLED");
 #endif
