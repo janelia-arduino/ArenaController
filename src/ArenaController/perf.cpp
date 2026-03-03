@@ -64,6 +64,10 @@ static uint32_t frames_completed = 0U;
 static uint32_t late_frame_count = 0U;
 static uint32_t late_max_us = 0U;
 
+// Ethernet / networking (session-scoped)
+static uint64_t net_rx_bytes = 0ULL;
+static uint64_t net_tx_bytes = 0ULL;
+
 // SD spike counters (counts of SD read durations above thresholds)
 static uint32_t sd_over_500us_count = 0U;
 static uint32_t sd_over_1000us_count = 0U;
@@ -251,6 +255,9 @@ reset_window ()
   late_frame_count = 0U;
   late_max_us = 0U;
 
+  net_rx_bytes = 0ULL;
+  net_tx_bytes = 0ULL;
+
   sd_over_500us_count = 0U;
   sd_over_1000us_count = 0U;
   sd_over_2000us_count = 0U;
@@ -285,7 +292,6 @@ begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms)
   s_period_us = hz_to_period_us (target_hz);
   reset_window ();
 }
-
 
 void
 end_session ()
@@ -389,7 +395,8 @@ on_frame_end ()
         }
     }
 
-  // Update apply point: first completed transfer after a committed buffer swap.
+  // Update apply point: first completed transfer after a committed buffer
+  // swap.
   for (uint8_t i = 0U; i < UPD_COUNT; ++i)
     {
       UpdateTracker &u = updates[i];
@@ -411,10 +418,9 @@ on_frame_end ()
           if (u.last_applied_us64 != 0ULL)
             {
               uint64_t const ifi_us64 = end_us64 - u.last_applied_us64;
-              uint32_t const ifi_u32
-                  = (ifi_us64 > 0xFFFFFFFFULL)
-                        ? 0xFFFFFFFFu
-                        : static_cast<uint32_t> (ifi_us64);
+              uint32_t const ifi_u32 = (ifi_us64 > 0xFFFFFFFFULL)
+                                           ? 0xFFFFFFFFu
+                                           : static_cast<uint32_t> (ifi_us64);
               u.ifi_us.push_u32 (ifi_u32);
             }
           u.last_applied_us64 = end_us64;
@@ -427,6 +433,30 @@ on_frame_end ()
     }
 
   port::frame_transfer_set (false);
+}
+
+void
+on_net_poll (uint32_t poll_us)
+{
+  net_poll_us.push_u32 (poll_us);
+}
+
+void
+on_net_cmd (uint32_t cmd_us)
+{
+  net_cmd_us.push_u32 (cmd_us);
+}
+
+void
+on_net_rx_bytes (uint32_t bytes)
+{
+  net_rx_bytes += static_cast<uint64_t> (bytes);
+}
+
+void
+on_net_tx_bytes (uint32_t bytes)
+{
+  net_tx_bytes += static_cast<uint64_t> (bytes);
 }
 
 void
@@ -683,6 +713,21 @@ compute_snapshot ()
   s.fetch_p99_us = fetch_scope_us.p99_u32 ();
   s.fetch_max_us = fetch_scope_us.max_u32 ();
   s.fetch_sum_us = fetch_scope_us.sum_us;
+
+  s.net_poll_n = net_poll_us.stats.n;
+  s.net_poll_mean_us = net_poll_us.mean_u32 ();
+  s.net_poll_p99_us = net_poll_us.p99_u32 ();
+  s.net_poll_max_us = net_poll_us.max_u32 ();
+  s.net_poll_sum_us = net_poll_us.sum_us;
+
+  s.net_cmd_n = net_cmd_us.stats.n;
+  s.net_cmd_mean_us = net_cmd_us.mean_u32 ();
+  s.net_cmd_p99_us = net_cmd_us.p99_u32 ();
+  s.net_cmd_max_us = net_cmd_us.max_u32 ();
+  s.net_cmd_sum_us = net_cmd_us.sum_us;
+
+  s.net_rx_bytes = net_rx_bytes;
+  s.net_tx_bytes = net_tx_bytes;
 
   s.sd_over_500us = sd_over_500us_count;
   s.sd_over_1000us = sd_over_1000us_count;

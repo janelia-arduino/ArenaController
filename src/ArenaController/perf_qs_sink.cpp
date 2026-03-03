@@ -370,6 +370,67 @@ qs_report_session (uint8_t qs_prio, const char *reason)
     qs_user_comment (qs_prio, line);
   }
 
+  // ---- PERF_NET ----
+  {
+    if (s.net_poll_n != 0U || s.net_cmd_n != 0U || s.net_rx_bytes != 0ULL
+        || s.net_tx_bytes != 0ULL)
+      {
+        bool const poll_p99_ready = (s.net_poll_n >= 5U);
+        bool const cmd_p99_ready = (s.net_cmd_n >= 5U);
+
+        char poll_p99[12];
+        char cmd_p99[12];
+        fmt_u32_or_na (poll_p99, sizeof (poll_p99), poll_p99_ready,
+                       s.net_poll_p99_us);
+        fmt_u32_or_na (cmd_p99, sizeof (cmd_p99), cmd_p99_ready,
+                       s.net_cmd_p99_us);
+
+        uint32_t const poll_duty_x100
+            = pct_x100 (s.net_poll_sum_us, s.window_us);
+        uint32_t const cmd_duty_x100
+            = pct_x100 (s.net_cmd_sum_us, s.window_us);
+
+        char poll_duty[12];
+        char cmd_duty[12];
+        fmt_pct_x100 (poll_duty, sizeof (poll_duty), poll_duty_x100);
+        fmt_pct_x100 (cmd_duty, sizeof (cmd_duty), cmd_duty_x100);
+
+        uint32_t const rx_kB
+            = static_cast<uint32_t> (s.net_rx_bytes / 1024ULL);
+        uint32_t const tx_kB
+            = static_cast<uint32_t> (s.net_tx_bytes / 1024ULL);
+
+        uint32_t rx_kBps = 0U;
+        uint32_t tx_kBps = 0U;
+        if (s.window_us != 0ULL)
+          {
+            rx_kBps = static_cast<uint32_t> ((s.net_rx_bytes * 1000000ULL)
+                                             / s.window_us / 1024ULL);
+            tx_kBps = static_cast<uint32_t> ((s.net_tx_bytes * 1000000ULL)
+                                             / s.window_us / 1024ULL);
+          }
+
+        char line[260];
+        snprintf (line, sizeof (line),
+                  "PERF_NET "
+                  "poll_us n=%lu mean=%lu p99=%s max=%lu duty=%s "
+                  "cmd_us n=%lu mean=%lu p99=%s max=%lu duty=%s "
+                  "rx_kB=%lu tx_kB=%lu rx_kBps=%lu tx_kBps=%lu",
+                  static_cast<unsigned long> (s.net_poll_n),
+                  static_cast<unsigned long> (s.net_poll_mean_us), poll_p99,
+                  static_cast<unsigned long> (s.net_poll_max_us), poll_duty,
+                  static_cast<unsigned long> (s.net_cmd_n),
+                  static_cast<unsigned long> (s.net_cmd_mean_us), cmd_p99,
+                  static_cast<unsigned long> (s.net_cmd_max_us), cmd_duty,
+                  static_cast<unsigned long> (rx_kB),
+                  static_cast<unsigned long> (tx_kB),
+                  static_cast<unsigned long> (rx_kBps),
+                  static_cast<unsigned long> (tx_kBps));
+
+        qs_user_comment (qs_prio, line);
+      }
+  }
+
   // ---- PERF_UPD ----
   {
     for (uint8_t idx = 0U; idx < UPD_COUNT; ++idx)
@@ -390,23 +451,23 @@ qs_report_session (uint8_t qs_prio, const char *reason)
                        u.latency_p99_us);
 
         char line[260];
-        snprintf (
-            line, sizeof (line),
-            "PERF_UPD kind=%s recv=%lu proc=%lu commit=%lu applied=%lu "
-            "coalesced=%lu "
-            "ifi_us n=%lu mean=%lu p99=%s max=%lu "
-            "latency_us n=%lu mean=%lu p99=%s max=%lu",
-            kUpdateShortName[idx], static_cast<unsigned long> (u.received),
-            static_cast<unsigned long> (u.processed),
-            static_cast<unsigned long> (u.committed),
-            static_cast<unsigned long> (u.applied),
-            static_cast<unsigned long> (u.coalesced),
-            static_cast<unsigned long> (u.ifi_n),
-            static_cast<unsigned long> (u.ifi_mean_us), ifi_p99,
-            static_cast<unsigned long> (u.ifi_max_us),
-            static_cast<unsigned long> (u.latency_n),
-            static_cast<unsigned long> (u.latency_mean_us), lat_p99,
-            static_cast<unsigned long> (u.latency_max_us));
+        snprintf (line, sizeof (line),
+                  "PERF_UPD kind=%s recv=%lu proc=%lu commit=%lu applied=%lu "
+                  "coalesced=%lu "
+                  "ifi_us n=%lu mean=%lu p99=%s max=%lu "
+                  "latency_us n=%lu mean=%lu p99=%s max=%lu",
+                  kUpdateShortName[idx],
+                  static_cast<unsigned long> (u.received),
+                  static_cast<unsigned long> (u.processed),
+                  static_cast<unsigned long> (u.committed),
+                  static_cast<unsigned long> (u.applied),
+                  static_cast<unsigned long> (u.coalesced),
+                  static_cast<unsigned long> (u.ifi_n),
+                  static_cast<unsigned long> (u.ifi_mean_us), ifi_p99,
+                  static_cast<unsigned long> (u.ifi_max_us),
+                  static_cast<unsigned long> (u.latency_n),
+                  static_cast<unsigned long> (u.latency_mean_us), lat_p99,
+                  static_cast<unsigned long> (u.latency_max_us));
         qs_user_comment (qs_prio, line);
       }
   }

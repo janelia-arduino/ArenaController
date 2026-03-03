@@ -1,6 +1,9 @@
 #include "fsp.hpp"
 
+#include <stdio.h>
+
 #include "commands.hpp"
+#include "mode_trace.hpp"
 #include "modes.hpp"
 #include "perf.hpp"
 
@@ -94,6 +97,147 @@ static QEvt const analog_input_initialized_evt
 //----------------------------------------------------------------------------
 // Local functions
 
+namespace
+{
+
+using AC::ModeTrace::EndReason;
+using AC::ModeTrace::ModeId;
+
+// Track the Arena's current *mode* for mode-centric performance sessions.
+// (This is intentionally separate from the QP state machine internals.)
+static ModeId s_mode = ModeId::AllOff;
+
+#if AC_ENABLE_PERF_PROBE
+// Hot-path gating for optional, higher-frequency perf probes.
+static bool s_perf_hotpath_enabled = false;
+#endif
+
+static inline uint16_t
+current_refresh_hz ()
+{
+  Display const *const display
+      = static_cast<Display const *const> (AO_Display);
+  uint32_t hz = (display != nullptr) ? display->refresh_rate_hz_ : 0U;
+  if (hz > 0xFFFFu)
+    {
+      hz = 0xFFFFu;
+    }
+  return static_cast<uint16_t> (hz);
+}
+
+static inline Perf::SessionMode
+perf_session_mode_for (ModeId m)
+{
+  switch (m)
+    {
+    case ModeId::PlayingPattern:
+    case ModeId::AnalogClosedLoop:
+      return Perf::SessionMode::Pattern;
+    case ModeId::StreamingFrame:
+      return Perf::SessionMode::Stream;
+    case ModeId::AllOn:
+    case ModeId::ShowingPatternFrame:
+    case ModeId::AllOff:
+    default:
+      return Perf::SessionMode::Other;
+    }
+}
+
+static void
+qs_mode_started (uint8_t prio, ModeId mode, uint16_t target_hz,
+                 uint32_t runtime_ms)
+{
+  char line[128];
+  if (mode == ModeId::AllOff)
+    {
+      (void)snprintf (line, sizeof (line), "mode=%s",
+                      AC::ModeTrace::mode_name (mode));
+    }
+  else
+    {
+      (void)snprintf (
+          line, sizeof (line), "mode=%s target_hz=%u runtime_ms=%lu",
+          AC::ModeTrace::mode_name (mode), static_cast<unsigned> (target_hz),
+          static_cast<unsigned long> (runtime_ms));
+    }
+
+  QS_BEGIN_ID (MODE_STARTED, prio)
+  QS_STR (line);
+  QS_END ()
+}
+
+static void
+qs_mode_ended (uint8_t prio, ModeId mode, EndReason reason, ModeId next)
+{
+  char line[128];
+  (void)snprintf (line, sizeof (line), "mode=%s reason=%s next=%s",
+                  AC::ModeTrace::mode_name (mode),
+                  AC::ModeTrace::reason_name (reason),
+                  AC::ModeTrace::mode_name (next));
+
+  QS_BEGIN_ID (MODE_ENDED, prio)
+  QS_STR (line);
+  QS_END ()
+}
+
+static void
+arena_mode_transition (ModeId next_mode, EndReason end_reason,
+                       char const *perf_reason_tag, uint32_t next_runtime_ms,
+                       bool restart_if_same)
+{
+  uint8_t const prio = AO_Arena->m_prio;
+  ModeId const prev_mode = s_mode;
+
+  bool const same_mode = (prev_mode == next_mode);
+  if (same_mode && !restart_if_same)
+    {
+      return;
+    }
+
+  // End previous mode session (if any)
+  if (prev_mode != ModeId::AllOff)
+    {
+      qs_mode_ended (prio, prev_mode, end_reason, next_mode);
+      Perf::qs_report_session (prio, perf_reason_tag);
+
+#if AC_ENABLE_PERF_PROBE
+      s_perf_hotpath_enabled = false;
+#endif
+    }
+
+  s_mode = next_mode;
+
+  // Start next mode session (if applicable)
+  if (next_mode != ModeId::AllOff)
+    {
+      uint16_t const hz = current_refresh_hz ();
+      Perf::begin_session (perf_session_mode_for (next_mode), hz,
+                           next_runtime_ms);
+
+#if AC_ENABLE_PERF_PROBE
+      s_perf_hotpath_enabled = true;
+#endif
+
+      qs_mode_started (prio, next_mode, hz, next_runtime_ms);
+    }
+  else
+    {
+      // Optional marker for the idle / stopped state.
+      qs_mode_started (prio, next_mode, 0U, 0U);
+    }
+}
+
+static inline void
+arena_post_analog_output_zero (QP::QActive *const src)
+{
+  UnsignedValueEvt *set_analog_output_ev
+      = Q_NEW (UnsignedValueEvt, SET_ANALOG_OUTPUT_SIG);
+  set_analog_output_ev->value = AC::constants::analog_output_zero;
+  AO_Arena->POST (set_analog_output_ev, src);
+}
+
+} // namespace
+
 void
 FSP::ArenaController_setup ()
 {
@@ -147,7 +291,9 @@ FSP::ArenaController_setup ()
   QS_USR_DICTIONARY (PERF_FRAME);
   QS_USR_DICTIONARY (PERF_STAGE);
   QS_USR_DICTIONARY (PERF_DROP);
+  QS_USR_DICTIONARY (MODE_STARTED);
   QS_USR_DICTIONARY (USER_COMMENT);
+  QS_USR_DICTIONARY (MODE_ENDED);
 
   // setup the QS filters...
   // QS_GLB_FILTER(QP::QS_SM_RECORDS); // state machine records ON
@@ -238,6 +384,8 @@ FSP::Arena_initializeAndSubscribe (QActive *const ao, QEvt const *e)
   BSP::initializeArena ();
 
   ao->subscribe (PLAY_PATTERN_SIG);
+  ao->subscribe (PATTERN_FINISHED_PLAYING_SIG);
+  ao->subscribe (PLAY_PATTERN_ERROR_SIG);
   ao->subscribe (FRAME_FILLED_SIG);
   ao->subscribe (SHOW_PATTERN_FRAME_SIG);
   ao->subscribe (ANALOG_CLOSED_LOOP_SIG);
@@ -331,31 +479,43 @@ FSP::Arena_fillFrameBufferWithDecodedFrame (QActive *const ao, QEvt const *e)
 void
 FSP::Arena_allOffTransition (QP::QActive *const ao, QP::QEvt const *e)
 {
-  UnsignedValueEvt *set_analog_output_ev
-      = Q_NEW (UnsignedValueEvt, SET_ANALOG_OUTPUT_SIG);
-  set_analog_output_ev->value = constants::analog_output_zero;
-  AO_Arena->POST (set_analog_output_ev, ao);
+  (void)e;
+  // Explicit stop command.
+  arena_mode_transition (ModeId::AllOff, EndReason::Stopped, "STOPPED", 0U,
+                         false);
+  arena_post_analog_output_zero (ao);
 }
 
 void
 FSP::Arena_allOnTransition (QP::QActive *const ao, QP::QEvt const *e)
 {
+  (void)e;
+  // Mode changes are considered interruptions of the previous mode.
+  arena_mode_transition (ModeId::AllOn, EndReason::Interrupted, "INTERRUPTED",
+                         0U, true);
   Arena_deactivateDisplay (ao, e);
-  UnsignedValueEvt *set_analog_output_ev
-      = Q_NEW (UnsignedValueEvt, SET_ANALOG_OUTPUT_SIG);
-  set_analog_output_ev->value = constants::analog_output_zero;
-  AO_Arena->POST (set_analog_output_ev, ao);
+  arena_post_analog_output_zero (ao);
 }
 
 void
 FSP::Arena_streamFrameTransition (QP::QActive *const ao, QP::QEvt const *e)
 {
+  (void)e;
+  arena_mode_transition (ModeId::StreamingFrame, EndReason::Interrupted,
+                         "INTERRUPTED", 0U, false);
   Arena_deactivateDisplay (ao, e);
 }
 
 void
 FSP::Arena_playPatternTransition (QP::QActive *const ao, QP::QEvt const *e)
 {
+  PlayPatternEvt const *ppev = static_cast<PlayPatternEvt const *> (e);
+  uint32_t const runtime_ms
+      = static_cast<uint32_t> (ppev->runtime_duration)
+        * constants::milliseconds_per_runtime_duration_unit;
+
+  arena_mode_transition (ModeId::PlayingPattern, EndReason::Interrupted,
+                         "INTERRUPTED", runtime_ms, true);
   Arena_deactivateDisplay (ao, e);
 }
 
@@ -369,6 +529,9 @@ void
 FSP::Arena_showPatternFrameTransition (QP::QActive *const ao,
                                        QP::QEvt const *e)
 {
+  (void)e;
+  arena_mode_transition (ModeId::ShowingPatternFrame, EndReason::Interrupted,
+                         "INTERRUPTED", 0U, true);
   Arena_deactivateDisplay (ao, e);
 }
 
@@ -382,7 +545,34 @@ void
 FSP::Arena_analogClosedLoopTransition (QP::QActive *const ao,
                                        QP::QEvt const *e)
 {
+  AnalogClosedLoopEvt const *aclev
+      = static_cast<AnalogClosedLoopEvt const *> (e);
+  uint32_t const runtime_ms
+      = static_cast<uint32_t> (aclev->runtime_duration)
+        * constants::milliseconds_per_runtime_duration_unit;
+
+  arena_mode_transition (ModeId::AnalogClosedLoop, EndReason::Interrupted,
+                         "INTERRUPTED", runtime_ms, true);
   Arena_deactivateDisplay (ao, e);
+}
+
+void
+FSP::Arena_patternFinishedTransition (QP::QActive *const ao, QP::QEvt const *e)
+{
+  (void)e;
+  arena_mode_transition (ModeId::AllOff, EndReason::Completed,
+                         "PATTERN_FINISHED", 0U, false);
+  arena_post_analog_output_zero (ao);
+}
+
+void
+FSP::Arena_playPatternErrorTransition (QP::QActive *const ao,
+                                       QP::QEvt const *e)
+{
+  (void)e;
+  arena_mode_transition (ModeId::AllOff, EndReason::Error,
+                         "PLAY_PATTERN_ERROR", 0U, false);
+  arena_post_analog_output_zero (ao);
 }
 
 void
@@ -984,7 +1174,20 @@ FSP::EthernetCommandInterface_pollEthernet (QActive *const ao, QEvt const *e)
   eci->ethernet_time_evt_.armX (
       constants::ticks_per_second
       / constants::ethernet_timer_frequency_low_speed_hz);
-  BSP::pollEthernet ();
+
+#if AC_ENABLE_PERF_PROBE
+  if (s_perf_hotpath_enabled)
+    {
+      uint32_t const t0 = micros ();
+      BSP::pollEthernet ();
+      uint32_t const dt = micros () - t0;
+      Perf::on_net_poll (dt);
+    }
+  else
+#endif
+    {
+      BSP::pollEthernet ();
+    }
 }
 
 void
@@ -996,7 +1199,20 @@ FSP::EthernetCommandInterface_pollEthernetHighSpeed (QActive *const ao,
   eci->ethernet_time_evt_.armX (
       constants::ticks_per_second
       / constants::ethernet_timer_frequency_high_speed_hz);
-  BSP::pollEthernet ();
+
+#if AC_ENABLE_PERF_PROBE
+  if (s_perf_hotpath_enabled)
+    {
+      uint32_t const t0 = micros ();
+      BSP::pollEthernet ();
+      uint32_t const dt = micros () - t0;
+      Perf::on_net_poll (dt);
+    }
+  else
+#endif
+    {
+      BSP::pollEthernet ();
+    }
 }
 
 void
@@ -1082,9 +1298,25 @@ FSP::EthernetCommandInterface_processBinaryCommand (QActive *const ao,
 {
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
+
+#if AC_ENABLE_PERF_PROBE
+  bool const measure = s_perf_hotpath_enabled;
+  uint32_t const t0 = measure ? micros () : 0U;
+#endif
+
   eci->binary_response_byte_count_ = FSP::processBinaryCommand (
       eci->binary_command_, eci->binary_command_byte_count_,
       eci->binary_response_);
+
+#if AC_ENABLE_PERF_PROBE
+  if (measure)
+    {
+      uint32_t const dt = micros () - t0;
+      Perf::on_net_cmd (dt);
+      Perf::on_net_rx_bytes (eci->binary_command_byte_count_);
+    }
+#endif
+
   QF::PUBLISH (&constants::command_processed_evt, ao);
 }
 
@@ -1096,6 +1328,13 @@ FSP::EthernetCommandInterface_writeBinaryResponse (QActive *const ao,
       = static_cast<EthernetCommandInterface *const> (ao);
   BSP::writeEthernetBinaryResponse (eci->connection_, eci->binary_response_,
                                     eci->binary_response_byte_count_);
+
+#if AC_ENABLE_PERF_PROBE
+  if (s_perf_hotpath_enabled)
+    {
+      Perf::on_net_tx_bytes (eci->binary_response_byte_count_);
+    }
+#endif
 }
 
 void
@@ -1125,12 +1364,28 @@ FSP::EthernetCommandInterface_processStreamCommand (QActive *const ao,
 {
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
+
+#if AC_ENABLE_PERF_PROBE
+  bool const measure = s_perf_hotpath_enabled;
+  uint32_t const t0 = measure ? micros () : 0U;
+#endif
+
   eci->binary_response_byte_count_ = 3;
   eci->binary_response_[0] = 2;
   eci->binary_response_[1] = 0;
   eci->binary_response_[2] = STREAM_FRAME_CMD;
   FSP::processStreamCommand (eci->binary_command_,
                              eci->binary_command_byte_count_);
+
+#if AC_ENABLE_PERF_PROBE
+  if (measure)
+    {
+      uint32_t const dt = micros () - t0;
+      Perf::on_net_cmd (dt);
+      Perf::on_net_rx_bytes (eci->binary_command_byte_count_);
+    }
+#endif
+
   QF::PUBLISH (&constants::command_processed_evt, ao);
 }
 
@@ -1180,6 +1435,13 @@ FSP::EthernetCommandInterface_writePatternFinishedResponse (QActive *const ao,
 
   BSP::writeEthernetBinaryResponse (eci->connection_, response,
                                     response_byte_count);
+
+#if AC_ENABLE_PERF_PROBE
+  if (s_perf_hotpath_enabled)
+    {
+      Perf::on_net_tx_bytes (response_byte_count);
+    }
+#endif
   QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
   QS_STR ("wrote pattern finished response over ethernet");
   QS_END ()
@@ -1200,6 +1462,13 @@ FSP::EthernetCommandInterface_writePatternErrorResponse (QActive *const ao,
 
   BSP::writeEthernetBinaryResponse (eci->connection_, response,
                                     response_byte_count);
+
+#if AC_ENABLE_PERF_PROBE
+  if (s_perf_hotpath_enabled)
+    {
+      Perf::on_net_tx_bytes (response_byte_count);
+    }
+#endif
   QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
   QS_STR ("wrote pattern error response over ethernet");
   QS_END ()
@@ -1542,8 +1811,9 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
       QS_BEGIN_ID (USER_COMMENT, ao->m_prio)
       QS_STR ("invalid frame rate");
       QS_END ()
-      AO_Arena->POST (&constants::all_off_evt, ao);
-      AO_Arena->POST (&constants::all_off_evt, ao);
+      // Treat invalid parameters as a pattern error; the Arena will exit
+      // the active mode and report performance.
+      QF::PUBLISH (&constants::play_pattern_error_evt, ao);
       return;
     }
   else if (ppev->frame_rate < 0)
@@ -1574,13 +1844,6 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
   // QS_U16(5, gain);
   // QS_U32(8, pattern->runtime_duration_ms_);
   // QS_END()
-#if defined(AC_ENABLE_PERF_PROBE)
-  // Start a fresh measurement session for this pattern run.
-  Display *const display = static_cast<Display *const> (AO_Display);
-  Perf::begin_session (Perf::SessionMode::Pattern,
-                       static_cast<uint16_t> (display->refresh_rate_hz_),
-                       pattern->runtime_duration_ms_);
-#endif
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_playing_pattern_evt, ao);
 }
@@ -1665,12 +1928,9 @@ FSP::Pattern_endRuntimeDuration (QActive *const ao, QEvt const *e)
   // Stop the periodic runtime timer now to prevent re-entry.
   pattern->runtime_duration_time_evt_.disarm ();
 
-#if defined(AC_ENABLE_PERF_PROBE)
-  Perf::qs_report_session (ao->m_prio, "PATTERN_FINISHED");
-#endif
-
+  // End-of-runtime is expressed as a published signal; the Arena owns
+  // the mode/session boundary and will transition to ALL_OFF.
   QF::PUBLISH (&constants::pattern_finished_playing_evt, ao);
-  AO_Arena->POST (&constants::all_off_evt, ao);
 }
 
 void
@@ -2142,7 +2402,9 @@ FSP::Card_scanDirectory (QHsm *const hsm, QEvt const *e)
 void
 FSP::Card_postAllOff (QHsm *const hsm, QEvt const *e)
 {
-  AO_Arena->POST (&constants::all_off_evt, hsm);
+  (void)e;
+  // Card-level failures should be treated as a mode-ending error.
+  QF::PUBLISH (&constants::play_pattern_error_evt, hsm);
 }
 
 void
@@ -2638,7 +2900,8 @@ FSP::processStreamCommand (uint8_t const *stream_buffer,
       QS_U32 (8, BSP::getByteCountPerPatternFrameGrayscale ());
       QS_U32 (8, BSP::getByteCountPerPatternFrameBinary ());
       QS_END ()
-      AO_Arena->POST (&constants::all_off_evt, &constants::fsp_id);
+      // Treat malformed stream frames as an error that ends the active mode.
+      QF::PUBLISH (&constants::play_pattern_error_evt, &constants::fsp_id);
       return;
     }
 

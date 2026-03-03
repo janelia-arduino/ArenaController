@@ -30,7 +30,10 @@
   X (spi_frame, 1)                                                            \
   X (ovh_frame, 0)                                                            \
   X (panelset, 1)                                                             \
-  X (fetch_scope, 1)
+  X (fetch_scope, 1)                                                          \
+  /* Ethernet / networking */                                                 \
+  X (net_poll, 1)                                                             \
+  X (net_cmd, 1)
 
 // -----------------------------
 // CPU stages
@@ -58,5 +61,5 @@
 //   * "SPF" corresponds to SET_FRAME_POSITION_CMD / UPDATE_PATTERN_FRAME.
 //   * "STREAM" corresponds to streaming frame packets.
 #define AC_PERF_UPDATES(X)                                                    \
-  X (UPD_SHOW_PATTERN_FRAME, "SPF")                                          \
+  X (UPD_SHOW_PATTERN_FRAME, "SPF")                                           \
   X (UPD_STREAM_FRAME, "STREAM")

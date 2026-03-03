@@ -54,6 +54,10 @@ struct FSP
                                          QP::QEvt const *e);
   static void Arena_analogClosedLoopTransition (QP::QActive *const ao,
                                                 QP::QEvt const *e);
+  static void Arena_patternFinishedTransition (QP::QActive *const ao,
+                                               QP::QEvt const *e);
+  static void Arena_playPatternErrorTransition (QP::QActive *const ao,
+                                                QP::QEvt const *e);
   static void Arena_beginAnalogClosedLoop (QP::QActive *const ao,
                                            QP::QEvt const *e);
   static void Arena_endAnalogClosedLoop (QP::QActive *const ao,

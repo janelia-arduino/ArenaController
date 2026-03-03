@@ -14,16 +14,16 @@
 //       - Time source and optional scope pins are provided by a tiny "port"
 //         implementation (see perf/perf_port.hpp).
 //       - Core streaming stats primitives live in perf/perf_core.hpp.
-//   * QS output emitted only at session end (e.g., pattern finished), not
-//     per-frame.
+//   * QS output emitted only at session end (e.g., mode end), not per-frame.
 //
 // Integration points (called from fsp.cpp/QM actions):
-//   - begin_session(...) at pattern start
+//   - begin_session(...) at mode start
 //   - on_refresh_isr_post(...) in refresh ISR wrapper
 //   - on_frame_start/on_frame_end around frame transfer
 //   - on_panelset_start/on_panelset_end around panel-set transfers
 //   - stage_begin/stage_end around SD read / decode / fill, etc.
-//   - qs_report_session(...) when pattern completes
+//   - qs_report_session(...) when the active mode ends (stopped/completed/
+//     error/interrupted)
 
 namespace Perf
 {
@@ -173,6 +173,38 @@ struct Snapshot
   uint32_t fetch_max_us;
   uint64_t fetch_sum_us;
 
+  // Ethernet / networking (measured within the current session)
+  uint32_t net_poll_n;
+  uint32_t net_poll_mean_us;
+  uint32_t net_poll_p99_us;
+  uint32_t net_poll_max_us;
+  uint64_t net_poll_sum_us;
+
+  uint32_t net_cmd_n;
+  uint32_t net_cmd_mean_us;
+  uint32_t net_cmd_p99_us;
+  uint32_t net_cmd_max_us;
+  uint64_t net_cmd_sum_us;
+
+  uint64_t net_rx_bytes;
+  uint64_t net_tx_bytes;
+
+  // Ethernet / networking (measured within the current session)
+  uint32_t net_poll_n;
+  uint32_t net_poll_mean_us;
+  uint32_t net_poll_p99_us;
+  uint32_t net_poll_max_us;
+  uint64_t net_poll_sum_us;
+
+  uint32_t net_cmd_n;
+  uint32_t net_cmd_mean_us;
+  uint32_t net_cmd_p99_us;
+  uint32_t net_cmd_max_us;
+  uint64_t net_cmd_sum_us;
+
+  uint64_t net_rx_bytes;
+  uint64_t net_tx_bytes;
+
   // Stages (SD/Decode/Fill/...)
   uint32_t stage_n[STAGE_COUNT];
   uint32_t stage_mean_us[STAGE_COUNT];
@@ -205,7 +237,6 @@ void reset_window ();
 // Start a new measurement session (resets window + sets metadata).
 void begin_session (SessionMode mode, uint16_t target_hz, uint32_t runtime_ms);
 
-
 // Optional explicit end; currently just marks end time.
 void end_session ();
 
@@ -228,6 +259,12 @@ on_defer_attempt (bool deferred_ok)
 // Called when a frame transfer begins/ends.
 void on_frame_start (uint16_t refresh_rate_hz);
 void on_frame_end ();
+
+// Ethernet / networking probes
+void on_net_poll (uint32_t poll_us);
+void on_net_cmd (uint32_t cmd_us);
+void on_net_rx_bytes (uint32_t bytes);
+void on_net_tx_bytes (uint32_t bytes);
 
 // Called around each panel-set transfer.
 void on_panelset_start ();
@@ -394,6 +431,22 @@ on_frame_start (uint16_t)
 }
 static inline void
 on_frame_end ()
+{
+}
+static inline void
+on_net_poll (uint32_t)
+{
+}
+static inline void
+on_net_cmd (uint32_t)
+{
+}
+static inline void
+on_net_rx_bytes (uint32_t)
+{
+}
+static inline void
+on_net_tx_bytes (uint32_t)
 {
 }
 static inline void

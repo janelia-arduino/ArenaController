@@ -156,6 +156,20 @@ Q_STATE_DEF (Arena, ArenaOn)
         status_ = tran (&PlayingPattern);
         break;
       }
+    //${AOs::Arena::SM::ArenaOn::PATTERN_FINISHED_PLAYING}
+    case PATTERN_FINISHED_PLAYING_SIG:
+      {
+        FSP::Arena_patternFinishedTransition (this, e);
+        status_ = tran (&AllOff);
+        break;
+      }
+    //${AOs::Arena::SM::ArenaOn::PLAY_PATTERN_ERROR}
+    case PLAY_PATTERN_ERROR_SIG:
+      {
+        FSP::Arena_playPatternErrorTransition (this, e);
+        status_ = tran (&AllOff);
+        break;
+      }
     //${AOs::Arena::SM::ArenaOn::INITIALIZE_ANALOG_TIMEOUT}
     case INITIALIZE_ANALOG_TIMEOUT_SIG:
       {
