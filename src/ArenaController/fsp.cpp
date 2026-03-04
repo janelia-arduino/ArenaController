@@ -145,8 +145,8 @@ struct TrialRspCtx
   bool pending;
 };
 
-static TrialRspCtx s_trial_rsp = { TrialRspOrigin::None, nullptr, { 0 }, 0U, 0U,
-                                  ModeId::AllOff, false };
+static TrialRspCtx s_trial_rsp
+    = { TrialRspOrigin::None, nullptr, { 0 }, 0U, 0U, ModeId::AllOff, false };
 
 static inline void
 trial_rsp_begin (uint8_t qs_prio, TrialRspOrigin origin, void *eth_connection,
@@ -175,8 +175,7 @@ trial_rsp_begin (uint8_t qs_prio, TrialRspOrigin origin, void *eth_connection,
 #if AC_DEBUG_TRIAL_OWNER
   {
     char line[128];
-    (void)snprintf (line, sizeof (line),
-                    "trial_owner=%s mode=%s req_ms=%lu",
+    (void)snprintf (line, sizeof (line), "trial_owner=%s mode=%s req_ms=%lu",
                     s_trial_rsp.eth_peer, AC::ModeTrace::mode_name (mode),
                     static_cast<unsigned long> (runtime_ms));
     QS_BEGIN_ID (USER_COMMENT, qs_prio)
@@ -227,7 +226,8 @@ trial_rsp_send_if_pending (uint8_t qs_prio, ModeId ended_mode,
                             "Sequence completed in ");
         char runtime_duration_str[constants::char_count_runtime_duration_str];
         itoa (s_trial_rsp.runtime_ms, runtime_duration_str, 10);
-        FSP::appendMessage (response, response_byte_count, runtime_duration_str);
+        FSP::appendMessage (response, response_byte_count,
+                            runtime_duration_str);
         FSP::appendMessage (response, response_byte_count, " ms");
         break;
       }
@@ -280,12 +280,11 @@ trial_rsp_send_if_pending (uint8_t qs_prio, ModeId ended_mode,
 #if AC_DEBUG_TRIAL_OWNER
   {
     char line[160];
-    (void)snprintf (line, sizeof (line),
-                    "trial_owner=%s mode=%s reason=%s elapsed_ms=%lu",
-                    s_trial_rsp.eth_peer,
-                    AC::ModeTrace::mode_name (ended_mode),
-                    AC::ModeTrace::reason_name (reason),
-                    static_cast<unsigned long> (elapsed_ms));
+    (void)snprintf (
+        line, sizeof (line), "trial_owner=%s mode=%s reason=%s elapsed_ms=%lu",
+        s_trial_rsp.eth_peer, AC::ModeTrace::mode_name (ended_mode),
+        AC::ModeTrace::reason_name (reason),
+        static_cast<unsigned long> (elapsed_ms));
     QS_BEGIN_ID (USER_COMMENT, qs_prio)
     QS_STR (line);
     QS_END ()
@@ -362,7 +361,6 @@ perf_session_mode_for (ModeId m)
     }
 }
 
-
 static inline const char *
 eth_backend_name ()
 {
@@ -387,10 +385,11 @@ qs_mode_started (uint8_t prio, ModeId mode, uint16_t target_hz,
     }
   else
     {
-      (void)snprintf (
-          line, sizeof (line), "mode=%s net=%s target_hz=%u runtime_ms=%lu",
-          AC::ModeTrace::mode_name (mode), eth_backend_name (), static_cast<unsigned> (target_hz),
-          static_cast<unsigned long> (runtime_ms));
+      (void)snprintf (line, sizeof (line),
+                      "mode=%s net=%s target_hz=%u runtime_ms=%lu",
+                      AC::ModeTrace::mode_name (mode), eth_backend_name (),
+                      static_cast<unsigned> (target_hz),
+                      static_cast<unsigned long> (runtime_ms));
     }
 
   QS_BEGIN_ID (MODE_STARTED, prio)
@@ -437,8 +436,8 @@ arena_mode_transition (ModeId next_mode, EndReason end_reason,
       trial_rsp_send_if_pending (prio, prev_mode, end_reason);
 
       // Ensure QS output (MODE_ENDED + PERF_*) is pushed promptly; this helps
-      // host-side test harnesses that expect the report immediately at the mode
-      // boundary.
+      // host-side test harnesses that expect the report immediately at the
+      // mode boundary.
       qs_flush_now ();
 
 #if AC_ENABLE_PERF_PROBE
@@ -722,8 +721,7 @@ FSP::Arena_allOffTransition (QP::QActive *const ao, QP::QEvt const *e)
 {
   (void)e;
   // Explicit stop command.
-  arena_mode_transition (ModeId::AllOff, EndReason::Stopped, 0U,
-                         false);
+  arena_mode_transition (ModeId::AllOff, EndReason::Stopped, 0U, false);
   arena_post_analog_output_zero (ao);
 }
 
@@ -732,8 +730,7 @@ FSP::Arena_allOnTransition (QP::QActive *const ao, QP::QEvt const *e)
 {
   (void)e;
   // Mode changes are considered interruptions of the previous mode.
-  arena_mode_transition (ModeId::AllOn, EndReason::Interrupted,
-                         0U, true);
+  arena_mode_transition (ModeId::AllOn, EndReason::Interrupted, 0U, true);
   Arena_deactivateDisplay (ao, e);
   arena_post_analog_output_zero (ao);
 }
@@ -742,7 +739,8 @@ void
 FSP::Arena_streamFrameTransition (QP::QActive *const ao, QP::QEvt const *e)
 {
   (void)e;
-  arena_mode_transition (ModeId::StreamingFrame, EndReason::Interrupted, 0U, false);
+  arena_mode_transition (ModeId::StreamingFrame, EndReason::Interrupted, 0U,
+                         false);
   Arena_deactivateDisplay (ao, e);
 }
 
@@ -754,7 +752,8 @@ FSP::Arena_playPatternTransition (QP::QActive *const ao, QP::QEvt const *e)
       = static_cast<uint32_t> (ppev->runtime_duration)
         * constants::milliseconds_per_runtime_duration_unit;
 
-  arena_mode_transition (ModeId::PlayingPattern, EndReason::Interrupted, runtime_ms, true);
+  arena_mode_transition (ModeId::PlayingPattern, EndReason::Interrupted,
+                         runtime_ms, true);
   Arena_deactivateDisplay (ao, e);
 }
 
@@ -769,7 +768,8 @@ FSP::Arena_showPatternFrameTransition (QP::QActive *const ao,
                                        QP::QEvt const *e)
 {
   (void)e;
-  arena_mode_transition (ModeId::ShowingPatternFrame, EndReason::Interrupted, 0U, true);
+  arena_mode_transition (ModeId::ShowingPatternFrame, EndReason::Interrupted,
+                         0U, true);
   Arena_deactivateDisplay (ao, e);
 }
 
@@ -789,7 +789,8 @@ FSP::Arena_analogClosedLoopTransition (QP::QActive *const ao,
       = static_cast<uint32_t> (aclev->runtime_duration)
         * constants::milliseconds_per_runtime_duration_unit;
 
-  arena_mode_transition (ModeId::AnalogClosedLoop, EndReason::Interrupted, runtime_ms, true);
+  arena_mode_transition (ModeId::AnalogClosedLoop, EndReason::Interrupted,
+                         runtime_ms, true);
   Arena_deactivateDisplay (ao, e);
 }
 
@@ -1266,8 +1267,7 @@ FSP::SerialCommandInterface_storePlayPatternParameters (QActive *const ao,
         * constants::milliseconds_per_runtime_duration_unit;
 
   trial_rsp_begin (ao->m_prio, TrialRspOrigin::Serial, nullptr,
-                   ModeId::PlayingPattern,
-                   sci->runtime_duration_ms_);
+                   ModeId::PlayingPattern, sci->runtime_duration_ms_);
 }
 
 void
@@ -1284,8 +1284,7 @@ FSP::SerialCommandInterface_storeAnalogClosedLoopParameters (QActive *const ao,
         * constants::milliseconds_per_runtime_duration_unit;
 
   trial_rsp_begin (ao->m_prio, TrialRspOrigin::Serial, nullptr,
-                   ModeId::AnalogClosedLoop,
-                   sci->runtime_duration_ms_);
+                   ModeId::AnalogClosedLoop, sci->runtime_duration_ms_);
 }
 
 void
@@ -1629,9 +1628,9 @@ FSP::EthernetCommandInterface_storePlayPatternParameters (QActive *const ao,
         * constants::milliseconds_per_runtime_duration_unit;
 
   // Remember which ethernet connection initiated this TRIAL_PARAMS session so
-  // we can reliably respond when the mode ends (even if other commands arrive).
-  trial_rsp_begin (ao->m_prio, TrialRspOrigin::Ethernet,
-                   eci->connection_,
+  // we can reliably respond when the mode ends (even if other commands
+  // arrive).
+  trial_rsp_begin (ao->m_prio, TrialRspOrigin::Ethernet, eci->connection_,
                    ModeId::PlayingPattern, eci->runtime_duration_ms_);
 }
 
@@ -1648,8 +1647,7 @@ FSP::EthernetCommandInterface_storeAnalogClosedLoopParameters (
       = aclev->runtime_duration
         * constants::milliseconds_per_runtime_duration_unit;
 
-  trial_rsp_begin (ao->m_prio, TrialRspOrigin::Ethernet,
-                   eci->connection_,
+  trial_rsp_begin (ao->m_prio, TrialRspOrigin::Ethernet, eci->connection_,
                    ModeId::AnalogClosedLoop, eci->runtime_duration_ms_);
 }
 
@@ -2604,8 +2602,8 @@ FSP::Card_postAllOff (QHsm *const hsm, QEvt const *e)
   (void)hsm;
   (void)e;
   // Card-level failures should be treated as a mode-ending error.
-  // NOTE: QF::PUBLISH expects a sender with getPrio() (e.g. QActive or QSpyId).
-  // Card is a QHsm, so use the owning Pattern AO as the sender.
+  // NOTE: QF::PUBLISH expects a sender with getPrio() (e.g. QActive or
+  // QSpyId). Card is a QHsm, so use the owning Pattern AO as the sender.
   QF::PUBLISH (&constants::play_pattern_error_evt, AO_Pattern);
 }
 

@@ -122,7 +122,6 @@ static char ethernet_ip_address[constants::ethernet_ip_address_length_max]
     = "";
 static bool ip_announced = false;
 
-
 #if (AC_ETH_BACKEND == 1)
 // QNEthernet-based TCP server + per-connection RX buffers. We keep a small
 // fixed connection table so we can associate late responses (e.g. trial end
@@ -143,7 +142,6 @@ static qn::EthernetServer eth_server (constants::ethernet_server_port);
 static bool eth_server_started = false;
 static QnEthConn eth_conns[AC_ETH_MAX_CONNECTIONS];
 #endif
-
 
 #if defined(AC_ENABLE_PERF_PROBE)
 // Performance probe pin state
@@ -558,7 +556,7 @@ BSP::writeEthernetBinaryResponse (
 
 void
 BSP::formatEthernetConnectionPeer (void *const connection, char *dst,
-                                  size_t dst_len)
+                                   size_t dst_len)
 {
   if (dst == nullptr || dst_len == 0U)
     {
@@ -661,7 +659,8 @@ void
 BSP::pollEthernet ()
 {
   // Keep the Ethernet stack progressing. On Teensy, QNEthernet also hooks
-  // yield(), but calling loop() here makes the cost visible to PERF_NET poll_us.
+  // yield(), but calling loop() here makes the cost visible to PERF_NET
+  // poll_us.
   qn::Ethernet.loop ();
 
   // IP announce (once).
@@ -737,8 +736,8 @@ BSP::pollEthernet ()
         }
 
       const size_t to_read = (static_cast<size_t> (avail) < remaining)
-                               ? static_cast<size_t> (avail)
-                               : remaining;
+                                 ? static_cast<size_t> (avail)
+                                 : remaining;
       const int n = conn.client.read (conn.rx_buf + conn.rx_len, to_read);
       if (n > 0)
         {
@@ -760,7 +759,7 @@ BSP::pollEthernet ()
                 {
                   const uint8_t *p = static_cast<uint8_t *> (term);
                   conn.rx_expected_len
-                    = static_cast<size_t> (p - conn.rx_buf) + 1U;
+                      = static_cast<size_t> (p - conn.rx_buf) + 1U;
                 }
             }
           else if (b0 == 0x32U)
@@ -769,14 +768,11 @@ BSP::pollEthernet ()
               // followed by the fixed header and frame bytes.
               if (conn.rx_len >= 3U)
                 {
-                  const uint16_t data_len
-                    = static_cast<uint16_t> (conn.rx_buf[1]
-                                             | (static_cast<uint16_t> (
-                                                  conn.rx_buf[2])
-                                                << 8));
-                  conn.rx_expected_len
-                    = static_cast<size_t> (data_len)
-                      + constants::stream_header_byte_count;
+                  const uint16_t data_len = static_cast<uint16_t> (
+                      conn.rx_buf[1]
+                      | (static_cast<uint16_t> (conn.rx_buf[2]) << 8));
+                  conn.rx_expected_len = static_cast<size_t> (data_len)
+                                         + constants::stream_header_byte_count;
                 }
             }
           else
@@ -804,7 +800,7 @@ BSP::pollEthernet ()
           cev->connection = &conn;
           cev->binary_command = conn.rx_buf;
           cev->binary_command_byte_count
-            = static_cast<uint16_t> (conn.rx_expected_len);
+              = static_cast<uint16_t> (conn.rx_expected_len);
           QF::PUBLISH (cev, &constants::bsp_id);
 
           conn.cmd_inflight = true;
@@ -831,7 +827,7 @@ BSP::createEthernetServerConnection ()
 
 void
 BSP::writeEthernetBinaryResponse (void *connection, uint8_t response[],
-                                 uint8_t response_byte_count)
+                                  uint8_t response_byte_count)
 {
   if (connection == nullptr)
     {
@@ -839,7 +835,7 @@ BSP::writeEthernetBinaryResponse (void *connection, uint8_t response[],
     }
 
   bsp_global::QnEthConn *conn
-    = static_cast<bsp_global::QnEthConn *> (connection);
+      = static_cast<bsp_global::QnEthConn *> (connection);
   if ((!conn->in_use) || (!conn->client))
     {
       return;
@@ -854,8 +850,7 @@ BSP::writeEthernetBinaryResponse (void *connection, uint8_t response[],
 }
 
 void
-BSP::formatEthernetConnectionPeer (void *connection, char *dst,
-                                  size_t dst_len)
+BSP::formatEthernetConnectionPeer (void *connection, char *dst, size_t dst_len)
 {
   if ((connection == nullptr) || (dst == nullptr) || (dst_len == 0U))
     {
@@ -863,7 +858,7 @@ BSP::formatEthernetConnectionPeer (void *connection, char *dst,
     }
 
   bsp_global::QnEthConn *conn
-    = static_cast<bsp_global::QnEthConn *> (connection);
+      = static_cast<bsp_global::QnEthConn *> (connection);
   if (!conn->in_use)
     {
       snprintf (dst, dst_len, "none");

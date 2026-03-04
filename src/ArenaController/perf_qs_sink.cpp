@@ -112,7 +112,6 @@ fmt_pct_x100 (char *dst, size_t dst_len, uint32_t pct_x100_val)
             static_cast<unsigned long> (pct_x100_val % 100U));
 }
 
-
 static inline void
 fmt_x100 (char *dst, size_t dst_len, uint64_t val_x100)
 {
@@ -426,10 +425,10 @@ qs_report_session (uint8_t qs_prio, const char *reason)
         if (s.window_us != 0ULL)
           {
             // (bytes / s) / 1024 * 100
-            rx_kBps_x100 = (s.net_rx_bytes * 100000000ULL) / s.window_us
-                         / 1024ULL;
-            tx_kBps_x100 = (s.net_tx_bytes * 100000000ULL) / s.window_us
-                         / 1024ULL;
+            rx_kBps_x100
+                = (s.net_rx_bytes * 100000000ULL) / s.window_us / 1024ULL;
+            tx_kBps_x100
+                = (s.net_tx_bytes * 100000000ULL) / s.window_us / 1024ULL;
           }
 
         char rx_kBps[24];
@@ -453,8 +452,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
                   static_cast<unsigned long long> (s.net_rx_bytes),
                   static_cast<unsigned long long> (s.net_tx_bytes),
                   static_cast<unsigned long> (rx_kB),
-                  static_cast<unsigned long> (tx_kB),
-                  rx_kBps, tx_kBps);
+                  static_cast<unsigned long> (tx_kB), rx_kBps, tx_kBps);
 
         qs_user_comment (qs_prio, line);
       }
