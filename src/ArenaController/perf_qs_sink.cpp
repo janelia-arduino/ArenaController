@@ -432,8 +432,8 @@ qs_report_session (uint8_t qs_prio, const char *reason)
                          / 1024ULL;
           }
 
-        char rx_kBps[16];
-        char tx_kBps[16];
+        char rx_kBps[24];
+        char tx_kBps[24];
         fmt_x100 (rx_kBps, sizeof (rx_kBps), rx_kBps_x100);
         fmt_x100 (tx_kBps, sizeof (tx_kBps), tx_kBps_x100);
 
