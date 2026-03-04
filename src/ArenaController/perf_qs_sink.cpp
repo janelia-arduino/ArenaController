@@ -103,6 +103,24 @@ fmt_p99ish (char *dst, size_t dst_len, bool p99_ready, uint32_t p99_val,
   snprintf (dst, dst_len, "%lu", static_cast<unsigned long> (v));
 }
 
+static inline void
+fmt_pct_x100 (char *dst, size_t dst_len, uint32_t pct_x100_val)
+{
+  // pct_x100_val is percent * 100 (e.g. 216 -> 2.16%).
+  snprintf (dst, dst_len, "%lu.%02lu%%",
+            static_cast<unsigned long> (pct_x100_val / 100U),
+            static_cast<unsigned long> (pct_x100_val % 100U));
+}
+
+
+static inline void
+fmt_x100 (char *dst, size_t dst_len, uint64_t val_x100)
+{
+  snprintf (dst, dst_len, "%llu.%02llu",
+            static_cast<unsigned long long> (val_x100 / 100ULL),
+            static_cast<unsigned long long> (val_x100 % 100ULL));
+}
+
 void
 format_summary (char *out, size_t out_len)
 {
@@ -389,9 +407,10 @@ qs_report_session (uint8_t qs_prio, const char *reason)
             = pct_x100 (s.net_poll_sum_us, s.window_us);
         uint32_t const cmd_duty_x100
             = pct_x100 (s.net_cmd_sum_us, s.window_us);
-
-        char poll_duty[12];
-        char cmd_duty[12];
+        // Use slightly larger buffers to avoid -Wformat-truncation
+        // when formatting percent values (pct_x100) as "X.YY%".
+        char poll_duty[16];
+        char cmd_duty[16];
         fmt_pct_x100 (poll_duty, sizeof (poll_duty), poll_duty_x100);
         fmt_pct_x100 (cmd_duty, sizeof (cmd_duty), cmd_duty_x100);
 
@@ -400,32 +419,42 @@ qs_report_session (uint8_t qs_prio, const char *reason)
         uint32_t const tx_kB
             = static_cast<uint32_t> (s.net_tx_bytes / 1024ULL);
 
-        uint32_t rx_kBps = 0U;
-        uint32_t tx_kBps = 0U;
+        // For low-traffic sessions, integer kBps often truncates to 0.
+        // Report kBps as fixed-point with 2 decimals, and include raw bytes.
+        uint64_t rx_kBps_x100 = 0ULL;
+        uint64_t tx_kBps_x100 = 0ULL;
         if (s.window_us != 0ULL)
           {
-            rx_kBps = static_cast<uint32_t> ((s.net_rx_bytes * 1000000ULL)
-                                             / s.window_us / 1024ULL);
-            tx_kBps = static_cast<uint32_t> ((s.net_tx_bytes * 1000000ULL)
-                                             / s.window_us / 1024ULL);
+            // (bytes / s) / 1024 * 100
+            rx_kBps_x100 = (s.net_rx_bytes * 100000000ULL) / s.window_us
+                         / 1024ULL;
+            tx_kBps_x100 = (s.net_tx_bytes * 100000000ULL) / s.window_us
+                         / 1024ULL;
           }
 
-        char line[260];
+        char rx_kBps[16];
+        char tx_kBps[16];
+        fmt_x100 (rx_kBps, sizeof (rx_kBps), rx_kBps_x100);
+        fmt_x100 (tx_kBps, sizeof (tx_kBps), tx_kBps_x100);
+
+        char line[320];
         snprintf (line, sizeof (line),
                   "PERF_NET "
                   "poll_us n=%lu mean=%lu p99=%s max=%lu duty=%s "
                   "cmd_us n=%lu mean=%lu p99=%s max=%lu duty=%s "
-                  "rx_kB=%lu tx_kB=%lu rx_kBps=%lu tx_kBps=%lu",
+                  "rx_B=%llu tx_B=%llu rx_kB=%lu tx_kB=%lu "
+                  "rx_kBps=%s tx_kBps=%s",
                   static_cast<unsigned long> (s.net_poll_n),
                   static_cast<unsigned long> (s.net_poll_mean_us), poll_p99,
                   static_cast<unsigned long> (s.net_poll_max_us), poll_duty,
                   static_cast<unsigned long> (s.net_cmd_n),
                   static_cast<unsigned long> (s.net_cmd_mean_us), cmd_p99,
                   static_cast<unsigned long> (s.net_cmd_max_us), cmd_duty,
+                  static_cast<unsigned long long> (s.net_rx_bytes),
+                  static_cast<unsigned long long> (s.net_tx_bytes),
                   static_cast<unsigned long> (rx_kB),
                   static_cast<unsigned long> (tx_kB),
-                  static_cast<unsigned long> (rx_kBps),
-                  static_cast<unsigned long> (tx_kBps));
+                  rx_kBps, tx_kBps);
 
         qs_user_comment (qs_prio, line);
       }

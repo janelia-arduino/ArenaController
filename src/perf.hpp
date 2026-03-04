@@ -189,22 +189,6 @@ struct Snapshot
   uint64_t net_rx_bytes;
   uint64_t net_tx_bytes;
 
-  // Ethernet / networking (measured within the current session)
-  uint32_t net_poll_n;
-  uint32_t net_poll_mean_us;
-  uint32_t net_poll_p99_us;
-  uint32_t net_poll_max_us;
-  uint64_t net_poll_sum_us;
-
-  uint32_t net_cmd_n;
-  uint32_t net_cmd_mean_us;
-  uint32_t net_cmd_p99_us;
-  uint32_t net_cmd_max_us;
-  uint64_t net_cmd_sum_us;
-
-  uint64_t net_rx_bytes;
-  uint64_t net_tx_bytes;
-
   // Stages (SD/Decode/Fill/...)
   uint32_t stage_n[STAGE_COUNT];
   uint32_t stage_mean_us[STAGE_COUNT];

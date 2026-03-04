@@ -525,6 +525,28 @@ BSP::writeEthernetBinaryResponse (
   r->len = 0;
 }
 
+void
+BSP::formatEthernetConnectionPeer (void *const connection, char *dst,
+                                  size_t dst_len)
+{
+  if (dst == nullptr || dst_len == 0U)
+    {
+      return;
+    }
+
+  dst[0] = '\0';
+
+  if (connection == nullptr)
+    {
+      snprintf (dst, dst_len, "null");
+      return;
+    }
+
+  struct mg_connection *c = (struct mg_connection *)connection;
+  // Print remote peer address as ip:port (e.g. "192.168.1.10:62222").
+  mg_snprintf (dst, dst_len, "%M", mg_print_ip_port, &c->rem);
+}
+
 const char *
 BSP::getEthernetIpAddress ()
 {

@@ -17,6 +17,27 @@
 #define AC_ENABLE_PERF_PROBE 1
 #endif
 
+// Flush QS output synchronously at mode boundaries.
+//
+// This helps ensure that MODE_* and PERF_* records appear immediately in QSPY
+// logs (useful for automated mode tests). The flush occurs only when a mode
+// ends (not in the high-frequency hot path).
+#ifndef AC_QS_FLUSH_ON_MODE_END
+#define AC_QS_FLUSH_ON_MODE_END 1
+#endif
+
+// Debug: emit trial-owner markers when a TRIAL_PARAMS session begins/ends.
+//
+// This is useful for diagnosing multi-client cases (e.g., one client starts a
+// long PLAY_PATTERN and another client interrupts it). When enabled, the
+// firmware will print the initiating ethernet peer address (ip:port) at trial
+// start and again when the trial end response is sent.
+//
+// Default off to keep QS logs clean.
+#ifndef AC_DEBUG_TRIAL_OWNER
+#define AC_DEBUG_TRIAL_OWNER 0
+#endif
+
 #include <Arduino.h>
 
 namespace AC

@@ -1,5 +1,6 @@
 #ifndef BSP_HPP
 #define BSP_HPP
+#include <stddef.h>
 #include "constants.hpp"
 #include "pattern_header.hpp"
 
@@ -41,6 +42,12 @@ struct BSP
       void *const connection,
       uint8_t response[AC::constants::byte_count_per_response_max],
       uint8_t response_byte_count);
+  // Format the peer address (ip:port) for an ethernet connection.
+  //
+  // This is used only for debug logging (e.g., trial owner markers) and
+  // should be implemented by the active ethernet backend (Mongoose/QNEthernet).
+  static void formatEthernetConnectionPeer (
+      void *const connection, char *dst, size_t dst_len);
   static const char *getEthernetIpAddress ();
 
   static void armRefreshTimer (uint32_t frequency_hz, void (*isr) ());
