@@ -11,10 +11,17 @@
 
 #include "ArenaController.hpp"
 
+#if (AC_ETH_BACKEND == 0)
 extern "C"
 {
 #include "mongoose_glue.h"
 }
+#elif (AC_ETH_BACKEND == 1)
+#include <QNEthernet.h>
+namespace qn = qindesign::network;
+#else
+#error "Unsupported AC_ETH_BACKEND value"
+#endif
 
 Q_DEFINE_THIS_FILE
 
@@ -114,6 +121,29 @@ static usb_serial_class &qs_serial_stream = Serial;
 static char ethernet_ip_address[constants::ethernet_ip_address_length_max]
     = "";
 static bool ip_announced = false;
+
+
+#if (AC_ETH_BACKEND == 1)
+// QNEthernet-based TCP server + per-connection RX buffers. We keep a small
+// fixed connection table so we can associate late responses (e.g. trial end
+// reasons) with the initiating socket.
+struct QnEthConn
+{
+  qn::EthernetClient client;
+  bool in_use;
+  bool cmd_inflight;
+  size_t rx_len;
+  size_t rx_expected_len;
+  IPAddress remote_ip;
+  uint16_t remote_port;
+  uint8_t rx_buf[constants::byte_count_per_pattern_frame_max + 16U];
+};
+
+static qn::EthernetServer eth_server (constants::ethernet_server_port);
+static bool eth_server_started = false;
+static QnEthConn eth_conns[AC_ETH_MAX_CONNECTIONS];
+#endif
+
 
 #if defined(AC_ENABLE_PERF_PROBE)
 // Performance probe pin state
@@ -340,6 +370,7 @@ BSP::writeSerialStringResponse (char *const response)
   bsp_global::serial_communication_interface_stream.println (response);
 }
 
+#if (AC_ETH_BACKEND == 0)
 void
 log_fn (char ch, void *param)
 {
@@ -552,6 +583,308 @@ BSP::getEthernetIpAddress ()
 {
   return bsp_global::ethernet_ip_address;
 }
+
+#elif (AC_ETH_BACKEND == 1)
+
+static inline bool
+ip_is_valid (const IPAddress &ip)
+{
+  return !((ip[0] == 0U) && (ip[1] == 0U) && (ip[2] == 0U) && (ip[3] == 0U));
+}
+
+static void
+ip_to_str (char *dst, size_t dst_len, const IPAddress &ip)
+{
+  snprintf (dst, dst_len, "%u.%u.%u.%u", static_cast<unsigned> (ip[0]),
+            static_cast<unsigned> (ip[1]), static_cast<unsigned> (ip[2]),
+            static_cast<unsigned> (ip[3]));
+}
+
+static bsp_global::QnEthConn *
+alloc_conn_slot (qn::EthernetClient &client)
+{
+  for (size_t i = 0; i < AC_ETH_MAX_CONNECTIONS; ++i)
+    {
+      if (!bsp_global::eth_conns[i].in_use)
+        {
+          bsp_global::QnEthConn &conn = bsp_global::eth_conns[i];
+          conn.client = client;
+          conn.in_use = true;
+          conn.cmd_inflight = false;
+          conn.rx_len = 0U;
+          conn.rx_expected_len = 0U;
+          conn.remote_ip = client.remoteIP ();
+          conn.remote_port = client.remotePort ();
+          return &conn;
+        }
+    }
+
+  // No slot available.
+  client.stop ();
+  return nullptr;
+}
+
+bool
+BSP::initializeEthernet ()
+{
+  bsp_global::ip_announced = false;
+  bsp_global::ethernet_ip_address[0] = 0;
+
+  // Clear connection table.
+  for (size_t i = 0; i < AC_ETH_MAX_CONNECTIONS; ++i)
+    {
+      bsp_global::QnEthConn &conn = bsp_global::eth_conns[i];
+      if (conn.in_use)
+        {
+          conn.client.stop ();
+        }
+      conn.in_use = false;
+      conn.cmd_inflight = false;
+      conn.rx_len = 0U;
+      conn.rx_expected_len = 0U;
+      conn.remote_ip = IPAddress (0, 0, 0, 0);
+      conn.remote_port = 0U;
+    }
+
+  bsp_global::eth_server_started = false;
+
+  const bool ok = qn::Ethernet.begin ();
+
+  QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
+  QS_STR ("QNEthernet begin")
+  QS_END ()
+
+  return ok;
+}
+
+void
+BSP::pollEthernet ()
+{
+  // Keep the Ethernet stack progressing. On Teensy, QNEthernet also hooks
+  // yield(), but calling loop() here makes the cost visible to PERF_NET poll_us.
+  qn::Ethernet.loop ();
+
+  // IP announce (once).
+  if (!bsp_global::ip_announced)
+    {
+      const IPAddress ip = qn::Ethernet.localIP ();
+      if (ip_is_valid (ip))
+        {
+          ip_to_str (bsp_global::ethernet_ip_address,
+                     sizeof (bsp_global::ethernet_ip_address), ip);
+          bsp_global::ip_announced = true;
+
+          QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
+          QS_STR ("QNEthernet ready")
+          QS_STR (bsp_global::ethernet_ip_address)
+          QS_END ()
+        }
+    }
+
+  if (!bsp_global::eth_server_started)
+    {
+      return;
+    }
+
+  // Accept new clients (non-blocking).
+  qn::EthernetClient new_client = bsp_global::eth_server.accept ();
+  if (new_client)
+    {
+      alloc_conn_slot (new_client);
+    }
+
+  // Service each active client.
+  for (size_t i = 0; i < AC_ETH_MAX_CONNECTIONS; ++i)
+    {
+      bsp_global::QnEthConn &conn = bsp_global::eth_conns[i];
+      if (!conn.in_use)
+        {
+          continue;
+        }
+
+      if (!conn.client.connected ())
+        {
+          conn.client.stop ();
+          conn.in_use = false;
+          conn.cmd_inflight = false;
+          conn.rx_len = 0U;
+          conn.rx_expected_len = 0U;
+          continue;
+        }
+
+      if (conn.cmd_inflight)
+        {
+          continue;
+        }
+
+      const int avail = conn.client.available ();
+      if (avail <= 0)
+        {
+          continue;
+        }
+
+      const size_t cap = sizeof (conn.rx_buf);
+      const size_t remaining = (conn.rx_len < cap) ? (cap - conn.rx_len) : 0U;
+      if (remaining == 0U)
+        {
+          // RX overflow: drop the connection to keep semantics simple.
+          conn.client.stop ();
+          conn.in_use = false;
+          conn.cmd_inflight = false;
+          conn.rx_len = 0U;
+          conn.rx_expected_len = 0U;
+          continue;
+        }
+
+      const size_t to_read = (static_cast<size_t> (avail) < remaining)
+                               ? static_cast<size_t> (avail)
+                               : remaining;
+      const int n = conn.client.read (conn.rx_buf + conn.rx_len, to_read);
+      if (n > 0)
+        {
+          conn.rx_len += static_cast<size_t> (n);
+        }
+
+      // Determine expected length once we have enough header bytes.
+      if ((conn.rx_expected_len == 0U) && (conn.rx_len > 0U))
+        {
+          const uint8_t b0 = conn.rx_buf[0];
+
+          if (b0 > constants::first_command_byte_max_value_binary)
+            {
+              // String command: wait for termination character.
+              void *term = memchr (conn.rx_buf,
+                                   constants::command_termination_character,
+                                   conn.rx_len);
+              if (term != nullptr)
+                {
+                  const uint8_t *p = static_cast<uint8_t *> (term);
+                  conn.rx_expected_len
+                    = static_cast<size_t> (p - conn.rx_buf) + 1U;
+                }
+            }
+          else if (b0 == 0x32U)
+            {
+              // Stream frame command: [0]=0x32, [1..2]=data_len (LE),
+              // followed by the fixed header and frame bytes.
+              if (conn.rx_len >= 3U)
+                {
+                  const uint16_t data_len
+                    = static_cast<uint16_t> (conn.rx_buf[1]
+                                             | (static_cast<uint16_t> (
+                                                  conn.rx_buf[2])
+                                                << 8));
+                  conn.rx_expected_len
+                    = static_cast<size_t> (data_len)
+                      + constants::stream_header_byte_count;
+                }
+            }
+          else
+            {
+              // Binary command: [0]=byte_count-1.
+              conn.rx_expected_len = static_cast<size_t> (b0) + 1U;
+            }
+
+          if (conn.rx_expected_len > cap)
+            {
+              // Bogus length. Drop.
+              conn.client.stop ();
+              conn.in_use = false;
+              conn.cmd_inflight = false;
+              conn.rx_len = 0U;
+              conn.rx_expected_len = 0U;
+              continue;
+            }
+        }
+
+      if ((conn.rx_expected_len > 0U) && (conn.rx_len >= conn.rx_expected_len))
+        {
+          // Publish the command event.
+          CommandEvt *cev = Q_NEW (CommandEvt, ETHERNET_COMMAND_AVAILABLE_SIG);
+          cev->connection = &conn;
+          cev->binary_command = conn.rx_buf;
+          cev->binary_command_byte_count
+            = static_cast<uint16_t> (conn.rx_expected_len);
+          QF::PUBLISH (cev, &constants::bsp_id);
+
+          conn.cmd_inflight = true;
+          // We'll clear the RX buffer once the response is written.
+        }
+    }
+}
+
+bool
+BSP::createEthernetServerConnection ()
+{
+  if (!bsp_global::eth_server_started)
+    {
+      bsp_global::eth_server.begin ();
+      bsp_global::eth_server_started = true;
+
+      QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
+      QS_STR ("QNEthernet server listening")
+      QS_END ()
+    }
+
+  return true;
+}
+
+void
+BSP::writeEthernetBinaryResponse (void *connection, uint8_t response[],
+                                 uint8_t response_byte_count)
+{
+  if (connection == nullptr)
+    {
+      return;
+    }
+
+  bsp_global::QnEthConn *conn
+    = static_cast<bsp_global::QnEthConn *> (connection);
+  if ((!conn->in_use) || (!conn->client))
+    {
+      return;
+    }
+
+  conn->client.write (response, response_byte_count);
+
+  // Mark the RX buffer consumed so the next command can be assembled.
+  conn->rx_len = 0U;
+  conn->rx_expected_len = 0U;
+  conn->cmd_inflight = false;
+}
+
+void
+BSP::formatEthernetConnectionPeer (void *connection, char *dst,
+                                  size_t dst_len)
+{
+  if ((connection == nullptr) || (dst == nullptr) || (dst_len == 0U))
+    {
+      return;
+    }
+
+  bsp_global::QnEthConn *conn
+    = static_cast<bsp_global::QnEthConn *> (connection);
+  if (!conn->in_use)
+    {
+      snprintf (dst, dst_len, "none");
+      return;
+    }
+
+  char ip_str[16];
+  ip_to_str (ip_str, sizeof (ip_str), conn->remote_ip);
+  snprintf (dst, dst_len, "%s:%u", ip_str,
+            static_cast<unsigned> (conn->remote_port));
+}
+
+const char *
+BSP::getEthernetIpAddress ()
+{
+  return bsp_global::ethernet_ip_address;
+}
+
+#else
+#error "Unsupported AC_ETH_BACKEND value"
+#endif
 
 void
 transferPanelCompleteCallback (EventResponderRef event_responder)

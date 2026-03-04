@@ -36,6 +36,27 @@
 // Default off to keep QS logs clean.
 #ifndef AC_DEBUG_TRIAL_OWNER
 #define AC_DEBUG_TRIAL_OWNER 0
+
+
+// -----------------------------------------------------------------------------
+// Ethernet backend selection
+// -----------------------------------------------------------------------------
+// Select which Ethernet stack/backend is used by the BSP.
+//   0 = Mongoose (vendored in examples/*)
+//   1 = QNEthernet (external library)
+// This affects only the board support package (BSP) Ethernet implementation;
+// the core firmware stays backend-agnostic.
+//
+// Override from the build system, for example:
+//   build_flags = -DAC_ETH_BACKEND=1
+#ifndef AC_ETH_BACKEND
+#define AC_ETH_BACKEND 0
+#endif
+
+// Maximum simultaneous TCP client connections accepted by the firmware.
+#ifndef AC_ETH_MAX_CONNECTIONS
+#define AC_ETH_MAX_CONNECTIONS 4
+#endif
 #endif
 
 #include <Arduino.h>

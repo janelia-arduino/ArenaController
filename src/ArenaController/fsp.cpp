@@ -362,6 +362,19 @@ perf_session_mode_for (ModeId m)
     }
 }
 
+
+static inline const char *
+eth_backend_name ()
+{
+#if (AC_ETH_BACKEND == 1)
+  return "qnethernet";
+#elif (AC_ETH_BACKEND == 0)
+  return "mongoose";
+#else
+  return "unknown";
+#endif
+}
+
 static void
 qs_mode_started (uint8_t prio, ModeId mode, uint16_t target_hz,
                  uint32_t runtime_ms)
@@ -369,14 +382,14 @@ qs_mode_started (uint8_t prio, ModeId mode, uint16_t target_hz,
   char line[128];
   if (mode == ModeId::AllOff)
     {
-      (void)snprintf (line, sizeof (line), "mode=%s",
-                      AC::ModeTrace::mode_name (mode));
+      (void)snprintf (line, sizeof (line), "mode=%s net=%s",
+                      AC::ModeTrace::mode_name (mode), eth_backend_name ());
     }
   else
     {
       (void)snprintf (
-          line, sizeof (line), "mode=%s target_hz=%u runtime_ms=%lu",
-          AC::ModeTrace::mode_name (mode), static_cast<unsigned> (target_hz),
+          line, sizeof (line), "mode=%s net=%s target_hz=%u runtime_ms=%lu",
+          AC::ModeTrace::mode_name (mode), eth_backend_name (), static_cast<unsigned> (target_hz),
           static_cast<unsigned long> (runtime_ms));
     }
 
@@ -1150,7 +1163,9 @@ FSP::SerialCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
       memcpy (&binary_command_byte_count_claim,
               sci->binary_command_ + command_buffer_position,
               sizeof (binary_command_byte_count_claim));
-      sci->binary_command_byte_count_claim_ = binary_command_byte_count_claim;
+      sci->binary_command_byte_count_claim_
+          = static_cast<uint16_t> (binary_command_byte_count_claim
+                                   + constants::stream_header_byte_count);
       QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
       QS_STR ("stream command");
       QS_U32 (8, sci->binary_command_byte_count_claim_);
@@ -1486,7 +1501,9 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
       memcpy (&binary_command_byte_count_claim,
               eci->binary_command_ + command_buffer_position,
               sizeof (binary_command_byte_count_claim));
-      eci->binary_command_byte_count_claim_ = binary_command_byte_count_claim;
+      eci->binary_command_byte_count_claim_
+          = static_cast<uint16_t> (binary_command_byte_count_claim
+                                   + constants::stream_header_byte_count);
       QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR ("stream command");
       QS_U32 (8, eci->binary_command_byte_count_claim_);
