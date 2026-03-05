@@ -1147,9 +1147,9 @@ FSP::SerialCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
   sci->binary_command_[sci->binary_command_byte_count_++] = first_command_byte;
   if (first_command_byte > constants::first_command_byte_max_value_binary)
     {
-      QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
-      QS_STR ("string command");
-      QS_END ()
+      // QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
+      // QS_STR ("string command");
+      // QS_END ()
       QF::PUBLISH (&constants::process_string_command_evt, ao);
     }
   else if (first_command_byte == STREAM_FRAME_CMD)
@@ -1223,10 +1223,10 @@ FSP::SerialCommandInterface_updateStreamCommand (QActive *const ao,
           = BSP::readSerialByte ();
       ++byte_count;
     }
-  QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
-  QS_STR ("update stream command");
-  QS_U32 (8, byte_count);
-  QS_END ()
+  // QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
+  // QS_STR ("update stream command");
+  // QS_U32 (8, byte_count);
+  // QS_END ()
 }
 
 bool
@@ -1489,9 +1489,9 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
   command_buffer_position += sizeof (first_command_byte);
   if (first_command_byte > constants::first_command_byte_max_value_binary)
     {
-      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-      QS_STR ("string command");
-      QS_END ()
+      // QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      // QS_STR ("string command");
+      // QS_END ()
       QF::PUBLISH (&constants::process_string_command_evt, ao);
     }
   else if (first_command_byte == STREAM_FRAME_CMD)
@@ -1503,17 +1503,17 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
       eci->binary_command_byte_count_claim_
           = static_cast<uint16_t> (binary_command_byte_count_claim
                                    + constants::stream_header_byte_count);
-      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-      QS_STR ("stream command");
-      QS_U32 (8, eci->binary_command_byte_count_claim_);
-      QS_END ()
+      // QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      // QS_STR ("stream command");
+      // QS_U32 (8, eci->binary_command_byte_count_claim_);
+      // QS_END ()
       QF::PUBLISH (&constants::process_stream_command_evt, ao);
     }
   else
     {
-      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-      QS_STR ("binary command");
-      QS_END ()
+      // QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      // QS_STR ("binary command");
+      // QS_END ()
       QF::PUBLISH (&constants::process_binary_command_evt, ao);
     }
 }
