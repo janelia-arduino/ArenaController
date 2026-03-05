@@ -2036,14 +2036,6 @@ FSP::Pattern_initializePlayPattern (QActive *const ao, QEvt const *e)
         * constants::milliseconds_per_runtime_duration_unit;
   pattern->runtime_duration_units_remaining_ = ppev->runtime_duration;
   pattern->frame_index_ = ppev->frame_index;
-  QS_BEGIN_ID (DEBUG_COMMENT, AO_Arena->m_prio)
-  QS_STR ("check and store parameters");
-  QS_U8 (0, control_mode);
-  QS_U16 (5, pattern->frame_rate_hz_);
-  QS_U16 (5, init_pos);
-  QS_U16 (5, gain);
-  QS_U32 (8, pattern->runtime_duration_ms_);
-  QS_END ()
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_playing_pattern_evt, ao);
 }
@@ -2080,14 +2072,6 @@ FSP::Pattern_initializeAnalogClosedLoop (QActive *const ao, QEvt const *e)
         * constants::milliseconds_per_runtime_duration_unit;
   pattern->runtime_duration_units_remaining_ = aclev->runtime_duration;
   pattern->frame_index_ = aclev->frame_index;
-  QS_BEGIN_ID (DEBUG_COMMENT, AO_Arena->m_prio)
-  QS_STR ("check and store parameters");
-  QS_U8 (0, control_mode);
-  QS_U16 (5, pattern->frame_rate_hz_);
-  QS_U16 (5, init_pos);
-  QS_U16 (5, gain);
-  QS_U32 (8, pattern->runtime_duration_ms_);
-  QS_END ()
   pattern->card_->dispatch (e, ao->m_prio);
   AO_Pattern->POST (&constants::begin_playing_pattern_evt, ao);
 }
