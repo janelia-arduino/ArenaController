@@ -1136,9 +1136,9 @@ FSP::SerialCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
   SerialCommandInterface *const sci
       = static_cast<SerialCommandInterface *const> (ao);
 
-  QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
-  QS_STR ("------------------------------------------------");
-  QS_END ()
+  // QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
+  // QS_STR ("------------------------------------------------");
+  // QS_END ()
 
   uint8_t first_command_byte = BSP::readSerialByte ();
   uint8_t command_buffer_position = 0;
@@ -1167,17 +1167,17 @@ FSP::SerialCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
       sci->binary_command_byte_count_claim_
           = static_cast<uint16_t> (binary_command_byte_count_claim
                                    + constants::stream_header_byte_count);
-      QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
-      QS_STR ("stream command");
-      QS_U32 (8, sci->binary_command_byte_count_claim_);
-      QS_END ()
+      // QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
+      // QS_STR ("stream command");
+      // QS_U32 (8, sci->binary_command_byte_count_claim_);
+      // QS_END ()
       QF::PUBLISH (&constants::process_stream_command_evt, ao);
     }
   else
     {
-      QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
-      QS_STR ("binary command");
-      QS_END ()
+      // QS_BEGIN_ID (USER_COMMENT, AO_SerialCommandInterface->m_prio)
+      // QS_STR ("binary command");
+      // QS_END ()
       QF::PUBLISH (&constants::process_binary_command_evt, ao);
     }
 }
@@ -1478,9 +1478,9 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
   eci->binary_command_ = cev->binary_command;
   eci->binary_command_byte_count_ = cev->binary_command_byte_count;
 
-  QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
-  QS_STR ("------------------------------------------------");
-  QS_END ()
+  // QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+  // QS_STR ("------------------------------------------------");
+  // QS_END ()
 
   uint8_t command_buffer_position = 0;
   uint8_t first_command_byte;
