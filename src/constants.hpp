@@ -36,6 +36,14 @@
 // Default off to keep QS logs clean.
 #ifndef AC_DEBUG_TRIAL_OWNER
 #define AC_DEBUG_TRIAL_OWNER 0
+#endif
+
+// Keep the Ethernet poll timer at the higher service rate for a short window
+// after RX/TX activity. This preserves low idle overhead while avoiding the
+// low-speed gap between back-to-back commands.
+#ifndef AC_ETH_HOT_POLL_HOLD_MS
+#define AC_ETH_HOT_POLL_HOLD_MS 50
+#endif
 
 // -----------------------------------------------------------------------------
 // Ethernet backend selection
@@ -55,7 +63,6 @@
 // Maximum simultaneous TCP client connections accepted by the firmware.
 #ifndef AC_ETH_MAX_CONNECTIONS
 #define AC_ETH_MAX_CONNECTIONS 4
-#endif
 #endif
 
 #include <Arduino.h>
@@ -99,6 +106,7 @@ constexpr uint8_t ethernet_ip_address_length_max = 32;
 constexpr uint16_t ethernet_server_port = 62222;
 constexpr uint32_t ethernet_timer_frequency_low_speed_hz = 100;
 constexpr uint32_t ethernet_timer_frequency_high_speed_hz = 1000;
+constexpr uint32_t ethernet_hot_poll_hold_ms = AC_ETH_HOT_POLL_HOLD_MS;
 
 // Display
 constexpr uint32_t refresh_rate_grayscale_default = 200;

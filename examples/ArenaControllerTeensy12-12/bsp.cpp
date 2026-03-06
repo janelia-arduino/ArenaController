@@ -409,7 +409,7 @@ BSP::initializeEthernet ()
   ethernet_init ();
   mongoose_init ();
 
-  QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+  QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
   QS_STR ("Ethernet init complete; waiting for DHCP");
   QS_END ()
 
@@ -432,7 +432,7 @@ BSP::pollEthernet ()
   if (st != last_state)
     {
       last_state = st;
-      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
       QS_STR ("ETH state");
       switch (st)
         {
@@ -459,7 +459,7 @@ BSP::pollEthernet ()
       QS_END ()
     }
 
-  // Announce the DHCP IP exactly once, via QS user records. This check is done
+  // Announce the DHCP IP exactly once, via QS Ethernet log records. This check is done
   // here (not in a specific Mongoose connection callback) so it works
   // regardless of which listeners are enabled (HTTP/HTTPS/binary server).
   if (!bsp_global::ip_announced && g_mgr.ifp && g_mgr.ifp->ip != 0)
@@ -469,7 +469,7 @@ BSP::pollEthernet ()
                    &g_mgr.ifp->ip);
       bsp_global::ip_announced = true;
 
-      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
       QS_STR ("ETHERNET UP");
       QS_STR ("IP");
       QS_STR (bsp_global::ethernet_ip_address);

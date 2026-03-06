@@ -54,6 +54,7 @@ public:
   std::uint32_t binary_command_byte_count_;
   std::uint32_t binary_command_byte_count_claim_;
   std::uint32_t runtime_duration_ms_;
+  std::uint32_t hot_poll_until_ms_;
 
 public:
   EthernetCommandInterface ();

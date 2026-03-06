@@ -113,6 +113,35 @@ static ModeId s_mode = ModeId::AllOff;
 static bool s_perf_hotpath_enabled = false;
 #endif
 
+static inline uint32_t
+ethernet_poll_period_ticks (uint32_t hz)
+{
+  uint32_t const ticks = constants::ticks_per_second / hz;
+  return (ticks != 0U) ? ticks : 1U;
+}
+
+static inline bool
+ethernet_hot_poll_active (EthernetCommandInterface const *eci)
+{
+  return static_cast<int32_t> (eci->hot_poll_until_ms_ - millis ()) > 0;
+}
+
+static inline void
+ethernet_mark_hot (EthernetCommandInterface *eci)
+{
+  eci->hot_poll_until_ms_ = millis () + constants::ethernet_hot_poll_hold_ms;
+}
+
+static inline void
+ethernet_rearm_timer (EthernetCommandInterface *eci)
+{
+  uint32_t const hz = ethernet_hot_poll_active (eci)
+                          ? constants::ethernet_timer_frequency_high_speed_hz
+                          : constants::ethernet_timer_frequency_low_speed_hz;
+  eci->ethernet_time_evt_.disarm ();
+  eci->ethernet_time_evt_.armX (ethernet_poll_period_ticks (hz));
+}
+
 // ---------------------------------------------------------------------------
 // Asynchronous TRIAL_PARAMS completion/abort response support
 //
@@ -178,7 +207,7 @@ trial_rsp_begin (uint8_t qs_prio, TrialRspOrigin origin, void *eth_connection,
     (void)snprintf (line, sizeof (line), "trial_owner=%s mode=%s req_ms=%lu",
                     s_trial_rsp.eth_peer, AC::ModeTrace::mode_name (mode),
                     static_cast<unsigned long> (runtime_ms));
-    QS_BEGIN_ID (USER_COMMENT, qs_prio)
+    QS_BEGIN_ID (DEBUG_COMMENT, qs_prio)
     QS_STR (line);
     QS_END ()
   }
@@ -285,7 +314,7 @@ trial_rsp_send_if_pending (uint8_t qs_prio, ModeId ended_mode,
         s_trial_rsp.eth_peer, AC::ModeTrace::mode_name (ended_mode),
         AC::ModeTrace::reason_name (reason),
         static_cast<unsigned long> (elapsed_ms));
-    QS_BEGIN_ID (USER_COMMENT, qs_prio)
+    QS_BEGIN_ID (DEBUG_COMMENT, qs_prio)
     QS_STR (line);
     QS_END ()
   }
@@ -295,7 +324,7 @@ trial_rsp_send_if_pending (uint8_t qs_prio, ModeId ended_mode,
     {
       BSP::writeSerialBinaryResponse (response, response_byte_count);
 
-      QS_BEGIN_ID (USER_COMMENT, qs_prio)
+      QS_BEGIN_ID (DEBUG_COMMENT, qs_prio)
       QS_STR ("wrote trial end response over serial");
       QS_STR (AC::ModeTrace::reason_name (reason));
       QS_END ()
@@ -313,7 +342,7 @@ trial_rsp_send_if_pending (uint8_t qs_prio, ModeId ended_mode,
         }
 #endif
 
-      QS_BEGIN_ID (USER_COMMENT, qs_prio)
+      QS_BEGIN_ID (DEBUG_COMMENT, qs_prio)
       QS_STR ("wrote trial end response over ethernet");
       QS_STR (AC::ModeTrace::reason_name (reason));
       QS_END ()
@@ -569,7 +598,7 @@ FSP::ArenaController_setup ()
                                     (void *)0, 0U); // no stack
 
   static QEvt const *ethernet_command_interface_queueSto
-      [constants::serial_command_interface_event_queue_count];
+      [constants::ethernet_command_interface_event_queue_count];
   AO_EthernetCommandInterface->start (
       3U, // priority
       ethernet_command_interface_queueSto,
@@ -1327,6 +1356,7 @@ FSP::EthernetCommandInterface_initializeAndSubscribe (QActive *const ao,
 
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
+  eci->hot_poll_until_ms_ = 0U;
   QS_OBJ_DICTIONARY (&(eci->ethernet_time_evt_));
   QS_SIG_DICTIONARY (ETHERNET_TIMEOUT_SIG, ao);
   QS_SIG_DICTIONARY (ACTIVATE_ETHERNET_COMMAND_INTERFACE_SIG, ao);
@@ -1341,10 +1371,7 @@ FSP::EthernetCommandInterface_armEthernetTimerLowSpeed (QActive *const ao,
 {
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
-  eci->ethernet_time_evt_.disarm ();
-  eci->ethernet_time_evt_.armX (
-      constants::ticks_per_second
-      / constants::ethernet_timer_frequency_low_speed_hz);
+  ethernet_rearm_timer (eci);
 }
 
 void
@@ -1353,10 +1380,8 @@ FSP::EthernetCommandInterface_armEthernetTimerHighSpeed (QActive *const ao,
 {
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
-  eci->ethernet_time_evt_.disarm ();
-  eci->ethernet_time_evt_.armX (
-      constants::ticks_per_second
-      / constants::ethernet_timer_frequency_high_speed_hz);
+  ethernet_mark_hot (eci);
+  ethernet_rearm_timer (eci);
 }
 
 void
@@ -1398,9 +1423,7 @@ FSP::EthernetCommandInterface_pollEthernet (QActive *const ao, QEvt const *e)
 {
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
-  eci->ethernet_time_evt_.armX (
-      constants::ticks_per_second
-      / constants::ethernet_timer_frequency_low_speed_hz);
+  ethernet_rearm_timer (eci);
 
 #if AC_ENABLE_PERF_PROBE
   if (s_perf_hotpath_enabled)
@@ -1423,9 +1446,8 @@ FSP::EthernetCommandInterface_pollEthernetHighSpeed (QActive *const ao,
 {
   EthernetCommandInterface *const eci
       = static_cast<EthernetCommandInterface *const> (ao);
-  eci->ethernet_time_evt_.armX (
-      constants::ticks_per_second
-      / constants::ethernet_timer_frequency_high_speed_hz);
+  ethernet_mark_hot (eci);
+  ethernet_rearm_timer (eci);
 
 #if AC_ENABLE_PERF_PROBE
   if (s_perf_hotpath_enabled)
@@ -1460,7 +1482,7 @@ FSP::EthernetCommandInterface_createServerConnection (QActive *const ao,
 
   if (server_connected)
     {
-      QS_BEGIN_ID (USER_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
       QS_STR ("Ethernet command server listening");
       QS_STR ("port");
       QS_U16 (5, constants::ethernet_server_port);
@@ -1480,6 +1502,8 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
   eci->connection_ = cev->connection;
   eci->binary_command_ = cev->binary_command;
   eci->binary_command_byte_count_ = cev->binary_command_byte_count;
+  ethernet_mark_hot (eci);
+  ethernet_rearm_timer (eci);
 
   QS_BEGIN_ID (DEBUG_COMMENT, AO_EthernetCommandInterface->m_prio)
   QS_STR ("------------------------------------------------");
@@ -1557,6 +1581,8 @@ FSP::EthernetCommandInterface_writeBinaryResponse (QActive *const ao,
       = static_cast<EthernetCommandInterface *const> (ao);
   BSP::writeEthernetBinaryResponse (eci->connection_, eci->binary_response_,
                                     eci->binary_response_byte_count_);
+  ethernet_mark_hot (eci);
+  ethernet_rearm_timer (eci);
 
 #if AC_ENABLE_PERF_PROBE
   if (s_perf_hotpath_enabled)
@@ -1575,6 +1601,8 @@ FSP::EthernetCommandInterface_updateStreamCommand (QActive *const ao,
   CommandEvt const *cev = static_cast<CommandEvt const *> (e);
   eci->binary_command_ = cev->binary_command;
   eci->binary_command_byte_count_ = cev->binary_command_byte_count;
+  ethernet_mark_hot (eci);
+  ethernet_rearm_timer (eci);
 }
 
 bool
@@ -3081,7 +3109,7 @@ FSP::processStreamCommand (uint8_t const *stream_buffer,
     }
   else
     {
-      QS_BEGIN_ID (DEBUG_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_BEGIN_ID (ERROR_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR ("streamed frame has invalid size");
       QS_U32 (8, frame_byte_count);
       QS_U32 (8, BSP::getByteCountPerPatternFrameGrayscale ());
