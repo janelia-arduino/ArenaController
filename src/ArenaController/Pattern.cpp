@@ -68,6 +68,8 @@ Pattern::Pattern ()
       runtime_duration_time_evt_ (this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
       find_card_time_evt_ (this, FIND_CARD_SIG, 0U)
 {
+  spf_pending_frame_index_ = 0U;
+  spf_update_pending_ = 0U;
   card_ = Card_getInstance ();
 }
 
@@ -314,7 +316,15 @@ Q_STATE_DEF (Pattern, ShowingPatternFrame)
     //${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFrame}
     case Q_EXIT_SIG:
       {
+        FSP::Pattern_clearPendingPatternFrameUpdate (this, e);
         FSP::Pattern_deleteFrameReference (this, e);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    //${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFrame::UPDATE_PATTERN_FRAME}
+    case UPDATE_PATTERN_FRAME_SIG:
+      {
+        FSP::Pattern_storePendingPatternFrameUpdate (this, e);
         status_ = Q_RET_HANDLED;
         break;
       }
@@ -435,7 +445,15 @@ Q_STATE_DEF (Pattern, SPF_DisplayingFrame)
     //${AOs::Pattern::SM::Initialized::DisplayingPatter~::ShowingPatternFr~::SPF_DisplayingFr~::FRAME_TRANSFERRED}
     case FRAME_TRANSFERRED_SIG:
       {
-        status_ = tran (&WaitingToDisplayNextFrame);
+        if (FSP::Pattern_hasPendingPatternFrameUpdate (this, e))
+          {
+            FSP::Pattern_applyPendingPatternFrameUpdate (this, e);
+            status_ = tran (&SPF_ReadingFrameFromFile);
+          }
+        else
+          {
+            status_ = tran (&WaitingToDisplayNextFrame);
+          }
         break;
       }
     default:

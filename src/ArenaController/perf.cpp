@@ -600,6 +600,26 @@ update_expect_commit (UpdateKind k)
 }
 
 void
+update_coalesced (UpdateKind k, uint32_t count)
+{
+  uint8_t const idx = static_cast<uint8_t> (k);
+  if (idx >= UPD_COUNT || count == 0U)
+    {
+      return;
+    }
+
+  UpdateTracker &u = updates[idx];
+  if (u.coalesced > (0xFFFFFFFFu - count))
+    {
+      u.coalesced = 0xFFFFFFFFu;
+    }
+  else
+    {
+      u.coalesced += count;
+    }
+}
+
+void
 on_frame_reference_saved ()
 {
   // A new frame reference has been installed by the Frame AO.

@@ -64,6 +64,8 @@ public:
   std::int16_t gain_;
   std::uint16_t timeout_counts_per_frame_index_;
   std::uint16_t timeout_count_;
+  std::uint16_t spf_pending_frame_index_;
+  std::uint8_t spf_update_pending_;
 
 public:
   Pattern ();

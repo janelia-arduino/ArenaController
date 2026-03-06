@@ -1309,13 +1309,13 @@ BSP::transferPanelSet (const uint8_t *const buffer, uint16_t &buffer_position,
 bool
 BSP::findPatternCard ()
 {
-  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+  QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
   QS_STR ("Attempting to find pattern card");
   QS_END ()
 
   bool result = bsp_global::pattern_sd.begin (SdioConfig (FIFO_SDIO));
 
-  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+  QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
   QS_STR ("Pattern card found");
   QS_U8 (0, result);
   QS_END ()
@@ -1329,7 +1329,7 @@ BSP::openPatternDirectory ()
 {
   bool directory_opened
       = bsp_global::pattern_dir.open (constants::pattern_dir_str);
-  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+  QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
   QS_STR ("pattern directory opened");
   QS_END ()
   return directory_opened;
@@ -1348,7 +1348,7 @@ BSP::scanPatternDirectory ()
           dir_index = f.dirIndex ();
           char name_log[constants::pattern_filename_log_str_len_max];
           f.getName (name_log, sizeof (name_log));
-          QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+          QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
           QS_STR ("dir-index");
           QS_U16 (5, dir_index);
           QS_STR ("pattern-id");
@@ -1377,7 +1377,7 @@ BSP::openPatternFileForReading (uint16_t pattern_id)
 
   if (!bsp_global::pattern_dir || !bsp_global::pattern_dir.isDir ())
     {
-      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+      QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
       QS_STR ("openPatternFileForReading: pattern_dir not open");
       QS_END ()
       return 0;
@@ -1392,7 +1392,7 @@ BSP::openPatternFileForReading (uint16_t pattern_id)
       O_RDONLY);
   if (!ok)
     {
-      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+      QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
       QS_STR ("openPatternFileForReading: open by dirIndex failed");
       QS_STR ("dirIndex");
       QS_U16 (5, pattern_id);
@@ -1408,7 +1408,7 @@ BSP::openPatternFileForReading (uint16_t pattern_id)
   if (bsp_global::pattern_file.isDir ())
     {
       bsp_global::pattern_file.close ();
-      QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+      QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
       QS_STR ("openPatternFileForReading: dirIndex is a directory");
       QS_U16 (5, pattern_id);
       QS_END ()
@@ -1418,7 +1418,7 @@ BSP::openPatternFileForReading (uint16_t pattern_id)
   // Optional: log the (possibly truncated) filename for debugging.
   char name_log[constants::pattern_filename_log_str_len_max];
   bsp_global::pattern_file.getName (name_log, sizeof (name_log));
-  QS_BEGIN_ID (USER_COMMENT, AO_Pattern->m_prio)
+  QS_BEGIN_ID (DEBUG_COMMENT, AO_Pattern->m_prio)
   QS_STR ("opened pattern by dirIndex");
   QS_U16 (5, pattern_id);
   QS_STR ("name");

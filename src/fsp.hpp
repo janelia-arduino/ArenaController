@@ -248,6 +248,14 @@ struct FSP
                                             QP::QEvt const *e);
   static void Pattern_setupNextFrame (QP::QActive *const ao,
                                       QP::QEvt const *e);
+  static void Pattern_storePendingPatternFrameUpdate (
+      QP::QActive *const ao, QP::QEvt const *e);
+  static bool Pattern_hasPendingPatternFrameUpdate (QP::QActive *const ao,
+                                                    QP::QEvt const *e);
+  static void Pattern_applyPendingPatternFrameUpdate (QP::QActive *const ao,
+                                                      QP::QEvt const *e);
+  static void Pattern_clearPendingPatternFrameUpdate (QP::QActive *const ao,
+                                                      QP::QEvt const *e);
   static void Pattern_updatePatternFrame (QP::QActive *const ao,
                                           QP::QEvt const *e);
   static void Pattern_decodeFrame (QP::QActive *const ao, QP::QEvt const *e);

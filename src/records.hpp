@@ -15,7 +15,9 @@ enum ArenaControllerRecords
   // Performance / timing probes (binary records; designed to be lightweight)
   PERF_FRAME = QP::QS_USER + 5,
   PERF_STAGE = QP::QS_USER + 6,
-  PERF_DROP = QP::QS_USER + 7,
+  PERF_COMMENT = QP::QS_USER + 7,
+  // Backwards-compatible alias for older filter setups / scripts.
+  PERF_DROP = PERF_COMMENT,
   // Explicit mode boundary markers (intended for host test harnesses).
   MODE_STARTED = QP::QS_USER + 8,
   MODE_ENDED = QP::QS_USER + 9,

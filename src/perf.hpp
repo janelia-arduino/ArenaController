@@ -275,6 +275,7 @@ void stage_end (Stage s);
 void update_received (UpdateKind k);
 void update_processed (UpdateKind k);
 void update_expect_commit (UpdateKind k);
+void update_coalesced (UpdateKind k, uint32_t count = 1U);
 void on_frame_reference_saved ();
 
 // Print a multi-line, self-explanatory QS performance report.
@@ -467,6 +468,10 @@ update_processed (UpdateKind)
 }
 static inline void
 update_expect_commit (UpdateKind)
+{
+}
+static inline void
+update_coalesced (UpdateKind, uint32_t = 1U)
 {
 }
 static inline void

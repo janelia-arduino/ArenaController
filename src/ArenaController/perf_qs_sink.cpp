@@ -74,9 +74,9 @@ pct_count_x100 (uint32_t count, uint32_t total)
 }
 
 static inline void
-qs_user_comment (uint8_t prio, const char *s)
+qs_perf_comment (uint8_t prio, const char *s)
 {
-  QS_BEGIN_ID (AC::USER_COMMENT, prio)
+  QS_BEGIN_ID (AC::PERF_COMMENT, prio)
   QS_STR (s);
   QS_END ()
 }
@@ -215,7 +215,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
               static_cast<unsigned long> (drops_total),
               static_cast<unsigned long> (s.refresh_post_fail),
               static_cast<unsigned long> (s.refresh_defer_drops));
-    qs_user_comment (qs_prio, line);
+    qs_perf_comment (qs_prio, line);
   }
 
   // ---- PERF_TIMING ----
@@ -248,7 +248,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
               static_cast<unsigned long> (s.ifi_min_us),
               static_cast<unsigned long> (s.ifi_max_us),
               static_cast<long> (jitter_min), static_cast<long> (jitter_max));
-    qs_user_comment (qs_prio, line);
+    qs_perf_comment (qs_prio, line);
   }
 
   // ---- PERF_XFER ----
@@ -304,7 +304,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
         static_cast<unsigned long> (panelsets_per_frame_x10 / 10U),
         static_cast<unsigned long> (panelsets_per_frame_x10 % 10U));
 
-    qs_user_comment (qs_prio, line);
+    qs_perf_comment (qs_prio, line);
   }
 
   // ---- PERF_CPU ----
@@ -384,7 +384,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
           }
       }
 
-    qs_user_comment (qs_prio, line);
+    qs_perf_comment (qs_prio, line);
   }
 
   // ---- PERF_NET ----
@@ -454,7 +454,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
                   static_cast<unsigned long> (rx_kB),
                   static_cast<unsigned long> (tx_kB), rx_kBps, tx_kBps);
 
-        qs_user_comment (qs_prio, line);
+        qs_perf_comment (qs_prio, line);
       }
   }
 
@@ -495,7 +495,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
                   static_cast<unsigned long> (u.latency_n),
                   static_cast<unsigned long> (u.latency_mean_us), lat_p99,
                   static_cast<unsigned long> (u.latency_max_us));
-        qs_user_comment (qs_prio, line);
+        qs_perf_comment (qs_prio, line);
       }
   }
 
@@ -527,7 +527,7 @@ qs_report_session (uint8_t qs_prio, const char *reason)
         static_cast<long> (headroom_p99), static_cast<long> (headroom_min),
         static_cast<unsigned long> (s.max_late_us));
 
-    qs_user_comment (qs_prio, line);
+    qs_perf_comment (qs_prio, line);
   }
 }
 

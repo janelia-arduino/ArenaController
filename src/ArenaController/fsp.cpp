@@ -559,7 +559,7 @@ FSP::ArenaController_setup ()
   QS_USR_DICTIONARY (ETHERNET_LOG);
   QS_USR_DICTIONARY (PERF_FRAME);
   QS_USR_DICTIONARY (PERF_STAGE);
-  QS_USR_DICTIONARY (PERF_DROP);
+  QS_USR_DICTIONARY (PERF_COMMENT);
   QS_USR_DICTIONARY (MODE_STARTED);
   QS_USR_DICTIONARY (MODE_ENDED);
   QS_USR_DICTIONARY (USER_COMMENT);
@@ -630,7 +630,7 @@ FSP::ArenaController_setup ()
   // QS_LOC_FILTER(-AO_EthernetCommandInterface->m_prio);
   // QS_LOC_FILTER(-AO_SerialCommandInterface->m_prio);
 
-  QS_BEGIN_ID (USER_COMMENT, AO_Arena->m_prio)
+  QS_BEGIN_ID (DEBUG_COMMENT, AO_Arena->m_prio)
   QS_STR ("sizeof(smlPoolSto[0])");
   QS_U16 (5, sizeof (smlPoolSto[0]));
   QS_STR ("sizeof(medPoolSto[0])");
@@ -644,7 +644,7 @@ FSP::ArenaController_setup ()
   QS_END ()
 
 #if defined(AC_ENABLE_PERF_PROBE)
-  QS_BEGIN_ID (USER_COMMENT, AO_Arena->m_prio)
+  QS_BEGIN_ID (PERF_COMMENT, AO_Arena->m_prio)
   QS_STR ("PERF PROBE ENABLED (AC_ENABLE_PERF_PROBE)");
   QS_END ()
 #endif
@@ -1004,7 +1004,7 @@ postRefreshTimeout ()
   if (!success)
     {
 #if !defined(AC_ENABLE_PERF_PROBE)
-      QS_BEGIN_ID (USER_COMMENT, AO_Display->m_prio)
+      QS_BEGIN_ID (ERROR_COMMENT, AO_Display->m_prio)
       QS_STR ("postRefreshTimeout failed");
       QS_END ()
 #endif
@@ -2075,6 +2075,8 @@ FSP::Pattern_initializeShowPatternFrame (QActive *const ao, QEvt const *e)
   ShowPatternFrameEvt const *spfev
       = static_cast<ShowPatternFrameEvt const *> (e);
   pattern->frame_index_ = spfev->frame_index;
+  pattern->spf_pending_frame_index_ = 0U;
+  pattern->spf_update_pending_ = 0U;
 
 #if defined(AC_ENABLE_PERF_PROBE)
   // Treat the initial show-pattern-frame display as an update.
@@ -2302,31 +2304,110 @@ FSP::Pattern_setupNextFrame (QP::QActive *const ao, QP::QEvt const *e)
   QS_END ()
 }
 
-void
-FSP::Pattern_updatePatternFrame (QP::QActive *const ao, QP::QEvt const *e)
+namespace
+{
+static inline uint16_t
+pattern_normalize_frame_index (Pattern const *pattern, uint16_t frame_index)
+{
+  if (pattern->frame_count_per_pattern_ == 0U)
+    {
+      return 0U;
+    }
+  if (frame_index >= pattern->frame_count_per_pattern_)
+    {
+      return 0U;
+    }
+  return frame_index;
+}
+
+static inline void
+pattern_begin_show_pattern_frame_update (Pattern *pattern,
+                                         uint16_t frame_index)
 {
 #if defined(AC_ENABLE_PERF_PROBE)
   Perf::update_processed (Perf::UPD_SHOW_PATTERN_FRAME);
   Perf::update_expect_commit (Perf::UPD_SHOW_PATTERN_FRAME);
 #endif
 
-  Pattern *const pattern = static_cast<Pattern *const> (ao);
   if (pattern->frame_)
     {
       Q_DELETE_REF (pattern->frame_);
       pattern->frame_ = nullptr;
     }
 
-  UnsignedValueEvt const *uvev = static_cast<UnsignedValueEvt const *> (e);
-  pattern->frame_index_ = uvev->value;
-  if (pattern->frame_index_ >= pattern->frame_count_per_pattern_)
-    {
-      pattern->frame_index_ = 0;
-    }
+  pattern->frame_index_
+      = pattern_normalize_frame_index (pattern, frame_index);
   QS_BEGIN_ID (DEBUG_COMMENT, AO_Arena->m_prio)
   QS_STR ("update pattern frame");
   QS_U16 (5, pattern->frame_index_);
   QS_END ()
+}
+} // namespace
+
+void
+FSP::Pattern_storePendingPatternFrameUpdate (QP::QActive *const ao,
+                                             QP::QEvt const *e)
+{
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+  UnsignedValueEvt const *uvev = static_cast<UnsignedValueEvt const *> (e);
+  uint16_t const next_index
+      = pattern_normalize_frame_index (pattern, uvev->value);
+
+#if defined(AC_ENABLE_PERF_PROBE)
+  if (pattern->spf_update_pending_)
+    {
+      Perf::update_coalesced (Perf::UPD_SHOW_PATTERN_FRAME);
+    }
+#endif
+
+  pattern->spf_pending_frame_index_ = next_index;
+  pattern->spf_update_pending_ = 1U;
+}
+
+bool
+FSP::Pattern_hasPendingPatternFrameUpdate (QP::QActive *const ao,
+                                           QP::QEvt const *e)
+{
+  (void)e;
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+  return (pattern->spf_update_pending_ != 0U);
+}
+
+void
+FSP::Pattern_applyPendingPatternFrameUpdate (QP::QActive *const ao,
+                                             QP::QEvt const *e)
+{
+  (void)e;
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+  if (pattern->spf_update_pending_ == 0U)
+    {
+      return;
+    }
+
+  uint16_t const next_index = pattern->spf_pending_frame_index_;
+  pattern->spf_update_pending_ = 0U;
+  pattern->spf_pending_frame_index_ = 0U;
+  pattern_begin_show_pattern_frame_update (pattern, next_index);
+}
+
+void
+FSP::Pattern_clearPendingPatternFrameUpdate (QP::QActive *const ao,
+                                             QP::QEvt const *e)
+{
+  (void)e;
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+  pattern->spf_update_pending_ = 0U;
+  pattern->spf_pending_frame_index_ = 0U;
+}
+
+void
+FSP::Pattern_updatePatternFrame (QP::QActive *const ao, QP::QEvt const *e)
+{
+  Pattern *const pattern = static_cast<Pattern *const> (ao);
+  UnsignedValueEvt const *uvev = static_cast<UnsignedValueEvt const *> (e);
+  pattern->spf_update_pending_ = 0U;
+  pattern->spf_pending_frame_index_ = 0U;
+  pattern_begin_show_pattern_frame_update (pattern, uvev->value);
 }
 
 void
