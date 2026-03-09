@@ -502,6 +502,7 @@ analog_input_ = AnalogInput_getInstance();</code>
    <attribute name="binary_command_byte_count_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count_claim_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_ms_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
+   <attribute name="hot_poll_until_ms_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <operation name="EthernetCommandInterface" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;EthernetCommandInterface::initial)),
     ethernet_time_evt_(this, ETHERNET_TIMEOUT_SIG, 0U)</code>
@@ -907,12 +908,16 @@ analog_input_ = AnalogInput_getInstance();</code>
    <attribute name="gain_" type="std::int16_t" visibility="0x00" properties="0x00"/>
    <attribute name="timeout_counts_per_frame_index_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
    <attribute name="timeout_count_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="spf_pending_frame_index_" type="std::uint16_t" visibility="0x00" properties="0x00"/>
+   <attribute name="spf_update_pending_" type="std::uint8_t" visibility="0x00" properties="0x00"/>
    <operation name="Pattern" type="" visibility="0x00" properties="0x00">
     <code>: QActive(Q_STATE_CAST(&amp;Pattern::initial)),
     frame_rate_time_evt_(this, FRAME_RATE_TIMEOUT_SIG, 0U),
     runtime_duration_time_evt_(this, RUNTIME_DURATION_TIMEOUT_SIG, 0U),
     find_card_time_evt_(this, FIND_CARD_SIG, 0U)
 
+spf_pending_frame_index_ = 0U;
+spf_update_pending_ = 0U;
 card_ = Card_getInstance();</code>
    </operation>
    <operation name="dispatchToCard" type="void" visibility="0x02" properties="0x00">
@@ -1050,13 +1055,20 @@ card_ = Card_getInstance();</code>
        <state_glyph node="40,77,24,6"/>
       </state>
       <state name="ShowingPatternFrame">
-       <exit brief="deleteFrameReference()">FSP::Pattern_deleteFrameReference(this, e);</exit>
+       <exit brief="clearPendingPatternFrameUpdateAndDeleteFrameReference()">FSP::Pattern_clearPendingPatternFrameUpdate(this, e);
+FSP::Pattern_deleteFrameReference(this, e);</exit>
        <initial target="../1">
         <action brief="deactivateDisplay()">FSP::Pattern_deactivateDisplay(this, e);</action>
         <initial_glyph conn="79,95,4,0,5">
          <action box="1,1,19,2"/>
         </initial_glyph>
        </initial>
+       <tran trig="UPDATE_PATTERN_FRAME">
+        <action brief="storePendingPatternFrameUpdate()">FSP::Pattern_storePendingPatternFrameUpdate(this, e);</action>
+        <tran_glyph conn="74,153,3,-1,24">
+         <action box="0,-2,28,5"/>
+        </tran_glyph>
+       </tran>
        <state name="SPF_ReadingFrameFromFile">
         <entry brief="readFrameFromFile()">FSP::Pattern_readFrameFromFile(this, e);</entry>
         <tran trig="FRAME_READ_FROM_FILE" target="../../2">
@@ -1093,7 +1105,20 @@ card_ = Card_getInstance();</code>
        </state>
        <state name="SPF_DisplayingFrame">
         <entry brief="displayFrame()">FSP::Pattern_displayFrame(this, e);</entry>
-        <tran trig="FRAME_TRANSFERRED" target="../../5">
+        <tran trig="FRAME_TRANSFERRED">
+         <choice target="../../1">
+          <guard brief="hasPendingPatternFrameUpdate()">FSP::Pattern_hasPendingPatternFrameUpdate(this, e)</guard>
+          <action brief="applyPendingPatternFrameUpdate()">FSP::Pattern_applyPendingPatternFrameUpdate(this, e);</action>
+          <choice_glyph conn="79,143,5,0,18,8">
+           <action box="1,0,28,4"/>
+          </choice_glyph>
+         </choice>
+         <choice target="../../5">
+          <guard brief="else"/>
+          <choice_glyph conn="79,143,5,3,19,3">
+           <action box="1,8,10,2"/>
+          </choice_glyph>
+         </choice>
          <tran_glyph conn="79,143,2,0,4">
           <action box="1,1,19,2"/>
          </tran_glyph>
@@ -1112,7 +1137,7 @@ card_ = Card_getInstance();</code>
         <state_glyph node="78,147,26,6"/>
        </state>
        <state_glyph node="74,87,54,69">
-        <exit box="1,2,25,2"/>
+        <exit box="1,2,46,2"/>
        </state_glyph>
       </state>
       <state name="WaitingToShowPatternFrame">

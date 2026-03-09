@@ -196,6 +196,10 @@ cmd = "python tools/quantum_leaps_tools.py qm"
 [tasks.qm-install]
 cmd = "python tools/quantum_leaps_tools.py qm --install-only"
 
+# Check that ArenaController.qm contains model changes relied on by generated code
+[tasks.check-qm-sync]
+cmd = "python tools/check_qm_sync.py"
+
 # Install QTools (and build qspy on Linux/macOS if needed)
 [tasks.qtools-install]
 cmd = "python tools/quantum_leaps_tools.py qtools-install"
