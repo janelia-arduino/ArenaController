@@ -142,6 +142,36 @@ ethernet_rearm_timer (EthernetCommandInterface *eci)
   eci->ethernet_time_evt_.armX (ethernet_poll_period_ticks (hz));
 }
 
+static inline bool
+ethernet_refresh_stream_claim (EthernetCommandInterface *eci)
+{
+  if ((eci->binary_command_ == nullptr)
+      || (eci->binary_command_byte_count_
+          < (sizeof (std::uint8_t) + sizeof (std::uint16_t)))
+      || (eci->binary_command_[0] != STREAM_FRAME_CMD))
+    {
+      return false;
+    }
+
+  std::uint16_t binary_command_byte_count_claim = 0U;
+  memcpy (&binary_command_byte_count_claim, eci->binary_command_ + 1U,
+          sizeof (binary_command_byte_count_claim));
+  eci->binary_command_byte_count_claim_
+      = static_cast<std::uint32_t> (binary_command_byte_count_claim)
+        + constants::stream_header_byte_count;
+  return true;
+}
+
+static inline void
+ethernet_repost_current_command (QActive *const ao, CommandEvt const *cev)
+{
+  CommandEvt *cev_repost = Q_NEW (CommandEvt, ETHERNET_COMMAND_AVAILABLE_SIG);
+  cev_repost->connection = cev->connection;
+  cev_repost->binary_command = cev->binary_command;
+  cev_repost->binary_command_byte_count = cev->binary_command_byte_count;
+  ao->POST (cev_repost, &constants::fsp_id);
+}
+
 // ---------------------------------------------------------------------------
 // Asynchronous TRIAL_PARAMS completion/abort response support
 //
@@ -1502,6 +1532,7 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
   eci->connection_ = cev->connection;
   eci->binary_command_ = cev->binary_command;
   eci->binary_command_byte_count_ = cev->binary_command_byte_count;
+  eci->binary_command_byte_count_claim_ = 0xFFFFFFFFU;
   ethernet_mark_hot (eci);
   ethernet_rearm_timer (eci);
 
@@ -1509,11 +1540,7 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
   QS_STR ("------------------------------------------------");
   QS_END ()
 
-  uint8_t command_buffer_position = 0;
-  uint8_t first_command_byte;
-  memcpy (&first_command_byte, eci->binary_command_ + command_buffer_position,
-          sizeof (first_command_byte));
-  command_buffer_position += sizeof (first_command_byte);
+  uint8_t const first_command_byte = eci->binary_command_[0];
   if (first_command_byte > constants::first_command_byte_max_value_binary)
     {
       QS_BEGIN_ID (DEBUG_COMMENT, AO_EthernetCommandInterface->m_prio)
@@ -1523,18 +1550,30 @@ FSP::EthernetCommandInterface_analyzeCommand (QActive *const ao, QEvt const *e)
     }
   else if (first_command_byte == STREAM_FRAME_CMD)
     {
-      uint16_t binary_command_byte_count_claim;
-      memcpy (&binary_command_byte_count_claim,
-              eci->binary_command_ + command_buffer_position,
-              sizeof (binary_command_byte_count_claim));
-      eci->binary_command_byte_count_claim_
-          = static_cast<uint16_t> (binary_command_byte_count_claim
-                                   + constants::stream_header_byte_count);
+      bool const have_stream_claim = ethernet_refresh_stream_claim (eci);
+      bool const stream_command_complete
+          = have_stream_claim
+            && (eci->binary_command_byte_count_
+                >= eci->binary_command_byte_count_claim_);
       QS_BEGIN_ID (DEBUG_COMMENT, AO_EthernetCommandInterface->m_prio)
       QS_STR ("stream command");
-      QS_U32 (8, eci->binary_command_byte_count_claim_);
+      QS_U32 (8, eci->binary_command_byte_count_);
+      QS_U32 (8, have_stream_claim ? eci->binary_command_byte_count_claim_
+                                   : 0U);
       QS_END ()
       QF::PUBLISH (&constants::process_stream_command_evt, ao);
+
+      // QNEthernet assembles and publishes complete commands. The first
+      // ETHERNET_COMMAND_AVAILABLE event is consumed here only to classify the
+      // command and move the AO into ProcessingStreamCommand, so repost the
+      // already-complete command to the AO itself for actual processing.
+      if (stream_command_complete)
+        {
+          QS_BEGIN_ID (DEBUG_COMMENT, AO_EthernetCommandInterface->m_prio)
+          QS_STR ("stream command complete on first ethernet event");
+          QS_END ()
+          ethernet_repost_current_command (ao, cev);
+        }
     }
   else
     {
@@ -1602,6 +1641,7 @@ FSP::EthernetCommandInterface_updateStreamCommand (QActive *const ao,
   eci->binary_command_ = cev->binary_command;
   eci->binary_command_byte_count_ = cev->binary_command_byte_count;
   eci->connection_ = cev->connection;
+  (void)ethernet_refresh_stream_claim (eci);
   ethernet_mark_hot (eci);
   ethernet_rearm_timer (eci);
 }
