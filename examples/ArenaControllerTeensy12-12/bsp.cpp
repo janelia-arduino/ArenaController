@@ -148,9 +148,11 @@ static QnEthConn eth_conns[AC_ETH_MAX_CONNECTIONS];
 static bool perf_refresh_tick_level = false;
 #endif
 
+#if (AC_ETH_BACKEND == 0)
 // Log
 static char log_str[constants::string_log_length_max];
 static uint16_t log_str_pos = 0;
+#endif
 
 struct QuarterPanel
 {
@@ -613,6 +615,22 @@ alloc_conn_slot (qn::EthernetClient &client)
           conn.rx_expected_len = 0U;
           conn.remote_ip = client.remoteIP ();
           conn.remote_port = client.remotePort ();
+
+          if (!conn.client.setNoDelay (true))
+            {
+              QS_BEGIN_ID (ERROR_COMMENT, AO_EthernetCommandInterface->m_prio)
+              QS_STR ("QNEthernet setNoDelay failed");
+              QS_END ()
+              conn.client.stop ();
+              conn.in_use = false;
+              conn.cmd_inflight = false;
+              conn.rx_len = 0U;
+              conn.rx_expected_len = 0U;
+              conn.remote_ip = IPAddress (0, 0, 0, 0);
+              conn.remote_port = 0U;
+              return nullptr;
+            }
+
           return &conn;
         }
     }
@@ -649,7 +667,7 @@ BSP::initializeEthernet ()
   const bool ok = qn::Ethernet.begin ();
 
   QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-  QS_STR ("QNEthernet begin")
+  QS_STR ("QNEthernet begin");
   QS_END ()
 
   return ok;
@@ -674,8 +692,8 @@ BSP::pollEthernet ()
           bsp_global::ip_announced = true;
 
           QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-          QS_STR ("QNEthernet ready")
-          QS_STR (bsp_global::ethernet_ip_address)
+          QS_STR ("QNEthernet ready");
+          QS_STR (bsp_global::ethernet_ip_address);
           QS_END ()
         }
     }
@@ -818,7 +836,7 @@ BSP::createEthernetServerConnection ()
       bsp_global::eth_server_started = true;
 
       QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR ("QNEthernet server listening")
+      QS_STR ("QNEthernet server listening");
       QS_END ()
     }
 
@@ -841,7 +859,25 @@ BSP::writeEthernetBinaryResponse (void *connection, uint8_t response[],
       return;
     }
 
-  conn->client.write (response, response_byte_count);
+  const size_t written = conn->client.write (response, response_byte_count);
+  if (written != response_byte_count)
+    {
+      QS_BEGIN_ID (ERROR_COMMENT, AO_EthernetCommandInterface->m_prio)
+      QS_STR ("QNEthernet short response write");
+      QS_U32 (8, static_cast<uint32_t> (written));
+      QS_U32 (8, static_cast<uint32_t> (response_byte_count));
+      QS_END ()
+      conn->client.stop ();
+      conn->in_use = false;
+      conn->rx_len = 0U;
+      conn->rx_expected_len = 0U;
+      conn->cmd_inflight = false;
+      conn->remote_ip = IPAddress (0, 0, 0, 0);
+      conn->remote_port = 0U;
+      return;
+    }
+
+  conn->client.flush ();
 
   // Mark the RX buffer consumed so the next command can be assembled.
   conn->rx_len = 0U;

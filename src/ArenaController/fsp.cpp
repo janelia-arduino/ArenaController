@@ -1601,6 +1601,7 @@ FSP::EthernetCommandInterface_updateStreamCommand (QActive *const ao,
   CommandEvt const *cev = static_cast<CommandEvt const *> (e);
   eci->binary_command_ = cev->binary_command;
   eci->binary_command_byte_count_ = cev->binary_command_byte_count;
+  eci->connection_ = cev->connection;
   ethernet_mark_hot (eci);
   ethernet_rearm_timer (eci);
 }
@@ -2335,8 +2336,7 @@ pattern_begin_show_pattern_frame_update (Pattern *pattern,
       pattern->frame_ = nullptr;
     }
 
-  pattern->frame_index_
-      = pattern_normalize_frame_index (pattern, frame_index);
+  pattern->frame_index_ = pattern_normalize_frame_index (pattern, frame_index);
   QS_BEGIN_ID (DEBUG_COMMENT, AO_Arena->m_prio)
   QS_STR ("update pattern frame");
   QS_U16 (5, pattern->frame_index_);
