@@ -927,8 +927,8 @@ FSP::AnalogInput_initializeInput (QHsm *const hsm, QEvt const *e)
     }
   else
     {
-      QS_BEGIN_ID (ERROR_COMMENT, AO_Arena->m_prio)
-      QS_STR ("analog input not initialized!");
+      QS_BEGIN_ID (DEBUG_COMMENT, AO_Arena->m_prio)
+      QS_STR ("analog input not initialized; continuing without analog input");
       QS_END ()
     }
 }

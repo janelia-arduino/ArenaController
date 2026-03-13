@@ -565,10 +565,20 @@ analog_input_ = AnalogInput_getInstance();</code>
         <action box="2,-2,32,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="ETHERNET_COMMAND_AVAILABLE" target="../../8">
+      <tran trig="ETHERNET_COMMAND_AVAILABLE">
        <action brief="analyzeCommand()">FSP::EthernetCommandInterface_analyzeCommand(this, e);</action>
        <tran_glyph conn="24,79,2,0,21">
         <action box="1,16,29,5"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="PROCESS_BINARY_COMMAND" target="../../7">
+       <tran_glyph conn="48,82,1,1,10">
+        <action box="2,-2,25,2"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="PROCESS_STREAM_COMMAND" target="../../8">
+       <tran_glyph conn="48,86,1,1,38">
+        <action box="2,-2,25,2"/>
        </tran_glyph>
       </tran>
       <state name="PlayingPattern">
@@ -642,19 +652,6 @@ analog_input_ = AnalogInput_getInstance();</code>
       <state_glyph node="58,87,23,11">
        <entry box="1,2,21,3"/>
       </state_glyph>
-     </state>
-     <state name="ChoosingCommandProcessor">
-      <tran trig="PROCESS_BINARY_COMMAND" target="../../7">
-       <tran_glyph conn="44,105,1,2,19,-7">
-        <action box="0,0,25,2"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="PROCESS_STREAM_COMMAND" target="../../9">
-       <tran_glyph conn="44,110,1,3,43">
-        <action box="0,-2,25,2"/>
-       </tran_glyph>
-      </tran>
-      <state_glyph node="20,100,24,14"/>
      </state>
      <state name="ProcessingStreamCommand">
       <entry brief="processStreamCommand()">FSP::EthernetCommandInterface_processStreamCommand(this, e);</entry>

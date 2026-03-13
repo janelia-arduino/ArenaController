@@ -51,6 +51,7 @@ static uint32_t current_frame_start_us = 0U;
 
 static uint32_t current_frame_panelset_sum_us = 0U;
 static uint32_t panelset_start_us = 0U;
+static bool frame_in_progress = false;
 
 // Counters
 static volatile uint32_t refresh_tick_count = 0U;
@@ -331,6 +332,7 @@ on_frame_start (uint16_t refresh_rate_hz)
   current_frame_start_us = start_us;
   current_frame_panelset_sum_us = 0U;
   panelset_start_us = 0U;
+  frame_in_progress = true;
 
   // Update expected period dynamically if refresh rate changes mid-session.
   if (refresh_rate_hz != 0U)
@@ -369,6 +371,19 @@ on_frame_start (uint16_t refresh_rate_hz)
 void
 on_frame_end ()
 {
+  // Sessions can start or end while a refresh transfer is already in flight.
+  // In that case we may observe a FRAME_TRANSFERRED without a matching
+  // on_frame_start() inside the current perf window. Ignore that orphaned end
+  // so idle/ALL_ON sessions do not report impossible transfer durations.
+  if (!frame_in_progress || current_frame_start_us == 0U)
+    {
+      current_frame_panelset_sum_us = 0U;
+      panelset_start_us = 0U;
+      frame_in_progress = false;
+      port::frame_transfer_set (false);
+      return;
+    }
+
   ++frames_completed;
 
   uint32_t const end_us = port::now_us32 ();
@@ -432,6 +447,10 @@ on_frame_end ()
         }
     }
 
+  current_frame_start_us = 0U;
+  current_frame_panelset_sum_us = 0U;
+  panelset_start_us = 0U;
+  frame_in_progress = false;
   port::frame_transfer_set (false);
 }
 

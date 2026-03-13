@@ -58,10 +58,29 @@ def main() -> int:
              errors)
     if eci_sc is not None:
         processing_stream = None
+        waiting_for_new = None
+        choosing = None
         for top in eci_sc.findall("state"):
-            processing_stream = _find_state(top, "ProcessingStreamCommand")
-            if processing_stream is not None:
-                break
+            if waiting_for_new is None:
+                waiting_for_new = _find_state(top, "WaitingForNewCommand")
+            if processing_stream is None:
+                processing_stream = _find_state(top, "ProcessingStreamCommand")
+            if choosing is None:
+                choosing = _find_state(top, "ChoosingCommandProcessor")
+        _require(choosing is None,
+                 "EthernetCommandInterface still models ChoosingCommandProcessor in ArenaController.qm",
+                 errors)
+        _require(waiting_for_new is not None,
+                 "EthernetCommandInterface::WaitingForNewCommand missing in ArenaController.qm",
+                 errors)
+        if waiting_for_new is not None:
+            waiting_trigs = {tran.attrib.get("trig") for tran in waiting_for_new.findall("tran")}
+            _require("PROCESS_BINARY_COMMAND" in waiting_trigs,
+                     "WaitingForNewCommand does not route PROCESS_BINARY_COMMAND directly in ArenaController.qm",
+                     errors)
+            _require("PROCESS_STREAM_COMMAND" in waiting_trigs,
+                     "WaitingForNewCommand does not route PROCESS_STREAM_COMMAND directly in ArenaController.qm",
+                     errors)
         _require(processing_stream is not None,
                  "EthernetCommandInterface::ProcessingStreamCommand missing in ArenaController.qm",
                  errors)

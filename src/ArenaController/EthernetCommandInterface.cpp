@@ -84,7 +84,6 @@ Q_STATE_DEF (EthernetCommandInterface, initial)
   QS_FUN_DICTIONARY (&EthernetCommandInterface::CreatingServerConnection);
   QS_FUN_DICTIONARY (&EthernetCommandInterface::WaitingForSerialCommand);
   QS_FUN_DICTIONARY (&EthernetCommandInterface::ProcessingBinaryCommand);
-  QS_FUN_DICTIONARY (&EthernetCommandInterface::ChoosingCommandProcessor);
   QS_FUN_DICTIONARY (&EthernetCommandInterface::ProcessingStreamCommand);
 
   return tran (&Inactive);
@@ -209,7 +208,17 @@ Q_STATE_DEF (EthernetCommandInterface, WaitingForNewCommand)
     case ETHERNET_COMMAND_AVAILABLE_SIG:
       {
         FSP::EthernetCommandInterface_analyzeCommand (this, e);
-        status_ = tran (&ChoosingCommandProcessor);
+        status_ = Q_RET_HANDLED;
+        break;
+      }
+    case PROCESS_BINARY_COMMAND_SIG:
+      {
+        status_ = tran (&ProcessingBinaryCommand);
+        break;
+      }
+    case PROCESS_STREAM_COMMAND_SIG:
+      {
+        status_ = tran (&ProcessingStreamCommand);
         break;
       }
     default:
@@ -354,33 +363,6 @@ Q_STATE_DEF (EthernetCommandInterface, ProcessingBinaryCommand)
         FSP::EthernetCommandInterface_storeAnalogClosedLoopParameters (this,
                                                                        e);
         status_ = tran (&PlayingPattern);
-        break;
-      }
-    default:
-      {
-        status_ = super (&Active);
-        break;
-      }
-    }
-  return status_;
-}
-
-//${AOs::EthernetCommandI~::SM::Active::ChoosingCommandProcessor} ............
-Q_STATE_DEF (EthernetCommandInterface, ChoosingCommandProcessor)
-{
-  QP::QState status_;
-  switch (e->sig)
-    {
-    //${AOs::EthernetCommandI~::SM::Active::ChoosingCommandP~::PROCESS_BINARY_COMMAND}
-    case PROCESS_BINARY_COMMAND_SIG:
-      {
-        status_ = tran (&ProcessingBinaryCommand);
-        break;
-      }
-    //${AOs::EthernetCommandI~::SM::Active::ChoosingCommandP~::PROCESS_STREAM_COMMAND}
-    case PROCESS_STREAM_COMMAND_SIG:
-      {
-        status_ = tran (&ProcessingStreamCommand);
         break;
       }
     default:
