@@ -500,7 +500,6 @@ analog_input_ = AnalogInput_getInstance();</code>
    <attribute name="connection_" type="void *" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_" type="std::uint8_t const *" visibility="0x00" properties="0x00"/>
    <attribute name="binary_command_byte_count_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
-   <attribute name="binary_command_byte_count_claim_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="runtime_duration_ms_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <attribute name="hot_poll_until_ms_" type="std::uint32_t" visibility="0x00" properties="0x00"/>
    <operation name="EthernetCommandInterface" type="" visibility="0x00" properties="0x00">
@@ -658,53 +657,15 @@ analog_input_ = AnalogInput_getInstance();</code>
       <state_glyph node="20,100,24,14"/>
      </state>
      <state name="ProcessingStreamCommand">
-      <entry brief="armEthernetTimerHighSpeed()">FSP::EthernetCommandInterface_armEthernetTimerHighSpeed(this, e);</entry>
-      <exit brief="armEthernetTimerLowSpeed()">FSP::EthernetCommandInterface_armEthernetTimerLowSpeed(this, e);</exit>
-      <initial target="../4">
-       <initial_glyph conn="94,105,4,0,2">
-        <action box="0,-2,10,2"/>
-       </initial_glyph>
-      </initial>
+      <entry brief="processStreamCommand()">FSP::EthernetCommandInterface_processStreamCommand(this, e);</entry>
       <tran trig="COMMAND_PROCESSED" target="../../4">
        <action brief="writeBinaryResponse()">FSP::EthernetCommandInterface_writeBinaryResponse(this, e);</action>
        <tran_glyph conn="89,85,0,1,-9,-8">
         <action box="1,-7,23,5"/>
        </tran_glyph>
       </tran>
-      <tran trig="ETHERNET_COMMAND_AVAILABLE">
-       <action brief="updateStreamCommand()">FSP::EthernetCommandInterface_updateStreamCommand(this, e);</action>
-       <choice target="../../5">
-        <guard brief="ifStreamCommandComplete()">FSP::EthernetCommandInterface_ifStreamCommandComplete(this, e)</guard>
-        <action brief="processStreamCommand()">FSP::EthernetCommandInterface_processStreamCommand(this, e);</action>
-        <choice_glyph conn="107,100,5,0,23,8">
-         <action box="2,-2,24,5"/>
-        </choice_glyph>
-       </choice>
-       <choice target="../../5">
-        <guard brief="else"/>
-        <choice_glyph conn="107,100,4,0,6,5,2">
-         <action box="1,3,10,2"/>
-        </choice_glyph>
-       </choice>
-       <tran_glyph conn="87,95,3,-1,20,5">
-        <action box="0,-2,28,5"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="ETHERNET_TIMEOUT">
-       <action brief="pollEthernetHighSpeed()">FSP::EthernetCommandInterface_pollEthernetHighSpeed(this, e);</action>
-       <tran_glyph conn="87,119,3,-1,31">
-        <action box="0,-2,21,5"/>
-       </tran_glyph>
-      </tran>
-      <state name="WaitingForCommand">
-       <state_glyph node="89,107,16,7"/>
-      </state>
-      <state name="MidStreamCommand">
-       <state_glyph node="107,108,25,6"/>
-      </state>
-      <state_glyph node="87,85,48,39">
-       <entry box="1,2,27,2"/>
-       <exit box="1,4,27,5"/>
+      <state_glyph node="87,85,48,16">
+       <entry box="1,2,25,3"/>
       </state_glyph>
      </state>
      <state_glyph node="15,28,126,98">

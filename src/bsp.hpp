@@ -45,8 +45,7 @@ struct BSP
   // Format the peer address (ip:port) for an ethernet connection.
   //
   // This is used only for debug logging (e.g., trial owner markers) and
-  // should be implemented by the active ethernet backend
-  // (Mongoose/QNEthernet).
+  // is implemented by the QNEthernet board support package.
   static void formatEthernetConnectionPeer (void *const connection, char *dst,
                                             size_t dst_len);
   static const char *getEthernetIpAddress ();

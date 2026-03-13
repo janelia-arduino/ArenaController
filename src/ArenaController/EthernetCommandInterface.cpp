@@ -86,8 +86,6 @@ Q_STATE_DEF (EthernetCommandInterface, initial)
   QS_FUN_DICTIONARY (&EthernetCommandInterface::ProcessingBinaryCommand);
   QS_FUN_DICTIONARY (&EthernetCommandInterface::ChoosingCommandProcessor);
   QS_FUN_DICTIONARY (&EthernetCommandInterface::ProcessingStreamCommand);
-  QS_FUN_DICTIONARY (&EthernetCommandInterface::WaitingForCommand);
-  QS_FUN_DICTIONARY (&EthernetCommandInterface::MidStreamCommand);
 
   return tran (&Inactive);
 }
@@ -403,21 +401,8 @@ Q_STATE_DEF (EthernetCommandInterface, ProcessingStreamCommand)
     //${AOs::EthernetCommandI~::SM::Active::ProcessingStreamCommand}
     case Q_ENTRY_SIG:
       {
-        FSP::EthernetCommandInterface_armEthernetTimerHighSpeed (this, e);
+        FSP::EthernetCommandInterface_processStreamCommand (this, e);
         status_ = Q_RET_HANDLED;
-        break;
-      }
-    //${AOs::EthernetCommandI~::SM::Active::ProcessingStreamCommand}
-    case Q_EXIT_SIG:
-      {
-        FSP::EthernetCommandInterface_armEthernetTimerLowSpeed (this, e);
-        status_ = Q_RET_HANDLED;
-        break;
-      }
-    //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::initial}
-    case Q_INIT_SIG:
-      {
-        status_ = tran (&WaitingForCommand);
         break;
       }
     //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::COMMAND_PROCESSED}
@@ -427,63 +412,9 @@ Q_STATE_DEF (EthernetCommandInterface, ProcessingStreamCommand)
         status_ = tran (&WaitingForNewCommand);
         break;
       }
-    //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_COMMAND_AVAILABLE}
-    case ETHERNET_COMMAND_AVAILABLE_SIG:
-      {
-        FSP::EthernetCommandInterface_updateStreamCommand (this, e);
-        //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_COMMAND~::[ifStreamCommandComplete()]}
-        if (FSP::EthernetCommandInterface_ifStreamCommandComplete (this, e))
-          {
-            FSP::EthernetCommandInterface_processStreamCommand (this, e);
-            status_ = tran (&MidStreamCommand);
-          }
-        //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_COMMAND~::[else]}
-        else
-          {
-            status_ = tran (&MidStreamCommand);
-          }
-        break;
-      }
-    //${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::ETHERNET_TIMEOUT}
-    case ETHERNET_TIMEOUT_SIG:
-      {
-        FSP::EthernetCommandInterface_pollEthernetHighSpeed (this, e);
-        status_ = Q_RET_HANDLED;
-        break;
-      }
     default:
       {
         status_ = super (&Active);
-        break;
-      }
-    }
-  return status_;
-}
-
-//${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::WaitingForCommand}
-Q_STATE_DEF (EthernetCommandInterface, WaitingForCommand)
-{
-  QP::QState status_;
-  switch (e->sig)
-    {
-    default:
-      {
-        status_ = super (&ProcessingStreamCommand);
-        break;
-      }
-    }
-  return status_;
-}
-
-//${AOs::EthernetCommandI~::SM::Active::ProcessingStream~::MidStreamCommand}
-Q_STATE_DEF (EthernetCommandInterface, MidStreamCommand)
-{
-  QP::QState status_;
-  switch (e->sig)
-    {
-    default:
-      {
-        status_ = super (&ProcessingStreamCommand);
         break;
       }
     }

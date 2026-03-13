@@ -143,9 +143,6 @@ struct FSP
   EthernetCommandInterface_armEthernetTimerLowSpeed (QP::QActive *const ao,
                                                      QP::QEvt const *e);
   static void
-  EthernetCommandInterface_armEthernetTimerHighSpeed (QP::QActive *const ao,
-                                                      QP::QEvt const *e);
-  static void
   EthernetCommandInterface_disarmEthernetTimer (QP::QActive *const ao,
                                                 QP::QEvt const *e);
   static void
@@ -153,9 +150,6 @@ struct FSP
                                                QP::QEvt const *e);
   static void EthernetCommandInterface_pollEthernet (QP::QActive *const ao,
                                                      QP::QEvt const *e);
-  static void
-  EthernetCommandInterface_pollEthernetHighSpeed (QP::QActive *const ao,
-                                                  QP::QEvt const *e);
   static void
   EthernetCommandInterface_createServerConnection (QP::QActive *const ao,
                                                    QP::QEvt const *e);
@@ -167,12 +161,6 @@ struct FSP
   static void
   EthernetCommandInterface_writeBinaryResponse (QP::QActive *const ao,
                                                 QP::QEvt const *e);
-  static void
-  EthernetCommandInterface_updateStreamCommand (QP::QActive *const ao,
-                                                QP::QEvt const *e);
-  static bool
-  EthernetCommandInterface_ifStreamCommandComplete (QP::QActive *const ao,
-                                                    QP::QEvt const *e);
   static void
   EthernetCommandInterface_processStreamCommand (QP::QActive *const ao,
                                                  QP::QEvt const *e);

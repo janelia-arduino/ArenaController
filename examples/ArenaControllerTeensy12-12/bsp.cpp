@@ -11,17 +11,8 @@
 
 #include "ArenaController.hpp"
 
-#if (AC_ETH_BACKEND == 0)
-extern "C"
-{
-#include "mongoose_glue.h"
-}
-#elif (AC_ETH_BACKEND == 1)
 #include <QNEthernet.h>
 namespace qn = qindesign::network;
-#else
-#error "Unsupported AC_ETH_BACKEND value"
-#endif
 
 Q_DEFINE_THIS_FILE
 
@@ -60,8 +51,6 @@ constexpr uint8_t perf_pin_frame_transfer = 49;
 constexpr uint8_t perf_pin_fetch = 50;
 
 // Ethernet Communication Interface
-// static const char *ethernet_static_url = "tcp://192.168.10.62:62222";
-const char *ethernet_dhcp_url = "tcp://0.0.0.0:62222";
 
 // frame
 constexpr uint8_t panel_count_per_frame_row_max_bsp = 5;
@@ -122,7 +111,6 @@ static char ethernet_ip_address[constants::ethernet_ip_address_length_max]
     = "";
 static bool ip_announced = false;
 
-#if (AC_ETH_BACKEND == 1)
 // QNEthernet-based TCP server + per-connection RX buffers. We keep a small
 // fixed connection table so we can associate late responses (e.g. trial end
 // reasons) with the initiating socket.
@@ -141,18 +129,12 @@ struct QnEthConn
 static qn::EthernetServer eth_server (constants::ethernet_server_port);
 static bool eth_server_started = false;
 static QnEthConn eth_conns[AC_ETH_MAX_CONNECTIONS];
-#endif
 
 #if defined(AC_ENABLE_PERF_PROBE)
 // Performance probe pin state
 static bool perf_refresh_tick_level = false;
 #endif
 
-#if (AC_ETH_BACKEND == 0)
-// Log
-static char log_str[constants::string_log_length_max];
-static uint16_t log_str_pos = 0;
-#endif
 
 struct QuarterPanel
 {
@@ -370,221 +352,6 @@ BSP::writeSerialStringResponse (char *const response)
   bsp_global::serial_communication_interface_stream.println (response);
 }
 
-#if (AC_ETH_BACKEND == 0)
-void
-log_fn (char ch, void *param)
-{
-  if ((ch == '\n')
-      || (bsp_global::log_str_pos == (constants::string_log_length_max - 1)))
-    {
-      bsp_global::log_str[bsp_global::log_str_pos] = 0;
-      QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR (bsp_global::log_str);
-      QS_END ()
-      bsp_global::log_str[0] = 0;
-      bsp_global::log_str_pos = 0;
-    }
-  else if (ch != '\r')
-    {
-      bsp_global::log_str[bsp_global::log_str_pos++] = ch;
-    }
-}
-
-bool
-BSP::initializeEthernet ()
-{
-  // Reset DHCP/IP announcement state on every init.
-  bsp_global::ethernet_ip_address[0] = '\0';
-  bsp_global::ip_announced = false;
-
-  // Mongoose internal logs are noisy; keep them off by default (see
-  // mongoose_impl.c), but still route them to QS if the level is raised.
-  mg_log_set_fn (log_fn, 0);
-
-#ifndef AC_MONGOOSE_LOG_LEVEL
-// Default to errors only. Define AC_MONGOOSE_LOG_LEVEL=MG_LL_INFO (or DEBUG)
-// while debugging Mongoose itself.
-#define AC_MONGOOSE_LOG_LEVEL MG_LL_ERROR
-#endif
-  mg_log_set (AC_MONGOOSE_LOG_LEVEL);
-
-  ethernet_init ();
-  mongoose_init ();
-
-  QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-  QS_STR ("Ethernet init complete; waiting for DHCP");
-  QS_END ()
-
-  return true;
-}
-
-void
-BSP::pollEthernet ()
-{
-  mongoose_poll ();
-
-  if (!g_mgr.ifp)
-    {
-      return;
-    }
-
-  // Log state changes (minimal but very informative): DOWN->UP->REQ->IP->READY
-  static uint8_t last_state = 0xFF;
-  uint8_t st = g_mgr.ifp->state;
-  if (st != last_state)
-    {
-      last_state = st;
-      QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR ("ETH state");
-      switch (st)
-        {
-        case MG_TCPIP_STATE_DOWN:
-          QS_STR ("DOWN");
-          break;
-        case MG_TCPIP_STATE_UP:
-          QS_STR ("UP");
-          break;
-        case MG_TCPIP_STATE_REQ:
-          QS_STR ("REQ");
-          break;
-        case MG_TCPIP_STATE_IP:
-          QS_STR ("IP");
-          break;
-        case MG_TCPIP_STATE_READY:
-          QS_STR ("READY");
-          break;
-        default:
-          QS_STR ("UNKNOWN");
-          QS_U8 (3, st);
-          break;
-        }
-      QS_END ()
-    }
-
-  // Announce the DHCP IP exactly once, via QS Ethernet log records. This check is done
-  // here (not in a specific Mongoose connection callback) so it works
-  // regardless of which listeners are enabled (HTTP/HTTPS/binary server).
-  if (!bsp_global::ip_announced && g_mgr.ifp && g_mgr.ifp->ip != 0)
-    {
-      mg_snprintf (bsp_global::ethernet_ip_address,
-                   sizeof (bsp_global::ethernet_ip_address), "%M", mg_print_ip,
-                   &g_mgr.ifp->ip);
-      bsp_global::ip_announced = true;
-
-      QS_BEGIN_ID (ETHERNET_LOG, AO_EthernetCommandInterface->m_prio)
-      QS_STR ("ETHERNET UP");
-      QS_STR ("IP");
-      QS_STR (bsp_global::ethernet_ip_address);
-      QS_STR ("CMD PORT");
-      QS_U16 (5, constants::ethernet_server_port);
-      QS_END ()
-    }
-}
-
-void
-sfn (struct mg_connection *c, int ev, void *ev_data)
-{
-  switch (ev)
-    {
-    case MG_EV_OPEN:
-      if (c->is_listening == 1)
-        {
-          MG_INFO (("SERVER is listening"));
-        }
-      break;
-
-    case MG_EV_ACCEPT:
-      MG_INFO (("SERVER accepted a connection"));
-      break;
-
-    case MG_EV_READ:
-      {
-        struct mg_iobuf *r = &c->recv;
-        MG_INFO (("SERVER got data: %lu bytes", r->len));
-
-        CommandEvt *cev = Q_NEW (CommandEvt, ETHERNET_COMMAND_AVAILABLE_SIG);
-        cev->connection = c;
-        cev->binary_command = r->buf;
-        cev->binary_command_byte_count = r->len;
-        QF::PUBLISH (cev, &constants::bsp_id);
-        break;
-      }
-
-    case MG_EV_WRITE:
-      MG_INFO (("MG_EV_WRITE"));
-      break;
-
-    case MG_EV_CLOSE:
-      MG_INFO (("SERVER disconnected"));
-      break;
-
-    case MG_EV_ERROR:
-      MG_INFO (("SERVER error: %s", (char *)ev_data));
-      break;
-
-    case MG_EV_POLL:
-      break;
-
-    default:
-      MG_INFO (("event %lu", ev));
-      break;
-    }
-}
-
-bool
-BSP::createEthernetServerConnection ()
-{
-  struct mg_connection *c
-      = mg_listen (&g_mgr, constants::ethernet_dhcp_url, sfn, NULL);
-  if (c == NULL)
-    {
-      MG_INFO (("SERVER cannot open a connection"));
-      return false;
-    }
-  return true;
-}
-
-void
-BSP::writeEthernetBinaryResponse (
-    void *const connection,
-    uint8_t response[constants::byte_count_per_response_max],
-    uint8_t response_byte_count)
-{
-  struct mg_connection *c = (struct mg_connection *)connection;
-  struct mg_iobuf *r = &c->recv;
-  mg_send (c, response, response_byte_count);
-  r->len = 0;
-}
-
-void
-BSP::formatEthernetConnectionPeer (void *const connection, char *dst,
-                                   size_t dst_len)
-{
-  if (dst == nullptr || dst_len == 0U)
-    {
-      return;
-    }
-
-  dst[0] = '\0';
-
-  if (connection == nullptr)
-    {
-      snprintf (dst, dst_len, "null");
-      return;
-    }
-
-  struct mg_connection *c = (struct mg_connection *)connection;
-  // Print remote peer address as ip:port (e.g. "192.168.1.10:62222").
-  mg_snprintf (dst, dst_len, "%M", mg_print_ip_port, &c->rem);
-}
-
-const char *
-BSP::getEthernetIpAddress ()
-{
-  return bsp_global::ethernet_ip_address;
-}
-
-#elif (AC_ETH_BACKEND == 1)
 
 static inline bool
 ip_is_valid (const IPAddress &ip)
@@ -913,9 +680,6 @@ BSP::getEthernetIpAddress ()
   return bsp_global::ethernet_ip_address;
 }
 
-#else
-#error "Unsupported AC_ETH_BACKEND value"
-#endif
 
 void
 transferPanelCompleteCallback (EventResponderRef event_responder)

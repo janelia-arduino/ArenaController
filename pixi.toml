@@ -117,32 +117,6 @@ cmd = "python tools/pio_runner.py flash --env teensy41 --example {{ example }} -
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
 cmd = "python tools/pio_runner.py rebuild --env teensy41 --example {{ example }}"
 
-[tasks.build-qnet]
-args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
-cmd = "python tools/pio_runner.py build --env teensy41_qnethernet --example {{ example }}"
-
-[tasks.clean-qnet]
-args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
-cmd = "python tools/pio_runner.py clean --env teensy41_qnethernet --example {{ example }}"
-
-[tasks.upload-qnet]
-args = [
-  { arg = "example", default = "examples/ArenaControllerTeensy12-12" },
-  { arg = "port", default = "/dev/ttyACM0" },
-]
-cmd = "python tools/pio_runner.py upload --env teensy41_qnethernet --example {{ example }} --port {{ port }}"
-
-[tasks.flash-qnet]
-args = [
-  { arg = "example", default = "examples/ArenaControllerTeensy12-12" },
-  { arg = "port", default = "/dev/ttyACM0" },
-]
-cmd = "python tools/pio_runner.py flash --env teensy41_qnethernet --example {{ example }} --port {{ port }}"
-
-[tasks.rebuild-qnet]
-args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
-cmd = "python tools/pio_runner.py rebuild --env teensy41_qnethernet --example {{ example }}"
-
 [tasks.deepclean]
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
 cmd = """

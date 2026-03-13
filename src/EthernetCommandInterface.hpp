@@ -52,7 +52,6 @@ public:
   void *connection_;
   std::uint8_t const *binary_command_;
   std::uint32_t binary_command_byte_count_;
-  std::uint32_t binary_command_byte_count_claim_;
   std::uint32_t runtime_duration_ms_;
   std::uint32_t hot_poll_until_ms_;
 
@@ -72,8 +71,6 @@ protected:
   Q_STATE_DECL (ProcessingBinaryCommand);
   Q_STATE_DECL (ChoosingCommandProcessor);
   Q_STATE_DECL (ProcessingStreamCommand);
-  Q_STATE_DECL (WaitingForCommand);
-  Q_STATE_DECL (MidStreamCommand);
 }; // class EthernetCommandInterface
 
 } // namespace AC

@@ -24,7 +24,7 @@
   - https://www.pjrc.com/store/teensy41.html
   - https://www.pjrc.com/store/ethernet_kit.html
   - https://github.com/QuantumLeaps/qp-arduino
-  - https://mongoose.ws/
+  - https://github.com/ssilverman/QNEthernet
   - https://www.adafruit.com/product/4470
   - https://www.adafruit.com/product/1083
 * Modular LED Display
@@ -315,7 +315,7 @@ sudo apt-get purge --auto-remove modemmanager
 
 Pixi tasks select which example gets built by setting the =PLATFORMIO_SRC_DIR= environment variable (so you do not need to edit =platformio.ini=).
 
-Default example (=examples/ArenaControllerTeensy12-12=):
+Default example (=examples/ArenaControllerTeensy12-12=, which now uses QNEthernet as the only Ethernet backend):
 
 #+BEGIN_SRC sh
 pixi run build
@@ -324,7 +324,6 @@ pixi run build
 Other examples:
 
 #+BEGIN_SRC sh
-pixi run build examples/MongooseTest
 pixi run build examples/SDCardDebugTest
 pixi run build examples/WatchdogTest
 #+END_SRC
@@ -351,9 +350,6 @@ pixi run flash examples/ArenaControllerTeensy12-12 COM3
 Flash other examples:
 
 #+BEGIN_SRC sh
-pixi run flash examples/MongooseTest
-pixi run flash examples/MongooseTest /dev/ttyACM1
-
 pixi run flash examples/SDCardDebugTest
 pixi run flash examples/SDCardDebugTest /dev/ttyACM1
 

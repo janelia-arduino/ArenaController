@@ -48,6 +48,35 @@ def main() -> int:
     _require("hot_poll_until_ms_" in eci_attrs,
              "EthernetCommandInterface is missing hot_poll_until_ms_ in ArenaController.qm",
              errors)
+    _require("binary_command_byte_count_claim_" not in eci_attrs,
+             "EthernetCommandInterface still models binary_command_byte_count_claim_ even though QNEthernet delivers complete Ethernet commands",
+             errors)
+
+    eci_sc = eci.find("statechart")
+    _require(eci_sc is not None,
+             "EthernetCommandInterface statechart missing in ArenaController.qm",
+             errors)
+    if eci_sc is not None:
+        processing_stream = None
+        for top in eci_sc.findall("state"):
+            processing_stream = _find_state(top, "ProcessingStreamCommand")
+            if processing_stream is not None:
+                break
+        _require(processing_stream is not None,
+                 "EthernetCommandInterface::ProcessingStreamCommand missing in ArenaController.qm",
+                 errors)
+        if processing_stream is not None:
+            entry_code = processing_stream.findtext("entry") or ""
+            _require("EthernetCommandInterface_processStreamCommand" in entry_code,
+                     "ProcessingStreamCommand entry action does not process the complete QNEthernet stream command",
+                     errors)
+            _require(processing_stream.find("exit") is None,
+                     "ProcessingStreamCommand should no longer model stream-specific timer exit handling",
+                     errors)
+            child_states = {s.attrib.get("name") for s in processing_stream.findall("state")}
+            _require("WaitingForCommand" not in child_states and "MidStreamCommand" not in child_states,
+                     "ProcessingStreamCommand still contains Mongoose-era substates in ArenaController.qm",
+                     errors)
 
     pattern = _find_class(root, "Pattern")
     pattern_attrs = {a.attrib.get("name") for a in pattern.findall("attribute")}
@@ -140,7 +169,7 @@ def main() -> int:
             print(f"ERROR: {msg}")
         return 1
 
-    print("ArenaController.qm contains the expected SPF pending-update and Ethernet hot-poll model changes.")
+    print("ArenaController.qm contains the expected SPF pending-update and QNEthernet-only Ethernet model changes.")
     return 0
 
 
