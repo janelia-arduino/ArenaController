@@ -2,13 +2,15 @@
 """Cross-platform wrapper for PlatformIO example builds.
 
 Sets PLATFORMIO_SRC_DIR and PLATFORMIO_BUILD_DIR in-process, then invokes
-`pio run ...` with the requested environment/target. This avoids shell-specific
-`export ... && ...` task bodies in pixi.toml.
+`pio run ...` with the requested environment/target. It also implements a
+cross-platform `deepclean` action used by pixi.toml. This avoids shell-specific
+`export ... && ...` and `rm -rf ...` task bodies.
 """
 from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -25,6 +27,21 @@ def build_env(example: str) -> dict[str, str]:
     return env
 
 
+def remove_tree(path: Path) -> None:
+    if path.exists():
+        print(f"[pio_runner] removing {path}")
+        shutil.rmtree(path)
+    else:
+        print(f"[pio_runner] already absent: {path}")
+
+
+def deepclean(*, example: str) -> int:
+    root = project_root()
+    remove_tree(root / '.pio' / 'build' / example)
+    remove_tree(root / '.pio' / 'libdeps')
+    return 0
+
+
 def run_pio(args: list[str], *, example: str) -> int:
     env = build_env(example)
     print(f"[pio_runner] PLATFORMIO_SRC_DIR={env['PLATFORMIO_SRC_DIR']}")
@@ -36,11 +53,14 @@ def run_pio(args: list[str], *, example: str) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['build', 'clean', 'upload', 'flash', 'rebuild'])
+    parser.add_argument('action', choices=['build', 'clean', 'upload', 'flash', 'rebuild', 'deepclean'])
     parser.add_argument('--env', dest='env_name', required=True)
     parser.add_argument('--example', default='examples/ArenaControllerTeensy12-12')
     parser.add_argument('--port', default=None)
     ns = parser.parse_args()
+
+    if ns.action == 'deepclean':
+        return deepclean(example=ns.example)
 
     base = ['pio', 'run', '-e', ns.env_name]
     if ns.action == 'build':

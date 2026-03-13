@@ -1,6 +1,6 @@
 [workspace]
 name = "G4.1-ArenaController"
-version = "7.0.0"
+version = "7.1.0"
 description = "Arduino library for communicating with the Reiser Lab Modular LED panels display arena."
 authors = ["Peter Polidoro <peter@polidoro.io>"]
 channels = ["conda-forge"]
@@ -118,10 +118,9 @@ args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
 cmd = "python tools/pio_runner.py rebuild --env teensy41 --example {{ example }}"
 
 [tasks.deepclean]
+description = "Remove the selected example build directory and the shared PlatformIO libdeps cache."
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
-cmd = """
-rm -rf "$PIXI_PROJECT_ROOT/.pio/build/{{ example }}"
-"""
+cmd = "python tools/pio_runner.py deepclean --env teensy41 --example {{ example }}"
 
 # Serial monitor (primarily used for examples/SDCardDebugTest)
 [tasks.monitor]
