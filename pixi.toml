@@ -139,11 +139,13 @@ pio run -e teensy41
 """
 
 # "Nuclear" clean that matches what you found works (`rm -rf .pio/build`), but
-# scoped to one example. Useful if you suspect any stale build products.
+# scoped to one example. Useful if you suspect any stale build products or outdated
+# libdeps.
 [tasks.deepclean]
 args = [{ arg = "example", default = "examples/ArenaControllerTeensy12-12" }]
 cmd = """
-rm -rf "$PIXI_PROJECT_ROOT/.pio/build/{{ example }}"
+rm -rf "$PIXI_PROJECT_ROOT/.pio/build/{{ example }}" &&
+rm -rf "$PIXI_PROJECT_ROOT/.pio/libdeps"
 """
 
 # Serial monitor (primarily used for examples/SDCardDebugTest)
