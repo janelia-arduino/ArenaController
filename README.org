@@ -1,6 +1,8 @@
 #+TITLE: ArenaController
 #+PROPERTY: VERSION 7.1.0
 
+Archived. Replaced by: https://github.com/floesche/LED-Display_G4.1_ArenaController_Slim
+
 * Repository Information
 
 - Library Name: ArenaController
